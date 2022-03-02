@@ -5,4 +5,8 @@ INSTALL Instructions:
 ```
   git clone https://github.com/RapidSilicon/FOEDAG_rs.git
   git submodule update --init --recursive
+  make 
+  make debug
+  make test
+  sudo make install
 ```
