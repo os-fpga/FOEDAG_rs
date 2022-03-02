@@ -1,2 +1,2 @@
 # FOEDAG_rs
-RapidSilicon FOEDAG
+RapidSilicon Raptor GUI
