@@ -104,7 +104,7 @@ else()
   )
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/include/)
+include_directories(${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/FOEDAG/src ${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/include/)
 
 set(QRC_MAIN_WINDOW )
 
@@ -175,7 +175,7 @@ endif()
 # Copy the init.tcl file from source to build directory
 add_custom_command(TARGET raptor_gui POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy 
-          ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tcl/library/init.tcl
+          ${CMAKE_CURRENT_SOURCE_DIR}/FOEDAG/third_party/tcl/library/init.tcl
           ${CMAKE_CURRENT_BINARY_DIR}/lib/tcl9.0/init.tcl)
 
 # Explicit lib build order
@@ -204,9 +204,7 @@ if(MSVC OR WIN32)
   set_target_properties(raptor_gui-bin PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 endif()
 
-target_link_libraries(raptor_gui-bin PUBLIC raptor_gui tcl_stubb tcl_static zlib)
-target_link_libraries(raptor_gui  PUBLIC tcl_stubb tcl_static zlib)
-target_link_libraries(raptor_gui  PUBLIC raptor_guicore newproject newfile projnavigator designruns texteditor qscintilla2_qt compiler console QConsole)
+target_link_libraries(raptor_gui-bin PUBLIC raptor_gui foedag)
 target_link_libraries(raptor_gui  PUBLIC Qt5::Widgets Qt5::Core Qt5::Gui)
 
 if(NOT NO_TCMALLOC)
