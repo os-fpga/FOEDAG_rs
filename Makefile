@@ -109,8 +109,7 @@ install: release
 	cmake --install build
 
 test_install:
-	cmake -DCMAKE_BUILD_TYPE=Release -DINSTALL_DIR=$(PREFIX) -S tests/TestInstall -B tests/TestInstall/build
-	cmake --build tests/TestInstall/build -j $(CPU_CORES)
+#	$(PREFIX)/bin/raptor_gui --replay FOEDAG/tests/TestGui/foedag_gui.tcl
 
 test/gui: run-cmake-debug
 #	$(XVFB) ./dbuild/bin/console_test --replay tests/TestGui/gui_console.tcl

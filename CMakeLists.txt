@@ -205,7 +205,6 @@ if(MSVC OR WIN32)
 endif()
 
 target_link_libraries(raptor_gui-bin PUBLIC raptor_gui foedag)
-#target_link_libraries(raptor_gui-bin PUBLIC Qt5::Widgets Qt5::Core Qt5::Gui)
 
 if(NOT NO_TCMALLOC)
   find_library(TCMALLOC_LIBRARY NAMES tcmalloc)
@@ -213,13 +212,6 @@ if(NOT NO_TCMALLOC)
     target_link_libraries(raptor_gui PRIVATE tcmalloc)
   endif()
 endif()
-
-#if (UNIX)
-#  target_link_libraries(raptor_gui-bin PUBLIC dl)
-#  target_link_libraries(raptor_gui-bin PUBLIC util)
-#  target_link_libraries(raptor_gui-bin PUBLIC m)
-#  target_link_libraries(raptor_gui-bin PUBLIC pthread)
-#endif()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
   target_link_libraries(raptor_gui PRIVATE stdc++fs)
@@ -301,13 +293,13 @@ install(
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/raptor_gui)
 
 install (
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/${TCL_STATIC_LIB}
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${TCL_STATIC_LIB}
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor_gui/lib)
 install (
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/${TCL_STUBB_LIB}
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${TCL_STUBB_LIB}
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor_gui/lib)
 install (
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/${ZLIB_STATIC_LIB}
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${ZLIB_STATIC_LIB}
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor_gui/lib)  
   
   
@@ -326,9 +318,9 @@ if (WIN32 AND $<CONFIG:Debug>)
 endif()
 
 install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/include/tcl.h
-        ${CMAKE_CURRENT_BINARY_DIR}/include/tclDecls.h
-        ${CMAKE_CURRENT_BINARY_DIR}/include/tclPlatDecls.h
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/include/tcl.h
+        ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG//include/tclDecls.h
+        ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG//include/tclPlatDecls.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/raptor_gui/include)
 
 #install(
@@ -347,7 +339,7 @@ include(CMakePackageConfigHelpers)
 
 # install the configuration file
 install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/Raptor_GuiConfig.cmake
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/FoedagConfig.cmake
   DESTINATION cmake)
 
 add_custom_target(raptor_gui_link_target ALL
