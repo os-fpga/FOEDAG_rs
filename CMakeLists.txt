@@ -143,11 +143,11 @@ endif()
 
 add_library(tcl_static STATIC IMPORTED)
 set_target_properties(tcl_static PROPERTIES
-  IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/lib/${TCL_STATIC_LIB})
+  IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${TCL_STATIC_LIB})
 
 add_library(tcl_stubb STATIC IMPORTED)
 set_target_properties(tcl_stubb PROPERTIES
-  IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/lib/${TCL_STUBB_LIB})
+  IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${TCL_STUBB_LIB})
 
 if(MSVC)
   set_target_properties(tcl_static PROPERTIES
@@ -169,7 +169,7 @@ if(MSVC)
 else()
   add_library(zlib STATIC IMPORTED)
   set_target_properties(zlib PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/lib/${ZLIB_STATIC_LIB})       
+    IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${ZLIB_STATIC_LIB})       
 endif()
 
 # Copy the init.tcl file from source to build directory
@@ -204,8 +204,8 @@ if(MSVC OR WIN32)
   set_target_properties(raptor_gui-bin PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 endif()
 
-target_link_libraries(raptor_gui-bin PUBLIC raptor_gui foedag)
-target_link_libraries(raptor_gui  PUBLIC Qt5::Widgets Qt5::Core Qt5::Gui)
+target_link_libraries(raptor_gui-bin PUBLIC raptor_gui foedag tcl_stubb tcl_static zlib)
+target_link_libraries(raptor_gui-bin PUBLIC Qt5::Widgets Qt5::Core Qt5::Gui)
 
 if(NOT NO_TCMALLOC)
   find_library(TCMALLOC_LIBRARY NAMES tcmalloc)
@@ -215,10 +215,10 @@ if(NOT NO_TCMALLOC)
 endif()
 
 if (UNIX)
-  target_link_libraries(raptor_gui PRIVATE dl)
-  target_link_libraries(raptor_gui PRIVATE util)
-  target_link_libraries(raptor_gui PRIVATE m)
-  target_link_libraries(raptor_gui PRIVATE pthread)
+  target_link_libraries(raptor_gui-bin PRIVATE dl)
+  target_link_libraries(raptor_gui-bin PRIVATE util)
+  target_link_libraries(raptor_gui-bin PRIVATE m)
+  target_link_libraries(raptor_gui-bin PRIVATE pthread)
 endif()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
