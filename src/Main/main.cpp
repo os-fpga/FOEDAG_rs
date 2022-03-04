@@ -31,6 +31,7 @@ FOEDAG::GUI_TYPE getGuiType(const bool& withQt, const bool& withQml) {
 }
 
 int main(int argc, char** argv) {
+  Q_INIT_RESOURCE(main_window_resource);
   FOEDAG::CommandLine* cmd = new FOEDAG::CommandLine(argc, argv);
   cmd->processArgs();
 
