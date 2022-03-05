@@ -72,7 +72,6 @@ set(CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS} ${TCMALLOC_COMPILE_OPTIONS} ${MY_CXX_WARNING_FLAGS}")
 
 if(MSVC)
-  add_subdirectory(FOEDAG/third_party/zlib) # Do not use EXCLUDE_FROM_ALL else unit tests will fail for this subsystem
 
   add_compile_definitions(_CRT_NONSTDC_NO_WARNINGS)
 
