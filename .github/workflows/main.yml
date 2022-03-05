@@ -143,13 +143,14 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Download workflow artifact
-      if: matrix.mode == 'test'
-      uses: dawidd6/action-download-artifact@v2.17.0
-      with:
-        github_token: ${{secrets.GITHUB_TOKEN}}
-        workflow: main.yml
-        repo: ${{ github.repository }}
+# Not working with private repo (Need to check the secret key)
+#    - name: Download workflow artifact
+#      if: matrix.mode == 'test'
+#      uses: dawidd6/action-download-artifact@v2.17.0
+#      with:
+#        github_token: ${{ secrets.GITHUB_TOKEN }}
+#        workflow: main.yml
+#        repo: ${{ github.repository }}
 
     - name: Install dependencies and build QT
       run: |
