@@ -72,7 +72,6 @@ set(CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS} ${TCMALLOC_COMPILE_OPTIONS} ${MY_CXX_WARNING_FLAGS}")
 
 if(MSVC)
-  add_subdirectory(third_party/zlib) # Do not use EXCLUDE_FROM_ALL else unit tests will fail for this subsystem
 
   add_compile_definitions(_CRT_NONSTDC_NO_WARNINGS)
 
@@ -143,11 +142,11 @@ endif()
 
 add_library(tcl_static STATIC IMPORTED)
 set_target_properties(tcl_static PROPERTIES
-  IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/lib/${TCL_STATIC_LIB})
+  IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${TCL_STATIC_LIB})
 
 add_library(tcl_stubb STATIC IMPORTED)
 set_target_properties(tcl_stubb PROPERTIES
-  IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/lib/${TCL_STUBB_LIB})
+  IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${TCL_STUBB_LIB})
 
 if(MSVC)
   set_target_properties(tcl_static PROPERTIES
@@ -169,7 +168,7 @@ if(MSVC)
 else()
   add_library(zlib STATIC IMPORTED)
   set_target_properties(zlib PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/lib/${ZLIB_STATIC_LIB})       
+    IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${ZLIB_STATIC_LIB})       
 endif()
 
 # Copy the init.tcl file from source to build directory
@@ -205,20 +204,12 @@ if(MSVC OR WIN32)
 endif()
 
 target_link_libraries(raptor_gui-bin PUBLIC raptor_gui foedag)
-target_link_libraries(raptor_gui  PUBLIC Qt5::Widgets Qt5::Core Qt5::Gui)
 
 if(NOT NO_TCMALLOC)
   find_library(TCMALLOC_LIBRARY NAMES tcmalloc)
   if(TCMALLOC_LIBRARY)
     target_link_libraries(raptor_gui PRIVATE tcmalloc)
   endif()
-endif()
-
-if (UNIX)
-  target_link_libraries(raptor_gui PRIVATE dl)
-  target_link_libraries(raptor_gui PRIVATE util)
-  target_link_libraries(raptor_gui PRIVATE m)
-  target_link_libraries(raptor_gui PRIVATE pthread)
 endif()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
@@ -301,13 +292,13 @@ install(
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/raptor_gui)
 
 install (
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/${TCL_STATIC_LIB}
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${TCL_STATIC_LIB}
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor_gui/lib)
 install (
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/${TCL_STUBB_LIB}
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${TCL_STUBB_LIB}
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor_gui/lib)
 install (
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/${ZLIB_STATIC_LIB}
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${ZLIB_STATIC_LIB}
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor_gui/lib)  
   
   
@@ -326,9 +317,9 @@ if (WIN32 AND $<CONFIG:Debug>)
 endif()
 
 install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/include/tcl.h
-        ${CMAKE_CURRENT_BINARY_DIR}/include/tclDecls.h
-        ${CMAKE_CURRENT_BINARY_DIR}/include/tclPlatDecls.h
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/include/tcl.h
+        ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG//include/tclDecls.h
+        ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG//include/tclPlatDecls.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/raptor_gui/include)
 
 #install(
@@ -347,7 +338,7 @@ include(CMakePackageConfigHelpers)
 
 # install the configuration file
 install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/Raptor_GuiConfig.cmake
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/FoedagConfig.cmake
   DESTINATION cmake)
 
 add_custom_target(raptor_gui_link_target ALL

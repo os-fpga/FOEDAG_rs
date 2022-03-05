@@ -74,9 +74,10 @@ jobs:
     - name: Test
       if: matrix.mode == 'test'
       run: |
-        make debug test/unittest-d
-        make release test/batch
-        make test/gui
+        make debug VERBOSE=1
+#        make test/unittest-d
+#        make release test/batch
+#        make test/gui
 
     - name: Regression
       if: matrix.mode == 'regression'
@@ -140,14 +141,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v1
       with:
-        submodules: true
+        submodules: recursive
 
-    - name: Download workflow artifact
-      if: matrix.mode == 'test'
-      uses: dawidd6/action-download-artifact@v2.17.0
-      with:
-        workflow: main.yml
-        repo: ${{ github.repository }}
+# Not working with private repo (Need to check the secret key)
+#    - name: Download workflow artifact
+#      if: matrix.mode == 'test'
+#      uses: dawidd6/action-download-artifact@v2.17.0
+#      with:
+#        github_token: ${{ secrets.GITHUB_TOKEN }}
+#        workflow: main.yml
+#        repo: ${{ github.repository }}
 
     - name: Install dependencies and build QT
       run: |
