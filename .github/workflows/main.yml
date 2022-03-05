@@ -141,12 +141,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v1
       with:
-        submodules: true
+        submodules: recursive
 
     - name: Download workflow artifact
       if: matrix.mode == 'test'
       uses: dawidd6/action-download-artifact@v2.17.0
       with:
+        github_token: ${{secrets.GITHUB_TOKEN}}
         workflow: main.yml
         repo: ${{ github.repository }}
 
