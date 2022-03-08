@@ -5,22 +5,20 @@
 
 FOEDAG::Session* GlobalSession;
 
+namespace RS {
+
 QWidget* mainWindowBuilder(FOEDAG::CommandLine* cmd,
                            FOEDAG::TclInterpreter* interp) {
   FOEDAG::MainWindow* mainW = new FOEDAG::MainWindow{interp};
-  mainW->setWindowTitle("RAPTOR");
-  mainW->resize(800, 550);
+  mainW->MainWindowTitle("RapidSilicon RAPTOR");
   return mainW;
 }
 
-void registerExampleCommands(QWidget* widget, FOEDAG::Session* session) {
-  auto hello = [](void* clientData, Tcl_Interp* interp, int argc,
-                  const char* argv[]) -> int {
-    GlobalSession->TclInterp()->evalCmd("puts Hello!");
-    return 0;
-  };
-  session->TclInterp()->registerCmd("hello", hello, 0, 0);
+void registerAllCommands(QWidget* widget, FOEDAG::Session* session) {
+  registerAllFoedagCommands(widget, session);
 }
+
+}  // namespace RS
 
 FOEDAG::GUI_TYPE getGuiType(const bool& withQt, const bool& withQml) {
   if (!withQt) return FOEDAG::GUI_TYPE::GT_NONE;
@@ -38,7 +36,7 @@ int main(int argc, char** argv) {
   FOEDAG::GUI_TYPE guiType = getGuiType(cmd->WithQt(), cmd->WithQml());
 
   FOEDAG::Foedag* foedag =
-      new FOEDAG::Foedag(cmd, mainWindowBuilder, registerExampleCommands);
+      new FOEDAG::Foedag(cmd, RS::mainWindowBuilder, RS::registerAllCommands);
 
   return foedag->init(guiType);
 }
