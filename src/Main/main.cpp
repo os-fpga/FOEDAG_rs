@@ -18,7 +18,7 @@ void registerAllCommands(QWidget* widget, FOEDAG::Session* session) {
   registerAllFoedagCommands(widget, session);
 }
 
-}
+}  // namespace RS
 
 FOEDAG::GUI_TYPE getGuiType(const bool& withQt, const bool& withQml) {
   if (!withQt) return FOEDAG::GUI_TYPE::GT_NONE;
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
   FOEDAG::GUI_TYPE guiType = getGuiType(cmd->WithQt(), cmd->WithQml());
 
   FOEDAG::Foedag* foedag =
-    new FOEDAG::Foedag(cmd, RS::mainWindowBuilder, RS::registerAllCommands);
+      new FOEDAG::Foedag(cmd, RS::mainWindowBuilder, RS::registerAllCommands);
 
   return foedag->init(guiType);
 }
