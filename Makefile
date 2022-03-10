@@ -111,8 +111,8 @@ test/gui_mac: run-cmake-debug
 #	$(XVFB) ./dbuild/bin/newfile --replay tests/TestGui/gui_new_file.tcl
 
 test/batch: run-cmake-release
-#	./build/bin/compiler_test --noqt --script tests/TestBatch/test_compiler_mt.tcl
-#	./build/bin/compiler_test --noqt --script tests/TestBatch/test_compiler_batch.tcl
+	./build/bin/raptor_gui --noqt --script tests/TestBatch/test_compiler_batch.tcl
+	./build/bin/raptor_gui --noqt --script tests/TestBatch/test_compiler_mt.tcl
 
 lib-only: run-cmake-release
 	cmake --build build --target raptor_gui -j $(CPU_CORES)
