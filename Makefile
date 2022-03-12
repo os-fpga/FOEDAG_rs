@@ -101,8 +101,8 @@ test_install_mac:
 	find /Users/runner/work/FOEDAG_rs/ -name "*QtXml*" -print
 	find /Users/runner/work/FOEDAG_rs/ -name "*QtQuick*" -print
 	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtWidgets /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtWidgets.framework/QtWidgets $(PREFIX)/bin/raptor_gui
-	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtCore /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtWidgets.framework/QtCore $(PREFIX)/bin/raptor_gui
-	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtGui /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtWidgets.framework/QtGui $(PREFIX)/bin/raptor_gui
+	install_name_tool -change @rpath/QtCore.framework/Versions/5/QtCore /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtCore.framework/QtCore $(PREFIX)/bin/raptor_gui
+	install_name_tool -change @rpath/QtGui.framework/Versions/5/QtGui /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtGui.framework/QtGui $(PREFIX)/bin/raptor_gui
 	install_name_tool -change @rpath/QtXml.framework/Versions/5/QtXml /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtXml.framework/QtXml $(PREFIX)/bin/raptor_gui
 	install_name_tool -change @rpath/QtQuick.framework/Versions/5/QtQuick /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtQuick.framework/QtQuick $(PREFIX)/bin/raptor_gui
 
