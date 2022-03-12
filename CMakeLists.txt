@@ -30,7 +30,7 @@ add_subdirectory(FOEDAG EXCLUDE_FROM_ALL)
 message("CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
 
 # Find Qt packages and error out if not found
-find_package(Qt5 COMPONENTS Core Gui Widgets Quick REQUIRED)
+find_package(Qt5 COMPONENTS Core Gui Widgets Quick Xml REQUIRED)
 if (NOT Qt5Widgets_FOUND)
     message(STATUS "Failed to find Qt5Widgets required (on debian/ubuntu try 'sudo apt install qt5-default')")
 elseif (NOT Qt5Gui_FOUND)
@@ -203,7 +203,8 @@ if(MSVC OR WIN32)
   set_target_properties(raptor_gui-bin PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 endif()
 
-target_link_libraries(raptor_gui-bin PUBLIC raptor_gui foedag)
+target_link_libraries(raptor_gui-bin PUBLIC raptor_gui foedag )
+target_link_libraries(raptor_gui-bin PUBLIC Qt5::Widgets Qt5::Core Qt5::Gui Qt5::Xml Qt5::Quick)
 
 if(NOT NO_TCMALLOC)
   find_library(TCMALLOC_LIBRARY NAMES tcmalloc)
