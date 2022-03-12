@@ -97,11 +97,11 @@ install: release
 
 # Fix macos dyn link qt issue
 test_install_mac:
-	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtWidgets /usr/local/opt/qt@5/lib/QtWidgets.framework/Versions/5/QtWidgets $(PREFIX)/bin/raptor_gui
-	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtWidgets /usr/local/opt/qt@5/lib/QtCore.framework/Versions/5/QtCore $(PREFIX)/bin/raptor_gui
-	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtGui /usr/local/opt/qt@5/lib/QtCore.framework/Versions/5/QtGui $(PREFIX)/bin/raptor_gui
-	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtXml /usr/local/opt/qt@5/lib/QtCore.framework/Versions/5/QtXml $(PREFIX)/bin/raptor_gui
-	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtQuick /usr/local/opt/qt@5/lib/QtCore.framework/Versions/5/QtQuick $(PREFIX)/bin/raptor_gui
+	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtWidgets /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtWidgets $(PREFIX)/bin/raptor_gui
+	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtWidgets /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtCore $(PREFIX)/bin/raptor_gui
+	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtGui /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtGui $(PREFIX)/bin/raptor_gui
+	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtXml /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtXml $(PREFIX)/bin/raptor_gui
+	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtQuick /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtQuick $(PREFIX)/bin/raptor_gui
 
 test_install:
 	$(PREFIX)/bin/raptor_gui --noqt --script tests/TestBatch/test_compiler_batch.tcl
