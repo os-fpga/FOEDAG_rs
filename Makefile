@@ -106,6 +106,7 @@ test_install_mac:
 	install_name_tool -change @rpath/QtXml.framework/Versions/5/QtXml /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtXml.framework/QtXml $(PREFIX)/bin/raptor_gui
 	install_name_tool -change @rpath/QtQuick.framework/Versions/5/QtQuick /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtQuick.framework/QtQuick $(PREFIX)/bin/raptor_gui
 	install_name_tool -change @rpath/QtQmlModels.framework/Versions/5/QtQmlModels /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtQmlModels.framework/QtQmlModels $(PREFIX)/bin/raptor_gui
+	install_name_tool -change @rpath/QtQml.framework/Versions/5/QtQml /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtQml.framework/QtQml $(PREFIX)/bin/raptor_gui
 
 test_install:
 	$(PREFIX)/bin/raptor_gui --noqt --script tests/TestBatch/test_compiler_batch.tcl
