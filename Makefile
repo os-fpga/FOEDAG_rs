@@ -98,6 +98,7 @@ install: release
 test_install:
 #	cmake -DCMAKE_BUILD_TYPE=Release -DINSTALL_DIR=$(PREFIX) -S tests/TestInstall -B tests/TestInstall/build
 #	cmake --build tests/TestInstall/build -j $(CPU_CORES)
+	ldd $(PREFIX)/bin/raptor_gui
 	$(PREFIX)/bin/raptor_gui --noqt --script tests/TestBatch/test_compiler_batch.tcl
 	$(PREFIX)/bin/raptor_gui --noqt --script tests/TestBatch/test_compiler_mt.tcl
 
