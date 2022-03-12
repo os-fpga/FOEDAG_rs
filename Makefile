@@ -98,10 +98,11 @@ install: release
 # Fix macos dyn link qt issue
 test_install_mac:
 	find /Users/runner/work/FOEDAG_rs/ -name "*QtWidgets*" -print
+        find /Users/runner/work/FOEDAG_rs/ -name "*QtXml*" -print
 	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtWidgets /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtWidgets.framework/QtWidgets $(PREFIX)/bin/raptor_gui
 	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtCore /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtWidgets.framework/QtCore $(PREFIX)/bin/raptor_gui
 	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtGui /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtWidgets.framework/QtGui $(PREFIX)/bin/raptor_gui
-	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtXml /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtWidgets.framework/QtXml $(PREFIX)/bin/raptor_gui
+	install_name_tool -change @rpath/QtXml.framework/Versions/5/QtXml /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtWidgets.framework/QtXml $(PREFIX)/bin/raptor_gui
 	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtQuick /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtWidgets.framework/QtQuick $(PREFIX)/bin/raptor_gui
 
 test_install:
