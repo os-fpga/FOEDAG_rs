@@ -95,10 +95,15 @@ clean:
 install: release
 	cmake --install build
 
+# Fix macos dyn link qt issue
+test_install_mac:
+	install_name_tool -change /usr/local/opt/qt/lib/QtWidgets.framework/Versions/5/QtWidgets /usr/local/opt/qt@5/lib/QtWidgets.framework/Versions/5/QtWidgets $(PREFIX)/bin/raptor_gui
+	install_name_tool -change /usr/local/opt/qt/lib/QtWidgets.framework/Versions/5/QtWidgets /usr/local/opt/qt@5/lib/QtCore.framework/Versions/5/QtCore $(PREFIX)/bin/raptor_gui
+	install_name_tool -change /usr/local/opt/qt/lib/QtWidgets.framework/Versions/5/QtGui /usr/local/opt/qt@5/lib/QtCore.framework/Versions/5/QtGui $(PREFIX)/bin/raptor_gui
+	install_name_tool -change /usr/local/opt/qt/lib/QtWidgets.framework/Versions/5/QtXml /usr/local/opt/qt@5/lib/QtCore.framework/Versions/5/QtXml $(PREFIX)/bin/raptor_gui
+	install_name_tool -change /usr/local/opt/qt/lib/QtWidgets.framework/Versions/5/QtQuick /usr/local/opt/qt@5/lib/QtCore.framework/Versions/5/QtQuick $(PREFIX)/bin/raptor_gui
+
 test_install:
-#	cmake -DCMAKE_BUILD_TYPE=Release -DINSTALL_DIR=$(PREFIX) -S tests/TestInstall -B tests/TestInstall/build
-#	cmake --build tests/TestInstall/build -j $(CPU_CORES)
-	otool -L $(PREFIX)/bin/raptor_gui
 	$(PREFIX)/bin/raptor_gui --noqt --script tests/TestBatch/test_compiler_batch.tcl
 	$(PREFIX)/bin/raptor_gui --noqt --script tests/TestBatch/test_compiler_mt.tcl
 
