@@ -131,20 +131,49 @@ else()
 endif()
 set_target_properties(raptor_gui-bin PROPERTIES OUTPUT_NAME raptor_gui)
 
-set(TCL_STATIC_LIB libtcl9.0.a)
-set(TCL_STUBB_LIB libtclstub9.0.a)
-set(ZLIB_STATIC_LIB libz.a)
+
 if (MSVC)
-  set(TCL_STUBB_LIB tclstub90.lib)
-  set(TCL_STATIC_LIB tcl90s.lib)
+  message("WINDOWS MODE")
+  set(TCL_STUBB_LIB tclstub86.lib)
+  set(TCL_STATIC_LIB tcl86ts.lib)
   set(ZLIB_STATIC_LIB zlib.lib)
+
+  add_library(tcl_static STATIC IMPORTED )
+  set_target_properties(tcl_static PROPERTIES
+    IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${TCL_STATIC_LIB})
+
+else()
+  set(TCL_STATIC_LIB libtcl8.6.so)
+  set(TCL_STUBB_LIB libtclstub8.6.a)
+  set(ZLIB_STATIC_LIB libz.a)
+  if(APPLE) 
+    set(TCL_STATIC_LIB libtcl8.6.dylib)
+  endif()
+  
+  link_directories(${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/)
+
+  if(CMAKE_SYSTEM_NAME MATCHES "MSYS")
+    message("MSYS MODE")
+    set(TCL_STATIC_LIB libtcl8.6.a)
+    add_library(tcl_static STATIC IMPORTED )
+    set_target_properties(tcl_static PROPERTIES
+      IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${TCL_STATIC_LIB})
+
+  else()
+    message("LINUX MODE")
+    get_filename_component(buildDirRelFilePath ${TCL_STATIC_LIB}
+                         REALPATH BASE_DIR ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib)
+  
+    add_library(tcl_static SHARED IMPORTED )
+    find_library(tcl_static PATHS ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/)
+    set_target_properties(tcl_static PROPERTIES
+      IMPORTED_LOCATION ${buildDirRelFilePath} IMPORTED_NO_SONAME ON)
+
+  endif()
+  
 endif()
 
-add_library(tcl_static STATIC IMPORTED)
-set_target_properties(tcl_static PROPERTIES
-  IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${TCL_STATIC_LIB})
-
-add_library(tcl_stubb STATIC IMPORTED)
+add_library(tcl_stubb STATIC IMPORTED )
 set_target_properties(tcl_stubb PROPERTIES
   IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${TCL_STUBB_LIB})
 
@@ -159,11 +188,11 @@ if(MSVC)
 
   # Do not add zlib library, it is imported above
 
-  set_target_properties(raptor_gui PROPERTIES
+  set_target_properties(foedag PROPERTIES
     COMPILE_OPTIONS "$<$<CONFIG:Debug>:/MTd>$<$<CONFIG:Release>:/MT>"
   )
-  target_link_libraries(raptor_gui-bin PUBLIC Netapi32)
-  target_link_libraries(raptor_gui  PUBLIC Netapi32)
+  target_link_libraries(foedag-bin PUBLIC Netapi32)
+  target_link_libraries(foedag  PUBLIC Netapi32)
 
 else()
   add_library(zlib STATIC IMPORTED)
@@ -174,9 +203,9 @@ endif()
 # Copy the init.tcl file from source to build directory
 add_custom_command(TARGET raptor_gui POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy 
-          ${CMAKE_CURRENT_SOURCE_DIR}/FOEDAG/third_party/tcl/library/init.tcl
-          ${CMAKE_CURRENT_BINARY_DIR}/lib/tcl9.0/init.tcl)
-
+          ${CMAKE_CURRENT_SOURCE_DIR}/FOEDAG/third_party/tcl8.6.12/library/init.tcl
+          ${CMAKE_CURRENT_BINARY_DIR}/lib/tcl8.6/init.tcl)
+          
 # Explicit lib build order
 #add_dependencies(raptor_gui )
 

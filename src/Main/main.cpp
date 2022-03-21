@@ -3,8 +3,6 @@
 #include "MainWindow/Session.h"
 #include "MainWindow/main_window.h"
 
-FOEDAG::Session* GlobalSession;
-
 namespace RS {
 
 QWidget* mainWindowBuilder(FOEDAG::CommandLine* cmd,
