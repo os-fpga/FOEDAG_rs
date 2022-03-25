@@ -130,7 +130,7 @@ test/batch: run-cmake-release
 	./build/bin/raptor --noqt --script tests/TestBatch/test_compiler_mt.tcl
 
 lib-only: run-cmake-release
-	cmake --build build --target raptor -j $(CPU_CORES)
+	cmake --build build --target raptor_gui -j $(CPU_CORES)
 
 format:
 	.github/bin/run-clang-format.sh
