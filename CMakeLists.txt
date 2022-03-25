@@ -129,7 +129,7 @@ if(MSVC)
 else()
   add_executable(raptor_gui-bin ${PROJECT_SOURCE_DIR}/src/Main/main.cpp ${QRC_MAIN_WINDOW})
 endif()
-set_target_properties(raptor_gui-bin PROPERTIES OUTPUT_NAME raptor_gui)
+set_target_properties(raptor_gui-bin PROPERTIES OUTPUT_NAME raptor)
 
 
 if (MSVC)
@@ -318,18 +318,18 @@ install(
 install(
   TARGETS raptor_gui 
   EXPORT Raptor_Gui
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor_gui
-  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/raptor_gui)
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor
+  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/raptor)
 
 install (
   FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${TCL_STATIC_LIB}
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor_gui/lib)
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor/lib)
 install (
   FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${TCL_STUBB_LIB}
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor_gui/lib)
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor/lib)
 install (
   FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/lib/${ZLIB_STATIC_LIB}
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor_gui/lib)  
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor/lib)  
   
   
 if (WIN32 AND $<CONFIG:Debug>)
@@ -343,14 +343,14 @@ if (WIN32 AND $<CONFIG:Debug>)
     FILES ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/raptor_gui.dir/raptor_gui.pdb
           ${TCL_BINARY_DIR}/runtime/CMakeFiles/tcl_static.dir/tcl_static.pdb
           ${TCL_BINARY_DIR}/runtime/CMakeFiles/tcl_stubb.dir/tcl_stubb.pdb
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor_gui)
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/raptor)
 endif()
 
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/include/tcl.h
         ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG//include/tclDecls.h
         ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG//include/tclPlatDecls.h
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/raptor_gui/include)
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/raptor/include)
 
 #install(
 #  EXPORT Raptor_Gui
@@ -371,6 +371,17 @@ install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/FoedagConfig.cmake
   DESTINATION cmake)
 
+
+install(
+    FILES etc/device.xml DESTINATION  ${CMAKE_INSTALL_DATAROOTDIR}/raptor/etc/)
+  
+
 add_custom_target(raptor_gui_link_target ALL
-                  COMMAND ${CMAKE_COMMAND} -E create_symlink
-                  build/compile_commands.json ../compile_commands.json)
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+      build/compile_commands.json ../compile_commands.json)
+
+add_custom_command(TARGET raptor_gui-bin POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/etc/
+    COMMAND ${CMAKE_COMMAND} -E copy 
+        ${PROJECT_SOURCE_DIR}/etc/device.xml        
+        ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/etc/)
