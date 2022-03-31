@@ -1,8 +1,8 @@
+#include "Compiler/CompilerOpenFPGA.h"
 #include "Main/CommandLine.h"
 #include "Main/Foedag.h"
 #include "Main/ToolContext.h"
 #include "MainWindow/Session.h"
-#include "Compiler/CompilerOpenFPGA.h"
 #include "MainWindow/main_window.h"
 
 namespace RS {
@@ -46,8 +46,8 @@ int main(int argc, char** argv) {
   else
     compiler = new FOEDAG::Compiler();
 
-  FOEDAG::Foedag* foedag = new FOEDAG::Foedag(cmd, RS::mainWindowBuilder,
-                                              RS::registerAllCommands, compiler, context);
+  FOEDAG::Foedag* foedag = new FOEDAG::Foedag(
+      cmd, RS::mainWindowBuilder, RS::registerAllCommands, compiler, context);
 
   return foedag->init(guiType);
 }
