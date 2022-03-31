@@ -425,6 +425,8 @@ jobs:
 
     - name: Install dependencies
       uses: jurplel/install-qt-action@v2
+      with:
+        setup-python: false
 
     - name: Use ccache
       uses: hendrikmuhs/ccache-action@v1
@@ -479,6 +481,8 @@ jobs:
 
     - name: Install dependencies
       uses: jurplel/install-qt-action@v2
+      with:
+        setup-python: false
 
     - uses: actions/checkout@v2
       with:
