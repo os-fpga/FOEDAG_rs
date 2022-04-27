@@ -41,13 +41,20 @@ int main(int argc, char** argv) {
       new FOEDAG::ToolContext(ToolName, Company, ExecutableName);
 
   FOEDAG::Compiler* compiler = nullptr;
-  if (cmd->CompilerName() == "openfpga")
-    compiler = new FOEDAG::CompilerOpenFPGA();
-  else
+  FOEDAG::CompilerOpenFPGA* opcompiler = nullptr;
+  if (cmd->CompilerName() == "openfpga") {
+    opcompiler = new FOEDAG::CompilerOpenFPGA();
+    compiler = opcompiler;
+    compiler->SetUseVerific(cmd->UseVerific());
+  } else {
     compiler = new FOEDAG::Compiler();
-
+  }
   FOEDAG::Foedag* foedag = new FOEDAG::Foedag(
       cmd, RS::mainWindowBuilder, RS::registerAllCommands, compiler, context);
-
+  if (opcompiler) {
+    const std::string& binpath = foedag->Context()->BinaryPath().string();
+    opcompiler->YosysExecPath(binpath + "/yosys");
+    opcompiler->VprExecPath(binpath + "/vpr");
+  }
   return foedag->init(guiType);
 }
