@@ -1,4 +1,4 @@
-#include "Compiler/CompilerOpenFPGA.h"
+#include "Compiler/CompilerRS.h"
 #include "Main/CommandLine.h"
 #include "Main/Foedag.h"
 #include "Main/ToolContext.h"
@@ -41,14 +41,14 @@ int main(int argc, char** argv) {
       new FOEDAG::ToolContext(ToolName, Company, ExecutableName);
 
   FOEDAG::Compiler* compiler = nullptr;
-  FOEDAG::CompilerOpenFPGA* opcompiler = nullptr;
-  if (cmd->CompilerName() == "openfpga") {
-    opcompiler = new FOEDAG::CompilerOpenFPGA();
-    compiler = opcompiler;
-    compiler->SetUseVerific(cmd->UseVerific());
-  } else {
+  FOEDAG::CompilerRS* opcompiler = nullptr;
+  if (cmd->CompilerName() == "dummy") {
     compiler = new FOEDAG::Compiler();
-  }
+  } else {
+    opcompiler = new FOEDAG::CompilerRS();
+    compiler = opcompiler;
+    compiler->SetUseVerific(true);
+  } 
   FOEDAG::Foedag* foedag = new FOEDAG::Foedag(
       cmd, RS::mainWindowBuilder, RS::registerAllCommands, compiler, context);
   if (opcompiler) {
