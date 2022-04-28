@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
     opcompiler = new FOEDAG::CompilerRS();
     compiler = opcompiler;
     compiler->SetUseVerific(true);
-  } 
+  }
   FOEDAG::Foedag* foedag = new FOEDAG::Foedag(
       cmd, RS::mainWindowBuilder, RS::registerAllCommands, compiler, context);
   if (opcompiler) {
