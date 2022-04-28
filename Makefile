@@ -69,7 +69,7 @@ coverage-build/html: raptor_gui-build/raptor_gui.coverage
 test/regression: run-cmake-release
 
 test/valgrind: run-cmake-debug
-	$(XVFB) valgrind --tool=memcheck --log-file=valgrind.log ./dbuild/bin/raptor --replay tests/TestGui/gui_foedag.tcl
+	$(XVFB) valgrind --tool=memcheck --log-file=valgrind.log ./dbuild/bin/raptor --compiler dummy --replay tests/TestGui/gui_foedag.tcl
 	grep "ERROR SUMMARY: 0" valgrind.log
 
 test: test/unittest test/regression
@@ -114,7 +114,7 @@ test_install:
 	$(PREFIX)/bin/raptor --batch --script tests/TestBatch/test_compiler_mt.tcl
 
 test/gui: run-cmake-debug
-	$(XVFB) ./dbuild/bin/raptor --replay tests/TestGui/gui_foedag.tcl
+	$(XVFB) ./dbuild/bin/raptor --compiler dummy --replay tests/TestGui/gui_foedag.tcl
 
 test/openfpga: run-cmake-release
 	./build/bin/raptor --batch --compiler openfpga --script FOEDAG/tests/Testcases/trivial/test.tcl
@@ -130,10 +130,10 @@ test/gui_mac: run-cmake-debug
 #	$(XVFB) ./dbuild/bin/newfile --replay tests/TestGui/gui_new_file.tcl
 
 test/batch: run-cmake-release
-	./build/bin/raptor --batch --script FOEDAG/tests/Testcases/trivial/test.tcl
-	./build/bin/raptor --batch --script FOEDAG/tests/Testcases/raygentop/raygentop.tcl
-	./build/bin/raptor --batch --script tests/TestBatch/test_compiler_batch.tcl
-	./build/bin/raptor --batch --script tests/TestBatch/test_compiler_mt.tcl
+	./build/bin/raptor --batch --compiler dummy --script FOEDAG/tests/Testcases/trivial/test.tcl
+	./build/bin/raptor --batch --compiler dummy --script FOEDAG/tests/Testcases/raygentop/raygentop.tcl
+	./build/bin/raptor --batch --compiler dummy --script tests/TestBatch/test_compiler_batch.tcl
+	./build/bin/raptor --batch --compiler dummy --script tests/TestBatch/test_compiler_mt.tcl
 
 lib-only: run-cmake-release
 	cmake --build build --target raptor_gui -j $(CPU_CORES)
