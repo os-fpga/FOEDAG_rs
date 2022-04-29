@@ -119,7 +119,7 @@ test/gui: run-cmake-debug
 test/openfpga: run-cmake-release
 	./build/bin/raptor --batch --compiler openfpga --script FOEDAG/tests/Testcases/trivial/test.tcl
 	./build/bin/raptor --batch --compiler openfpga --script FOEDAG/tests/Testcases/trivial/test.tcl --verific
-	./build/bin/raptor --batch --compiler openfpga --script FOEDAG/tests/Testcases/raygentop/raygentop.tcl
+	./build/bin/raptor --batch --compiler openfpga --script FOEDAG/tests/Testcases/aes_decrypt_fpga/aes_decrypt.tcl
 
 test/gui_mac: run-cmake-debug
 #	$(XVFB) ./dbuild/bin/raptor --replay tests/TestGui/gui_start_stop.tcl
@@ -131,7 +131,7 @@ test/gui_mac: run-cmake-debug
 
 test/batch: run-cmake-release
 	./build/bin/raptor --batch --compiler dummy --script FOEDAG/tests/Testcases/trivial/test.tcl
-	./build/bin/raptor --batch --compiler dummy --script FOEDAG/tests/Testcases/raygentop/raygentop.tcl
+	./build/bin/raptor --batch --compiler dummy --script FOEDAG/tests/Testcases/aes_decrypt_fpga/aes_decrypt.tcl
 	./build/bin/raptor --batch --compiler dummy --script tests/TestBatch/test_compiler_batch.tcl
 	./build/bin/raptor --batch --compiler dummy --script tests/TestBatch/test_compiler_mt.tcl
 
