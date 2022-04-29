@@ -105,7 +105,10 @@ endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/FOEDAG/src ${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/include/)
 
-set(QRC_MAIN_WINDOW )
+set(QRC_MAIN_WINDOW
+  FOEDAG/src/NewProject/newproject.qrc
+  FOEDAG/src/MainWindow/main_window_resource.qrc
+)
 
 # Put source code here, files that are generated at build time in
 # raptor_gui_generated_SRC
