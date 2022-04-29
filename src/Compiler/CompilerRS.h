@@ -17,11 +17,11 @@ All rights reserved
 namespace FOEDAG {
 class CompilerRS : public CompilerOpenFPGA {
  public:
-  CompilerRS() = default;
+  CompilerRS();
   ~CompilerRS() = default;
 
   void Help(std::ostream* out);
-
+  std::string BaseVprCommand();
  protected:
 };
 
