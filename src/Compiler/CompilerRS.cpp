@@ -66,11 +66,7 @@ opt_clean -purge
 write_blif ${OUTPUT_BLIF}
   )";
 
-
-
-CompilerRS::CompilerRS() {
-  YosysScript(RapidSiliconYosysScript);
-}
+CompilerRS::CompilerRS() { YosysScript(RapidSiliconYosysScript); }
 
 std::string CompilerRS::BaseVprCommand() {
   std::string command =

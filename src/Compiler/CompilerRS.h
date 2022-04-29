@@ -22,6 +22,7 @@ class CompilerRS : public CompilerOpenFPGA {
 
   void Help(std::ostream* out);
   std::string BaseVprCommand();
+
  protected:
 };
 
