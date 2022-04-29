@@ -98,6 +98,7 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "----------------------------------" << std::endl;
   (*out) << "Options:" << std::endl;
   (*out) << "   --help           : This help" << std::endl;
+  (*out) << "   --version        : Version" << std::endl;
   (*out) << "   --batch          : Tcl only, no GUI" << std::endl;
   (*out) << "   --replay <script>: Replay GUI test" << std::endl;
   (*out) << "   --script <script>: Execute a Tcl script" << std::endl;
@@ -135,6 +136,5 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   sta" << std::endl;
   (*out) << "   power" << std::endl;
   (*out) << "   bitstream" << std::endl;
-  (*out) << "   tcl_exit" << std::endl;
   (*out) << "----------------------------------" << std::endl;
 }
