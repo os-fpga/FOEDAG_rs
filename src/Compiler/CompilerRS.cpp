@@ -80,9 +80,21 @@ std::string CompilerRS::BaseVprCommand() {
   return command;
 }
 
+extern const char* foedag_version_number;
+extern const char* foedag_git_hash;
+void CompilerRS::Version(std::ostream* out) {
+  (*out) << "RapidSilicon Raptor Compiler"
+         << "\n";
+  if (std::string(foedag_version_number) != "${VERSION_NUMBER}")
+    (*out) << "Version : " << foedag_version_number << "\n";
+  if (std::string(foedag_git_hash) != "${GIT_HASH}")
+    (*out) << "Git Hash: " << foedag_git_hash << "\n";
+  (*out) << "Built   : " << std::string(__DATE__) << "\n";
+}
+
 void CompilerRS::Help(std::ostream* out) {
   (*out) << "----------------------------------" << std::endl;
-  (*out) << "----------  RAPTOR HELP  ---------" << std::endl;
+  (*out) << "--- RapidSilicon RAPTOR HELP  ----" << std::endl;
   (*out) << "----------------------------------" << std::endl;
   (*out) << "Options:" << std::endl;
   (*out) << "   --help           : This help" << std::endl;
