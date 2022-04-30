@@ -110,8 +110,8 @@ test_install_mac:
 	install_name_tool -change @rpath/QtQml.framework/Versions/5/QtQml /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtQml.framework/QtQml $(PREFIX)/bin/raptor
 	install_name_tool -change @rpath/QtNetwork.framework/Versions/5/QtNetwork /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtNetwork.framework/QtNetwork $(PREFIX)/bin/raptor
 test_install:
-	$(PREFIX)/bin/raptor --batch --script tests/TestBatch/test_compiler_batch.tcl
-	$(PREFIX)/bin/raptor --batch --script tests/TestBatch/test_compiler_mt.tcl
+	$(PREFIX)/bin/raptor --batch --compiler dummy --script tests/TestBatch/test_compiler_batch.tcl
+	$(PREFIX)/bin/raptor --batch --compiler dummy --script tests/TestBatch/test_compiler_mt.tcl
 
 test/gui: run-cmake-debug
 	$(XVFB) ./dbuild/bin/raptor --compiler dummy --replay tests/TestGui/gui_foedag.tcl
