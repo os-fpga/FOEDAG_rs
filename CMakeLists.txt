@@ -376,8 +376,9 @@ install(
 
 
 install(
-    FILES etc/device.xml DESTINATION  ${CMAKE_INSTALL_DATAROOTDIR}/raptor/etc/)
-  
+    FILES etc/device.xml DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/raptor/etc/)
+install(
+    FILES tests/Arch/gemini.xml DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/raptor/arch/)  
 
 add_custom_target(raptor_gui_link_target ALL
     COMMAND ${CMAKE_COMMAND} -E create_symlink
@@ -385,6 +386,10 @@ add_custom_target(raptor_gui_link_target ALL
 
 add_custom_command(TARGET raptor_gui-bin POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/etc/
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/arch/
     COMMAND ${CMAKE_COMMAND} -E copy 
         ${PROJECT_SOURCE_DIR}/etc/device.xml        
-        ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/etc/)
+        ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/etc/
+    COMMAND ${CMAKE_COMMAND} -E copy 
+        ${PROJECT_SOURCE_DIR}/tests/Arch/gemini.xml        
+        ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/arch/)

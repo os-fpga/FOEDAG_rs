@@ -20,6 +20,7 @@ All rights reserved
 
 #include "Compiler/CompilerRS.h"
 #include "Compiler/Constraints.h"
+#include "MainWindow/Session.h"
 
 using namespace FOEDAG;
 
@@ -66,7 +67,10 @@ opt_clean -purge
 write_blif ${OUTPUT_BLIF}
   )";
 
-CompilerRS::CompilerRS() { YosysScript(RapidSiliconYosysScript); }
+CompilerRS::CompilerRS() {
+  YosysScript(RapidSiliconYosysScript);
+  m_channel_width = 180;
+}
 
 std::string CompilerRS::BaseVprCommand() {
   std::string command =
@@ -76,7 +80,12 @@ std::string CompilerRS::BaseVprCommand() {
                   std::string(" --sdc_file ") +
                   std::string(m_design->Name() + "_openfpga.sdc") +
                   std::string(" --route_chan_width ") +
-                  std::to_string(m_channel_width));
+                  std::to_string(m_channel_width) +
+                  " --clock_modeling ideal --timing_report_npaths 100 "
+                  "--absorb_buffer_luts off --constant_net_method route "
+                  "--timing_report_detail detailed --post_place_timing_report "
+                  "POST_PLACE_TIMING_REPORT");
+
   return command;
 }
 
