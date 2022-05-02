@@ -39,6 +39,7 @@ synth_rs -tech genesis -top ${TOP_MODULE} ${OPTIMIZATION}
 
 # Clean and output blif
 write_blif ${OUTPUT_BLIF}
+write_verilog ${OUTPUT_VERILOG}
   )";
 
 std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
