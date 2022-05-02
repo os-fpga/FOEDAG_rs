@@ -130,7 +130,8 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   add_design_file <file>... <type> (-VHDL_1987, -VHDL_1993, "
             "-VHDL_2000, "
             "-VHDL_2008 (.vhd default), -V_1995, \n"
-            "                                     -V_2001 (.v default), -SV_2005, -SV_2009, -SV_2012, -SV_2017 (.sv default)) "
+            "                                     -V_2001 (.v default), "
+            "-SV_2005, -SV_2009, -SV_2012, -SV_2017 (.sv default)) "
          << std::endl;
   (*out) << "   add_include_path <path1>...: As in +incdir+" << std::endl;
   (*out) << "   add_library_path <path1>...: As in +libdir+" << std::endl;
