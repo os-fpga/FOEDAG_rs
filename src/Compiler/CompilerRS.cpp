@@ -31,45 +31,53 @@ ${READ_DESIGN_FILES}
 
 # Technology mapping
 hierarchy -top ${TOP_MODULE}
-proc
+
 ${KEEP_NAMES}
-techmap -D NO_LUT -map +/adff2dff.v
 
-# Synthesis
-flatten
-opt_expr
-opt_clean
-check
-opt -nodffe -nosdff
-fsm
-opt -nodffe -nosdff
-wreduce
-peepopt
-opt_clean
-opt -nodffe -nosdff
-memory -nomap
-opt_clean
-opt -fast -full -nodffe -nosdff
-memory_map
-opt -full -nodffe -nosdff
-techmap
-opt -fast -nodffe -nosdff
-clean
-
-# LUT mapping
-abc -lut ${LUT_SIZE}
-
-# Check
-synth -run check
+plugin -i synth-rs
+synth_rs -tech genesis -top ${TOP_MODULE} ${OPTIMIZATION}
 
 # Clean and output blif
-opt_clean -purge
 write_blif ${OUTPUT_BLIF}
   )";
 
+std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
+  std::string result = script;
+  // Keeps for Synthesis, preserve nodes used in constraints
+  std::string keeps;
+  if (m_keepAllSignals) {
+    keeps += "setattr -set keep 1 w:\\*\n";
+  }
+  for (auto keep : m_constraints->GetKeeps()) {
+    (*m_out) << "Keep name: " << keep << "\n";
+    keeps += "setattr -set keep 1 " + keep + "\n";
+  }
+  result = ReplaceAll(result, "${KEEP_NAMES}", keeps);
+  std::string optimization;
+  switch (m_synthOpt)
+  {
+  case NoOpt:
+         break;
+  case Area:
+         optimization = "-de -goal area";
+         break;
+  case Delay:
+         optimization = "-de -goal delay";
+         break;
+  case Mixed:
+         optimization = "-de -goal mixed";
+         break;
+  }
+  result = ReplaceAll(result, "${OPTIMIZATION}", optimization);
+  result = ReplaceAll(result, "${LUT_SIZE}", std::to_string(m_lut_size));
+  return result;
+}
+
+
+
 CompilerRS::CompilerRS() {
   YosysScript(RapidSiliconYosysScript);
-  m_channel_width = 180;
+  m_channel_width = 300;
 }
 
 std::string CompilerRS::BaseVprCommand() {
@@ -137,7 +145,7 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "     Constraints: set_pin_loc, set_region_loc, all SDC commands"
          << std::endl;
   (*out) << "   ipgenerate" << std::endl;
-  (*out) << "   synthesize" << std::endl;
+  (*out) << "   synthesize <optimization>  : Optional optimization (area, delay, mixed, none)" << std::endl;
   (*out) << "   packing" << std::endl;
   (*out) << "   global_placement" << std::endl;
   (*out) << "   place" << std::endl;
