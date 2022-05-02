@@ -23,7 +23,8 @@ class CompilerRS : public CompilerOpenFPGA {
   void Help(std::ostream* out);
   void Version(std::ostream* out);
   std::string BaseVprCommand();
-  std::string FinishSynthesisScript(const std::string& script); 
+  std::string FinishSynthesisScript(const std::string& script);
+
  protected:
 };
 

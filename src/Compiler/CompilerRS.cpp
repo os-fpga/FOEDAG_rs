@@ -54,26 +54,23 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   }
   result = ReplaceAll(result, "${KEEP_NAMES}", keeps);
   std::string optimization;
-  switch (m_synthOpt)
-  {
-  case NoOpt:
-         break;
-  case Area:
-         optimization = "-de -goal area";
-         break;
-  case Delay:
-         optimization = "-de -goal delay";
-         break;
-  case Mixed:
-         optimization = "-de -goal mixed";
-         break;
+  switch (m_synthOpt) {
+    case NoOpt:
+      break;
+    case Area:
+      optimization = "-de -goal area";
+      break;
+    case Delay:
+      optimization = "-de -goal delay";
+      break;
+    case Mixed:
+      optimization = "-de -goal mixed";
+      break;
   }
   result = ReplaceAll(result, "${OPTIMIZATION}", optimization);
   result = ReplaceAll(result, "${LUT_SIZE}", std::to_string(m_lut_size));
   return result;
 }
-
-
 
 CompilerRS::CompilerRS() {
   YosysScript(RapidSiliconYosysScript);
@@ -145,7 +142,9 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "     Constraints: set_pin_loc, set_region_loc, all SDC commands"
          << std::endl;
   (*out) << "   ipgenerate" << std::endl;
-  (*out) << "   synthesize <optimization>  : Optional optimization (area, delay, mixed, none)" << std::endl;
+  (*out) << "   synthesize <optimization>  : Optional optimization (area, "
+            "delay, mixed, none)"
+         << std::endl;
   (*out) << "   packing" << std::endl;
   (*out) << "   global_placement" << std::endl;
   (*out) << "   place" << std::endl;
