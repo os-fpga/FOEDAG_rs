@@ -42,6 +42,15 @@ write_blif ${OUTPUT_BLIF}
 write_verilog ${OUTPUT_VERILOG}
   )";
 
+std::string CompilerRS::InitSynthesisScript() {
+  if (m_use_rs_synthesis) {
+    YosysScript(RapidSiliconYosysScript);
+    return m_yosysScript;
+  } else {
+    return CompilerOpenFPGA::InitSynthesisScript();
+  }
+}
+
 std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   std::string result = script;
   // Keeps for Synthesis, preserve nodes used in constraints
@@ -73,12 +82,32 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   return result;
 }
 
-CompilerRS::CompilerRS() {
-  YosysScript(RapidSiliconYosysScript);
-  m_channel_width = 300;
+CompilerRS::CompilerRS() { m_channel_width = 300; }
+
+bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
+  CompilerOpenFPGA::RegisterCommands(interp, batchMode);
+  auto rs_synthesis = [](void* clientData, Tcl_Interp* interp, int argc,
+                         const char* argv[]) -> int {
+    CompilerRS* compiler = (CompilerRS*)clientData;
+    std::string name;
+    if (argc != 2) {
+      compiler->ErrorMessage("Specify on/off");
+      return TCL_ERROR;
+    }
+    std::string arg = argv[1];
+    compiler->UseRsSynthesis((arg == "on") ? true : false);
+    return TCL_OK;
+  };
+  interp->registerCmd("rs_synthesis", rs_synthesis, this, 0);
+
+  return true;
 }
 
 std::string CompilerRS::BaseVprCommand() {
+  std::string device_size = "";
+  if (!m_deviceSize.empty()) {
+    device_size = " --device " + m_deviceSize;
+  }
   std::string command =
       m_vprExecutablePath.string() + std::string(" ") +
       m_architectureFile.string() + std::string(" ") +
@@ -90,7 +119,8 @@ std::string CompilerRS::BaseVprCommand() {
                   " --clock_modeling ideal --timing_report_npaths 100 "
                   "--absorb_buffer_luts off --constant_net_method route "
                   "--timing_report_detail detailed --post_place_timing_report "
-                  "POST_PLACE_TIMING_REPORT");
+                  "POST_PLACE_TIMING_REPORT" +
+                  device_size);
 
   return command;
 }
@@ -122,6 +152,8 @@ void CompilerRS::Help(std::ostream* out) {
          << std::endl;
   (*out) << "   architecture <file>        : Uses the architecture file"
          << std::endl;
+  (*out) << "   set_device_size XxY        : Device fabric size selection"
+         << std::endl;
   (*out) << "   custom_synth_script <file> : Uses a custom Yosys templatized "
             "script"
          << std::endl;
@@ -143,6 +175,10 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "     Constraints: set_pin_loc, set_region_loc, all SDC commands"
          << std::endl;
   (*out) << "   ipgenerate" << std::endl;
+  (*out) << "   verific_parser <on/off>    : Turns on/off Verific Parser"
+         << std::endl;
+  (*out) << "   rs_synthesis <on/off>      : Turns on/off RS Synthesis"
+         << std::endl;
   (*out) << "   synthesize <optimization>  : Optional optimization (area, "
             "delay, mixed, none)"
          << std::endl;
