@@ -23,9 +23,13 @@ class CompilerRS : public CompilerOpenFPGA {
   void Help(std::ostream* out);
   void Version(std::ostream* out);
   std::string BaseVprCommand();
-  std::string FinishSynthesisScript(const std::string& script);
+  virtual std::string InitSynthesisScript();
+  virtual std::string FinishSynthesisScript(const std::string& script);
+  virtual bool RegisterCommands(TclInterpreter* interp, bool batchMode);
+  void UseRsSynthesis(bool on) { m_use_rs_synthesis = on; }
 
  protected:
+  bool m_use_rs_synthesis = true;
 };
 
 }  // namespace FOEDAG
