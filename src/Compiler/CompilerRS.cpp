@@ -39,7 +39,7 @@ synth_rs -tech genesis -top ${TOP_MODULE} ${OPTIMIZATION}
 
 # Clean and output blif
 write_blif ${OUTPUT_BLIF}
-write_verilog ${OUTPUT_VERILOG}
+write_verilog -noexpr -nodec -defparam -norename ${OUTPUT_VERILOG}
   )";
 
 std::string CompilerRS::InitSynthesisScript() {
