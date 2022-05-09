@@ -82,7 +82,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   return result;
 }
 
-CompilerRS::CompilerRS() { m_channel_width = 300; }
+CompilerRS::CompilerRS() { m_channel_width = 180; }
 
 bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
   CompilerOpenFPGA::RegisterCommands(interp, batchMode);
