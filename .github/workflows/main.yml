@@ -6,6 +6,7 @@ on:
 
 jobs:
   linux-gcc:
+    if: ${{ false }}  # disable for now
     name: ${{ matrix.mode }}
 
     runs-on: ubuntu-latest
@@ -114,6 +115,7 @@ jobs:
 
 # Reference: https://github.com/OPM/ResInsight/blob/dev/.github/workflows/centos7.yml
   centos7-gcc:
+    if: ${{ false }}  # disable for now
     name:  ${{ matrix.mode }}
 
     runs-on: ubuntu-latest
@@ -196,6 +198,7 @@ jobs:
 
 # Reference: https://github.com/eyllanesc/69108420/blob/main/.github/workflows/test.yml
   msys2-gcc:
+    if: ${{ false }}  # disable for now
     runs-on: windows-2022
     defaults:
       run:
@@ -389,6 +392,13 @@ jobs:
         if %errorlevel% neq 0 exit /b %errorlevel%
         make test/batch
 
+    - name: Archive working dir
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: foedag
+        path: ${{ github.workspace }}
+
     - name: Archive build artifacts
       uses: actions/upload-artifact@v2
       with:
@@ -405,6 +415,7 @@ jobs:
           ${{ github.workspace }}/build/tests/
 
   macos-gcc:
+    if: ${{ false }}  # disable for now
     runs-on: macos-latest
 
     steps:
@@ -466,6 +477,7 @@ jobs:
         make regression
 
   macos-clang:
+    if: ${{ false }}  # disable for now
     runs-on: macos-latest
 
     steps:
@@ -528,6 +540,7 @@ jobs:
         make regression
 
   CodeFormatting:
+    if: ${{ false }}  # disable for now
     runs-on: ubuntu-20.04
 
     steps:
@@ -546,6 +559,7 @@ jobs:
       run: ./.github/bin/run-clang-format.sh
 
   ClangTidy:
+    if: ${{ false }}  # disable for now
     runs-on: ubuntu-20.04
     if: ${{github.event_name == 'pull_request'}}
 
