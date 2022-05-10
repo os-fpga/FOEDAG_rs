@@ -559,7 +559,6 @@ jobs:
       run: ./.github/bin/run-clang-format.sh
 
   ClangTidy:
-    if: ${{ false }}  # disable for now
     runs-on: ubuntu-20.04
     if: ${{github.event_name == 'pull_request'}}
 
