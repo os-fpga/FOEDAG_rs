@@ -111,34 +111,33 @@ std::string CompilerRS::BaseVprCommand() {
 
   std::string netlistFile = m_design->Name() + "_post_synth.blif";
   for (const auto& lang_file : m_design->FileList()) {
-      switch (lang_file.first) {
-        case Design::Language::VERILOG_NETLIST:
-        case Design::Language::BLIF:
-        case Design::Language::EBLIF:
-          netlistFile = lang_file.second;
-          break;
-        default:
-          break;
-      }
+    switch (lang_file.first) {
+      case Design::Language::VERILOG_NETLIST:
+      case Design::Language::BLIF:
+      case Design::Language::EBLIF:
+        netlistFile = lang_file.second;
+        break;
+      default:
+        break;
+    }
   }
 
   std::string pnrOptions;
-  if (!PnROpt().empty()) 
-    pnrOptions = " " + PnROpt();
+  if (!PnROpt().empty()) pnrOptions = " " + PnROpt();
 
   std::string command =
       m_vprExecutablePath.string() + std::string(" ") +
       m_architectureFile.string() + std::string(" ") +
-      std::string(netlistFile +
-                  std::string(" --sdc_file ") +
-                  std::string(m_design->Name() + "_openfpga.sdc") +
-                  std::string(" --route_chan_width ") +
-                  std::to_string(m_channel_width) +
-                  " --clock_modeling ideal --timing_report_npaths 100 "
-                  "--absorb_buffer_luts off --constant_net_method route "
-                  "--timing_report_detail detailed --post_place_timing_report " +
-                  m_design->Name() + "_post_place_timing.rpt" +
-                  device_size + pnrOptions);
+      std::string(
+          netlistFile + std::string(" --sdc_file ") +
+          std::string(m_design->Name() + "_openfpga.sdc") +
+          std::string(" --route_chan_width ") +
+          std::to_string(m_channel_width) +
+          " --clock_modeling ideal --timing_report_npaths 100 "
+          "--absorb_buffer_luts off --constant_net_method route "
+          "--timing_report_detail detailed --post_place_timing_report " +
+          m_design->Name() + "_post_place_timing.rpt" + device_size +
+          pnrOptions);
 
   return command;
 }
@@ -174,7 +173,9 @@ void CompilerRS::Help(std::ostream* out) {
             "                                     -V_2001 (.v default), "
             "-SV_2005, -SV_2009, -SV_2012, -SV_2017 (.sv default)) "
          << std::endl;
-  (*out) << "   read_netlist <file>        : Read a netlist (.blif/.eblif) instead of an RTL design (Skip Synthesis)" << std::endl;
+  (*out) << "   read_netlist <file>        : Read a netlist (.blif/.eblif) "
+            "instead of an RTL design (Skip Synthesis)"
+         << std::endl;
   (*out) << "   add_include_path <path1>...: As in +incdir+" << std::endl;
   (*out) << "   add_library_path <path1>...: As in +libdir+" << std::endl;
   (*out) << "   set_macro <name>=<value>...: As in -D<macro>=<value>"
@@ -192,21 +193,23 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   custom_synth_script <file> : Uses a custom Yosys templatized "
             "script"
          << std::endl;
-  (*out) << "   synthesize <optimization>  : RTL Synthesis, optional opt. (area, "
-            "delay, mixed, none)"
-         << std::endl;
+  (*out)
+      << "   synthesize <optimization>  : RTL Synthesis, optional opt. (area, "
+         "delay, mixed, none)"
+      << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
          << std::endl;
   (*out) << "   architecture <file>        : Uses the architecture file"
          << std::endl;
   (*out) << "   set_device_size XxY        : Device fabric size selection"
-         << std::endl;  
+         << std::endl;
   (*out) << "   packing                    : Packing" << std::endl;
   (*out) << "   global_placement           : Analytical placer" << std::endl;
   (*out) << "   place                      : Detailed placer" << std::endl;
   (*out) << "   route                      : Router" << std::endl;
-  (*out) << "   sta                        : Statistical Timing Analysis" << std::endl;
+  (*out) << "   sta                        : Statistical Timing Analysis"
+         << std::endl;
   (*out) << "   power                      : Power estimator" << std::endl;
   (*out) << "   bitstream                  : Bitstream generation" << std::endl;
   (*out) << "----------------------------------" << std::endl;

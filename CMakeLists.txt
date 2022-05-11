@@ -390,6 +390,6 @@ add_custom_command(TARGET raptor_gui-bin POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy 
         ${PROJECT_SOURCE_DIR}/etc/device.xml        
         ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/etc/
-    COMMAND ${CMAKE_COMMAND} -E copy 
-        ${PROJECT_SOURCE_DIR}/tests/Arch/*       
+    COMMAND ${CMAKE_COMMAND} -E copy_directory 
+        ${PROJECT_SOURCE_DIR}/tests/Arch  
         ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/Arch/)
