@@ -183,7 +183,8 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   set_top_module <top>       : Sets the top module" << std::endl;
   (*out) << "   add_constraint_file <file> : Sets SDC + location constraints"
          << std::endl;
-  (*out) << "     Constraints: set_pin_loc, set_region_loc, all SDC commands"
+  (*out) << "                                Constraints: set_pin_loc, "
+            "set_region_loc, all SDC commands"
          << std::endl;
   (*out) << "   ipgenerate                 : IP generation" << std::endl;
   (*out) << "   verific_parser <on/off>    : Turns on/off Verific Parser"
@@ -200,7 +201,18 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
          << std::endl;
-  (*out) << "   architecture <file>        : Uses the architecture file"
+  (*out) << "   architecture <vpr_file.xml> ?<openfpga_file.xml>?" << std::endl;
+  (*out) << "                              : Uses the architecture file and "
+            "optional openfpga arch file (For bitstream generation)"
+         << std::endl;
+  (*out) << "   custom_openfpga_script <file> : Uses a custom OpenFPGA "
+            "templatized script"
+         << std::endl;
+  (*out) << "   bitstream_config_files <bitstream_setting.xml> "
+            "?<sim_setting.xml>? ?<repack_setting.xml>?"
+         << std::endl;
+  (*out) << "                              : Uses alternate bitstream "
+            "generation configuration files"
          << std::endl;
   (*out) << "   set_device_size XxY        : Device fabric size selection"
          << std::endl;
@@ -211,6 +223,6 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   sta                        : Statistical Timing Analysis"
          << std::endl;
   (*out) << "   power                      : Power estimator" << std::endl;
-  (*out) << "   bitstream                  : Bitstream generation" << std::endl;
+  (*out) << "   bitstream ?force?          : Bitstream generation" << std::endl;
   (*out) << "----------------------------------" << std::endl;
 }
