@@ -201,8 +201,7 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
          << std::endl;
-  (*out) << "   architecture <vpr_file.xml> ?<openfpga_file.xml>?"
-         << std::endl;
+  (*out) << "   architecture <vpr_file.xml> ?<openfpga_file.xml>?" << std::endl;
   (*out) << "                              : Uses the architecture file and "
             "optional openfpga arch file (For bitstream generation)"
          << std::endl;
