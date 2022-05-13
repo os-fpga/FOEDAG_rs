@@ -21,6 +21,7 @@ All rights reserved
 #include "Compiler/CompilerRS.h"
 #include "Compiler/Constraints.h"
 #include "MainWindow/Session.h"
+#include "NewProject/ProjectManager/project_manager.h"
 
 using namespace FOEDAG;
 
@@ -109,13 +110,13 @@ std::string CompilerRS::BaseVprCommand() {
     device_size = " --device " + m_deviceSize;
   }
 
-  std::string netlistFile = m_design->Name() + "_post_synth.blif";
-  for (const auto& lang_file : m_design->FileList()) {
-    switch (lang_file.first) {
+  std::string netlistFile = m_projManager->projectName() + "_post_synth.blif";
+  for (const auto& lang_file : m_projManager->DesignFiles()) {
+    switch (m_projManager->designFileData(lang_file)) {
       case Design::Language::VERILOG_NETLIST:
       case Design::Language::BLIF:
       case Design::Language::EBLIF:
-        netlistFile = lang_file.second;
+        netlistFile = lang_file;
         break;
       default:
         break;
@@ -130,14 +131,14 @@ std::string CompilerRS::BaseVprCommand() {
       m_architectureFile.string() + std::string(" ") +
       std::string(
           netlistFile + std::string(" --sdc_file ") +
-          std::string(m_design->Name() + "_openfpga.sdc") +
+          std::string(m_projManager->projectName() + "_openfpga.sdc") +
           std::string(" --route_chan_width ") +
           std::to_string(m_channel_width) +
           " --clock_modeling ideal --timing_report_npaths 100 "
           "--absorb_buffer_luts off --constant_net_method route "
           "--timing_report_detail detailed --post_place_timing_report " +
-          m_design->Name() + "_post_place_timing.rpt" + device_size +
-          pnrOptions);
+          m_projManager->projectName() + "_post_place_timing.rpt" +
+          device_size + pnrOptions);
 
   return command;
 }
