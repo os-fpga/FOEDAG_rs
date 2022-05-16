@@ -216,8 +216,8 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   custom_openfpga_script <file> : Uses a custom OpenFPGA "
             "templatized script"
          << std::endl;
-  (*out) << "   bitstream_config_files <bitstream_setting.xml> "
-            "?<sim_setting.xml>? ?<repack_setting.xml>?"
+  (*out) << "   bitstream_config_files -bitstream <bitstream_setting.xml> "
+            "-sim <sim_setting.xml> -repack <repack_setting.xml>"
          << std::endl;
   (*out) << "                              : Uses alternate bitstream "
             "generation configuration files"
