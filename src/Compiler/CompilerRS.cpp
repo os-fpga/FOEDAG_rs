@@ -36,7 +36,7 @@ hierarchy -top ${TOP_MODULE}
 ${KEEP_NAMES}
 
 plugin -i synth-rs
-synth_rs -tech genesis -top ${TOP_MODULE} ${OPTIMIZATION}
+synth_rs -tech genesis -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING}
 
 # Clean and output blif
 write_blif ${OUTPUT_BLIF}
@@ -66,19 +66,72 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   result = ReplaceAll(result, "${KEEP_NAMES}", keeps);
   std::string optimization;
   switch (m_synthOpt) {
-    case NoOpt:
+    case SynthesisOpt::None:
+      optimization = "-de";
       break;
-    case Area:
+    case SynthesisOpt::Area:
       optimization = "-de -goal area";
       break;
-    case Delay:
+    case SynthesisOpt::Delay:
       optimization = "-de -goal delay";
       break;
-    case Mixed:
+    case SynthesisOpt::Mixed:
       optimization = "-de -goal mixed";
       break;
   }
+  std::string effort;
+  switch (m_synthEffort) {
+    case SynthesisEffort::None:
+      break;
+    case SynthesisEffort::High:
+      effort = "-effort high";
+      break;
+    case SynthesisEffort::Low:
+      effort = "-effort low";
+      break;
+    case SynthesisEffort::Medium:
+      effort = "-effort medium";
+      break;
+  }
+  std::string fsm_encoding;
+  switch (m_synthFsm) {
+    case SynthesisFsmEncoding::None:
+      break;
+    case SynthesisFsmEncoding::Binary:
+      fsm_encoding = "-fsm_encoding binary";
+      break;
+    case SynthesisFsmEncoding::Onehot:
+      fsm_encoding = "-fsm_encoding onehot";
+      break;
+  }
+  std::string carry_inference;
+  switch (m_synthCarry) {
+    case SynthesisCarryInference::None:
+      break;
+    case SynthesisCarryInference::All:
+      carry_inference = "-carry all";
+      break;
+    case SynthesisCarryInference::NoConst:
+      carry_inference = "-carry no_const";
+      break;
+    case SynthesisCarryInference::NoCarry:
+      carry_inference = "-carry no";
+      break;
+  }
+  std::string no_dsp;
+  if (m_synthNoDsp) {
+    no_dsp = "-no_dsp";
+  }
+  std::string no_bram;
+  if (m_synthNoBram) {
+    no_bram = "-no_bram";
+  }
   result = ReplaceAll(result, "${OPTIMIZATION}", optimization);
+  result = ReplaceAll(result, "${EFFORT}", effort);
+  result = ReplaceAll(result, "${FSM_ENCODING}", fsm_encoding);
+  result = ReplaceAll(result, "${CARRY}", carry_inference);
+  result = ReplaceAll(result, "${NO_DSP}", no_dsp);
+  result = ReplaceAll(result, "${NO_BRAM}", no_bram);
   result = ReplaceAll(result, "${LUT_SIZE}", std::to_string(m_lut_size));
   return result;
 }
@@ -202,10 +255,56 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   custom_synth_script <file> : Uses a custom Yosys templatized "
             "script"
          << std::endl;
-  (*out)
-      << "   synthesize <optimization>  : RTL Synthesis, optional opt. (area, "
-         "delay, mixed, none)"
-      << std::endl;
+  (*out) << "   synthesize <options>       : Synthesize the RTL design with "
+            "optional synthesis options"
+         << std::endl;
+  (*out) << "                              : The following defaults exist:"
+         << std::endl;
+  (*out) << "                              : -optimization mixed"
+         << std::endl;
+  (*out) << "                              : -effort high"
+         << std::endl;
+  (*out) << "                              : -fsm_encoding binary if "
+            "optimization == area else onehot"
+         << std::endl;
+  (*out) << "                              : -carry no_const"
+         << std::endl;
+  (*out) << "     -optimization <opt_goal> : Optimization goal:"
+         << std::endl;
+  (*out) << "       area                   : minimize resource utilization"
+         << std::endl;
+  (*out) << "       delay                  : expect better frequencies in "
+            "general without respect to specific clock domains"
+         << std::endl;
+  (*out) << "       mixed                  : good compromise between 'area'"
+            " and 'delay'"
+         << std::endl;
+  (*out) << "     -effort <level>          : Optimization effort level (high,"
+            " medium, low)"
+         << std::endl;
+  (*out) << "     -fsm_encoding <encoding> : FSM encoding:"
+         << std::endl;
+  (*out) << "       binary                 : compact encoding - using minimum "
+            "of registers to cover the N states"
+         << std::endl;
+  (*out) << "       onehot                 : one hot encoding - using N "
+            "registers for N states"
+         << std::endl;
+  (*out) << "     -carry <mode>            : Carry logic inference mode:"
+         << std::endl;
+  (*out) << "       all                    : infer as much as possible"
+         << std::endl;
+  (*out) << "       no_const               : infer carries only with non "
+            "constant inputs"
+         << std::endl;
+  (*out) << "       none                   : do not infer carries"
+         << std::endl;
+  (*out) << "     -no_dsp                  : Do not use DSP blocks to "
+            "implement multipliers and associated logic"
+         << std::endl;
+  (*out) << "     -no_bram                 : Do not use Block RAM to "
+            "implement memory components"
+         << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
          << std::endl;
