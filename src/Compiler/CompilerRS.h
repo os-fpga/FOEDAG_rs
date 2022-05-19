@@ -17,6 +17,12 @@ All rights reserved
 namespace FOEDAG {
 class CompilerRS : public CompilerOpenFPGA {
  public:
+  enum class SynthesisOpt { None, Area, Delay, Mixed };
+  enum class SynthesisEffort { None, High, Low, Medium };
+  enum class SynthesisCarryInference { None, NoCarry, All, NoConst };
+  enum class SynthesisFsmEncoding { None, Binary, Onehot };
+
+ public:
   CompilerRS();
   ~CompilerRS() = default;
 
@@ -27,9 +33,27 @@ class CompilerRS : public CompilerOpenFPGA {
   virtual std::string FinishSynthesisScript(const std::string& script);
   virtual bool RegisterCommands(TclInterpreter* interp, bool batchMode);
   void UseRsSynthesis(bool on) { m_use_rs_synthesis = on; }
+  SynthesisOpt getSynthOpt() { return m_synthOpt; }
+  void setSynthOpt(SynthesisOpt opt) { m_synthOpt = opt; }
+  SynthesisEffort getSynthEffort() { return m_synthEffort; }
+  void setSynthEffort(SynthesisEffort effort) { m_synthEffort = effort; }
+  SynthesisCarryInference getSynthCarry() { return m_synthCarry; }
+  void setSynthCarry(SynthesisCarryInference carry) { m_synthCarry = carry; }
+  SynthesisFsmEncoding getSynthFsm() { return m_synthFsm; }
+  void setSynthFsm(SynthesisFsmEncoding fsmEnc) { m_synthFsm = fsmEnc; }
+  bool getSynthNoDsp() { return m_synthNoDsp; }
+  void setSynthNoDsp(bool noDsp) { m_synthNoDsp = noDsp; }
+  bool getSynthNoBram() { return m_synthNoBram; }
+  void setSynthNoBram(bool noBram) { m_synthNoBram = noBram; }
 
  protected:
   bool m_use_rs_synthesis = true;
+  SynthesisOpt m_synthOpt = SynthesisOpt::None;
+  SynthesisEffort m_synthEffort = SynthesisEffort::None;
+  SynthesisCarryInference m_synthCarry = SynthesisCarryInference::None;
+  SynthesisFsmEncoding m_synthFsm = SynthesisFsmEncoding::None;
+  bool m_synthNoDsp = false;
+  bool m_synthNoBram = false;
 };
 
 }  // namespace FOEDAG

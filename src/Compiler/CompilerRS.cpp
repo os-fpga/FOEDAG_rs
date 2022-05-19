@@ -154,6 +154,80 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
   };
   interp->registerCmd("rs_synthesis", rs_synthesis, this, 0);
 
+  auto synth_options = [](void* clientData, Tcl_Interp* interp, int argc,
+      const char* argv[]) -> int {
+    CompilerRS* compiler = (CompilerRS*)clientData;
+    for (int i = 1; i < argc; i++) {
+      std::string option = argv[i];
+      if (option == "-optimization" && i + 1 < argc) {
+        std::string arg = argv[++i];
+        if (arg == "mixed") {
+          compiler->setSynthOpt(SynthesisOpt::Mixed);
+        } else if (arg == "area") {
+          compiler->setSynthOpt(SynthesisOpt::Area);
+        } else if (arg == "delay") {
+          compiler->setSynthOpt(SynthesisOpt::Delay);
+        } else {
+          compiler->ErrorMessage("Unknown optimization option: " + arg);
+          return TCL_ERROR;
+        }
+        continue;
+      }
+      if (option == "-fsm_encoding" && i + 1 < argc) {
+        std::string arg = argv[++i];
+        if (arg == "binary") {
+          compiler->setSynthFsm(SynthesisFsmEncoding::Binary);
+        } else if (arg == "onehot") {
+          compiler->setSynthFsm(SynthesisFsmEncoding::Onehot);
+        } else {
+          compiler->ErrorMessage("Unknown fsm encoding option: " + arg);
+          return TCL_ERROR;
+        }
+        continue;
+      }
+      if (option == "-effort" && i + 1 < argc) {
+        std::string arg = argv[++i];
+        if (arg == "high") {
+          compiler->setSynthEffort(SynthesisEffort::High);
+        } else if (arg == "medium") {
+          compiler->setSynthEffort(SynthesisEffort::Medium);
+        } else if (arg == "low") {
+          compiler->setSynthEffort(SynthesisEffort::Low);
+        } else {
+          compiler->ErrorMessage("Unknown effort option: " + arg);
+          return TCL_ERROR;
+        }
+        continue;
+      }
+      if (option == "-carry" && i + 1 < argc) {
+        std::string arg = argv[++i];
+        if (arg == "none") {
+          compiler->setSynthCarry(SynthesisCarryInference::NoCarry);
+        } else if (arg == "no_const") {
+          compiler->setSynthCarry(SynthesisCarryInference::NoConst);
+        } else if (arg == "all") {
+          compiler->setSynthCarry(SynthesisCarryInference::All);
+        } else {
+          compiler->ErrorMessage("Unknown carry inference option: " + arg);
+          return TCL_ERROR;
+        }
+        continue;
+      }
+      if (option == "-no_dsp") {
+        compiler->setSynthNoDsp(true);
+        continue;
+      }
+      if (option == "-no_bram") {
+        compiler->setSynthNoBram(true);
+        continue;
+      }
+      compiler->ErrorMessage("Unknown option: " + option);
+      return TCL_ERROR;
+    }
+    return TCL_OK;
+  };
+  interp->registerCmd("synth_options", synth_options, this, 0);
+
   return true;
 }
 
@@ -255,10 +329,8 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   custom_synth_script <file> : Uses a custom Yosys templatized "
             "script"
          << std::endl;
-  (*out) << "   synthesize <options>       : Synthesize the RTL design with "
-            "optional synthesis options"
-         << std::endl;
-  (*out) << "                              : The following defaults exist:"
+  (*out) << "   synth_options <opt_list>   : Synthesis options. "
+            "The following defaults exist:"
          << std::endl;
   (*out) << "                              : -optimization mixed"
          << std::endl;
@@ -271,12 +343,12 @@ void CompilerRS::Help(std::ostream* out) {
          << std::endl;
   (*out) << "     -optimization <opt_goal> : Optimization goal:"
          << std::endl;
-  (*out) << "       area                   : minimize resource utilization"
+  (*out) << "       area                   : Minimize resource utilization"
          << std::endl;
-  (*out) << "       delay                  : expect better frequencies in "
+  (*out) << "       delay                  : Expect better frequencies in "
             "general without respect to specific clock domains"
          << std::endl;
-  (*out) << "       mixed                  : good compromise between 'area'"
+  (*out) << "       mixed                  : Good compromise between 'area'"
             " and 'delay'"
          << std::endl;
   (*out) << "     -effort <level>          : Optimization effort level (high,"
@@ -284,20 +356,20 @@ void CompilerRS::Help(std::ostream* out) {
          << std::endl;
   (*out) << "     -fsm_encoding <encoding> : FSM encoding:"
          << std::endl;
-  (*out) << "       binary                 : compact encoding - using minimum "
+  (*out) << "       binary                 : Compact encoding - using minimum "
             "of registers to cover the N states"
          << std::endl;
-  (*out) << "       onehot                 : one hot encoding - using N "
+  (*out) << "       onehot                 : One hot encoding - using N "
             "registers for N states"
          << std::endl;
   (*out) << "     -carry <mode>            : Carry logic inference mode:"
          << std::endl;
-  (*out) << "       all                    : infer as much as possible"
+  (*out) << "       all                    : Infer as much as possible"
          << std::endl;
-  (*out) << "       no_const               : infer carries only with non "
+  (*out) << "       no_const               : Infer carries only with non "
             "constant inputs"
          << std::endl;
-  (*out) << "       none                   : do not infer carries"
+  (*out) << "       none                   : Do not infer carries"
          << std::endl;
   (*out) << "     -no_dsp                  : Do not use DSP blocks to "
             "implement multipliers and associated logic"
@@ -324,6 +396,8 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   set_device_size XxY        : Device fabric size selection"
          << std::endl;
   (*out) << "   packing                    : Packing" << std::endl;
+  (*out) << "   synthesize                 : Synthesize the RTL design"
+         << std::endl;
   (*out) << "   global_placement           : Analytical placer" << std::endl;
   (*out) << "   place                      : Detailed placer" << std::endl;
   (*out) << "   route                      : Router" << std::endl;
