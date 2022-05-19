@@ -140,8 +140,8 @@ CompilerRS::CompilerRS() { m_channel_width = 180; }
 
 bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
   CompilerOpenFPGA::RegisterCommands(interp, batchMode);
-  auto rs_synthesis = [](void* clientData, Tcl_Interp* interp, int argc,
-                         const char* argv[]) -> int {
+  auto rs_synthesis = [](void * clientData, Tcl_Interp * interp, int argc,
+                         const char * argv[])->int {
     CompilerRS* compiler = (CompilerRS*)clientData;
     std::string name;
     if (argc != 2) {
@@ -154,8 +154,8 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
   };
   interp->registerCmd("rs_synthesis", rs_synthesis, this, 0);
 
-  auto synth_options = [](void* clientData, Tcl_Interp* interp, int argc,
-      const char* argv[]) -> int {
+  auto synth_options = [](void * clientData, Tcl_Interp * interp, int argc,
+                          const char * argv[])->int {
     CompilerRS* compiler = (CompilerRS*)clientData;
     for (int i = 1; i < argc; i++) {
       std::string option = argv[i];
@@ -246,9 +246,8 @@ std::string CompilerRS::BaseVprCommand() {
         netlistFile = lang_file;
         std::filesystem::path the_path = netlistFile;
         if (!the_path.is_absolute()) {
-          netlistFile =
-              std::filesystem::path(std::filesystem::path("..") / netlistFile)
-                  .string();
+          netlistFile = std::filesystem::path(std::filesystem::path("..") /
+                                              netlistFile).string();
         }
         break;
       }
@@ -309,8 +308,7 @@ void CompilerRS::Help(std::ostream* out) {
             "-SV_2005, -SV_2009, -SV_2012, -SV_2017 (.sv default)) "
          << std::endl;
   (*out) << "   read_netlist <file>        : Read a netlist (.blif/.eblif) "
-            "instead of an RTL design (Skip Synthesis)"
-         << std::endl;
+            "instead of an RTL design (Skip Synthesis)" << std::endl;
   (*out) << "   add_include_path <path1>...: As in +incdir+" << std::endl;
   (*out) << "   add_library_path <path1>...: As in +libdir+" << std::endl;
   (*out) << "   set_macro <name>=<value>...: As in -D<macro>=<value>"
@@ -319,64 +317,47 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   add_constraint_file <file> : Sets SDC + location constraints"
          << std::endl;
   (*out) << "                                Constraints: set_pin_loc, "
-            "set_region_loc, all SDC commands"
-         << std::endl;
+            "set_region_loc, all SDC commands" << std::endl;
   (*out) << "   ipgenerate                 : IP generation" << std::endl;
   (*out) << "   verific_parser <on/off>    : Turns on/off Verific Parser"
          << std::endl;
   (*out) << "   rs_synthesis <on/off>      : Turns on/off RS Synthesis"
          << std::endl;
   (*out) << "   custom_synth_script <file> : Uses a custom Yosys templatized "
-            "script"
+            "script" << std::endl;
+  (*out) << "   synth_options <opt list>   : Synthesis options. "
+            "The following defaults exist:" << std::endl;
+  (*out) << "                              :   -optimization mixed"
          << std::endl;
-  (*out) << "   synth_options <opt_list>   : Synthesis options. "
-            "The following defaults exist:"
-         << std::endl;
-  (*out) << "                              : -optimization mixed"
-         << std::endl;
-  (*out) << "                              : -effort high"
-         << std::endl;
-  (*out) << "                              : -fsm_encoding binary if "
-            "optimization == area else onehot"
-         << std::endl;
-  (*out) << "                              : -carry no_const"
-         << std::endl;
-  (*out) << "     -optimization <opt_goal> : Optimization goal:"
-         << std::endl;
+  (*out) << "                              :   -effort high" << std::endl;
+  (*out) << "                              :   -fsm_encoding binary if "
+            "optimization == area else onehot" << std::endl;
+  (*out) << "                              :   -carry no_const" << std::endl;
+  (*out) << "     -optimization <opt_goal> : Optimization goal:" << std::endl;
   (*out) << "       area                   : Minimize resource utilization"
          << std::endl;
   (*out) << "       delay                  : Expect better frequencies in "
-            "general without respect to specific clock domains"
-         << std::endl;
+            "general without respect to specific clock domains" << std::endl;
   (*out) << "       mixed                  : Good compromise between 'area'"
-            " and 'delay'"
-         << std::endl;
+            " and 'delay'" << std::endl;
   (*out) << "     -effort <level>          : Optimization effort level (high,"
-            " medium, low)"
-         << std::endl;
-  (*out) << "     -fsm_encoding <encoding> : FSM encoding:"
-         << std::endl;
+            " medium, low)" << std::endl;
+  (*out) << "     -fsm_encoding <encoding> : FSM encoding:" << std::endl;
   (*out) << "       binary                 : Compact encoding - using minimum "
-            "of registers to cover the N states"
-         << std::endl;
+            "of registers to cover the N states" << std::endl;
   (*out) << "       onehot                 : One hot encoding - using N "
-            "registers for N states"
-         << std::endl;
+            "registers for N states" << std::endl;
   (*out) << "     -carry <mode>            : Carry logic inference mode:"
          << std::endl;
   (*out) << "       all                    : Infer as much as possible"
          << std::endl;
   (*out) << "       no_const               : Infer carries only with non "
-            "constant inputs"
-         << std::endl;
-  (*out) << "       none                   : Do not infer carries"
-         << std::endl;
+            "constant inputs" << std::endl;
+  (*out) << "       none                   : Do not infer carries" << std::endl;
   (*out) << "     -no_dsp                  : Do not use DSP blocks to "
-            "implement multipliers and associated logic"
-         << std::endl;
+            "implement multipliers and associated logic" << std::endl;
   (*out) << "     -no_bram                 : Do not use Block RAM to "
-            "implement memory components"
-         << std::endl;
+            "implement memory components" << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
          << std::endl;
@@ -385,14 +366,11 @@ void CompilerRS::Help(std::ostream* out) {
             "optional openfpga arch file (For bitstream generation)"
          << std::endl;
   (*out) << "   custom_openfpga_script <file> : Uses a custom OpenFPGA "
-            "templatized script"
-         << std::endl;
+            "templatized script" << std::endl;
   (*out) << "   bitstream_config_files -bitstream <bitstream_setting.xml> "
-            "-sim <sim_setting.xml> -repack <repack_setting.xml>"
-         << std::endl;
+            "-sim <sim_setting.xml> -repack <repack_setting.xml>" << std::endl;
   (*out) << "                              : Uses alternate bitstream "
-            "generation configuration files"
-         << std::endl;
+            "generation configuration files" << std::endl;
   (*out) << "   set_device_size XxY        : Device fabric size selection"
          << std::endl;
   (*out) << "   packing                    : Packing" << std::endl;
