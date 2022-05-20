@@ -17,12 +17,6 @@ All rights reserved
 namespace FOEDAG {
 class CompilerRS : public CompilerOpenFPGA {
  public:
-  enum class SynthesisOpt {
-    None,
-    Area,
-    Delay,
-    Mixed
-  };
   enum class SynthesisEffort {
     None,
     High,
@@ -52,8 +46,6 @@ class CompilerRS : public CompilerOpenFPGA {
   virtual std::string FinishSynthesisScript(const std::string& script);
   virtual bool RegisterCommands(TclInterpreter* interp, bool batchMode);
   void UseRsSynthesis(bool on) { m_use_rs_synthesis = on; }
-  SynthesisOpt getSynthOpt() { return m_synthOpt; }
-  void setSynthOpt(SynthesisOpt opt) { m_synthOpt = opt; }
   SynthesisEffort getSynthEffort() { return m_synthEffort; }
   void setSynthEffort(SynthesisEffort effort) { m_synthEffort = effort; }
   SynthesisCarryInference getSynthCarry() { return m_synthCarry; }
@@ -67,7 +59,6 @@ class CompilerRS : public CompilerOpenFPGA {
 
  protected:
   bool m_use_rs_synthesis = true;
-  SynthesisOpt m_synthOpt = SynthesisOpt::None;
   SynthesisEffort m_synthEffort = SynthesisEffort::None;
   SynthesisCarryInference m_synthCarry = SynthesisCarryInference::None;
   SynthesisFsmEncoding m_synthFsm = SynthesisFsmEncoding::None;

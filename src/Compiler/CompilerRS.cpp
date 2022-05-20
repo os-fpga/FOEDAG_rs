@@ -159,20 +159,6 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
     CompilerRS* compiler = (CompilerRS*)clientData;
     for (int i = 1; i < argc; i++) {
       std::string option = argv[i];
-      if (option == "-optimization" && i + 1 < argc) {
-        std::string arg = argv[++i];
-        if (arg == "mixed") {
-          compiler->setSynthOpt(SynthesisOpt::Mixed);
-        } else if (arg == "area") {
-          compiler->setSynthOpt(SynthesisOpt::Area);
-        } else if (arg == "delay") {
-          compiler->setSynthOpt(SynthesisOpt::Delay);
-        } else {
-          compiler->ErrorMessage("Unknown optimization option: " + arg);
-          return TCL_ERROR;
-        }
-        continue;
-      }
       if (option == "-fsm_encoding" && i + 1 < argc) {
         std::string arg = argv[++i];
         if (arg == "binary") {
@@ -325,21 +311,15 @@ void CompilerRS::Help(std::ostream* out) {
          << std::endl;
   (*out) << "   custom_synth_script <file> : Uses a custom Yosys templatized "
             "script" << std::endl;
+  (*out)
+      << "   synthesize <optimization>  : RTL Synthesis, optional opt. (area, "
+         "delay, mixed, none)" << std::endl;
   (*out) << "   synth_options <opt list>   : Synthesis options. "
             "The following defaults exist:" << std::endl;
-  (*out) << "                              :   -optimization mixed"
-         << std::endl;
   (*out) << "                              :   -effort high" << std::endl;
   (*out) << "                              :   -fsm_encoding binary if "
             "optimization == area else onehot" << std::endl;
   (*out) << "                              :   -carry no_const" << std::endl;
-  (*out) << "     -optimization <opt_goal> : Optimization goal:" << std::endl;
-  (*out) << "       area                   : Minimize resource utilization"
-         << std::endl;
-  (*out) << "       delay                  : Expect better frequencies in "
-            "general without respect to specific clock domains" << std::endl;
-  (*out) << "       mixed                  : Good compromise between 'area'"
-            " and 'delay'" << std::endl;
   (*out) << "     -effort <level>          : Optimization effort level (high,"
             " medium, low)" << std::endl;
   (*out) << "     -fsm_encoding <encoding> : FSM encoding:" << std::endl;
@@ -374,8 +354,6 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   set_device_size XxY        : Device fabric size selection"
          << std::endl;
   (*out) << "   packing                    : Packing" << std::endl;
-  (*out) << "   synthesize                 : Synthesize the RTL design"
-         << std::endl;
   (*out) << "   global_placement           : Analytical placer" << std::endl;
   (*out) << "   place                      : Detailed placer" << std::endl;
   (*out) << "   route                      : Router" << std::endl;
