@@ -140,8 +140,8 @@ CompilerRS::CompilerRS() { m_channel_width = 180; }
 
 bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
   CompilerOpenFPGA::RegisterCommands(interp, batchMode);
-  auto rs_synthesis = [](void * clientData, Tcl_Interp * interp, int argc,
-                         const char * argv[])->int {
+  auto rs_synthesis = [](void* clientData, Tcl_Interp* interp, int argc,
+                         const char* argv[]) -> int {
     CompilerRS* compiler = (CompilerRS*)clientData;
     std::string name;
     if (argc != 2) {
@@ -154,8 +154,8 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
   };
   interp->registerCmd("rs_synthesis", rs_synthesis, this, 0);
 
-  auto synth_options = [](void * clientData, Tcl_Interp * interp, int argc,
-                          const char * argv[])->int {
+  auto synth_options = [](void* clientData, Tcl_Interp* interp, int argc,
+                          const char* argv[]) -> int {
     CompilerRS* compiler = (CompilerRS*)clientData;
     for (int i = 1; i < argc; i++) {
       std::string option = argv[i];
@@ -232,8 +232,9 @@ std::string CompilerRS::BaseVprCommand() {
         netlistFile = lang_file;
         std::filesystem::path the_path = netlistFile;
         if (!the_path.is_absolute()) {
-          netlistFile = std::filesystem::path(std::filesystem::path("..") /
-                                              netlistFile).string();
+          netlistFile =
+              std::filesystem::path(std::filesystem::path("..") / netlistFile)
+                  .string();
         }
         break;
       }
@@ -294,7 +295,8 @@ void CompilerRS::Help(std::ostream* out) {
             "-SV_2005, -SV_2009, -SV_2012, -SV_2017 (.sv default)) "
          << std::endl;
   (*out) << "   read_netlist <file>        : Read a netlist (.blif/.eblif) "
-            "instead of an RTL design (Skip Synthesis)" << std::endl;
+            "instead of an RTL design (Skip Synthesis)"
+         << std::endl;
   (*out) << "   add_include_path <path1>...: As in +incdir+" << std::endl;
   (*out) << "   add_library_path <path1>...: As in +libdir+" << std::endl;
   (*out) << "   set_macro <name>=<value>...: As in -D<macro>=<value>"
@@ -332,12 +334,15 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "       all                    : Infer as much as possible"
          << std::endl;
   (*out) << "       no_const               : Infer carries only with non "
-            "constant inputs" << std::endl;
+            "constant inputs"
+         << std::endl;
   (*out) << "       none                   : Do not infer carries" << std::endl;
   (*out) << "     -no_dsp                  : Do not use DSP blocks to "
-            "implement multipliers and associated logic" << std::endl;
+            "implement multipliers and associated logic"
+         << std::endl;
   (*out) << "     -no_bram                 : Do not use Block RAM to "
-            "implement memory components" << std::endl;
+            "implement memory components"
+         << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
          << std::endl;
@@ -346,11 +351,14 @@ void CompilerRS::Help(std::ostream* out) {
             "optional openfpga arch file (For bitstream generation)"
          << std::endl;
   (*out) << "   custom_openfpga_script <file> : Uses a custom OpenFPGA "
-            "templatized script" << std::endl;
+            "templatized script"
+         << std::endl;
   (*out) << "   bitstream_config_files -bitstream <bitstream_setting.xml> "
-            "-sim <sim_setting.xml> -repack <repack_setting.xml>" << std::endl;
+            "-sim <sim_setting.xml> -repack <repack_setting.xml>"
+         << std::endl;
   (*out) << "                              : Uses alternate bitstream "
-            "generation configuration files" << std::endl;
+            "generation configuration files"
+         << std::endl;
   (*out) << "   set_device_size XxY        : Device fabric size selection"
          << std::endl;
   (*out) << "   packing                    : Packing" << std::endl;
