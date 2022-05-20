@@ -66,15 +66,15 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   result = ReplaceAll(result, "${KEEP_NAMES}", keeps);
   std::string optimization;
   switch (m_synthOpt) {
-    case NoOpt:
+    case SynthesisOpt::None:
       break;
-    case Area:
+    case SynthesisOpt::Area:
       optimization = "-de -goal area";
       break;
-    case Delay:
+    case SynthesisOpt::Delay:
       optimization = "-de -goal delay";
       break;
-    case Mixed:
+    case SynthesisOpt::Mixed:
       optimization = "-de -goal mixed";
       break;
   }
