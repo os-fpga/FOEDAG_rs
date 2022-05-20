@@ -320,7 +320,8 @@ void CompilerRS::Help(std::ostream* out) {
          "delay, mixed, none)"
       << std::endl;
   (*out) << "   synth_options <opt list>   : Synthesis options. "
-            "The following defaults exist:" << std::endl;
+            "The following defaults exist:"
+         << std::endl;
   (*out) << "                              :   -effort high" << std::endl;
   (*out) << "                              :   -fsm_encoding binary if "
             "optimization == area else onehot"
