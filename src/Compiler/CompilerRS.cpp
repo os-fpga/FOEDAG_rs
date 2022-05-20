@@ -305,30 +305,37 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   add_constraint_file <file> : Sets SDC + location constraints"
          << std::endl;
   (*out) << "                                Constraints: set_pin_loc, "
-            "set_region_loc, all SDC commands" << std::endl;
+            "set_region_loc, all SDC commands"
+         << std::endl;
   (*out) << "   ipgenerate                 : IP generation" << std::endl;
   (*out) << "   verific_parser <on/off>    : Turns on/off Verific Parser"
          << std::endl;
   (*out) << "   rs_synthesis <on/off>      : Turns on/off RS Synthesis"
          << std::endl;
   (*out) << "   custom_synth_script <file> : Uses a custom Yosys templatized "
-            "script" << std::endl;
+            "script"
+         << std::endl;
   (*out)
       << "   synthesize <optimization>  : RTL Synthesis, optional opt. (area, "
-         "delay, mixed, none)" << std::endl;
+         "delay, mixed, none)"
+      << std::endl;
   (*out) << "   synth_options <opt list>   : Synthesis options. "
             "The following defaults exist:" << std::endl;
   (*out) << "                              :   -effort high" << std::endl;
   (*out) << "                              :   -fsm_encoding binary if "
-            "optimization == area else onehot" << std::endl;
+            "optimization == area else onehot"
+         << std::endl;
   (*out) << "                              :   -carry no_const" << std::endl;
   (*out) << "     -effort <level>          : Optimization effort level (high,"
-            " medium, low)" << std::endl;
+            " medium, low)"
+         << std::endl;
   (*out) << "     -fsm_encoding <encoding> : FSM encoding:" << std::endl;
   (*out) << "       binary                 : Compact encoding - using minimum "
-            "of registers to cover the N states" << std::endl;
+            "of registers to cover the N states"
+         << std::endl;
   (*out) << "       onehot                 : One hot encoding - using N "
-            "registers for N states" << std::endl;
+            "registers for N states"
+         << std::endl;
   (*out) << "     -carry <mode>            : Carry logic inference mode:"
          << std::endl;
   (*out) << "       all                    : Infer as much as possible"
