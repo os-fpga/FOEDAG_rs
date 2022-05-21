@@ -25,6 +25,24 @@ All rights reserved
 
 using namespace FOEDAG;
 
+const std::string QLYosysScript = R"( 
+# Yosys synthesis script for ${TOP_MODULE}
+# Read source files
+${READ_DESIGN_FILES}
+
+# Technology mapping
+hierarchy -top ${TOP_MODULE}
+
+${KEEP_NAMES}
+
+plugin -i ${PLUGIN_LIB}
+${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION}
+
+# Clean and output blif
+write_blif ${OUTPUT_BLIF}
+write_verilog -noexpr -nodec -defparam -norename ${OUTPUT_VERILOG}
+  )";
+
 const std::string RapidSiliconYosysScript = R"( 
 # Yosys synthesis script for ${TOP_MODULE}
 # Read source files
@@ -35,8 +53,8 @@ hierarchy -top ${TOP_MODULE}
 
 ${KEEP_NAMES}
 
-plugin -i synth-rs
-synth_rs -tech genesis -top ${TOP_MODULE} ${OPTIMIZATION}
+plugin -i ${PLUGIN_LIB}
+${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION}
 
 # Clean and output blif
 write_blif ${OUTPUT_BLIF}
@@ -44,12 +62,25 @@ write_verilog -noexpr -nodec -defparam -norename ${OUTPUT_VERILOG}
   )";
 
 std::string CompilerRS::InitSynthesisScript() {
-  if (m_use_rs_synthesis) {
-    YosysScript(RapidSiliconYosysScript);
-    return m_yosysScript;
-  } else {
-    return CompilerOpenFPGA::InitSynthesisScript();
+  switch (m_synthType) {
+    case SynthesisType::Yosys:
+      return CompilerOpenFPGA::InitSynthesisScript();
+    case SynthesisType::QL: {
+      m_mapToTechnology = "qlf_k6n10";
+      m_yosysPluginLib = "ql-qlf";
+      m_yosysPlugin = "synth_ql";
+      YosysScript(QLYosysScript);
+      break;
+    }
+    case SynthesisType::RS: {
+      m_mapToTechnology = "genesis";
+      m_yosysPluginLib = "synth-rs";
+      m_yosysPlugin = "synth_rs";
+      YosysScript(RapidSiliconYosysScript);
+      break;
+    }
   }
+  return m_yosysScript;
 }
 
 std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
@@ -78,7 +109,13 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
       optimization = "-de -goal mixed";
       break;
   }
+  if (m_synthType == SynthesisType::QL) {
+    optimization = "";
+  }
   result = ReplaceAll(result, "${OPTIMIZATION}", optimization);
+  result = ReplaceAll(result, "${PLUGIN_LIB}", PluginLibName());
+  result = ReplaceAll(result, "${PLUGIN_NAME}", PluginName());
+  result = ReplaceAll(result, "${MAP_TO_TECHNOLOGY}", MapTechnology());
   result = ReplaceAll(result, "${LUT_SIZE}", std::to_string(m_lut_size));
   return result;
 }
@@ -87,19 +124,28 @@ CompilerRS::CompilerRS() { m_channel_width = 180; }
 
 bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
   CompilerOpenFPGA::RegisterCommands(interp, batchMode);
-  auto rs_synthesis = [](void* clientData, Tcl_Interp* interp, int argc,
-                         const char* argv[]) -> int {
+  auto synthesis_type = [](void* clientData, Tcl_Interp* interp, int argc,
+                           const char* argv[]) -> int {
     CompilerRS* compiler = (CompilerRS*)clientData;
     std::string name;
     if (argc != 2) {
-      compiler->ErrorMessage("Specify on/off");
+      compiler->ErrorMessage("Specify type: Yosys/RS/QL");
       return TCL_ERROR;
     }
     std::string arg = argv[1];
-    compiler->UseRsSynthesis((arg == "on") ? true : false);
+    if (arg == "Yosys") {
+      compiler->SynthType(SynthesisType::Yosys);
+    } else if (arg == "RS") {
+      compiler->SynthType(SynthesisType::RS);
+    } else if (arg == "QL") {
+      compiler->SynthType(SynthesisType::QL);
+    } else {
+      compiler->ErrorMessage("Illegal synthesis type: " + arg);
+      return TCL_ERROR;
+    }
     return TCL_OK;
   };
-  interp->registerCmd("rs_synthesis", rs_synthesis, this, 0);
+  interp->registerCmd("synthesis_type", synthesis_type, this, 0);
 
   return true;
 }
@@ -199,7 +245,7 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   ipgenerate                 : IP generation" << std::endl;
   (*out) << "   verific_parser <on/off>    : Turns on/off Verific Parser"
          << std::endl;
-  (*out) << "   rs_synthesis <on/off>      : Turns on/off RS Synthesis"
+  (*out) << "   synthesis_type Yosys/QL/RS : Selects Synthesis type"
          << std::endl;
   (*out) << "   custom_synth_script <file> : Uses a custom Yosys templatized "
             "script"
@@ -208,6 +254,8 @@ void CompilerRS::Help(std::ostream* out) {
       << "   synthesize <optimization>  : RTL Synthesis, optional opt. (area, "
          "delay, mixed, none)"
       << std::endl;
+  (*out) << "   synth_options <option list>: RS-Yosys Plugin Options"
+         << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
          << std::endl;

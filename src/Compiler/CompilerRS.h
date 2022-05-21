@@ -15,6 +15,8 @@ All rights reserved
 #define COMPILER_RS_H
 
 namespace FOEDAG {
+enum class SynthesisType { Yosys, QL, RS };
+
 class CompilerRS : public CompilerOpenFPGA {
  public:
   CompilerRS();
@@ -26,10 +28,10 @@ class CompilerRS : public CompilerOpenFPGA {
   virtual std::string InitSynthesisScript();
   virtual std::string FinishSynthesisScript(const std::string& script);
   virtual bool RegisterCommands(TclInterpreter* interp, bool batchMode);
-  void UseRsSynthesis(bool on) { m_use_rs_synthesis = on; }
+  void SynthType(SynthesisType type) { m_synthType = type; }
 
  protected:
-  bool m_use_rs_synthesis = true;
+  SynthesisType m_synthType = SynthesisType::RS;
 };
 
 }  // namespace FOEDAG
