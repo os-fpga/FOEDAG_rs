@@ -209,6 +209,10 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
   auto synth_options = [](void* clientData, Tcl_Interp* interp, int argc,
                           const char* argv[]) -> int {
     CompilerRS* compiler = (CompilerRS*)clientData;
+    if (compiler->m_synthType != SynthesisType::RS) {
+      compiler->ErrorMessage("Please set 'synthesis_type RS' at first.");
+      return TCL_ERROR;
+    }
     for (int i = 1; i < argc; i++) {
       std::string option = argv[i];
       if (option == "-fsm_encoding" && i + 1 < argc) {
