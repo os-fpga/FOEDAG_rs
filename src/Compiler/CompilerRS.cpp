@@ -25,6 +25,24 @@ All rights reserved
 
 using namespace FOEDAG;
 
+const std::string QLYosysScript = R"( 
+# Yosys synthesis script for ${TOP_MODULE}
+# Read source files
+${READ_DESIGN_FILES}
+
+# Technology mapping
+hierarchy -top ${TOP_MODULE}
+
+${KEEP_NAMES}
+
+plugin -i ${PLUGIN_LIB}
+${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING}
+
+# Clean and output blif
+write_blif ${OUTPUT_BLIF}
+write_verilog -noexpr -nodec -defparam -norename ${OUTPUT_VERILOG}
+  )";
+
 const std::string RapidSiliconYosysScript = R"( 
 # Yosys synthesis script for ${TOP_MODULE}
 # Read source files
@@ -35,8 +53,8 @@ hierarchy -top ${TOP_MODULE}
 
 ${KEEP_NAMES}
 
-plugin -i synth-rs
-synth_rs -tech genesis -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING}
+plugin -i ${PLUGIN_LIB}
+${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING}
 
 # Clean and output blif
 write_blif ${OUTPUT_BLIF}
@@ -44,12 +62,25 @@ write_verilog -noexpr -nodec -defparam -norename ${OUTPUT_VERILOG}
   )";
 
 std::string CompilerRS::InitSynthesisScript() {
-  if (m_use_rs_synthesis) {
-    YosysScript(RapidSiliconYosysScript);
-    return m_yosysScript;
-  } else {
-    return CompilerOpenFPGA::InitSynthesisScript();
+  switch (m_synthType) {
+    case SynthesisType::Yosys:
+      return CompilerOpenFPGA::InitSynthesisScript();
+    case SynthesisType::QL: {
+      m_mapToTechnology = "qlf_k6n10";
+      m_yosysPluginLib = "ql-qlf";
+      m_yosysPlugin = "synth_ql";
+      YosysScript(QLYosysScript);
+      break;
+    }
+    case SynthesisType::RS: {
+      m_mapToTechnology = "genesis";
+      m_yosysPluginLib = "synth-rs";
+      m_yosysPlugin = "synth_rs";
+      YosysScript(RapidSiliconYosysScript);
+      break;
+    }
   }
+  return m_yosysScript;
 }
 
 std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
@@ -67,6 +98,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   std::string optimization;
   switch (m_synthOpt) {
     case SynthesisOpt::None:
+      // Use default
       optimization = "-de";
       break;
     case SynthesisOpt::Area:
@@ -126,12 +158,23 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   if (m_synthNoBram) {
     no_bram = "-no_bram";
   }
+  if (m_synthType == SynthesisType::QL) {
+    optimization = "";
+    effort = "";
+    fsm_encoding = "";
+    carry_inference = "";
+    no_dsp = "";
+    no_bram = "";
+  }
   result = ReplaceAll(result, "${OPTIMIZATION}", optimization);
   result = ReplaceAll(result, "${EFFORT}", effort);
   result = ReplaceAll(result, "${FSM_ENCODING}", fsm_encoding);
   result = ReplaceAll(result, "${CARRY}", carry_inference);
   result = ReplaceAll(result, "${NO_DSP}", no_dsp);
   result = ReplaceAll(result, "${NO_BRAM}", no_bram);
+  result = ReplaceAll(result, "${PLUGIN_LIB}", PluginLibName());
+  result = ReplaceAll(result, "${PLUGIN_NAME}", PluginName());
+  result = ReplaceAll(result, "${MAP_TO_TECHNOLOGY}", MapTechnology());
   result = ReplaceAll(result, "${LUT_SIZE}", std::to_string(m_lut_size));
   return result;
 }
@@ -140,19 +183,28 @@ CompilerRS::CompilerRS() { m_channel_width = 180; }
 
 bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
   CompilerOpenFPGA::RegisterCommands(interp, batchMode);
-  auto rs_synthesis = [](void* clientData, Tcl_Interp* interp, int argc,
-                         const char* argv[]) -> int {
+  auto synthesis_type = [](void* clientData, Tcl_Interp* interp, int argc,
+                           const char* argv[]) -> int {
     CompilerRS* compiler = (CompilerRS*)clientData;
     std::string name;
     if (argc != 2) {
-      compiler->ErrorMessage("Specify on/off");
+      compiler->ErrorMessage("Specify type: Yosys/RS/QL");
       return TCL_ERROR;
     }
     std::string arg = argv[1];
-    compiler->UseRsSynthesis((arg == "on") ? true : false);
+    if (arg == "Yosys") {
+      compiler->SynthType(SynthesisType::Yosys);
+    } else if (arg == "RS") {
+      compiler->SynthType(SynthesisType::RS);
+    } else if (arg == "QL") {
+      compiler->SynthType(SynthesisType::QL);
+    } else {
+      compiler->ErrorMessage("Illegal synthesis type: " + arg);
+      return TCL_ERROR;
+    }
     return TCL_OK;
   };
-  interp->registerCmd("rs_synthesis", rs_synthesis, this, 0);
+  interp->registerCmd("synthesis_type", synthesis_type, this, 0);
 
   auto synth_options = [](void* clientData, Tcl_Interp* interp, int argc,
                           const char* argv[]) -> int {
@@ -162,9 +214,9 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
       if (option == "-fsm_encoding" && i + 1 < argc) {
         std::string arg = argv[++i];
         if (arg == "binary") {
-          compiler->setSynthFsm(SynthesisFsmEncoding::Binary);
+          compiler->SynthFsm(SynthesisFsmEncoding::Binary);
         } else if (arg == "onehot") {
-          compiler->setSynthFsm(SynthesisFsmEncoding::Onehot);
+          compiler->SynthFsm(SynthesisFsmEncoding::Onehot);
         } else {
           compiler->ErrorMessage("Unknown fsm encoding option: " + arg);
           return TCL_ERROR;
@@ -174,11 +226,11 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
       if (option == "-effort" && i + 1 < argc) {
         std::string arg = argv[++i];
         if (arg == "high") {
-          compiler->setSynthEffort(SynthesisEffort::High);
+          compiler->SynthEffort(SynthesisEffort::High);
         } else if (arg == "medium") {
-          compiler->setSynthEffort(SynthesisEffort::Medium);
+          compiler->SynthEffort(SynthesisEffort::Medium);
         } else if (arg == "low") {
-          compiler->setSynthEffort(SynthesisEffort::Low);
+          compiler->SynthEffort(SynthesisEffort::Low);
         } else {
           compiler->ErrorMessage("Unknown effort option: " + arg);
           return TCL_ERROR;
@@ -188,11 +240,11 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
       if (option == "-carry" && i + 1 < argc) {
         std::string arg = argv[++i];
         if (arg == "none") {
-          compiler->setSynthCarry(SynthesisCarryInference::NoCarry);
+          compiler->SynthCarry(SynthesisCarryInference::NoCarry);
         } else if (arg == "no_const") {
-          compiler->setSynthCarry(SynthesisCarryInference::NoConst);
+          compiler->SynthCarry(SynthesisCarryInference::NoConst);
         } else if (arg == "all") {
-          compiler->setSynthCarry(SynthesisCarryInference::All);
+          compiler->SynthCarry(SynthesisCarryInference::All);
         } else {
           compiler->ErrorMessage("Unknown carry inference option: " + arg);
           return TCL_ERROR;
@@ -200,11 +252,11 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
         continue;
       }
       if (option == "-no_dsp") {
-        compiler->setSynthNoDsp(true);
+        compiler->SynthNoDsp(true);
         continue;
       }
       if (option == "-no_bram") {
-        compiler->setSynthNoBram(true);
+        compiler->SynthNoBram(true);
         continue;
       }
       compiler->ErrorMessage("Unknown option: " + option);
@@ -288,6 +340,8 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   help                       : This help" << std::endl;
   (*out) << "   create_design <name>       : Creates a design with <name> name"
          << std::endl;
+  (*out) << "   target_device <name>       : Targets a device with <name> name"
+         << std::endl;
   (*out) << "   add_design_file <file>... <type> (-VHDL_1987, -VHDL_1993, "
             "-VHDL_2000, "
             "-VHDL_2008 (.vhd default), -V_1995, \n"
@@ -310,7 +364,7 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   ipgenerate                 : IP generation" << std::endl;
   (*out) << "   verific_parser <on/off>    : Turns on/off Verific Parser"
          << std::endl;
-  (*out) << "   rs_synthesis <on/off>      : Turns on/off RS Synthesis"
+  (*out) << "   synthesis_type Yosys/QL/RS : Selects Synthesis type"
          << std::endl;
   (*out) << "   custom_synth_script <file> : Uses a custom Yosys templatized "
             "script"
@@ -319,7 +373,7 @@ void CompilerRS::Help(std::ostream* out) {
       << "   synthesize <optimization>  : RTL Synthesis, optional opt. (area, "
          "delay, mixed, none)"
       << std::endl;
-  (*out) << "   synth_options <opt list>   : Synthesis options. "
+  (*out) << "   synth_options <option list>: RS-Yosys Plugin Options. "
             "The following defaults exist:"
          << std::endl;
   (*out) << "                              :   -effort high" << std::endl;

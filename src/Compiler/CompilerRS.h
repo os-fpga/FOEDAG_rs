@@ -15,6 +15,8 @@ All rights reserved
 #define COMPILER_RS_H
 
 namespace FOEDAG {
+enum class SynthesisType { Yosys, QL, RS };
+
 class CompilerRS : public CompilerOpenFPGA {
  public:
   enum class SynthesisEffort { None, High, Low, Medium };
@@ -31,20 +33,20 @@ class CompilerRS : public CompilerOpenFPGA {
   virtual std::string InitSynthesisScript();
   virtual std::string FinishSynthesisScript(const std::string& script);
   virtual bool RegisterCommands(TclInterpreter* interp, bool batchMode);
-  void UseRsSynthesis(bool on) { m_use_rs_synthesis = on; }
-  SynthesisEffort getSynthEffort() { return m_synthEffort; }
-  void setSynthEffort(SynthesisEffort effort) { m_synthEffort = effort; }
-  SynthesisCarryInference getSynthCarry() { return m_synthCarry; }
-  void setSynthCarry(SynthesisCarryInference carry) { m_synthCarry = carry; }
-  SynthesisFsmEncoding getSynthFsm() { return m_synthFsm; }
-  void setSynthFsm(SynthesisFsmEncoding fsmEnc) { m_synthFsm = fsmEnc; }
-  bool getSynthNoDsp() { return m_synthNoDsp; }
-  void setSynthNoDsp(bool noDsp) { m_synthNoDsp = noDsp; }
-  bool getSynthNoBram() { return m_synthNoBram; }
-  void setSynthNoBram(bool noBram) { m_synthNoBram = noBram; }
+  void SynthType(SynthesisType type) { m_synthType = type; }
+  SynthesisEffort SynthEffort() { return m_synthEffort; }
+  void SynthEffort(SynthesisEffort effort) { m_synthEffort = effort; }
+  SynthesisCarryInference SynthCarry() { return m_synthCarry; }
+  void SynthCarry(SynthesisCarryInference carry) { m_synthCarry = carry; }
+  SynthesisFsmEncoding SynthFsm() { return m_synthFsm; }
+  void SynthFsm(SynthesisFsmEncoding fsmEnc) { m_synthFsm = fsmEnc; }
+  bool SynthNoDsp() { return m_synthNoDsp; }
+  void SynthNoDsp(bool noDsp) { m_synthNoDsp = noDsp; }
+  bool SynthNoBram() { return m_synthNoBram; }
+  void SynthNoBram(bool noBram) { m_synthNoBram = noBram; }
 
  protected:
-  bool m_use_rs_synthesis = true;
+  SynthesisType m_synthType = SynthesisType::RS;
   SynthesisEffort m_synthEffort = SynthesisEffort::None;
   SynthesisCarryInference m_synthCarry = SynthesisCarryInference::None;
   SynthesisFsmEncoding m_synthFsm = SynthesisFsmEncoding::None;
