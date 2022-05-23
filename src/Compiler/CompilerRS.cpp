@@ -98,8 +98,8 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   std::string optimization;
   switch (m_synthOpt) {
     case SynthesisOpt::None:
-      // Use default
-      optimization = "-de";
+      // None means none
+      optimization = "";
       break;
     case SynthesisOpt::Area:
       optimization = "-de -goal area";
