@@ -36,11 +36,10 @@ hierarchy -top ${TOP_MODULE}
 ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
-${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING}
 
-# Clean and output blif
-write_blif ${OUTPUT_BLIF}
-write_verilog -noexpr -nodec -defparam -norename ${OUTPUT_VERILOG}
+${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} -blif ${OUTPUT_BLIF}
+
+write_verilog -noattr -nohex ${OUTPUT_VERILOG}
   )";
 
 const std::string RapidSiliconYosysScript = R"( 
@@ -66,7 +65,7 @@ std::string CompilerRS::InitSynthesisScript() {
     case SynthesisType::Yosys:
       return CompilerOpenFPGA::InitSynthesisScript();
     case SynthesisType::QL: {
-      m_mapToTechnology = "qlf_k6n10";
+      m_mapToTechnology = "qlf_k6n10f";
       m_yosysPluginLib = "ql-qlf";
       m_yosysPlugin = "synth_ql";
       YosysScript(QLYosysScript);
@@ -166,6 +165,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
     no_dsp = "";
     no_bram = "";
   }
+  optimization += " " + SynthMoreOpt();
   result = ReplaceAll(result, "${OPTIMIZATION}", optimization);
   result = ReplaceAll(result, "${EFFORT}", effort);
   result = ReplaceAll(result, "${FSM_ENCODING}", fsm_encoding);
