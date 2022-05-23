@@ -63,16 +63,17 @@ write_verilog -noexpr -nodec -defparam -norename ${OUTPUT_VERILOG}
 std::string CompilerRS::InitSynthesisScript() {
   switch (m_synthType) {
     case SynthesisType::Yosys:
+      Message("Yosys Synthesis");
       return CompilerOpenFPGA::InitSynthesisScript();
     case SynthesisType::QL: {
-      std::cout << "QL" << std::endl;
+      Message("QL Synthesis");
       if (m_yosysPluginLib.empty()) m_yosysPluginLib = "ql-qlf";
       if (m_yosysPlugin.empty()) m_yosysPlugin = "synth_ql";
       YosysScript(QLYosysScript);
       break;
     }
     case SynthesisType::RS: {
-      std::cout << "RS" << std::endl;
+      Message("RS Synthesis");
       if (m_mapToTechnology.empty()) m_mapToTechnology = "genesis";
       if (m_yosysPluginLib.empty()) m_yosysPluginLib = "synth-rs";
       if (m_yosysPlugin.empty()) m_yosysPlugin = "synth_rs";
