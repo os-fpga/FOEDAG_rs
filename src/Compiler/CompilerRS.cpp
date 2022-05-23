@@ -344,7 +344,8 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   help                       : This help" << std::endl;
   (*out) << "   create_design <name>       : Creates a design with <name> name"
          << std::endl;
-  (*out) << "   target_device <name>       : Targets a device with <name> name"
+  (*out) << "   target_device <name>       : Targets a device with <name> name "
+            "(MPW1, GENESIS)"
          << std::endl;
   (*out) << "   add_design_file <file>... <type> (-VHDL_1987, -VHDL_1993, "
             "-VHDL_2000, "
