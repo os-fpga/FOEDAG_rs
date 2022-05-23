@@ -162,8 +162,9 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
     effort = "";
     fsm_encoding = "";
     carry_inference = "";
-    no_dsp = "";
-    no_bram = "";
+    if (m_synthNoAdder) {
+      optimization += " -no_adder";
+    }
   }
   optimization += " " + SynthMoreOpt();
   result = ReplaceAll(result, "${OPTIMIZATION}", optimization);
@@ -264,7 +265,7 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
         continue;
       }
       if (option == "-no_adder") {
-        compiler->SynthNoDsp(true);
+        compiler->SynthNoAdder(true);
         continue;
       }
       compiler->ErrorMessage("Unknown option: " + option);
