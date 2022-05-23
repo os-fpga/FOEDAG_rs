@@ -65,16 +65,17 @@ std::string CompilerRS::InitSynthesisScript() {
     case SynthesisType::Yosys:
       return CompilerOpenFPGA::InitSynthesisScript();
     case SynthesisType::QL: {
-      m_mapToTechnology = "qlf_k6n10f";
-      m_yosysPluginLib = "ql-qlf";
-      m_yosysPlugin = "synth_ql";
+      std::cout << "QL" << std::endl;
+      if (m_yosysPluginLib.empty()) m_yosysPluginLib = "ql-qlf";
+      if (m_yosysPlugin.empty()) m_yosysPlugin = "synth_ql";
       YosysScript(QLYosysScript);
       break;
     }
     case SynthesisType::RS: {
-      m_mapToTechnology = "genesis";
-      m_yosysPluginLib = "synth-rs";
-      m_yosysPlugin = "synth_rs";
+      std::cout << "RS" << std::endl;
+      if (m_mapToTechnology.empty()) m_mapToTechnology = "genesis";
+      if (m_yosysPluginLib.empty()) m_yosysPluginLib = "synth-rs";
+      if (m_yosysPlugin.empty()) m_yosysPlugin = "synth_rs";
       YosysScript(RapidSiliconYosysScript);
       break;
     }
@@ -166,6 +167,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
       optimization += " -no_adder";
     }
   }
+  optimization += " " + DefaultSynthOptions();
   optimization += " " + SynthMoreOpt();
   result = ReplaceAll(result, "${OPTIMIZATION}", optimization);
   result = ReplaceAll(result, "${EFFORT}", effort);
@@ -173,39 +175,20 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   result = ReplaceAll(result, "${CARRY}", carry_inference);
   result = ReplaceAll(result, "${NO_DSP}", no_dsp);
   result = ReplaceAll(result, "${NO_BRAM}", no_bram);
-  result = ReplaceAll(result, "${PLUGIN_LIB}", PluginLibName());
-  result = ReplaceAll(result, "${PLUGIN_NAME}", PluginName());
-  result = ReplaceAll(result, "${MAP_TO_TECHNOLOGY}", MapTechnology());
+  result = ReplaceAll(result, "${PLUGIN_LIB}", YosysPluginLibName());
+  result = ReplaceAll(result, "${PLUGIN_NAME}", YosysPluginName());
+  result = ReplaceAll(result, "${MAP_TO_TECHNOLOGY}", YosysMapTechnology());
   result = ReplaceAll(result, "${LUT_SIZE}", std::to_string(m_lut_size));
   return result;
 }
 
-CompilerRS::CompilerRS() { m_channel_width = 180; }
+CompilerRS::CompilerRS() : CompilerOpenFPGA() {
+  m_synthType = SynthesisType::RS;
+  m_channel_width = 180;
+}
 
 bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
   CompilerOpenFPGA::RegisterCommands(interp, batchMode);
-  auto synthesis_type = [](void* clientData, Tcl_Interp* interp, int argc,
-                           const char* argv[]) -> int {
-    CompilerRS* compiler = (CompilerRS*)clientData;
-    std::string name;
-    if (argc != 2) {
-      compiler->ErrorMessage("Specify type: Yosys/RS/QL");
-      return TCL_ERROR;
-    }
-    std::string arg = argv[1];
-    if (arg == "Yosys") {
-      compiler->SynthType(SynthesisType::Yosys);
-    } else if (arg == "RS") {
-      compiler->SynthType(SynthesisType::RS);
-    } else if (arg == "QL") {
-      compiler->SynthType(SynthesisType::QL);
-    } else {
-      compiler->ErrorMessage("Illegal synthesis type: " + arg);
-      return TCL_ERROR;
-    }
-    return TCL_OK;
-  };
-  interp->registerCmd("synthesis_type", synthesis_type, this, 0);
 
   auto synth_options = [](void* clientData, Tcl_Interp* interp, int argc,
                           const char* argv[]) -> int {
