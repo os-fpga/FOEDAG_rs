@@ -162,8 +162,9 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
     effort = "";
     fsm_encoding = "";
     carry_inference = "";
-    no_dsp = "";
-    no_bram = "";
+    if (m_synthNoAdder) {
+      optimization += " -no_adder";
+    }
   }
   optimization += " " + SynthMoreOpt();
   result = ReplaceAll(result, "${OPTIMIZATION}", optimization);
@@ -209,8 +210,8 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
   auto synth_options = [](void* clientData, Tcl_Interp* interp, int argc,
                           const char* argv[]) -> int {
     CompilerRS* compiler = (CompilerRS*)clientData;
-    if (compiler->m_synthType != SynthesisType::RS) {
-      compiler->ErrorMessage("Please set 'synthesis_type RS' at first.");
+    if (compiler->m_synthType == SynthesisType::Yosys) {
+      compiler->ErrorMessage("Please set 'synthesis_type RS or QL' first.");
       return TCL_ERROR;
     }
     for (int i = 1; i < argc; i++) {
@@ -261,6 +262,10 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
       }
       if (option == "-no_bram") {
         compiler->SynthNoBram(true);
+        continue;
+      }
+      if (option == "-no_adder") {
+        compiler->SynthNoAdder(true);
         continue;
       }
       compiler->ErrorMessage("Unknown option: " + option);

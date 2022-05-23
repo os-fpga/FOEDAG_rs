@@ -44,6 +44,8 @@ class CompilerRS : public CompilerOpenFPGA {
   void SynthNoDsp(bool noDsp) { m_synthNoDsp = noDsp; }
   bool SynthNoBram() { return m_synthNoBram; }
   void SynthNoBram(bool noBram) { m_synthNoBram = noBram; }
+  bool SynthNoAdder() { return m_synthNoAdder; }
+  void SynthNoAdder(bool noAdder) { m_synthNoAdder = noAdder; }
 
  protected:
   SynthesisType m_synthType = SynthesisType::RS;
@@ -52,6 +54,7 @@ class CompilerRS : public CompilerOpenFPGA {
   SynthesisFsmEncoding m_synthFsm = SynthesisFsmEncoding::None;
   bool m_synthNoDsp = false;
   bool m_synthNoBram = false;
+  bool m_synthNoAdder = false;
 };
 
 }  // namespace FOEDAG
