@@ -37,7 +37,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} -blif ${OUTPUT_BLIF}
+${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} -blif ${OUTPUT_BLIF} ${FAST}
 
 write_verilog -noattr -nohex ${OUTPUT_VERILOG}
   )";
@@ -53,7 +53,7 @@ hierarchy -top ${TOP_MODULE}
 ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
-${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING}
+${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} ${FAST}
 
 # Clean and output blif
 write_blif ${OUTPUT_BLIF}
@@ -159,10 +159,15 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   if (m_synthNoBram) {
     no_bram = "-no_bram";
   }
+  std::string fast_mode;
+  if (m_synthFast) {
+    fast_mode = "-fast";
+  }
   if (m_synthType == SynthesisType::QL) {
     optimization = "";
     effort = "";
     fsm_encoding = "";
+    fast_mode = "";
     carry_inference = "";
     if (m_synthNoAdder) {
       optimization += " -no_adder";
@@ -176,6 +181,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   result = ReplaceAll(result, "${CARRY}", carry_inference);
   result = ReplaceAll(result, "${NO_DSP}", no_dsp);
   result = ReplaceAll(result, "${NO_BRAM}", no_bram);
+  result = ReplaceAll(result, "${FAST}", fast_mode);
   result = ReplaceAll(result, "${PLUGIN_LIB}", YosysPluginLibName());
   result = ReplaceAll(result, "${PLUGIN_NAME}", YosysPluginName());
   result = ReplaceAll(result, "${MAP_TO_TECHNOLOGY}", YosysMapTechnology());
@@ -250,6 +256,10 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
       }
       if (option == "-no_adder") {
         compiler->SynthNoAdder(true);
+        continue;
+      }
+      if (option == "-fast") {
+        compiler->SynthFast(true);
         continue;
       }
       compiler->ErrorMessage("Unknown option: " + option);
@@ -398,6 +408,9 @@ void CompilerRS::Help(std::ostream* out) {
          << std::endl;
   (*out) << "     -no_bram                 : Do not use Block RAM to "
             "implement memory components"
+         << std::endl;
+  (*out) << "     -fast                    : Perform the fastest synthesis. "
+            "Don't expect good QoR."
          << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
