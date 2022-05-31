@@ -92,6 +92,8 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
     keeps += "setattr -set keep 1 w:\\*\n";
   }
   for (auto keep : m_constraints->GetKeeps()) {
+    keep = ReplaceAll(keep, "@", "[");
+    keep = ReplaceAll(keep, "%", "]");
     (*m_out) << "Keep name: " << keep << "\n";
     keeps += "setattr -set keep 1 " + keep + "\n";
   }
