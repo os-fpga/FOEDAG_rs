@@ -282,11 +282,11 @@ std::string CompilerRS::BaseVprCommand() {
 
   std::string netlistFile = m_projManager->projectName() + "_post_synth.blif";
   for (const auto& lang_file : m_projManager->DesignFiles()) {
-    switch (m_projManager->designFileData(lang_file)) {
+    switch (lang_file.first) {
       case Design::Language::VERILOG_NETLIST:
       case Design::Language::BLIF:
       case Design::Language::EBLIF: {
-        netlistFile = lang_file;
+        netlistFile = lang_file.second;
         std::filesystem::path the_path = netlistFile;
         if (!the_path.is_absolute()) {
           netlistFile =
