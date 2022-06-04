@@ -113,6 +113,8 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
     case SynthesisOpt::Mixed:
       optimization = "-de -goal mixed";
       break;
+    case SynthesisOpt::Clean:
+      break;
   }
   std::string effort;
   switch (m_synthEffort) {
@@ -367,7 +369,7 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "                                Constraints: set_pin_loc, "
             "set_region_loc, all SDC commands"
          << std::endl;
-  (*out) << "   ipgenerate                 : IP generation" << std::endl;
+  (*out) << "   ipgenerate ?clean?        : IP generation" << std::endl;
   (*out) << "   verific_parser <on/off>    : Turns on/off Verific Parser"
          << std::endl;
   (*out) << "   synthesis_type Yosys/QL/RS : Selects Synthesis type"
@@ -375,10 +377,10 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   custom_synth_script <file> : Uses a custom Yosys templatized "
             "script"
          << std::endl;
-  (*out)
-      << "   synthesize <optimization>  : RTL Synthesis, optional opt. (area, "
-         "delay, mixed, none)"
-      << std::endl;
+  (*out) << "   synthesize <optimization>  ?clean? : RTL Synthesis, optional "
+            "opt. (area, "
+            "delay, mixed, none)"
+         << std::endl;
   (*out) << "   synth_options <option list>: RS-Yosys Plugin Options. "
             "The following defaults exist:"
          << std::endl;
@@ -432,13 +434,13 @@ void CompilerRS::Help(std::ostream* out) {
          << std::endl;
   (*out) << "   set_device_size XxY        : Device fabric size selection"
          << std::endl;
-  (*out) << "   packing                    : Packing" << std::endl;
-  (*out) << "   global_placement           : Analytical placer" << std::endl;
-  (*out) << "   place                      : Detailed placer" << std::endl;
-  (*out) << "   route                      : Router" << std::endl;
-  (*out) << "   sta                        : Statistical Timing Analysis"
+  (*out) << "   packing ?clean?            : Packing" << std::endl;
+  (*out) << "   global_placement ?clean?   : Analytical placer" << std::endl;
+  (*out) << "   place ?clean?              : Detailed placer" << std::endl;
+  (*out) << "   route ?clean?              : Router" << std::endl;
+  (*out) << "   sta ?clean?                : Statistical Timing Analysis"
          << std::endl;
-  (*out) << "   power                      : Power estimator" << std::endl;
-  (*out) << "   bitstream ?force?          : Bitstream generation" << std::endl;
+  (*out) << "   power ?clean?              : Power estimator" << std::endl;
+  (*out) << "   bitstream ?force? ?clean?  : Bitstream generation" << std::endl;
   (*out) << "----------------------------------" << std::endl;
 }
