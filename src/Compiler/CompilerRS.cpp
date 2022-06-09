@@ -148,8 +148,8 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
     case SynthesisCarryInference::All:
       carry_inference = "-carry all";
       break;
-    case SynthesisCarryInference::NoConst:
-      carry_inference = "-carry no_const";
+    case SynthesisCarryInference::Auto:
+      carry_inference = "-carry auto";
       break;
     case SynthesisCarryInference::NoCarry:
       carry_inference = "-carry no";
@@ -240,8 +240,8 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
         std::string arg = argv[++i];
         if (arg == "none") {
           compiler->SynthCarry(SynthesisCarryInference::NoCarry);
-        } else if (arg == "no_const") {
-          compiler->SynthCarry(SynthesisCarryInference::NoConst);
+        } else if (arg == "auto") {
+          compiler->SynthCarry(SynthesisCarryInference::Auto);
         } else if (arg == "all") {
           compiler->SynthCarry(SynthesisCarryInference::All);
         } else {
@@ -388,7 +388,7 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "                              :   -fsm_encoding binary if "
             "optimization == area else onehot"
          << std::endl;
-  (*out) << "                              :   -carry no_const" << std::endl;
+  (*out) << "                              :   -carry auto" << std::endl;
   (*out) << "     -effort <level>          : Optimization effort level (high,"
             " medium, low)"
          << std::endl;
@@ -403,8 +403,8 @@ void CompilerRS::Help(std::ostream* out) {
          << std::endl;
   (*out) << "       all                    : Infer as much as possible"
          << std::endl;
-  (*out) << "       no_const               : Infer carries only with non "
-            "constant inputs"
+  (*out) << "       auto                   : Infer carries based on internal "
+            "heuristics"
          << std::endl;
   (*out) << "       none                   : Do not infer carries" << std::endl;
   (*out) << "     -no_dsp                  : Do not use DSP blocks to "
