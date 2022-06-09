@@ -8,7 +8,7 @@
 
 namespace RS {
 
-#define Company "RapidSilicon"
+#define Company "Rapid Silicon"
 #define ToolName "Raptor"
 #define ExecutableName "raptor"
 
