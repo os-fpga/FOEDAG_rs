@@ -19,7 +19,7 @@ namespace FOEDAG {
 class CompilerRS : public CompilerOpenFPGA {
  public:
   enum class SynthesisEffort { None, High, Low, Medium };
-  enum class SynthesisCarryInference { None, NoCarry, All, NoConst };
+  enum class SynthesisCarryInference { None, NoCarry, All, Auto };
   enum class SynthesisFsmEncoding { None, Binary, Onehot };
 
  public:
