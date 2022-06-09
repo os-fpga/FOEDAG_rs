@@ -325,7 +325,7 @@ std::string CompilerRS::BaseVprCommand() {
 extern const char* foedag_version_number;
 extern const char* foedag_git_hash;
 void CompilerRS::Version(std::ostream* out) {
-  (*out) << "RapidSilicon Raptor Compiler"
+  (*out) << "Rapid Silicon Raptor Compiler"
          << "\n";
   if (std::string(foedag_version_number) != "${VERSION_NUMBER}")
     (*out) << "Version : " << foedag_version_number << "\n";
@@ -335,14 +335,15 @@ void CompilerRS::Version(std::ostream* out) {
 }
 
 void CompilerRS::Help(std::ostream* out) {
-  (*out) << "----------------------------------" << std::endl;
-  (*out) << "--- RapidSilicon RAPTOR HELP  ----" << std::endl;
-  (*out) << "----------------------------------" << std::endl;
+  (*out) << "-----------------------------------" << std::endl;
+  (*out) << "--- Rapid Silicon RAPTOR HELP  ----" << std::endl;
+  (*out) << "-----------------------------------" << std::endl;
   (*out) << "Options:" << std::endl;
   (*out) << "   --help           : This help" << std::endl;
   (*out) << "   --version        : Version" << std::endl;
   (*out) << "   --batch          : Tcl only, no GUI" << std::endl;
   (*out) << "   --script <script>: Execute a Tcl script" << std::endl;
+  (*out) << "   --mute           : mutes stdout in batch mode" << std::endl;
   (*out) << "Tcl commands:" << std::endl;
   (*out) << "   help                       : This help" << std::endl;
   (*out) << "   create_design <name>       : Creates a design with <name> name"
@@ -376,10 +377,6 @@ void CompilerRS::Help(std::ostream* out) {
          << std::endl;
   (*out) << "   custom_synth_script <file> : Uses a custom Yosys templatized "
             "script"
-         << std::endl;
-  (*out) << "   synthesize <optimization>  ?clean? : RTL Synthesis, optional "
-            "opt. (area, "
-            "delay, mixed, none)"
          << std::endl;
   (*out) << "   synth_options <option list>: RS-Yosys Plugin Options. "
             "The following defaults exist:"
@@ -415,6 +412,10 @@ void CompilerRS::Help(std::ostream* out) {
          << std::endl;
   (*out) << "     -fast                    : Perform the fastest synthesis. "
             "Don't expect good QoR."
+         << std::endl;
+  (*out) << "   synthesize <optimization>  ?clean? : RTL Synthesis, optional "
+            "opt. (area, "
+            "delay, mixed, none)"
          << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
