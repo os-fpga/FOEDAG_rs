@@ -362,6 +362,7 @@ void CompilerRS::Help(std::ostream* out) {
          << std::endl;
   (*out) << "   add_include_path <path1>...: As in +incdir+" << std::endl;
   (*out) << "   add_library_path <path1>...: As in +libdir+" << std::endl;
+  (*out) << "   add_library_ext <.v> <.sv> ...: As in +libext+" << std::endl;
   (*out) << "   set_macro <name>=<value>...: As in -D<macro>=<value>"
          << std::endl;
   (*out) << "   set_top_module <top>       : Sets the top module" << std::endl;
