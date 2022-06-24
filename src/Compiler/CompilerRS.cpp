@@ -304,7 +304,7 @@ std::string CompilerRS::BaseVprCommand() {
 
   std::string pnrOptions;
   if (!PnROpt().empty()) pnrOptions = " " + PnROpt();
-
+  if (!PerDevicePnROptions().empty()) pnrOptions += " " + PerDevicePnROptions();
   std::string command =
       m_vprExecutablePath.string() + std::string(" ") +
       m_architectureFile.string() + std::string(" ") +
