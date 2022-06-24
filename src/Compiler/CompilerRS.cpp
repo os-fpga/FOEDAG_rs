@@ -177,7 +177,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
       optimization += " -no_adder";
     }
   }
-  optimization += " " + DefaultSynthOptions();
+  optimization += " " + PerDeviceSynthOptions();
   optimization += " " + SynthMoreOpt();
   result = ReplaceAll(result, "${OPTIMIZATION}", optimization);
   result = ReplaceAll(result, "${EFFORT}", effort);
