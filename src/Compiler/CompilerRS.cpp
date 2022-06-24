@@ -57,7 +57,7 @@ ${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${E
 
 # Clean and output blif
 write_blif ${OUTPUT_BLIF}
-write_verilog -noexpr -nodec -defparam -norename ${OUTPUT_VERILOG}
+write_verilog -noexpr -nodec -norename ${OUTPUT_VERILOG}
   )";
 
 std::string CompilerRS::InitSynthesisScript() {
