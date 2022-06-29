@@ -324,7 +324,7 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
   };
   interp->registerCmd("synth_options", synth_options, this, 0);
   auto max_threads = [](void* clientData, Tcl_Interp* interp, int argc,
-                          const char* argv[]) -> int {
+                        const char* argv[]) -> int {
     CompilerRS* compiler = (CompilerRS*)clientData;
     if (argc != 2) {
       compiler->ErrorMessage("Specify a number of threads.");
@@ -332,8 +332,7 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
     }
     try {
       compiler->MaxThreads(std::stoi(std::string(argv[1])));
-    }
-    catch (...) {
+    } catch (...) {
       compiler->ErrorMessage("Specify integer as a number of threads.");
       return TCL_ERROR;
     }

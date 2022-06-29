@@ -41,7 +41,9 @@ class CompilerRS : public CompilerOpenFPGA {
   SynthesisFsmEncoding SynthFsm() { return m_synthFsm; }
   void SynthFsm(SynthesisFsmEncoding fsmEnc) { m_synthFsm = fsmEnc; }
   SynthesisClkeStrategy SynthClke() { return m_synthClke; }
-  void SynthClke(SynthesisClkeStrategy clkeStrategy) { m_synthClke = clkeStrategy; }
+  void SynthClke(SynthesisClkeStrategy clkeStrategy) {
+    m_synthClke = clkeStrategy;
+  }
   bool SynthNoDsp() { return m_synthNoDsp; }
   void SynthNoDsp(bool noDsp) { m_synthNoDsp = noDsp; }
   bool SynthNoBram() { return m_synthNoBram; }
