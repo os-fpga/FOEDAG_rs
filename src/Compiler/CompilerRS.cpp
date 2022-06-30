@@ -436,9 +436,10 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   add_constraint_file <file> : Sets SDC + location constraints"
          << std::endl;
   (*out) << "                                Constraints: set_pin_loc, "
-            "set_region_loc, all SDC commands"
+            "all SDC Standard commands"
          << std::endl;
-  (*out) << "   ipgenerate ?clean?        : IP generation" << std::endl;
+  (*out) << "   set_pin_loc <design_io_name> <device_io_name> : Constraints pin location (Use in constraint file)" << std::endl;
+  (*out) << "   ipgenerate ?clean?         : IP generation" << std::endl;
   (*out) << "   verific_parser <on/off>    : Turns on/off Verific Parser"
          << std::endl;
   (*out) << "   synthesis_type Yosys/QL/RS : Selects Synthesis type"
