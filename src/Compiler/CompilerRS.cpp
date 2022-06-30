@@ -438,7 +438,9 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "                                Constraints: set_pin_loc, "
             "all SDC Standard commands"
          << std::endl;
-  (*out) << "   set_pin_loc <design_io_name> <device_io_name> : Constraints pin location (Use in constraint file)" << std::endl;
+  (*out) << "   set_pin_loc <design_io_name> <device_io_name> : Constraints "
+            "pin location (Use in constraint file)"
+         << std::endl;
   (*out) << "   ipgenerate ?clean?         : IP generation" << std::endl;
   (*out) << "   verific_parser <on/off>    : Turns on/off Verific Parser"
          << std::endl;
