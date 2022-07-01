@@ -37,7 +37,8 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} -blif ${OUTPUT_BLIF} ${FAST}
+${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} -blif ${OUTPUT_BLIF} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+
 
 write_verilog -noattr -nohex ${OUTPUT_VERILOG}
   )";
@@ -53,7 +54,8 @@ hierarchy -top ${TOP_MODULE}
 ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
-${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} ${FAST}
+
+${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 # Clean and output blif
 write_blif ${OUTPUT_BLIF}
@@ -167,6 +169,27 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   if (m_synthFast) {
     fast_mode = "-fast";
   }
+  std::string max_threads = "-de_max_threads " + std::to_string(m_maxThreads);
+  std::string no_simplify;
+  if (m_synthNoSimplify) {
+    no_simplify = "-no_simplify";
+  }
+  std::string clke_strategy;
+  switch (m_synthClke) {
+    case SynthesisClkeStrategy::None:
+      break;
+    case SynthesisClkeStrategy::Early:
+      clke_strategy = "-clock_enable_strategy early";
+      break;
+    case SynthesisClkeStrategy::Late:
+      clke_strategy = "-clock_enable_strategy late";
+      break;
+  }
+  std::string cec;
+  if (m_synthCec) {
+    cec = "-cec";
+  }
+
   if (m_synthType == SynthesisType::QL) {
     optimization = "";
     effort = "";
@@ -176,6 +199,10 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
     if (m_synthNoAdder) {
       optimization += " -no_adder";
     }
+    max_threads = "";
+    no_simplify = "";
+    clke_strategy = "";
+    cec = "";
   }
   optimization += " " + PerDeviceSynthOptions();
   optimization += " " + SynthMoreOpt();
@@ -186,6 +213,10 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   result = ReplaceAll(result, "${NO_DSP}", no_dsp);
   result = ReplaceAll(result, "${NO_BRAM}", no_bram);
   result = ReplaceAll(result, "${FAST}", fast_mode);
+  result = ReplaceAll(result, "${MAX_THREADS}", max_threads);
+  result = ReplaceAll(result, "${NO_SIMPLIFY}", no_simplify);
+  result = ReplaceAll(result, "${CLKE_STRATEGY}", clke_strategy);
+  result = ReplaceAll(result, "${CEC}", cec);
   result = ReplaceAll(result, "${PLUGIN_LIB}", YosysPluginLibName());
   result = ReplaceAll(result, "${PLUGIN_NAME}", YosysPluginName());
   result = ReplaceAll(result, "${MAP_TO_TECHNOLOGY}", YosysMapTechnology());
@@ -266,12 +297,48 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
         compiler->SynthFast(true);
         continue;
       }
+      if (option == "-no_simplify") {
+        compiler->SynthNoSimplify(true);
+        continue;
+      }
+      if (option == "-clke_strategy" && i + 1 < argc) {
+        std::string arg = argv[++i];
+        if (arg == "early") {
+          compiler->SynthClke(SynthesisClkeStrategy::Early);
+        } else if (arg == "late") {
+          compiler->SynthClke(SynthesisClkeStrategy::Late);
+        } else {
+          compiler->ErrorMessage("Unknown clock enable strategy: " + arg);
+          return TCL_ERROR;
+        }
+        continue;
+      }
+      if (option == "-cec") {
+        compiler->SynthCec(true);
+        continue;
+      }
       compiler->ErrorMessage("Unknown option: " + option);
       return TCL_ERROR;
     }
     return TCL_OK;
   };
   interp->registerCmd("synth_options", synth_options, this, 0);
+  auto max_threads = [](void* clientData, Tcl_Interp* interp, int argc,
+                        const char* argv[]) -> int {
+    CompilerRS* compiler = (CompilerRS*)clientData;
+    if (argc != 2) {
+      compiler->ErrorMessage("Specify a number of threads.");
+      return TCL_ERROR;
+    }
+    try {
+      compiler->MaxThreads(std::stoi(std::string(argv[1])));
+    } catch (...) {
+      compiler->ErrorMessage("Specify integer as a number of threads.");
+      return TCL_ERROR;
+    }
+    return TCL_OK;
+  };
+  interp->registerCmd("max_threads", max_threads, this, 0);
 
   return true;
 }
@@ -371,7 +438,9 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "                                Constraints: set_pin_loc, "
             "all SDC Standard commands"
          << std::endl;
-  (*out) << "   set_pin_loc <design_io_name> <device_io_name> : Constraints pin location (Use in constraint file)" << std::endl;
+  (*out) << "   set_pin_loc <design_io_name> <device_io_name> : Constraints "
+            "pin location (Use in constraint file)"
+         << std::endl;
   (*out) << "   ipgenerate ?clean?         : IP generation" << std::endl;
   (*out) << "   verific_parser <on/off>    : Turns on/off Verific Parser"
          << std::endl;
@@ -379,6 +448,9 @@ void CompilerRS::Help(std::ostream* out) {
          << std::endl;
   (*out) << "   custom_synth_script <file> : Uses a custom Yosys templatized "
             "script"
+         << std::endl;
+  (*out) << "   max_threads <-1/[2:64]>    : Maximum number of threads to"
+            " be used (-1 is for automatic selection)"
          << std::endl;
   (*out) << "   synth_options <option list>: RS-Yosys Plugin Options. "
             "The following defaults exist:"
@@ -388,6 +460,8 @@ void CompilerRS::Help(std::ostream* out) {
             "optimization == area else onehot"
          << std::endl;
   (*out) << "                              :   -carry auto" << std::endl;
+  (*out) << "                              :   -clke_strategy early"
+         << std::endl;
   (*out) << "     -effort <level>          : Optimization effort level (high,"
             " medium, low)"
          << std::endl;
@@ -414,6 +488,19 @@ void CompilerRS::Help(std::ostream* out) {
          << std::endl;
   (*out) << "     -fast                    : Perform the fastest synthesis. "
             "Don't expect good QoR."
+         << std::endl;
+  (*out) << "     -no_simplify             : Do not run special "
+            "simplification algorithms in synthesis. "
+         << std::endl;
+  (*out) << "     -clke_strategy <strategy>: Clock enable extraction "
+            "strategy for FFs:"
+         << std::endl;
+  (*out) << "       early                  : Perform early extraction"
+         << std::endl;
+  (*out) << "       late                   : Perform late extraction"
+         << std::endl;
+  (*out) << "     -cec                     : Dump verilog after key phases "
+            "and use internal equivalence checking (ABC based)"
          << std::endl;
   (*out) << "   synthesize <optimization>  ?clean? : RTL Synthesis, optional "
             "opt. (area, "
