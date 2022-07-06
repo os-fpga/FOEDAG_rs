@@ -395,10 +395,17 @@ void CompilerRS::Version(std::ostream* out) {
   (*out) << "Rapid Silicon Raptor Compiler"
          << "\n";
   if (std::string(foedag_version_number) != "${VERSION_NUMBER}")
-    (*out) << "Version : " << foedag_version_number << "\n";
+    (*out) << "Version   : " << foedag_version_number << "\n";
   if (std::string(foedag_git_hash) != "${GIT_HASH}")
-    (*out) << "Git Hash: " << foedag_git_hash << "\n";
-  (*out) << "Built   : " << std::string(__DATE__) << "\n";
+    (*out) << "Git Hash  : " << foedag_git_hash << "\n";
+  (*out) << "Built     : " << std::string(__DATE__) << "\n";
+#ifdef PRODUCTION_BUILD
+  (*out) << "Build type: Production"
+         << "\n";
+#else
+  (*out) << "Build type: Engineering"
+         << "\n";
+#endif
 }
 
 void CompilerRS::Help(std::ostream* out) {
