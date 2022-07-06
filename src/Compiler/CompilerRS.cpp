@@ -380,6 +380,7 @@ std::string CompilerRS::BaseVprCommand() {
           std::string(m_projManager->projectName() + "_openfpga.sdc") +
           std::string(" --route_chan_width ") +
           std::to_string(m_channel_width) +
+          " --suppress_warnings check_rr_node_warnings.log,check_rr_node"
           " --clock_modeling ideal --timing_report_npaths 100 "
           "--absorb_buffer_luts off --constant_net_method route "
           "--timing_report_detail detailed --post_place_timing_report " +
