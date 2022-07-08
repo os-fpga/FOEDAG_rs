@@ -539,6 +539,10 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   sta ?clean?                : Statistical Timing Analysis"
          << std::endl;
   (*out) << "   power ?clean?              : Power estimator" << std::endl;
+#ifdef PRODUCTION_BUILD
+  (*out) << "   bitstream ?clean?          : Bitstream generation" << std::endl;
+#else
   (*out) << "   bitstream ?force? ?clean?  : Bitstream generation" << std::endl;
+#endif
   (*out) << "----------------------------------" << std::endl;
 }
