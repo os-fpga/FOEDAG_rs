@@ -15,7 +15,10 @@ namespace RS {
 
 QWidget* mainWindowBuilder(FOEDAG::Session* session) {
   FOEDAG::MainWindow* mainW = new FOEDAG::MainWindow{session};
-  mainW->MainWindowTitle(std::string(Company) + " " + std::string(ToolName));
+  auto info = mainW->Info();
+  info.name = QString("%1 %2").arg(Company, ToolName);
+  info.url = "https://github.com/RapidSilicon/FOEDAG_rs/commit/";
+  mainW->Info(info);
   return mainW;
 }
 
