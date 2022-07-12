@@ -449,7 +449,18 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   set_pin_loc <design_io_name> <device_io_name> : Constraints "
             "pin location (Use in constraint file)"
          << std::endl;
-  (*out) << "   ipgenerate ?clean?         : IP generation" << std::endl;
+  (*out) << "   add_litex_ip_catalog <directory> : Browses directory for LiteX "
+            "IP generators, adds the IP(s) to the IP Catalog"
+         << std::endl;
+  (*out) << "   ip_configure <IP_NAME> -mod_name <name> -out_file <filename> "
+            "-version <ver_name> -P<param>=\"<value>\"..."
+         << std::endl;
+  (*out) << "                              : Configures an IP <IP_NAME> and "
+            "generates the corresponding file with module name"
+         << std::endl;
+  (*out) << "   ipgenerate ?clean?         : Generates all IP instances set by "
+            "ip_configure"
+         << std::endl;
   (*out) << "   verific_parser <on/off>    : Turns on/off Verific Parser"
          << std::endl;
   (*out) << "   synthesis_type Yosys/QL/RS : Selects Synthesis type"
