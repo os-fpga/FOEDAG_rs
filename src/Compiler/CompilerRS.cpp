@@ -551,6 +551,6 @@ bool CompilerRS::LicenseDevice(const std::string& deviceName) {
   // cannot be checkedout. deviceName is "GEMINI or MPW1" at this point.
   // Properly transform the string to the "RaptorGemini" feature before invoking
   // the License manager
-  
+
   return true;
 }
