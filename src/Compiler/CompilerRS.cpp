@@ -544,3 +544,11 @@ void CompilerRS::Help(std::ostream* out) {
 #endif
   (*out) << "----------------------------------" << std::endl;
 }
+
+bool CompilerRS::LicenseDevice(const std::string& deviceName) {
+  // Should return false in Production build if the Device License Feature cannot be checkedout.
+  // deviceName is "GEMINI or MPW1" at this point.
+  // Properly transform the string to the "RaptorGemini" feature before invoking the License manager
+  
+  return true;
+}

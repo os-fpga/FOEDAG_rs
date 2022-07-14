@@ -60,6 +60,8 @@ class CompilerRS : public CompilerOpenFPGA {
   void MaxThreads(int maxThreads) { m_maxThreads = maxThreads; }
 
  protected:
+  bool LicenseDevice(const std::string& deviceName);
+
   SynthesisEffort m_synthEffort = SynthesisEffort::None;
   SynthesisCarryInference m_synthCarry = SynthesisCarryInference::None;
   SynthesisFsmEncoding m_synthFsm = SynthesisFsmEncoding::None;
