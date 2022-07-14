@@ -104,7 +104,8 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   switch (m_synthOpt) {
     case SynthesisOpt::None:
       // None means none
-      optimization = "";
+      // Aram: DE optimization and mapping is mandatory for July release.
+      optimization = "-de";
       break;
     case SynthesisOpt::Area:
       optimization = "-de -goal area";
