@@ -232,8 +232,7 @@ CompilerRS::CompilerRS() : CompilerOpenFPGA() {
 
 CompilerRS::~CompilerRS() {
 #ifdef PRODUCTION_BUILD
-  if (licensePtr)
-    delete licensePtr;
+  if (licensePtr) delete licensePtr;
 #endif
 }
 
@@ -556,17 +555,13 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "----------------------------------" << std::endl;
 }
 
-bool CompilerRS::LicenseDevice(const std::string &deviceName)
-{
+bool CompilerRS::LicenseDevice(const std::string& deviceName) {
   // Should return false in Production build if the Device License Feature
   // cannot be check out.
 #ifdef PRODUCTION_BUILD
-  try
-  {
+  try {
     auto license = License_Manager(deviceName);
-  }
-  catch (...)
-  {
+  } catch (...) {
     return false;
   }
 

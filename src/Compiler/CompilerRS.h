@@ -15,7 +15,7 @@ All rights reserved
 #define COMPILER_RS_H
 
 #ifdef PRODUCTION_BUILD
-  #include "License_manager.hpp"
+#include "License_manager.hpp"
 #endif
 
 namespace FOEDAG {
