@@ -14,6 +14,10 @@ All rights reserved
 #ifndef COMPILER_RS_H
 #define COMPILER_RS_H
 
+#ifdef PRODUCTION_BUILD
+  #include "License_manager.hpp"
+#endif
+
 namespace FOEDAG {
 
 class CompilerRS : public CompilerOpenFPGA {
@@ -25,7 +29,7 @@ class CompilerRS : public CompilerOpenFPGA {
 
  public:
   CompilerRS();
-  ~CompilerRS() = default;
+  ~CompilerRS();
 
   void Help(std::ostream* out);
   void Version(std::ostream* out);
@@ -73,6 +77,10 @@ class CompilerRS : public CompilerOpenFPGA {
   bool m_synthCec = false;
   bool m_synthNoSimplify = false;
   int m_maxThreads = -1;
+
+#ifdef PRODUCTION_BUILD
+  License_Manager* licensePtr = nullptr;
+#endif
 };
 
 }  // namespace FOEDAG

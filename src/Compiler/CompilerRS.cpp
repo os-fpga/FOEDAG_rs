@@ -230,6 +230,13 @@ CompilerRS::CompilerRS() : CompilerOpenFPGA() {
   m_channel_width = 180;
 }
 
+CompilerRS::~CompilerRS() {
+#ifdef PRODUCTION_BUILD
+  if (licensePtr)
+    delete licensePtr;
+#endif
+}
+
 bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
   CompilerOpenFPGA::RegisterCommands(interp, batchMode);
 
@@ -549,11 +556,20 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "----------------------------------" << std::endl;
 }
 
-bool CompilerRS::LicenseDevice(const std::string& deviceName) {
+bool CompilerRS::LicenseDevice(const std::string &deviceName)
+{
   // Should return false in Production build if the Device License Feature
-  // cannot be checkedout. deviceName is "GEMINI or MPW1" at this point.
-  // Properly transform the string to the "RaptorGemini" feature before invoking
-  // the License manager
+  // cannot be check out.
+#ifdef PRODUCTION_BUILD
+  try
+  {
+    auto license = License_Manager(deviceName);
+  }
+  catch (...)
+  {
+    return false;
+  }
 
+#endif
   return true;
 }
