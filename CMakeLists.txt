@@ -26,6 +26,14 @@ project(RAPTOR_GUI)
 if (PRODUCTION_BUILD)
   message("Production Build type set to ON")
   set (PRODUCTION_BUILD_FLAG "-DPRODUCTION_BUILD=1")
+  if (NOT RAPTOR)
+    get_filename_component(FLEX_LM_SRC_DIR "../Raptor/Tools/Flex_LM"
+        REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+    add_subdirectory(${FLEX_LM_SRC_DIR} Flex_LM)
+  else()
+    get_filename_component(FLEX_LM_SRC_DIR "../Tools/Flex_LM"
+        REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+  endif()
 endif(PRODUCTION_BUILD)
 
 add_subdirectory(FOEDAG EXCLUDE_FROM_ALL)
@@ -139,6 +147,11 @@ else()
 endif()
 set_target_properties(raptor_gui-bin PROPERTIES OUTPUT_NAME raptor)
 
+if (PRODUCTION_BUILD)
+  add_dependencies(raptor_gui-bin rs_licenseManager)
+  target_include_directories(raptor_gui-bin PUBLIC ${FLEX_LM_SRC_DIR})
+  target_link_libraries(raptor_gui-bin PUBLIC rs_licenseManager)
+endif()
 
 if (MSVC)
   message("WINDOWS MODE")

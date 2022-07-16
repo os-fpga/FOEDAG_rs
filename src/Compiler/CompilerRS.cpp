@@ -230,6 +230,12 @@ CompilerRS::CompilerRS() : CompilerOpenFPGA() {
   m_channel_width = 180;
 }
 
+CompilerRS::~CompilerRS() {
+#ifdef PRODUCTION_BUILD
+  if (licensePtr) delete licensePtr;
+#endif
+}
+
 bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
   CompilerOpenFPGA::RegisterCommands(interp, batchMode);
 
@@ -440,6 +446,9 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   add_litex_ip_catalog <directory> : Browses directory for LiteX "
             "IP generators, adds the IP(s) to the IP Catalog"
          << std::endl;
+  (*out) << "   ip_catalog ?<ip_name>?     : Lists all available IPs, and "
+            "their parameters if <ip_name> is given "
+         << std::endl;
   (*out) << "   ip_configure <IP_NAME> -mod_name <name> -out_file <filename> "
             "-version <ver_name> -P<param>=\"<value>\"..."
          << std::endl;
@@ -548,9 +557,14 @@ void CompilerRS::Help(std::ostream* out) {
 
 bool CompilerRS::LicenseDevice(const std::string& deviceName) {
   // Should return false in Production build if the Device License Feature
-  // cannot be checkedout. deviceName is "GEMINI or MPW1" at this point.
-  // Properly transform the string to the "RaptorGemini" feature before invoking
-  // the License manager
+  // cannot be check out.
+#ifdef PRODUCTION_BUILD
+  try {
+    auto license = License_Manager(deviceName);
+  } catch (...) {
+    return false;
+  }
 
+#endif
   return true;
 }
