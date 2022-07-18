@@ -26,16 +26,15 @@ project(RAPTOR_GUI)
 if (PRODUCTION_BUILD)
   message("Production Build type set to ON")
   set (PRODUCTION_BUILD_FLAG "-DPRODUCTION_BUILD=1")
-  if (RAPTOR)
-    get_filename_component(FLEX_LM_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../Tools/Flex_LM"
-      REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-    message("FLEX: "  ${FLEX_LM_SRC_DIR})
-  else()
-    get_filename_component(FLEX_LM_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../Raptor/Tools/Flex_LM"
-      REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-    add_subdirectory(${FLEX_LM_SRC_DIR} Flex_LM)
-    message("FLEX: "  ${FLEX_LM_SRC_DIR})
+  if (NOT FLEX_LM_SRC_DIR)
+      # If the build is from Raptor level it will be set by Raptor/CMakeLists.txt.
+      # In case of standelone build user should specify path to Flex_LM source dir.
+      message(FATAL_ERROR "Flex_LM source dir is not set.")
   endif()
+  if (NOT RAPTOR)
+    add_subdirectory(${FLEX_LM_SRC_DIR} Flex_LM)
+  endif()
+  message("FLEX: "  ${FLEX_LM_SRC_DIR})
 endif(PRODUCTION_BUILD)
 
 add_subdirectory(FOEDAG EXCLUDE_FROM_ALL)
