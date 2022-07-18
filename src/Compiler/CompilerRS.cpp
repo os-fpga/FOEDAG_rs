@@ -23,6 +23,10 @@ All rights reserved
 #include "MainWindow/Session.h"
 #include "NewProject/ProjectManager/project_manager.h"
 
+#ifdef PRODUCTION_BUILD
+#include "License_manager.hpp"
+#endif
+
 using namespace FOEDAG;
 
 const std::string QLYosysScript = R"( 

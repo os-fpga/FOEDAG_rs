@@ -26,16 +26,16 @@ project(RAPTOR_GUI)
 if (PRODUCTION_BUILD)
   message("Production Build type set to ON")
   set (PRODUCTION_BUILD_FLAG "-DPRODUCTION_BUILD=1")
-  if (NOT RAPTOR)
-  get_filename_component(FLEX_LM_SRC_DIR "../Raptor/Tools/Flex_LM"
+  if (RAPTOR)
+    get_filename_component(FLEX_LM_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../Tools/Flex_LM"
       REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+    message("FLEX: "  ${FLEX_LM_SRC_DIR})
   else()
-  get_filename_component(FLEX_LM_SRC_DIR "../Tools/Flex_LM"
+    get_filename_component(FLEX_LM_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../Raptor/Tools/Flex_LM"
       REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+    add_subdirectory(${FLEX_LM_SRC_DIR} Flex_LM)
+    message("FLEX: "  ${FLEX_LM_SRC_DIR})
   endif()
-
-  add_subdirectory(${FLEX_LM_SRC_DIR} Flex_LM)
-  
 endif(PRODUCTION_BUILD)
 
 add_subdirectory(FOEDAG EXCLUDE_FROM_ALL)
@@ -118,7 +118,7 @@ else()
   )
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/FOEDAG/src ${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/include/)
+include_directories(${FLEX_LM_SRC_DIR} ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/FOEDAG/src ${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/include/)
 
 set(QRC_MAIN_WINDOW
   FOEDAG/src/NewProject/newproject.qrc
@@ -129,27 +129,37 @@ set(QRC_MAIN_WINDOW
 # raptor_gui_generated_SRC
 set(raptor_gui_SRC  
   ${QRC_MAIN_WINDOW}
+  ${PROJECT_SOURCE_DIR}/src/Compiler/CompilerRS.cpp
 )
 
 add_library(raptor_gui STATIC ${raptor_gui_SRC})
+target_link_libraries(raptor_gui PUBLIC Qt5::Widgets Qt5::Core Qt5::Gui Qt5::Xml Qt5::Quick)
+
+if (PRODUCTION_BUILD)
+target_link_libraries(raptor_gui PUBLIC rs_licenseManager)
+endif()
 
 #set_target_properties(raptor_gui PROPERTIES PUBLIC_HEADER )
 target_include_directories(raptor_gui PRIVATE
+  FOEDAG/third_party/tcl8.6.12/generic/
+  ${FLEX_LM_SRC_DIR}
+  ${FLEX_LM_SRC_DIR}/machind
   ${CMAKE_CURRENT_BINARY_DIR}/include
   FOEDAG/third_party/googletest/googletest/include
   FOEDAG/third_party/googletest/googlemock/include)
 target_include_directories(raptor_gui PUBLIC $<INSTALL_INTERFACE:include/raptor_gui>)
 
 if(MSVC)
-  add_executable(raptor_gui-bin  ${PROJECT_SOURCE_DIR}/src/Main/main.cpp ${PROJECT_SOURCE_DIR}/src/Compiler/CompilerRS.cpp ${QRC_MAIN_WINDOW})
+  add_executable(raptor_gui-bin ${PROJECT_SOURCE_DIR}/src/Main/main.cpp)
   set_property(TARGET raptor_gui-bin PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
   set_property(TARGET raptor_gui-bin PROPERTY COMPILER_FLAGS /DSTATIC_BUILD)
 else()
-  add_executable(raptor_gui-bin ${PROJECT_SOURCE_DIR}/src/Main/main.cpp ${PROJECT_SOURCE_DIR}/src/Compiler/CompilerRS.cpp ${QRC_MAIN_WINDOW})
+  add_executable(raptor_gui-bin ${PROJECT_SOURCE_DIR}/src/Main/main.cpp)
 endif()
 set_target_properties(raptor_gui-bin PROPERTIES OUTPUT_NAME raptor)
 
 if (PRODUCTION_BUILD)
+  add_dependencies(raptor_gui rs_licenseManager)
   add_dependencies(raptor_gui-bin rs_licenseManager)
   target_include_directories(raptor_gui-bin PUBLIC ${FLEX_LM_SRC_DIR})
   target_link_libraries(raptor_gui-bin PUBLIC rs_licenseManager)
