@@ -152,7 +152,7 @@ if(MSVC)
   set_property(TARGET raptor_gui-bin PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
   set_property(TARGET raptor_gui-bin PROPERTY COMPILER_FLAGS /DSTATIC_BUILD)
 else()
-  add_executable(raptor_gui-bin ${PROJECT_SOURCE_DIR}/src/Main/main.cpp)
+  add_executable(raptor_gui-bin ${PROJECT_SOURCE_DIR}/src/Main/main.cpp ${QRC_MAIN_WINDOW})
 endif()
 set_target_properties(raptor_gui-bin PROPERTIES OUTPUT_NAME raptor)
 
