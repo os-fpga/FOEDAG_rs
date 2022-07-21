@@ -150,7 +150,7 @@ target_include_directories(raptor_gui PRIVATE
 target_include_directories(raptor_gui PUBLIC $<INSTALL_INTERFACE:include/raptor_gui>)
 
 if(MSVC)
-  add_executable(raptor_gui-bin ${PROJECT_SOURCE_DIR}/src/Main/main.cpp)
+  add_executable(raptor_gui-bin ${PROJECT_SOURCE_DIR}/src/Main/main.cpp ${QRC_MAIN_WINDOW})
   set_property(TARGET raptor_gui-bin PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
   set_property(TARGET raptor_gui-bin PROPERTY COMPILER_FLAGS /DSTATIC_BUILD)
 else()
