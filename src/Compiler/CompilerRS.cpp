@@ -417,7 +417,7 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   --batch          : Tcl only, no GUI" << std::endl;
   (*out) << "   --script <script>: Execute a Tcl script" << std::endl;
   (*out) << "   --mute           : mutes stdout in batch mode" << std::endl;
-  (*out) << "Tcl commands:" << std::endl;
+  (*out) << "Tcl commands (Available in GUI or Batch console or Batch script):" << std::endl;
   (*out) << "   help                       : This help" << std::endl;
   (*out) << "   create_design <name>       : Creates a design with <name> name"
          << std::endl;
@@ -433,9 +433,9 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   read_netlist <file>        : Read a netlist (.blif/.eblif) "
             "instead of an RTL design (Skip Synthesis)"
          << std::endl;
-  (*out) << "   add_include_path <path1>...: As in +incdir+" << std::endl;
-  (*out) << "   add_library_path <path1>...: As in +libdir+" << std::endl;
-  (*out) << "   add_library_ext <.v> <.sv> ...: As in +libext+" << std::endl;
+  (*out) << "   add_include_path <path1>...: As in +incdir+    (Not applicable to VHDL)" << std::endl;
+  (*out) << "   add_library_path <path1>...: As in +libdir+    (Not applicable to VHDL)" << std::endl;
+  (*out) << "   add_library_ext <.v> <.sv> ...: As in +libext+ (Not applicable to VHDL)" << std::endl;
   (*out) << "   set_macro <name>=<value>...: As in -D<macro>=<value>"
          << std::endl;
   (*out) << "   set_top_module <top>       : Sets the top module" << std::endl;
