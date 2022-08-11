@@ -28,7 +28,7 @@ if (PRODUCTION_BUILD)
   set (PRODUCTION_BUILD_FLAG "-DPRODUCTION_BUILD=1")
   if (NOT RAPTOR)
     # FLEX_LM_SRC_DIR should be made as required path.
-    get_filename_component(FLEX_LM_SRC_DIR "../Raptor/Tools/Flex_LM"
+    get_filename_component(FLEX_LM_SRC_DIR "Raptor_Tools/Flex_LM"
       REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
     add_subdirectory(${FLEX_LM_SRC_DIR} Flex_LM)
     # No need for else as FLEX_LM_SRC_DIR will be set by Raptor
