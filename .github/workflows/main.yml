@@ -143,18 +143,11 @@ jobs:
       with:
         access_token: ${{ github.token }}
 
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-
-    - name: ssh-agent
-      uses: webfactory/ssh-agent@v0.5.4
-      with: 
-        ssh-private-key: |
-          ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
-
-    - name: Checkout code
-      uses: actions/checkout@v1
+    - actions/checkout@v1
+    - uses: PhutureCorp/container-ssh-agent@v0.0.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
+          home-dir: "/root"
 
 # Not working with private repo (Need to check the secret key)
 #    - name: Download workflow artifact
