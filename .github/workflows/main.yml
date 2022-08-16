@@ -143,6 +143,10 @@ jobs:
       with:
         access_token: ${{ github.token }}
 
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
     - name: ssh-agent
       uses: webfactory/ssh-agent@v0.5.4
       with: 
