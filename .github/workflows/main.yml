@@ -39,13 +39,11 @@ jobs:
       uses: webfactory/ssh-agent@v0.5.4
       with: 
         ssh-private-key: |
-          ${{ secrets.SSH_PRIVATE_KEY_VERIFIC_RS }}
           ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
 
     - name: Checkout code
       uses: actions/checkout@v2
       with:
-        submodules: recursive
         fetch-depth: 0
 
     - name: Install dependencies
@@ -149,13 +147,10 @@ jobs:
       uses: webfactory/ssh-agent@v0.5.4
       with: 
         ssh-private-key: |
-          ${{ secrets.SSH_PRIVATE_KEY_VERIFIC_RS }}
           ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
 
     - name: Checkout code
       uses: actions/checkout@v1
-      with:
-        submodules: recursive
 
 # Not working with private repo (Need to check the secret key)
 #    - name: Download workflow artifact
@@ -236,13 +231,11 @@ jobs:
       uses: webfactory/ssh-agent@v0.5.4
       with: 
         ssh-private-key: |
-          ${{ secrets.SSH_PRIVATE_KEY_VERIFIC_RS }}
           ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
 
     - name: Git pull
       uses: actions/checkout@v2
       with:
-        submodules: recursive
         fetch-depth: 0
 
     - name: Install core dependencies
@@ -373,12 +366,10 @@ jobs:
       uses: webfactory/ssh-agent@v0.5.4
       with: 
         ssh-private-key: |
-          ${{ secrets.SSH_PRIVATE_KEY_VERIFIC_RS }}
           ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
 
     - uses: actions/checkout@v2
       with:
-        submodules: recursive
         fetch-depth: 0
 
     - name: Build & Test
@@ -450,12 +441,10 @@ jobs:
       uses: webfactory/ssh-agent@v0.5.4
       with: 
         ssh-private-key: |
-          ${{ secrets.SSH_PRIVATE_KEY_VERIFIC_RS }}
           ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
 
     - uses: actions/checkout@v2
       with:
-        submodules: recursive
         fetch-depth: 0
 
     - name: Install dependencies
@@ -523,12 +512,10 @@ jobs:
       uses: webfactory/ssh-agent@v0.5.4
       with: 
         ssh-private-key: |
-          ${{ secrets.SSH_PRIVATE_KEY_VERIFIC_RS }}
           ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
 
     - uses: actions/checkout@v2
       with:
-        submodules: recursive
         fetch-depth: 0
 
     - name: Use ccache
@@ -598,10 +585,19 @@ jobs:
       with:
         access_token: ${{ github.token }}
 
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: ssh-agent
+      uses: webfactory/ssh-agent@v0.5.4
+      with: 
+        ssh-private-key: |
+          ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
+
     - name: Checkout code
       uses: actions/checkout@v2
       with:
-        submodules: recursive
         fetch-depth: 0
 
     - name: Install Dependencies
