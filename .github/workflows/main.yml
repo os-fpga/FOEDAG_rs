@@ -144,7 +144,7 @@ jobs:
         access_token: ${{ github.token }}
 
     - name: Checkout code
-      ses: actions/checkout@v1
+      uses: actions/checkout@v1
 
 # Not working with private repo (Need to check the secret key)
 #    - name: Download workflow artifact
