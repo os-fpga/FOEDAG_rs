@@ -101,7 +101,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
     keep = ReplaceAll(keep, "@", "[");
     keep = ReplaceAll(keep, "%", "]");
     (*m_out) << "Keep name: " << keep << "\n";
-    keeps += "setattr -set keep 1 " + keep + "\n";
+    keeps += "setattr -set keep 1 w:\\" + keep + "\n";
   }
   result = ReplaceAll(result, "${KEEP_NAMES}", keeps);
   std::string optimization;
@@ -455,6 +455,10 @@ void CompilerRS::Help(std::ostream* out) {
          << std::endl;
   (*out) << "   set_pin_loc <design_io_name> <device_io_name> : Constraints "
             "pin location (Use in constraint file)"
+         << std::endl;
+  (*out) << "   keep <signal list> OR all_signals : Keeps the list of signals "
+            "or all signals through Synthesis unchanged (unoptimized in "
+            "certain cases)"
          << std::endl;
   (*out) << "   add_litex_ip_catalog <directory> : Browses directory for LiteX "
             "IP generators, adds the IP(s) to the IP Catalog"
