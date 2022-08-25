@@ -4,9 +4,18 @@ RapidSilicon Raptor GUI, reuses elements of the open-source FOEDAG and augments 
 INSTALL Instructions:
 ```
   git clone https://github.com/RapidSilicon/FOEDAG_rs.git
-  git submodule update --init --recursive
   make 
   make debug
   make test
   sudo make install
+```
+
+To force submodule update:
+```
+  make UPDATE_SUBMODULES=ON
+```
+
+To build in production mode:
+```
+  make PRODUCTION_BUILD=ON
 ```

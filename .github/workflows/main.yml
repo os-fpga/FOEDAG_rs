@@ -21,6 +21,7 @@ jobs:
         - coverage
         - install
         - valgrind
+        - production
     env:
       MODE: ${{ matrix.mode }}
 
@@ -36,8 +37,9 @@ jobs:
         python-version: 3.8
 
     - name: ssh-agent
+      if: matrix.mode == 'production'
       uses: webfactory/ssh-agent@v0.5.4
-      with: 
+      with:
         ssh-private-key: |
           ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
 
@@ -108,6 +110,12 @@ jobs:
         make clean   # make sure we only see installation artifacts
         make test_install
 
+    - name: Production
+      if: matrix.mode == 'production'
+      run: |
+        make release PRODUCTION_BUILD=ON
+        ./build/bin/raptor --version
+
     - name: Archive regression artifacts
       if: matrix.mode == 'regression' && always()
       uses: actions/upload-artifact@v2
@@ -158,12 +166,6 @@ jobs:
     - name: Install dependencies and build QT
       run: |
         bash .github/workflows/install_centos_dependencies_build.sh
-
-    - name: ssh-agent
-      uses: webfactory/ssh-agent@v0.5.4
-      with: 
-        ssh-private-key: |
-          ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
 
     - name: Prepare QT build artifacts
       if: matrix.mode == 'test'
@@ -226,12 +228,6 @@ jobs:
     - name: Configure Git
       run: git config --global core.autocrlf input
       shell: bash
-
-    - name: ssh-agent
-      uses: webfactory/ssh-agent@v0.5.4
-      with: 
-        ssh-private-key: |
-          ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
 
     - name: Git pull
       uses: actions/checkout@v2
@@ -362,12 +358,6 @@ jobs:
     - run: git config --global core.autocrlf input
       shell: bash
 
-    - name: ssh-agent
-      uses: webfactory/ssh-agent@v0.5.4
-      with: 
-        ssh-private-key: |
-          ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
-
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
@@ -437,12 +427,6 @@ jobs:
       with:
         python-version: 3.8
 
-    - name: ssh-agent
-      uses: webfactory/ssh-agent@v0.5.4
-      with: 
-        ssh-private-key: |
-          ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
-
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
@@ -507,12 +491,6 @@ jobs:
       uses: jurplel/install-qt-action@v2
       with:
         setup-python: false
-
-    - name: ssh-agent
-      uses: webfactory/ssh-agent@v0.5.4
-      with: 
-        ssh-private-key: |
-          ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
 
     - uses: actions/checkout@v2
       with:
@@ -584,16 +562,6 @@ jobs:
       uses: styfle/cancel-workflow-action@0.8.0
       with:
         access_token: ${{ github.token }}
-
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-
-    - name: ssh-agent
-      uses: webfactory/ssh-agent@v0.5.4
-      with: 
-        ssh-private-key: |
-          ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
 
     - name: Checkout code
       uses: actions/checkout@v2
