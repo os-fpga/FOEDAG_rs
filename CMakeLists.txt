@@ -23,12 +23,46 @@ option(
 
 project(RAPTOR_GUI)
 
+list(APPEND FOEDAG_RS_RECURSIVE_SUBSYTEMS
+  FOEDAG
+  )
+
+list(APPEND FOEDAG_RS_NON_RECURSIVE_SUBSYTEMS
+  Raptor_Tools
+  )
+
+find_package(Git QUIET)
+
+function(checkout_subsystems SUBSYSTEM_LIST WORK_DIR RECURSIVE UPDATE)
+    foreach(SUBMODULE IN LISTS ${SUBSYSTEM_LIST})
+        file(GLOB README ${WORK_DIR}/${SUBMODULE}/README*)
+        if (NOT EXISTS "${README}" OR ${UPDATE})
+            message("Updating ${SUBMODULE} submodule...")
+            execute_process(
+                COMMAND ${GIT_EXECUTABLE} submodule update --init ${RECURSIVE} ${SUBMODULE}
+                WORKING_DIRECTORY ${WORK_DIR}
+                RESULT_VARIABLE GIT_SUBMOD_RESULT
+                )
+            if  (NOT GIT_SUBMOD_RESULT EQUAL "0") 
+                message(FATAL_ERROR "\"${GIT_EXECUTABLE} submodule update --init ${RECURSIVE} ${SUBMODULE}\" failed with ${GIT_SUBMOD_RESULT}, please checkout submodule manually")
+            endif()
+        endif()
+    endforeach()
+endfunction(checkout_subsystems)
+
+if (NOT UPDATE_SUBMODULES)
+    set(UPDATE_SUBMODULES OFF)
+endif()
+
+checkout_subsystems(FOEDAG_RS_RECURSIVE_SUBSYTEMS ${CMAKE_CURRENT_SOURCE_DIR} "--recursive" ${UPDATE_SUBMODULES})
+
 if (PRODUCTION_BUILD)
   message("Production Build type set to ON")
   set (PRODUCTION_BUILD_FLAG "-DPRODUCTION_BUILD=1")
   if (NOT RAPTOR)
+    checkout_subsystems(FOEDAG_RS_NON_RECURSIVE_SUBSYTEMS ${CMAKE_CURRENT_SOURCE_DIR} "" ${UPDATE_SUBMODULES})
     # FLEX_LM_SRC_DIR should be made as required path.
-    get_filename_component(FLEX_LM_SRC_DIR "../Raptor/Tools/Flex_LM"
+    get_filename_component(FLEX_LM_SRC_DIR "Raptor_Tools/Flex_LM"
       REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
     add_subdirectory(${FLEX_LM_SRC_DIR} Flex_LM)
     # No need for else as FLEX_LM_SRC_DIR will be set by Raptor

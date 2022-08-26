@@ -21,6 +21,7 @@ jobs:
         - coverage
         - install
         - valgrind
+        - production
     env:
       MODE: ${{ matrix.mode }}
 
@@ -35,10 +36,16 @@ jobs:
       with:
         python-version: 3.8
 
+    - name: ssh-agent
+      if: matrix.mode == 'production'
+      uses: webfactory/ssh-agent@v0.5.4
+      with:
+        ssh-private-key: |
+          ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
+
     - name: Checkout code
       uses: actions/checkout@v2
       with:
-        submodules: recursive
         fetch-depth: 0
 
     - name: Install dependencies
@@ -103,6 +110,12 @@ jobs:
         make clean   # make sure we only see installation artifacts
         make test_install
 
+    - name: Production
+      if: matrix.mode == 'production'
+      run: |
+        make release PRODUCTION_BUILD=ON
+        ./build/bin/raptor --version
+
     - name: Archive regression artifacts
       if: matrix.mode == 'regression' && always()
       uses: actions/upload-artifact@v2
@@ -140,8 +153,6 @@ jobs:
 
     - name: Checkout code
       uses: actions/checkout@v1
-      with:
-        submodules: recursive
 
 # Not working with private repo (Need to check the secret key)
 #    - name: Download workflow artifact
@@ -221,7 +232,6 @@ jobs:
     - name: Git pull
       uses: actions/checkout@v2
       with:
-        submodules: recursive
         fetch-depth: 0
 
     - name: Install core dependencies
@@ -350,7 +360,6 @@ jobs:
 
     - uses: actions/checkout@v2
       with:
-        submodules: recursive
         fetch-depth: 0
 
     - name: Build & Test
@@ -420,7 +429,6 @@ jobs:
 
     - uses: actions/checkout@v2
       with:
-        submodules: recursive
         fetch-depth: 0
 
     - name: Install dependencies
@@ -486,7 +494,6 @@ jobs:
 
     - uses: actions/checkout@v2
       with:
-        submodules: recursive
         fetch-depth: 0
 
     - name: Use ccache
@@ -559,7 +566,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
       with:
-        submodules: recursive
         fetch-depth: 0
 
     - name: Install Dependencies

@@ -13,6 +13,7 @@ scl enable devtoolset-9 bash
 yum install -y tcl
 yum install -y make
 yum install -y swig
+yum install -y openssh-server openssh-clients
 yum install -y which
 yum install -y google-perftools
 yum install -y gperftools gperftools-devel
