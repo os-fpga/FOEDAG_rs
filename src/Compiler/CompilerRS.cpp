@@ -535,6 +535,9 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "     -cec                     : Dump verilog after key phases "
             "and use internal equivalence checking (ABC based)"
          << std::endl;
+  (*out) << "   analyze ?clean?            : Analyzes the RTL design, "
+            "generates top-level, pin and hierarchy information"
+         << std::endl;
   (*out) << "   synthesize <optimization>  ?clean? : RTL Synthesis, optional "
             "opt. (area, "
             "delay, mixed, none)"
