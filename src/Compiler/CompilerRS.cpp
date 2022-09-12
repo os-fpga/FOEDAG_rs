@@ -543,6 +543,9 @@ void CompilerRS::Help(std::ostream* out) {
             "delay, mixed, none)"
          << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
+  (*out) << "   pnr_netlist_lang <blif, verilog> : Chooses vpr input netlist "
+            "format"
+         << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
          << std::endl;
   (*out) << "   architecture <vpr_file.xml> ?<openfpga_file.xml>?" << std::endl;
