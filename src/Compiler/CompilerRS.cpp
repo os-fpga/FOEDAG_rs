@@ -427,11 +427,18 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   target_device <name>       : Targets a device with <name> name "
             "(MPW1, GEMINI)"
          << std::endl;
-  (*out) << "   add_design_file <file>... <type> (-VHDL_1987, -VHDL_1993, "
+  (*out) << "   add_design_file <file>... (-work, -L) <libName> <type> "
+            "(-VHDL_1987, -VHDL_1993, "
             "-VHDL_2000, "
             "-VHDL_2008 (.vhd default), -V_1995, \n"
             "                                     -V_2001 (.v default), "
             "-SV_2005, -SV_2009, -SV_2012, -SV_2017 (.sv default)) "
+         << std::endl;
+  (*out) << "         -work <libName> specifies alternate library used to "
+            "compile, default is work"
+         << std::endl;
+  (*out) << "         -L <libName>... specifies libraries needed to compile "
+            "the set of files, default is work"
          << std::endl;
   (*out) << "   read_netlist <file>        : Read a netlist (.blif/.eblif) "
             "instead of an RTL design (Skip Synthesis)"
