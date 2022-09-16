@@ -427,18 +427,22 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   target_device <name>       : Targets a device with <name> name "
             "(MPW1, GEMINI)"
          << std::endl;
-  (*out) << "   add_design_file <file>... (-work, -L) <libName> <type> "
-            "(-VHDL_1987, -VHDL_1993, "
-            "-VHDL_2000, "
-            "-VHDL_2008 (.vhd default), -V_1995, \n"
-            "                                     -V_2001 (.v default), "
-            "-SV_2005, -SV_2009, -SV_2012, -SV_2017 (.sv default)) "
+  (*out) << "   add_design_file <file list> ?type?   ?-work <libName>?   ?-L "
+            "<libName>? "
          << std::endl;
-  (*out) << "         -work <libName> specifies alternate library used to "
-            "compile, default is work"
+  (*out) << "              Each invocation of the command compiles the "
+            "file list into a compilation unit "
          << std::endl;
-  (*out) << "         -L <libName>... specifies libraries needed to compile "
-            "the set of files, default is work"
+  (*out) << "                       <type> : -VHDL_1987, -VHDL_1993, "
+            "-VHDL_2000, -VHDL_2008, -V_1995, "
+            "-V_2001, -SV_2005, -SV_2009, -SV_2012, -SV_2017> "
+         << std::endl;
+  (*out) << "              -work <libName> : Compiles the compilation unit "
+            "into library <libName>, default is \"work\""
+         << std::endl;
+  (*out) << "              -L <libName>    : Import the library <libName> "
+            "needed to "
+            "compile the compilation unit, default is \"work\""
          << std::endl;
   (*out) << "   read_netlist <file>        : Read a netlist (.blif/.eblif) "
             "instead of an RTL design (Skip Synthesis)"
@@ -481,6 +485,9 @@ void CompilerRS::Help(std::ostream* out) {
          << std::endl;
   (*out) << "   ipgenerate ?clean?         : Generates all IP instances set by "
             "ip_configure"
+         << std::endl;
+  (*out) << "   message_severity <message_id> <ERROR/WARNING/INFO/IGNORE> : "
+            "Upgrade/downgrade RTL compilation message severity"
          << std::endl;
   (*out) << "   verific_parser <on/off>    : Turns on/off Verific Parser"
          << std::endl;
