@@ -361,7 +361,7 @@ std::string CompilerRS::BaseVprCommand() {
     device_size = " --device " + m_deviceSize;
   }
 
-  td::string netlistFile;// =
+  std::string netlistFile;// =
    //   m_projManager->projectName() +
     //  ((m_useVerilogNetlist) ? "_post_synth.v" : "_post_synth.blif");
   
