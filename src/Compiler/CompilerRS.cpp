@@ -360,19 +360,14 @@ std::string CompilerRS::BaseVprCommand() {
   if (!m_deviceSize.empty()) {
     device_size = " --device " + m_deviceSize;
   }
-
-  std::string netlistFile;// =
-   //   m_projManager->projectName() +
-    //  ((m_useVerilogNetlist) ? "_post_synth.v" : "_post_synth.blif");
-  
+  std::string netlistFile;
   if (m_useVerilogNetlist){
-    netlistFile  = ProjManager()->projectName() + "_post_synth.v";
-   }
-   else if (m_useEdifNetlist){
-    netlistFile  = ProjManager()->projectName() + "_post_synth.edif";
-   }else {
-     netlistFile  = ProjManager()->projectName() +  "_post_synth.blif";
-   }
+    netlistFile = ProjManager()->projectName() + "_post_synth.v";
+  } else if (m_useEdifNetlist) {
+    netlistFile = ProjManager()->projectName() + "_post_synth.edif";
+  }else {
+    netlistFile = ProjManager()->projectName() + "_post_synth.blif";
+  }
   for (const auto& lang_file : m_projManager->DesignFiles()) {
     switch (lang_file.first) {
       case Design::Language::VERILOG_NETLIST:
