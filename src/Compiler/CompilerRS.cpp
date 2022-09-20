@@ -361,11 +361,11 @@ std::string CompilerRS::BaseVprCommand() {
     device_size = " --device " + m_deviceSize;
   }
   std::string netlistFile;
-  if (m_useVerilogNetlist){
+  if (m_useVerilogNetlist) {
     netlistFile = ProjManager()->projectName() + "_post_synth.v";
   } else if (m_useEdifNetlist) {
     netlistFile = ProjManager()->projectName() + "_post_synth.edif";
-  }else {
+  } else {
     netlistFile = ProjManager()->projectName() + "_post_synth.blif";
   }
   for (const auto& lang_file : m_projManager->DesignFiles()) {
