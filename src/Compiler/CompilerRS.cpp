@@ -45,6 +45,7 @@ ${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} $
 
 
 write_verilog -noattr -nohex ${OUTPUT_VERILOG}
+write_edif ${OUTPUT_EDIF}
   )";
 
 const std::string RapidSiliconYosysScript = R"( 
