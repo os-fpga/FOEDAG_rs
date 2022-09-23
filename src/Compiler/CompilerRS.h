@@ -83,6 +83,9 @@ class CompilerRS : public CompilerOpenFPGA {
 #endif
 };
 
+std::string TclArgs_getRsSynthesisOptions();
+void TclArgs_setRsSynthesisOptions(const std::string& argsStr);
+
 }  // namespace FOEDAG
 
 #endif
