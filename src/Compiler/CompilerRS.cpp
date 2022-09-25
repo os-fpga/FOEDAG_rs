@@ -45,6 +45,7 @@ ${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} $
 
 
 write_verilog -noattr -nohex ${OUTPUT_VERILOG}
+write_edif ${OUTPUT_EDIF}
   )";
 
 const std::string RapidSiliconYosysScript = R"( 
@@ -64,6 +65,7 @@ ${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${E
 # Clean and output blif
 write_blif ${OUTPUT_BLIF}
 write_verilog -noexpr -nodec -norename ${OUTPUT_VERILOG}
+write_edif ${OUTPUT_EDIF}
   )";
 
 std::string CompilerRS::InitSynthesisScript() {
@@ -359,10 +361,14 @@ std::string CompilerRS::BaseVprCommand() {
   if (!m_deviceSize.empty()) {
     device_size = " --device " + m_deviceSize;
   }
-
-  std::string netlistFile =
-      m_projManager->projectName() +
-      ((m_useVerilogNetlist) ? "_post_synth.v" : "_post_synth.blif");
+  std::string netlistFile;
+  if (m_useVerilogNetlist) {
+    netlistFile = ProjManager()->projectName() + "_post_synth.v";
+  } else if (m_useEdifNetlist) {
+    netlistFile = ProjManager()->projectName() + "_post_synth.edif";
+  } else {
+    netlistFile = ProjManager()->projectName() + "_post_synth.blif";
+  }
   for (const auto& lang_file : m_projManager->DesignFiles()) {
     switch (lang_file.first) {
       case Design::Language::VERILOG_NETLIST:
