@@ -1,24 +1,85 @@
 {
     "Tasks": {
         "Synthesis": {
-            "synth_dropdown_ex": {
-                "label": "Dropdown Example",
+            "opt_dropdown": {
+                "label": "Optimization",
                 "widgetType": "dropdown",
                 "options": [
-                    "option1",
-                    "option2",
-                    "option3"
+                    "Area",
+                    "Delay",
+                    "Mixed",
+                    "None"
                 ],
-                "default": "option3"
+                "optionsLookup": [
+                    "area",
+                    "delay",
+                    "mixed",
+                    "none"
+                ],
+                "arg": "_SynthOpt_"
             },
-            "synth_input_ex_1": {
-                "label": "Text Input Example",
-                "widgetType": "input",
-                "default": "some synthesis related text"
+            "effort_dropdown": {
+                "label": "Effort",
+                "widgetType": "dropdown",
+                "options": [
+                    "High",
+                    "Medium",
+                    "Low"
+                ],
+                "optionsLookup": [
+                    "high",
+                    "medium",
+                    "low"
+                ],
+                "arg": "effort"
             },
-            "synth_input_ex_2": {
-                "widgetType": "input",
-                "default": "input field w/o a label provided"
+            "fsm_encoding_dropdown": {
+                "label": "FSM Encoding",
+                "widgetType": "dropdown",
+                "options": [
+                    "Binary",
+                    "One Hot"
+                ],
+                "optionsLookup": [
+                    "binary",
+                    "onehot"
+                ],
+                "arg": "fsm_encoding"
+            },
+            "carry_dropdown": {
+                "label": "Carry",
+                "widgetType": "dropdown",
+                "options": [
+                    "All",
+                    "Auto",
+                    "None"
+                ],
+                "optionsLookup": [
+                    "all",
+                    "auto",
+                    "none"
+                ],
+                "arg": "carry"
+            },
+            "no_dsp_checkbox": {
+                "label": "No DSP Blocks",
+                "widgetType": "checkbox",
+                "arg": "no_dsp"
+            },
+            "no_bram_checkbox": {
+                "label": "No Block Ram",
+                "widgetType": "checkbox",
+                "arg": "no_bram"
+            },
+            "fast_checkbox": {
+                "label": "Fast Synthesis",
+                "widgetType": "checkbox",
+                "arg": "fast"
+            },
+            "_META_": {
+                "hidden": false,
+                "isSetting": true,
+                "tclArgKey": "CompilerRs_Synthesis"
             }
         },
         "Placement": {
@@ -29,7 +90,7 @@
                     "Random",
                     "In Define Order"
                 ],
-                "optionsLookup":[
+                "optionsLookup": [
                     "random",
                     "in_define_order"
                 ],
