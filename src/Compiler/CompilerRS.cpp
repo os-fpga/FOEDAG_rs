@@ -470,11 +470,14 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   set_top_module <top>       : Sets the top module" << std::endl;
   (*out) << "   add_constraint_file <file> : Sets SDC + location constraints"
          << std::endl;
-  (*out) << "                                Constraints: set_pin_loc, "
+  (*out) << "                                Constraints: set_pin_loc, set_mode, "
             "all SDC Standard commands"
          << std::endl;
   (*out) << "   set_pin_loc <design_io_name> <device_io_name> : Constraints "
             "pin location (Use in constraint file)"
+         << std::endl;
+  (*out) << "   set_mode <io_mode_name> <device_io_name> : Constraints "
+            "pin mode (Use in constraint file)"
          << std::endl;
   (*out) << "   keep <signal list> OR all_signals : Keeps the list of signals "
             "or all signals through Synthesis unchanged (unoptimized in "
