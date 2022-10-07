@@ -569,6 +569,14 @@ void CompilerRS::Help(std::ostream *out) {
             "opt. (area, "
             "delay, mixed, none)"
          << std::endl;
+  (*out) << "   pin_loc_assign_method <Method>: Method choices:" << std::endl;
+  (*out) << "                                in_define_order(Default), port "
+            "order pin assignment"
+         << std::endl;
+  (*out) << "                                random , random pin assignment"
+         << std::endl;
+  (*out) << "                                free , no automatic pin assignment"
+         << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
   (*out) << "   pnr_netlist_lang <blif, verilog> : Chooses vpr input netlist "
             "format"
