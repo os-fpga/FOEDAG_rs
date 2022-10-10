@@ -373,7 +373,7 @@ std::string CompilerRS::BaseVprCommand() {
     netlistFile = ProjManager()->projectName() + "_post_synth.blif";
   }
   for (const auto &lang_file : m_projManager->DesignFiles()) {
-    switch (lang_file.first) {
+    switch (lang_file.first.language) {
       case Design::Language::VERILOG_NETLIST:
       case Design::Language::BLIF:
       case Design::Language::EBLIF: {
