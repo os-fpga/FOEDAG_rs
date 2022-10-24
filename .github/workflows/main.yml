@@ -28,11 +28,11 @@ jobs:
     steps:
 
     - name: Cancel previous
-      uses: styfle/cancel-workflow-action@0.9.1
+      uses: styfle/cancel-workflow-action@0.11.0
       with:
         access_token: ${{ github.token }}
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4.3.0
       with:
         python-version: 3.8
 
@@ -44,7 +44,7 @@ jobs:
           ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
 
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
@@ -118,7 +118,7 @@ jobs:
 
     - name: Archive regression artifacts
       if: matrix.mode == 'regression' && always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3.1.0
       with:
         name: raptor_gui-linux-gcc-regression
         path: |
@@ -147,12 +147,12 @@ jobs:
     steps:
 
     - name: Cancel previous
-      uses: styfle/cancel-workflow-action@0.9.1
+      uses: styfle/cancel-workflow-action@0.11.0
       with:
         access_token: ${{ github.token }}
 
     - name: Checkout code
-      uses: actions/checkout@v1
+      uses: actions/checkout@v3
 
 # Not working with private repo (Need to check the secret key)
 #    - name: Download workflow artifact
@@ -175,7 +175,7 @@ jobs:
 
     - name: Archive QT build artifacts
       if: matrix.mode == 'test'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3.1.0
       with:
         name: buildqt5-centos7-gcc
         path: buildqt5-centos7-gcc.tgz
@@ -215,7 +215,7 @@ jobs:
     steps:
 
     - name: Cancel previous
-      uses: styfle/cancel-workflow-action@0.9.1
+      uses: styfle/cancel-workflow-action@0.11.0
       with:
         access_token: ${{ github.token }}
 
@@ -230,7 +230,7 @@ jobs:
       shell: bash
 
     - name: Git pull
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
@@ -329,7 +329,7 @@ jobs:
     steps:
 
     - name: Cancel previous
-      uses: styfle/cancel-workflow-action@0.9.1
+      uses: styfle/cancel-workflow-action@0.11.0
       with:
         access_token: ${{ github.token }}
 
@@ -347,7 +347,7 @@ jobs:
         choco install -y swig --side-by-side --version=3.0.12
 
     - name: Setup Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4.3.0
       with:
         python-version: 3.8
         architecture: x64
@@ -358,7 +358,7 @@ jobs:
     - run: git config --global core.autocrlf input
       shell: bash
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
@@ -399,14 +399,14 @@ jobs:
         make test/batch
 
     - name: Archive build artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3.1.0
       with:
         name: raptor_gui-windows-msvc
         path: ${{ github.workspace }}/install
 
     - name: Archive regression artifacts
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3.1.0
       with:
         name: raptor_gui-windows-msvc-regression
         path: |
@@ -419,15 +419,15 @@ jobs:
     steps:
 
     - name: Cancel previous
-      uses: styfle/cancel-workflow-action@0.9.1
+      uses: styfle/cancel-workflow-action@0.11.0
       with:
         access_token: ${{ github.token }}
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4.3.0
       with:
         python-version: 3.8
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
@@ -479,11 +479,11 @@ jobs:
     steps:
 
     - name: Cancel previous
-      uses: styfle/cancel-workflow-action@0.9.1
+      uses: styfle/cancel-workflow-action@0.11.0
       with:
         access_token: ${{ github.token }}
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4.3.0
       with:
         python-version: 3.8
 
@@ -492,7 +492,7 @@ jobs:
       with:
         setup-python: false
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
@@ -540,7 +540,7 @@ jobs:
     steps:
 
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
@@ -559,12 +559,12 @@ jobs:
     steps:
 
     - name: Cancel previous
-      uses: styfle/cancel-workflow-action@0.8.0
+      uses: styfle/cancel-workflow-action@0.11.0
       with:
         access_token: ${{ github.token }}
 
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
