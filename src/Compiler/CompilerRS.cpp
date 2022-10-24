@@ -230,18 +230,22 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   result = ReplaceAll(result, "${MAP_TO_TECHNOLOGY}", YosysMapTechnology());
   result = ReplaceAll(result, "${LUT_SIZE}", std::to_string(m_lut_size));
 
-  switch (GetNetlistType())
-  {
-  case NetlistType::Verilog:
-    // Temporary, once pin_c works with Verilog, only output Verilog 
-    result = ReplaceAll(result, "${OUTPUT_NETLIST}", "write_verilog -noexpr -nodec -norename ${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
-    break;
-  case NetlistType::Edif:
-    result = ReplaceAll(result, "${OUTPUT_NETLIST}", "write_edif ${OUTPUT_EDIF}");
-    break;
-  case NetlistType::Blif:
-    result = ReplaceAll(result, "${OUTPUT_NETLIST}", "write_verilog -noexpr -nodec -norename ${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
-    break;
+  switch (GetNetlistType()) {
+    case NetlistType::Verilog:
+      // Temporary, once pin_c works with Verilog, only output Verilog
+      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
+                          "write_verilog -noexpr -nodec -norename "
+                          "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
+      break;
+    case NetlistType::Edif:
+      result =
+          ReplaceAll(result, "${OUTPUT_NETLIST}", "write_edif ${OUTPUT_EDIF}");
+      break;
+    case NetlistType::Blif:
+      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
+                          "write_verilog -noexpr -nodec -norename "
+                          "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
+      break;
   }
 
   return result;
@@ -379,17 +383,16 @@ std::string CompilerRS::BaseVprCommand() {
     device_size = " --device " + m_deviceSize;
   }
   std::string netlistFile;
-  switch (GetNetlistType())
-  {
-  case NetlistType::Verilog:
-    netlistFile = ProjManager()->projectName() + "_post_synth.v";
-    break;
-  case NetlistType::Edif:
-    netlistFile = ProjManager()->projectName() + "_post_synth.edif";
-    break;
-  case NetlistType::Blif:
-    netlistFile = ProjManager()->projectName() + "_post_synth.blif";
-    break;
+  switch (GetNetlistType()) {
+    case NetlistType::Verilog:
+      netlistFile = ProjManager()->projectName() + "_post_synth.v";
+      break;
+    case NetlistType::Edif:
+      netlistFile = ProjManager()->projectName() + "_post_synth.edif";
+      break;
+    case NetlistType::Blif:
+      netlistFile = ProjManager()->projectName() + "_post_synth.blif";
+      break;
   }
   for (const auto &lang_file : m_projManager->DesignFiles()) {
     switch (lang_file.first.language) {
@@ -597,7 +600,8 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "                                free , no automatic pin assignment"
          << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
-  (*out) << "   pnr_netlist_lang <blif, edif, verilog> : Chooses vpr input netlist "
+  (*out) << "   pnr_netlist_lang <blif, edif, verilog> : Chooses vpr input "
+            "netlist "
             "format"
          << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
