@@ -20,11 +20,11 @@ All rights reserved
 
 #include "Compiler/CompilerRS.h"
 #include "Compiler/Constraints.h"
+#include "Compiler/Log.h"
 #include "MainWindow/Session.h"
 #include "NewProject/ProjectManager/project_manager.h"
-#include "Utils/StringUtils.h"
-#include "Compiler/Log.h"
 #include "Utils/FileUtils.h"
+#include "Utils/StringUtils.h"
 
 #ifdef PRODUCTION_BUILD
 #include "License_manager.hpp"
@@ -34,9 +34,9 @@ extern FOEDAG::Session *GlobalSession;
 
 using namespace FOEDAG;
 
-static auto copyLog = [](FOEDAG::ProjectManager* projManager,
-                  const std::string& srcFileName,
-                  const std::string& destFileName) -> bool {
+static auto copyLog = [](FOEDAG::ProjectManager *projManager,
+                         const std::string &srcFileName,
+                         const std::string &destFileName) -> bool {
   bool result = false;
   if (projManager) {
     std::filesystem::path projectPath(projManager->projectPath());
@@ -50,7 +50,6 @@ static auto copyLog = [](FOEDAG::ProjectManager* projManager,
   }
   return result;
 };
-
 
 const std::string QLYosysScript = R"( 
 # Yosys synthesis script for ${TOP_MODULE}
@@ -826,7 +825,7 @@ bool CompilerRS::TimingAnalysis() {
   }
 
   // TODO: Add stars support here
-  
+
   if (FileUtils::IsUptoDate(
           (std::filesystem::path(ProjManager()->projectPath()) /
            std::string(ProjManager()->projectName() + "_post_synth.route"))
