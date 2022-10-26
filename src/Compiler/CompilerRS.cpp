@@ -23,6 +23,8 @@ All rights reserved
 #include "MainWindow/Session.h"
 #include "NewProject/ProjectManager/project_manager.h"
 #include "Utils/StringUtils.h"
+#include "Compiler/Log.h"
+#include "Utils/FileUtils.h"
 
 #ifdef PRODUCTION_BUILD
 #include "License_manager.hpp"
@@ -31,6 +33,24 @@ All rights reserved
 extern FOEDAG::Session *GlobalSession;
 
 using namespace FOEDAG;
+
+static auto copyLog = [](FOEDAG::ProjectManager* projManager,
+                  const std::string& srcFileName,
+                  const std::string& destFileName) -> bool {
+  bool result = false;
+  if (projManager) {
+    std::filesystem::path projectPath(projManager->projectPath());
+    std::filesystem::path src = projectPath / srcFileName;
+    std::filesystem::path dest = projectPath / destFileName;
+    if (FileUtils::FileExists(src)) {
+      std::filesystem::remove(dest);
+      std::filesystem::copy_file(src, dest);
+      result = true;
+    }
+  }
+  return result;
+};
+
 
 const std::string QLYosysScript = R"( 
 # Yosys synthesis script for ${TOP_MODULE}
@@ -253,7 +273,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
 
 CompilerRS::CompilerRS() : CompilerOpenFPGA() {
   m_synthType = SynthesisType::RS;
-  m_netlistType = NetlistType::Verilog;
+  m_netlistType = NetlistType::Blif;
   m_channel_width = 200;
 }
 
@@ -763,4 +783,132 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
       continue;
     }
   }
+}
+
+bool CompilerRS::TimingAnalysis() {
+  if (!ProjManager()->HasDesign()) {
+    ErrorMessage("No design specified");
+    return false;
+  }
+  if (!HasTargetDevice()) return false;
+
+  if (TimingAnalysisOpt() == STAOpt::Clean) {
+    Message("Cleaning TimingAnalysis results for " +
+            ProjManager()->projectName());
+    TimingAnalysisOpt(STAOpt::None);
+    m_state = State::Routed;
+    std::filesystem::remove(
+        std::filesystem::path(ProjManager()->projectPath()) /
+        std::string(ProjManager()->projectName() + "_sta.cmd"));
+    return true;
+  }
+
+  PERF_LOG("TimingAnalysis has started");
+  (*m_out) << "##################################################" << std::endl;
+  (*m_out) << "Timing Analysis for design: " << ProjManager()->projectName()
+           << std::endl;
+  (*m_out) << "##################################################" << std::endl;
+  if (!FileUtils::FileExists(m_vprExecutablePath)) {
+    ErrorMessage("Cannot find executable: " + m_vprExecutablePath.string());
+    return false;
+  }
+
+  if (TimingAnalysisOpt() == STAOpt::View) {
+    TimingAnalysisOpt(STAOpt::None);
+    const std::string command = BaseVprCommand() + " --analysis --disp on";
+    const int status = ExecuteAndMonitorSystemCommand(command);
+    if (status) {
+      ErrorMessage("Design " + ProjManager()->projectName() +
+                   " place and route view failed!");
+      return false;
+    }
+    return true;
+  }
+
+  // TODO: Add stars support here
+  
+  if (FileUtils::IsUptoDate(
+          (std::filesystem::path(ProjManager()->projectPath()) /
+           std::string(ProjManager()->projectName() + "_post_synth.route"))
+              .string(),
+          (std::filesystem::path(ProjManager()->projectPath()) /
+           std::string(ProjManager()->projectName() + "_sta.cmd"))
+              .string())) {
+    (*m_out) << "Design " << ProjManager()->projectName()
+             << " timing didn't change" << std::endl;
+    return true;
+  }
+  int status = 0;
+  std::string taCommand;
+  // use OpenSTA to do the job
+  if (TimingAnalysisOpt() == STAOpt::Opensta) {
+    // allows SDF to be generated for OpenSTA
+    std::string command = BaseVprCommand() + " --gen_post_synthesis_netlist on";
+    std::ofstream ofs((std::filesystem::path(ProjManager()->projectPath()) /
+                       std::string(ProjManager()->projectName() + "_sta.cmd"))
+                          .string());
+    ofs.close();
+    int status = ExecuteAndMonitorSystemCommand(command);
+    if (status) {
+      ErrorMessage("Design " + ProjManager()->projectName() +
+                   " timing analysis failed!");
+      return false;
+    }
+    // find files
+    std::string libFileName =
+        (std::filesystem::current_path() /
+         std::string(ProjManager()->projectName() + ".lib"))
+            .string();  // this is the standard sdc file
+    std::string netlistFileName =
+        (std::filesystem::path(ProjManager()->projectPath()) /
+         std::string(ProjManager()->projectName() + "_post_synthesis.v"))
+            .string();
+    std::string sdfFileName =
+        (std::filesystem::path(ProjManager()->projectPath()) /
+         std::string(ProjManager()->projectName() + "_post_synthesis.sdf"))
+            .string();
+    // std::string sdcFile = ProjManager()->getConstrFiles();
+    std::string sdcFileName =
+        (std::filesystem::current_path() /
+         std::string(ProjManager()->projectName() + ".sdc"))
+            .string();  // this is the standard sdc file
+    if (std::filesystem::is_regular_file(libFileName) &&
+        std::filesystem::is_regular_file(netlistFileName) &&
+        std::filesystem::is_regular_file(sdfFileName) &&
+        std::filesystem::is_regular_file(sdcFileName)) {
+      taCommand =
+          BaseStaCommand() + " " +
+          BaseStaScript(libFileName, netlistFileName, sdfFileName, sdcFileName);
+      std::ofstream ofs((std::filesystem::path(ProjManager()->projectPath()) /
+                         std::string(ProjManager()->projectName() + "_sta.cmd"))
+                            .string());
+      ofs << taCommand << std::endl;
+      ofs.close();
+    } else {
+      ErrorMessage(
+          "No required design info generated for user design, required "
+          "for timing analysis");
+      return false;
+    }
+  } else {  // use vpr/tatum engine
+    taCommand = BaseVprCommand() + " --analysis";
+    std::ofstream ofs((std::filesystem::path(ProjManager()->projectPath()) /
+                       std::string(ProjManager()->projectName() + "_sta.cmd"))
+                          .string());
+    ofs << taCommand << " --disp on" << std::endl;
+    ofs.close();
+  }
+
+  status = ExecuteAndMonitorSystemCommand(taCommand);
+  if (status) {
+    ErrorMessage("Design " + ProjManager()->projectName() +
+                 " timing analysis failed!");
+    return false;
+  }
+
+  (*m_out) << "Design " << ProjManager()->projectName()
+           << " is timing analysed!" << std::endl;
+
+  copyLog(ProjManager(), "vpr_stdout.log", "timing_analysis.rpt");
+  return true;
 }

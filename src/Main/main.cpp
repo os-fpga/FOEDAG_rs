@@ -11,7 +11,7 @@
 namespace RS {
 
 #define Company "Rapid Silicon"
-#define ToolName "FOEDAG RS"
+#define ToolName "Raptor Design Suite"
 #define ExecutableName "raptor"
 
 QWidget* mainWindowBuilder(FOEDAG::Session* session) {
