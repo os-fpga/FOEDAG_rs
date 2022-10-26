@@ -64,6 +64,7 @@ class CompilerRS : public CompilerOpenFPGA {
   void MaxThreads(int maxThreads) { m_maxThreads = maxThreads; }
 
   bool TimingAnalysis();
+
  protected:
   bool LicenseDevice(const std::string& deviceName);
 
