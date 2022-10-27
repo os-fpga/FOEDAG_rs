@@ -824,8 +824,6 @@ bool CompilerRS::TimingAnalysis() {
     return true;
   }
 
-  // TODO: Add stars support here
-
   if (FileUtils::IsUptoDate(
           (std::filesystem::path(ProjManager()->projectPath()) /
            std::string(ProjManager()->projectName() + "_post_synth.route"))
@@ -842,10 +840,25 @@ bool CompilerRS::TimingAnalysis() {
   // use OpenSTA to do the job
   if (TimingAnalysisOpt() == STAOpt::Opensta) {
     // allows SDF to be generated for OpenSTA
+
+    // calls stars to generate files for opensta
+    // stars pass all arguments to vpr to generate design context
+    // then it does it work based on that
+    std::string vpr_executable_path =
+        m_vprExecutablePath.string() + std::string(" ");
     std::string command = BaseVprCommand() + " --gen_post_synthesis_netlist on";
+    if (command.find(vpr_executable_path) != std::string::npos) {
+      command = ReplaceAll(command, vpr_executable_path,
+                           m_starsExecutablePath.string() + " ");
+    }
+    if (!FileUtils::FileExists(m_starsExecutablePath)) {
+      ErrorMessage("Cannot find executable: " + m_starsExecutablePath.string());
+      return false;
+    }
     std::ofstream ofs((std::filesystem::path(ProjManager()->projectPath()) /
                        std::string(ProjManager()->projectName() + "_sta.cmd"))
                           .string());
+    ofs << command << std::endl;
     ofs.close();
     int status = ExecuteAndMonitorSystemCommand(command);
     if (status) {
@@ -855,22 +868,22 @@ bool CompilerRS::TimingAnalysis() {
     }
     // find files
     std::string libFileName =
-        (std::filesystem::current_path() /
-         std::string(ProjManager()->projectName() + ".lib"))
-            .string();  // this is the standard sdc file
+        (std::filesystem::path(ProjManager()->projectPath()) /
+         std::string(ProjManager()->projectName() + "_stars.lib"))
+            .string();
     std::string netlistFileName =
         (std::filesystem::path(ProjManager()->projectPath()) /
-         std::string(ProjManager()->projectName() + "_post_synthesis.v"))
+         std::string(ProjManager()->projectName() + "_stars.v"))
             .string();
     std::string sdfFileName =
         (std::filesystem::path(ProjManager()->projectPath()) /
-         std::string(ProjManager()->projectName() + "_post_synthesis.sdf"))
+         std::string(ProjManager()->projectName() + "_stars.sdf"))
             .string();
     // std::string sdcFile = ProjManager()->getConstrFiles();
     std::string sdcFileName =
-        (std::filesystem::current_path() /
-         std::string(ProjManager()->projectName() + ".sdc"))
-            .string();  // this is the standard sdc file
+        (std::filesystem::path(ProjManager()->projectPath()) /
+         std::string(ProjManager()->projectName() + "_stars.sdc"))
+            .string();
     if (std::filesystem::is_regular_file(libFileName) &&
         std::filesystem::is_regular_file(netlistFileName) &&
         std::filesystem::is_regular_file(sdfFileName) &&

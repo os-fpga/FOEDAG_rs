@@ -63,6 +63,9 @@ class CompilerRS : public CompilerOpenFPGA {
   int MaxThreads() { return m_maxThreads; }
   void MaxThreads(int maxThreads) { m_maxThreads = maxThreads; }
 
+  void StarsExecPath(const std::filesystem::path& path) {
+    m_starsExecutablePath = path;
+  }
   bool TimingAnalysis();
 
  protected:
@@ -79,7 +82,7 @@ class CompilerRS : public CompilerOpenFPGA {
   bool m_synthCec = false;
   bool m_synthNoSimplify = false;
   int m_maxThreads = -1;
-
+  std::filesystem::path m_starsExecutablePath = "stars";
 #ifdef PRODUCTION_BUILD
   License_Manager* licensePtr = nullptr;
 #endif
