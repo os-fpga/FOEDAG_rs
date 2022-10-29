@@ -521,6 +521,10 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "   set_mode <io_mode_name> <device_io_name> : Constraints "
             "pin mode (Use in constraint file)"
          << std::endl;
+  (*out) << "   script_path                : Returns the path of the Tcl "
+            "script passed "
+            "with --script"
+         << std::endl;
   (*out) << "   keep <signal list> OR all_signals : Keeps the list of signals "
             "or all signals through Synthesis unchanged (unoptimized in "
             "certain cases)"
