@@ -468,10 +468,16 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "   --version        : Version" << std::endl;
   (*out) << "   --batch          : Tcl only, no GUI" << std::endl;
   (*out) << "   --script <script>: Execute a Tcl script" << std::endl;
+  (*out) << "   --project <project file>: Open a project" << std::endl;
   (*out) << "   --mute           : mutes stdout in batch mode" << std::endl;
   (*out) << "Tcl commands (Available in GUI or Batch console or Batch script):"
          << std::endl;
   (*out) << "   help                       : This help" << std::endl;
+  (*out) << "   open_project <file>        : Opens a project in the GUI"
+         << std::endl;
+  (*out) << "   run_project <file>         : Opens and immediately runs the "
+            "project"
+         << std::endl;
   (*out) << "   create_design <name>       : Creates a design with <name> name"
          << std::endl;
   (*out) << "   target_device <name>       : Targets a device with <name> name "
