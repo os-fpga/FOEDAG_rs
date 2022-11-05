@@ -20,14 +20,36 @@ All rights reserved
 
 #include "Compiler/CompilerRS.h"
 #include "Compiler/Constraints.h"
+#include "Compiler/Log.h"
 #include "MainWindow/Session.h"
 #include "NewProject/ProjectManager/project_manager.h"
+#include "Utils/FileUtils.h"
+#include "Utils/StringUtils.h"
 
 #ifdef PRODUCTION_BUILD
 #include "License_manager.hpp"
 #endif
 
+extern FOEDAG::Session *GlobalSession;
+
 using namespace FOEDAG;
+
+static auto copyLog = [](FOEDAG::ProjectManager *projManager,
+                         const std::string &srcFileName,
+                         const std::string &destFileName) -> bool {
+  bool result = false;
+  if (projManager) {
+    std::filesystem::path projectPath(projManager->projectPath());
+    std::filesystem::path src = projectPath / srcFileName;
+    std::filesystem::path dest = projectPath / destFileName;
+    if (FileUtils::FileExists(src)) {
+      std::filesystem::remove(dest);
+      std::filesystem::copy_file(src, dest);
+      result = true;
+    }
+  }
+  return result;
+};
 
 const std::string QLYosysScript = R"( 
 # Yosys synthesis script for ${TOP_MODULE}
@@ -45,6 +67,7 @@ ${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} $
 
 
 write_verilog -noattr -nohex ${OUTPUT_VERILOG}
+write_edif ${OUTPUT_EDIF}
   )";
 
 const std::string RapidSiliconYosysScript = R"( 
@@ -61,9 +84,8 @@ plugin -i ${PLUGIN_LIB}
 
 ${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
-# Clean and output blif
-write_blif ${OUTPUT_BLIF}
-write_verilog -noexpr -nodec -norename ${OUTPUT_VERILOG}
+${OUTPUT_NETLIST}
+
   )";
 
 std::string CompilerRS::InitSynthesisScript() {
@@ -90,7 +112,7 @@ std::string CompilerRS::InitSynthesisScript() {
   return m_yosysScript;
 }
 
-std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
+std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   std::string result = script;
   // Keeps for Synthesis, preserve nodes used in constraints
   std::string keeps;
@@ -226,12 +248,32 @@ std::string CompilerRS::FinishSynthesisScript(const std::string& script) {
   result = ReplaceAll(result, "${PLUGIN_NAME}", YosysPluginName());
   result = ReplaceAll(result, "${MAP_TO_TECHNOLOGY}", YosysMapTechnology());
   result = ReplaceAll(result, "${LUT_SIZE}", std::to_string(m_lut_size));
+
+  switch (GetNetlistType()) {
+    case NetlistType::Verilog:
+      // Temporary, once pin_c works with Verilog, only output Verilog
+      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
+                          "write_verilog -noexpr -nodec -norename "
+                          "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
+      break;
+    case NetlistType::Edif:
+      result =
+          ReplaceAll(result, "${OUTPUT_NETLIST}", "write_edif ${OUTPUT_EDIF}");
+      break;
+    case NetlistType::Blif:
+      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
+                          "write_verilog -noexpr -nodec -norename "
+                          "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
+      break;
+  }
+
   return result;
 }
 
 CompilerRS::CompilerRS() : CompilerOpenFPGA() {
   m_synthType = SynthesisType::RS;
-  m_channel_width = 180;
+  m_netlistType = NetlistType::Blif;
+  m_channel_width = 200;
 }
 
 CompilerRS::~CompilerRS() {
@@ -240,12 +282,12 @@ CompilerRS::~CompilerRS() {
 #endif
 }
 
-bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
+bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
   CompilerOpenFPGA::RegisterCommands(interp, batchMode);
 
-  auto synth_options = [](void* clientData, Tcl_Interp* interp, int argc,
-                          const char* argv[]) -> int {
-    CompilerRS* compiler = (CompilerRS*)clientData;
+  auto synth_options = [](void *clientData, Tcl_Interp *interp, int argc,
+                          const char *argv[]) -> int {
+    CompilerRS *compiler = (CompilerRS *)clientData;
     if (compiler->m_synthType == SynthesisType::Yosys) {
       compiler->ErrorMessage("Please set 'synthesis_type RS or QL' first.");
       return TCL_ERROR;
@@ -334,9 +376,9 @@ bool CompilerRS::RegisterCommands(TclInterpreter* interp, bool batchMode) {
     return TCL_OK;
   };
   interp->registerCmd("synth_options", synth_options, this, 0);
-  auto max_threads = [](void* clientData, Tcl_Interp* interp, int argc,
-                        const char* argv[]) -> int {
-    CompilerRS* compiler = (CompilerRS*)clientData;
+  auto max_threads = [](void *clientData, Tcl_Interp *interp, int argc,
+                        const char *argv[]) -> int {
+    CompilerRS *compiler = (CompilerRS *)clientData;
     if (argc != 2) {
       compiler->ErrorMessage("Specify a number of threads.");
       return TCL_ERROR;
@@ -359,12 +401,20 @@ std::string CompilerRS::BaseVprCommand() {
   if (!m_deviceSize.empty()) {
     device_size = " --device " + m_deviceSize;
   }
-
-  std::string netlistFile =
-      m_projManager->projectName() +
-      ((m_useVerilogNetlist) ? "_post_synth.v" : "_post_synth.blif");
-  for (const auto& lang_file : m_projManager->DesignFiles()) {
-    switch (lang_file.first) {
+  std::string netlistFile;
+  switch (GetNetlistType()) {
+    case NetlistType::Verilog:
+      netlistFile = ProjManager()->projectName() + "_post_synth.v";
+      break;
+    case NetlistType::Edif:
+      netlistFile = ProjManager()->projectName() + "_post_synth.edif";
+      break;
+    case NetlistType::Blif:
+      netlistFile = ProjManager()->projectName() + "_post_synth.blif";
+      break;
+  }
+  for (const auto &lang_file : m_projManager->DesignFiles()) {
+    switch (lang_file.first.language) {
       case Design::Language::VERILOG_NETLIST:
       case Design::Language::BLIF:
       case Design::Language::EBLIF: {
@@ -403,25 +453,31 @@ std::string CompilerRS::BaseVprCommand() {
   return command;
 }
 
-void CompilerRS::Version(std::ostream* out) {
-  (*out) << "Rapid Silicon Raptor Compiler"
+void CompilerRS::Version(std::ostream *out) {
+  (*out) << "Rapid Silicon Raptor Design Suite"
          << "\n";
   PrintVersion(out);
 }
 
-void CompilerRS::Help(std::ostream* out) {
-  (*out) << "-----------------------------------" << std::endl;
-  (*out) << "--- Rapid Silicon RAPTOR HELP  ----" << std::endl;
-  (*out) << "-----------------------------------" << std::endl;
+void CompilerRS::Help(std::ostream *out) {
+  (*out) << "-----------------------------------------------" << std::endl;
+  (*out) << "--- Rapid Silicon Raptor Design Suite help  ---" << std::endl;
+  (*out) << "-----------------------------------------------" << std::endl;
   (*out) << "Options:" << std::endl;
   (*out) << "   --help           : This help" << std::endl;
   (*out) << "   --version        : Version" << std::endl;
   (*out) << "   --batch          : Tcl only, no GUI" << std::endl;
   (*out) << "   --script <script>: Execute a Tcl script" << std::endl;
+  (*out) << "   --project <project file>: Open a project" << std::endl;
   (*out) << "   --mute           : mutes stdout in batch mode" << std::endl;
   (*out) << "Tcl commands (Available in GUI or Batch console or Batch script):"
          << std::endl;
   (*out) << "   help                       : This help" << std::endl;
+  (*out) << "   open_project <file>        : Opens a project in the GUI"
+         << std::endl;
+  (*out) << "   run_project <file>         : Opens and immediately runs the "
+            "project"
+         << std::endl;
   (*out) << "   create_design <name>       : Creates a design with <name> name"
          << std::endl;
   (*out) << "   target_device <name>       : Targets a device with <name> name "
@@ -461,11 +517,19 @@ void CompilerRS::Help(std::ostream* out) {
   (*out) << "   set_top_module <top>       : Sets the top module" << std::endl;
   (*out) << "   add_constraint_file <file> : Sets SDC + location constraints"
          << std::endl;
-  (*out) << "                                Constraints: set_pin_loc, "
-            "all SDC Standard commands"
-         << std::endl;
+  (*out)
+      << "                                Constraints: set_pin_loc, set_mode, "
+         "all SDC Standard commands"
+      << std::endl;
   (*out) << "   set_pin_loc <design_io_name> <device_io_name> : Constraints "
             "pin location (Use in constraint file)"
+         << std::endl;
+  (*out) << "   set_mode <io_mode_name> <device_io_name> : Constraints "
+            "pin mode (Use in constraint file)"
+         << std::endl;
+  (*out) << "   script_path                : Returns the path of the Tcl "
+            "script passed "
+            "with --script"
          << std::endl;
   (*out) << "   keep <signal list> OR all_signals : Keeps the list of signals "
             "or all signals through Synthesis unchanged (unoptimized in "
@@ -556,8 +620,17 @@ void CompilerRS::Help(std::ostream* out) {
             "opt. (area, "
             "delay, mixed, none)"
          << std::endl;
+  (*out) << "   pin_loc_assign_method <Method>: Method choices:" << std::endl;
+  (*out) << "                                in_define_order(Default), port "
+            "order pin assignment"
+         << std::endl;
+  (*out) << "                                random , random pin assignment"
+         << std::endl;
+  (*out) << "                                free , no automatic pin assignment"
+         << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
-  (*out) << "   pnr_netlist_lang <blif, verilog> : Chooses vpr input netlist "
+  (*out) << "   pnr_netlist_lang <blif, edif, verilog> : Chooses vpr input "
+            "netlist "
             "format"
          << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
@@ -589,10 +662,10 @@ void CompilerRS::Help(std::ostream* out) {
 #else
   (*out) << "   bitstream ?force? ?clean?  : Bitstream generation" << std::endl;
 #endif
-  (*out) << "----------------------------------" << std::endl;
+  (*out) << "-----------------------------------------------" << std::endl;
 }
 
-bool CompilerRS::LicenseDevice(const std::string& deviceName) {
+bool CompilerRS::LicenseDevice(const std::string &deviceName) {
   // Should return false in Production build if the Device License Feature
   // cannot be check out.
 #ifdef PRODUCTION_BUILD
@@ -603,5 +676,261 @@ bool CompilerRS::LicenseDevice(const std::string& deviceName) {
   }
 
 #endif
+  return true;
+}
+
+// This collects the current compiler values and returns a string of args that
+// will be used by the settings UI to populate its fields
+std::string FOEDAG::TclArgs_getRsSynthesisOptions() {
+  CompilerRS *compiler = (CompilerRS *)GlobalSession->GetCompiler();
+  std::string tclOptions{};
+  if (compiler) {
+    // Use the script completer to generate an arg list w/ current values
+    // Note we are only grabbing the values that matter for the settings ui
+    tclOptions = compiler->FinishSynthesisScript(
+        "${OPTIMIZATION} ${EFFORT} ${FSM_ENCODING} ${CARRY} ${NO_DSP} "
+        "${NO_BRAM} ${FAST}");
+
+    // The settings UI provides a single argument value pair for each field.
+    // Optimization uses -de -goal so we convert that to the settings specific
+    // synth arg, -_SynthOpt_
+    std::string tag = "-_SynthOpt_";
+    std::string noneStr = tag + " none";
+    // generically replace -de -goal * with -_SynthOpt_ *
+    tclOptions = StringUtils::replaceAll(tclOptions, "-de -goal", tag);
+    // special case for None, must be run AFTER -de -goal has been replaced
+    tclOptions = StringUtils::replaceAll(tclOptions, "-de", noneStr);
+
+    // short term fix for carry which currently seems to use both no and none
+    tclOptions =
+        StringUtils::replaceAll(tclOptions, "-carry no ", "-carry none ");
+  };
+  return tclOptions;
+}
+
+// This takes an arglist generated by the settings dialog and applies the
+// options to CompilerRs
+void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
+  CompilerRS *compiler = (CompilerRS *)GlobalSession->GetCompiler();
+
+  // Split into args by -
+  std::vector<std::string> args;
+  StringUtils::tokenize(argsStr, "-", args);
+  for (auto arg : args) {
+    // add back the "-" removed from tokenize()
+    arg = "-" + arg;
+
+    // Split arg into tokens
+    std::vector<std::string> tokens;
+    StringUtils::tokenize(arg, " ", tokens);
+
+    // Read in arg tag
+    std::string option{};
+    if (tokens.size() > 0) {
+      option = tokens[0];
+    }
+
+    // This codes mostly copies the logic from the synth_options lambda
+    // It would be nice if the syth_options logic could be refactored into
+    // pieces that could be used in this parser as well
+
+    // -_SynthOpt_ is the settings dlg's arg for Optimization (-de -goal)
+    if (option == "-_SynthOpt_" && tokens.size() > 1) {
+      std::string arg = tokens[1];
+      if (arg == "area") {
+        compiler->SynthOpt(Compiler::SynthesisOpt::Area);
+      } else if (arg == "delay") {
+        compiler->SynthOpt(Compiler::SynthesisOpt::Delay);
+      } else if (arg == "mixed") {
+        compiler->SynthOpt(Compiler::SynthesisOpt::Mixed);
+      } else if (arg == "none") {
+        compiler->SynthOpt(Compiler::SynthesisOpt::None);
+      }
+      continue;
+    }
+    if (option == "-fsm_encoding" && tokens.size() > 1) {
+      std::string arg = tokens[1];
+      if (arg == "binary") {
+        compiler->SynthFsm(CompilerRS::SynthesisFsmEncoding::Binary);
+      } else if (arg == "onehot") {
+        compiler->SynthFsm(CompilerRS::SynthesisFsmEncoding::Onehot);
+      }
+      continue;
+    }
+    if (option == "-effort" && tokens.size() > 1) {
+      std::string arg = tokens[1];
+      if (arg == "high") {
+        compiler->SynthEffort(CompilerRS::SynthesisEffort::High);
+      } else if (arg == "medium") {
+        compiler->SynthEffort(CompilerRS::SynthesisEffort::Medium);
+      } else if (arg == "low") {
+        compiler->SynthEffort(CompilerRS::SynthesisEffort::Low);
+      }
+      continue;
+    }
+    if (option == "-carry" && tokens.size() > 1) {
+      std::string arg = tokens[1];
+      if (arg == "none") {
+        compiler->SynthCarry(CompilerRS::SynthesisCarryInference::NoCarry);
+      } else if (arg == "auto") {
+        compiler->SynthCarry(CompilerRS::SynthesisCarryInference::Auto);
+      } else if (arg == "all") {
+        compiler->SynthCarry(CompilerRS::SynthesisCarryInference::All);
+      }
+      continue;
+    }
+    if (option == "-no_dsp") {
+      compiler->SynthNoDsp(true);
+      continue;
+    }
+    if (option == "-no_bram") {
+      compiler->SynthNoBram(true);
+      continue;
+    }
+    if (option == "-fast") {
+      compiler->SynthFast(true);
+      continue;
+    }
+  }
+}
+
+bool CompilerRS::TimingAnalysis() {
+  if (!ProjManager()->HasDesign()) {
+    ErrorMessage("No design specified");
+    return false;
+  }
+  if (!HasTargetDevice()) return false;
+
+  if (TimingAnalysisOpt() == STAOpt::Clean) {
+    Message("Cleaning TimingAnalysis results for " +
+            ProjManager()->projectName());
+    TimingAnalysisOpt(STAOpt::None);
+    m_state = State::Routed;
+    std::filesystem::remove(
+        std::filesystem::path(ProjManager()->projectPath()) /
+        std::string(ProjManager()->projectName() + "_sta.cmd"));
+    return true;
+  }
+
+  PERF_LOG("TimingAnalysis has started");
+  (*m_out) << "##################################################" << std::endl;
+  (*m_out) << "Timing Analysis for design: " << ProjManager()->projectName()
+           << std::endl;
+  (*m_out) << "##################################################" << std::endl;
+  if (!FileUtils::FileExists(m_vprExecutablePath)) {
+    ErrorMessage("Cannot find executable: " + m_vprExecutablePath.string());
+    return false;
+  }
+
+  if (TimingAnalysisOpt() == STAOpt::View) {
+    TimingAnalysisOpt(STAOpt::None);
+    const std::string command = BaseVprCommand() + " --analysis --disp on";
+    const int status = ExecuteAndMonitorSystemCommand(command);
+    if (status) {
+      ErrorMessage("Design " + ProjManager()->projectName() +
+                   " place and route view failed!");
+      return false;
+    }
+    return true;
+  }
+
+  if (FileUtils::IsUptoDate(
+          (std::filesystem::path(ProjManager()->projectPath()) /
+           std::string(ProjManager()->projectName() + "_post_synth.route"))
+              .string(),
+          (std::filesystem::path(ProjManager()->projectPath()) /
+           std::string(ProjManager()->projectName() + "_sta.cmd"))
+              .string())) {
+    (*m_out) << "Design " << ProjManager()->projectName()
+             << " timing didn't change" << std::endl;
+    return true;
+  }
+  int status = 0;
+  std::string taCommand;
+  // use OpenSTA to do the job
+  if (TimingAnalysisOpt() == STAOpt::Opensta) {
+    // allows SDF to be generated for OpenSTA
+
+    // calls stars to generate files for opensta
+    // stars pass all arguments to vpr to generate design context
+    // then it does it work based on that
+    std::string vpr_executable_path =
+        m_vprExecutablePath.string() + std::string(" ");
+    std::string command = BaseVprCommand() + " --gen_post_synthesis_netlist on";
+    if (command.find(vpr_executable_path) != std::string::npos) {
+      command = ReplaceAll(command, vpr_executable_path,
+                           m_starsExecutablePath.string() + " ");
+    }
+    if (!FileUtils::FileExists(m_starsExecutablePath)) {
+      ErrorMessage("Cannot find executable: " + m_starsExecutablePath.string());
+      return false;
+    }
+    std::ofstream ofs((std::filesystem::path(ProjManager()->projectPath()) /
+                       std::string(ProjManager()->projectName() + "_sta.cmd"))
+                          .string());
+    ofs << command << std::endl;
+    ofs.close();
+    int status = ExecuteAndMonitorSystemCommand(command);
+    if (status) {
+      ErrorMessage("Design " + ProjManager()->projectName() +
+                   " timing analysis failed!");
+      return false;
+    }
+    // find files
+    std::string libFileName =
+        (std::filesystem::path(ProjManager()->projectPath()) /
+         std::string(ProjManager()->projectName() + "_stars.lib"))
+            .string();
+    std::string netlistFileName =
+        (std::filesystem::path(ProjManager()->projectPath()) /
+         std::string(ProjManager()->projectName() + "_stars.v"))
+            .string();
+    std::string sdfFileName =
+        (std::filesystem::path(ProjManager()->projectPath()) /
+         std::string(ProjManager()->projectName() + "_stars.sdf"))
+            .string();
+    // std::string sdcFile = ProjManager()->getConstrFiles();
+    std::string sdcFileName =
+        (std::filesystem::path(ProjManager()->projectPath()) /
+         std::string(ProjManager()->projectName() + "_stars.sdc"))
+            .string();
+    if (std::filesystem::is_regular_file(libFileName) &&
+        std::filesystem::is_regular_file(netlistFileName) &&
+        std::filesystem::is_regular_file(sdfFileName) &&
+        std::filesystem::is_regular_file(sdcFileName)) {
+      taCommand =
+          BaseStaCommand() + " " +
+          BaseStaScript(libFileName, netlistFileName, sdfFileName, sdcFileName);
+      std::ofstream ofs((std::filesystem::path(ProjManager()->projectPath()) /
+                         std::string(ProjManager()->projectName() + "_sta.cmd"))
+                            .string());
+      ofs << taCommand << std::endl;
+      ofs.close();
+    } else {
+      ErrorMessage(
+          "No required design info generated for user design, required "
+          "for timing analysis");
+      return false;
+    }
+  } else {  // use vpr/tatum engine
+    taCommand = BaseVprCommand() + " --analysis";
+    std::ofstream ofs((std::filesystem::path(ProjManager()->projectPath()) /
+                       std::string(ProjManager()->projectName() + "_sta.cmd"))
+                          .string());
+    ofs << taCommand << " --disp on" << std::endl;
+    ofs.close();
+  }
+
+  status = ExecuteAndMonitorSystemCommand(taCommand);
+  if (status) {
+    ErrorMessage("Design " + ProjManager()->projectName() +
+                 " timing analysis failed!");
+    return false;
+  }
+
+  (*m_out) << "Design " << ProjManager()->projectName()
+           << " is timing analysed!" << std::endl;
+
+  copyLog(ProjManager(), "vpr_stdout.log", "timing_analysis.rpt");
   return true;
 }

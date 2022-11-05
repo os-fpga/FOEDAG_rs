@@ -3,6 +3,7 @@
 #include "Main/Foedag.h"
 #include "Main/Settings.h"
 #include "Main/ToolContext.h"
+#include "Main/WidgetFactory.h"
 #include "MainWindow/Session.h"
 #include "MainWindow/main_window.h"
 #include "Utils/FileUtils.h"
@@ -10,7 +11,7 @@
 namespace RS {
 
 #define Company "Rapid Silicon"
-#define ToolName "FOEDAG RS"
+#define ToolName "Raptor Design Suite"
 #define ExecutableName "raptor"
 
 QWidget* mainWindowBuilder(FOEDAG::Session* session) {
@@ -52,6 +53,9 @@ int main(int argc, char** argv) {
     opcompiler = new FOEDAG::CompilerRS();
     compiler = opcompiler;
     compiler->SetUseVerific(true);
+    FOEDAG::addTclArgFns("CompilerRs_Synthesis",
+                         {FOEDAG::TclArgs_setRsSynthesisOptions,
+                          FOEDAG::TclArgs_getRsSynthesisOptions});
   }
   FOEDAG::Foedag* foedag =
       new FOEDAG::Foedag(cmd, RS::mainWindowBuilder, RS::registerAllCommands,
@@ -64,6 +68,8 @@ int main(int argc, char** argv) {
     std::filesystem::path vprPath = binpath / "vpr";
     std::filesystem::path openFpgaPath = binpath / "openfpga";
     std::filesystem::path pinConvPath = binpath / "pin_c";
+    std::filesystem::path staPath = binpath / "sta";
+    std::filesystem::path starsPath = binpath / "stars";
     std::filesystem::path bitstreamSettingPath =
         datapath / "etc" / "devices" / "gemini" / "bitstream_annotation.xml";
     std::filesystem::path simSettingPath =
@@ -74,6 +80,8 @@ int main(int argc, char** argv) {
     opcompiler->AnalyzeExecPath(analyzePath);
     opcompiler->YosysExecPath(yosysPath);
     opcompiler->VprExecPath(vprPath);
+    opcompiler->StaExecPath(staPath);
+    opcompiler->StarsExecPath(starsPath);
     opcompiler->OpenFpgaExecPath(openFpgaPath);
     opcompiler->OpenFpgaBitstreamSettingFile(bitstreamSettingPath);
     opcompiler->OpenFpgaSimSettingFile(simSettingPath);
