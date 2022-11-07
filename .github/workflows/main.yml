@@ -53,7 +53,7 @@ jobs:
         bash .github/workflows/install_ubuntu_dependencies_build.sh
 
     - name: Use ccache
-      uses: hendrikmuhs/ccache-action@v1
+      uses: hendrikmuhs/ccache-action@v1.2.3
       with:
         key: linux-${{ matrix.mode }}
 
@@ -63,6 +63,7 @@ jobs:
         echo 'CXX=g++-9' >> $GITHUB_ENV
         echo 'PATH=/usr/lib/ccache:'"$PATH" >> $GITHUB_ENV
         echo 'PREFIX=/tmp/raptor_gui-install' >> $GITHUB_ENV
+        echo "$PREFIX" >> $GITHUB_PATH
         echo "ADDITIONAL_CMAKE_OPTIONS='-DMY_CXX_WARNING_FLAGS="-W -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Werror -UNDEBUG"'" >> $GITHUB_ENV
         echo 'RULE_MESSAGES=off' >> $GITHUB_ENV
 
@@ -71,7 +72,6 @@ jobs:
         env
         which cmake && cmake --version
         which make && make --version
-        which swig && swig -version
         which python && python --version
         which ninja && ninja --version
         which tclsh && echo 'puts [info patchlevel];exit 0' | tclsh
@@ -157,7 +157,7 @@ jobs:
 # Not working with private repo (Need to check the secret key)
 #    - name: Download workflow artifact
 #      if: matrix.mode == 'test'
-#      uses: dawidd6/action-download-artifact@v2.17.0
+#      uses: dawidd6/action-download-artifact@v2.24.0
 #      with:
 #        github_token: ${{ secrets.GITHUB_TOKEN }}
 #        workflow: main.yml
@@ -194,6 +194,7 @@ jobs:
         echo 'CXX=/opt/rh/devtoolset-9/root/usr/bin/g++' >> $GITHUB_ENV
         echo 'PATH=/usr/local/Qt-5.15.0/bin:/usr/lib/ccache:'"$PATH" >> $GITHUB_ENV
         echo 'PREFIX=/tmp/raptor_gui-install' >> $GITHUB_ENV
+        echo "$PREFIX" >> $GITHUB_PATH
         echo "ADDITIONAL_CMAKE_OPTIONS='-DMY_CXX_WARNING_FLAGS="-W -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Werror -UNDEBUG"'" >> $GITHUB_ENV
         echo 'RULE_MESSAGES=off' >> $GITHUB_ENV
 
@@ -203,6 +204,11 @@ jobs:
         make debug test/unittest-d
         make release test/batch
         make test/gui
+
+    - name: Regression
+      id: reg_ok
+      if: matrix.mode == 'regression'
+      run: |
         make regression
 
 # Reference: https://github.com/eyllanesc/69108420/blob/main/.github/workflows/test.yml
@@ -234,10 +240,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Install core dependencies
-      run: choco install -y swig --side-by-side --version=3.0.12
-      shell: powershell
-
     - name: Setup Msys2
       uses: msys2/setup-msys2@v2
       with:
@@ -264,13 +266,11 @@ jobs:
         
     - name: Configure shell environment variables
       run: |
-        export SWIG_DIR=/c/ProgramData/chocolatey/lib/swig/tools/install/swigwin-3.0.12
         export Qt5_Dir=/mingw64/lib/cmake/Qt5/
         # Static version: export Qt5_Dir=/mingw64/qt5-static/lib/cmake/Qt5/
         export Qt5_DIR=$Qt5_Dir
         export CWD=`pwd`
         echo "Qt5_DIR=$Qt5_DIR" >> $GITHUB_ENV
-        echo "SWIG_DIR=$SWIG_DIR" >> $GITHUB_ENV
         echo 'CMAKE_GENERATOR=Ninja' >> $GITHUB_ENV
         echo 'CC=gcc' >> $GITHUB_ENV
         echo 'CXX=g++' >> $GITHUB_ENV
@@ -278,16 +278,13 @@ jobs:
         echo "PREFIX=$CWD/install" >> $GITHUB_ENV
 
         echo "$Qt5_DIR" >> $GITHUB_PATH
-        echo "$SWIG_DIR" >> $GITHUB_PATH
 
     - name: Show shell configuration
       run: |
-        export PATH=$SWIG_DIR:$PATH
         env
         where git && git --version
         where cmake && cmake --version
         where make && make --version
-        where swig && swig -version
         where python && python --version
         where ninja && ninja --version
         where tclsh && echo 'puts [info patchlevel];exit 0' | tclsh
@@ -296,7 +293,6 @@ jobs:
 
     - name: Build
       run: |
-        export PATH=$SWIG_DIR:$PATH
         export Qt5_Dir=/mingw64/lib/cmake/Qt5/
         # export Qt5_Dir=/mingw64/qt5-static/lib/cmake/Qt5/
         export Qt5_DIR=$Qt5_Dir
@@ -309,7 +305,6 @@ jobs:
 
     - name: Test
       run: |
-        export PATH=$SWIG_DIR:$PATH
         export Qt5_Dir=/mingw64/lib/cmake/Qt5/
         # export Qt5_Dir=/mingw64/qt5-static/lib/cmake/Qt5/
         export Qt5_DIR=$Qt5_Dir
@@ -335,7 +330,7 @@ jobs:
 
 # Fix Cmake version, 3.21.4 has a bug that prevents Tcl to build
     - name: Setup cmake
-      uses: jwlawson/actions-setup-cmake@v1.9
+      uses: jwlawson/actions-setup-cmake@v1.13.0
       with:
         cmake-version: '3.21.3'
     - name: Use cmake
@@ -344,7 +339,6 @@ jobs:
     - name: Install Core Dependencies
       run: |
         choco install -y make
-        choco install -y swig --side-by-side --version=3.0.12
 
     - name: Setup Python
       uses: actions/setup-python@v4.3.0
@@ -353,7 +347,7 @@ jobs:
         architecture: x64
 
     - name: Install Qt
-      uses: jurplel/install-qt-action@v2
+      uses: jurplel/install-qt-action@v3.0.0
 
     - run: git config --global core.autocrlf input
       shell: bash
@@ -375,14 +369,12 @@ jobs:
 
         set MAKE_DIR=C:\make\bin
         #set TCL_DIR=%PROGRAMFILES%\Git\mingw64\bin
-        set SWIG_DIR=%PROGRMDATA%\chocolatey\lib\swig\tools\install\swigwin-3.0.12
-        set PATH=%pythonLocation%;%SWIG_DIR%;%MAKE_DIR%;%PATH%
-        #set PATH=%pythonLocation%;%SWIG_DIR%;%MAKE_DIR%;%TCL_DIR%;%PATH%
+        set PATH=%pythonLocation%;%MAKE_DIR%;%PATH%
+        #set PATH=%pythonLocation%;%MAKE_DIR%;%TCL_DIR%;%PATH%
 
         set
         where cmake && cmake --version
         where make && make --version
-        where swig && swig -version
         where python && python --version
         where ninja && ninja --version
 
@@ -432,12 +424,12 @@ jobs:
         fetch-depth: 0
 
     - name: Install dependencies
-      uses: jurplel/install-qt-action@v2
+      uses: jurplel/install-qt-action@v3.0.0
       with:
         setup-python: false
 
     - name: Use ccache
-      uses: hendrikmuhs/ccache-action@v1
+      uses: hendrikmuhs/ccache-action@v1.2.3
       with:
         key: macos-gcc
 
@@ -447,13 +439,13 @@ jobs:
         echo 'CXX=g++-9' >> $GITHUB_ENV
         echo "PATH=$(brew --prefix)/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
         echo 'PREFIX=${GITHUB_WORKSPACE}/install' >> $GITHUB_ENV
+        echo "$PREFIX" >> $GITHUB_PATH
 
     - name: Show shell configuration
       run: |
         env
         which cmake && cmake --version
         which make && make --version
-        which swig && swig -version
         which python && python --version
         which tclsh && echo 'puts [info patchlevel];exit 0' | tclsh
         which $CC && $CC --version
@@ -488,7 +480,7 @@ jobs:
         python-version: 3.8
 
     - name: Install dependencies
-      uses: jurplel/install-qt-action@v2
+      uses: jurplel/install-qt-action@v3.0.0
       with:
         setup-python: false
 
@@ -497,7 +489,7 @@ jobs:
         fetch-depth: 0
 
     - name: Use ccache
-      uses: hendrikmuhs/ccache-action@v1
+      uses: hendrikmuhs/ccache-action@v1.2.3
       with:
         key: macos-clang
 
@@ -505,6 +497,7 @@ jobs:
       run: |
         echo 'PREFIX=${GITHUB_WORKSPACE}/install' >> $GITHUB_ENV
         echo "PATH=$(brew --prefix)/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
+        echo "$PREFIX" >> $GITHUB_PATH
 
     - name: Install XQuartz on macOS
       run: brew install xquartz --cask
@@ -514,7 +507,6 @@ jobs:
         env
         which cmake && cmake --version
         which make && make --version
-        which swig && swig -version
         which python && python --version
         which tclsh && echo 'puts [info patchlevel];exit 0' | tclsh
 
@@ -577,7 +569,7 @@ jobs:
                                 qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools qtdeclarative5-dev xvfb
 
     - name: Use ccache
-      uses: hendrikmuhs/ccache-action@v1
+      uses: hendrikmuhs/ccache-action@v1.2.3
       with:
         key: clang-tidy-codegen
 
