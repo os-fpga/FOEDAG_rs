@@ -151,17 +151,20 @@ jobs:
       with:
         access_token: ${{ github.token }}
 
+    - name: Install ssh-agent
+      run: |
+        yum install -y openssh-server openssh-clients
+        yum-config-manager --enable rhel-server-rhscl-7-rpms
+        yum install -y https://repo.ius.io/ius-release-el7.rpm
+        yum install -y centos-release-scl
+        yum install -y devtoolset-9
+        yum install -y devtoolset-9-toolchain
+        yum remove -y git*
+        yum install -y https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
+        yum install -y git
+
     - name: Checkout code
       uses: actions/checkout@v3
-
-# Not working with private repo (Need to check the secret key)
-#    - name: Download workflow artifact
-#      if: matrix.mode == 'test'
-#      uses: dawidd6/action-download-artifact@v2.24.0
-#      with:
-#        github_token: ${{ secrets.GITHUB_TOKEN }}
-#        workflow: main.yml
-#        repo: ${{ github.repository }}
 
     - name: Install dependencies and build QT
       run: |
@@ -180,6 +183,10 @@ jobs:
         name: buildqt5-centos7-gcc
         path: buildqt5-centos7-gcc.tgz
 
+    - name: Remove QT tar file.
+      run: |
+        rm -rf buildqt5-centos7-gcc.tgz
+        
     - name: Show shell configuration
       run: |
         env
@@ -201,9 +208,10 @@ jobs:
     - name: Test
       if: matrix.mode == 'test'
       run: |
-        make debug test/unittest-d
+        git config --global --add safe.directory '*'
+        #       make debug test/unittest-d
         make release test/batch
-        make test/gui
+        #        make test/gui
 
     - name: Regression
       id: reg_ok
