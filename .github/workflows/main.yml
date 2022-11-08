@@ -209,9 +209,9 @@ jobs:
       if: matrix.mode == 'test'
       run: |
         git config --global --add safe.directory '*'
-#        make debug test/unittest-d
+        #       make debug test/unittest-d
         make release test/batch
-#        make test/gui
+        #        make test/gui
 
     - name: Regression
       id: reg_ok
