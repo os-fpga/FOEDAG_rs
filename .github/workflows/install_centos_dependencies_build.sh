@@ -11,6 +11,7 @@ yum install -y devtoolset-9-toolchain
 yum install -y devtoolset-9-gcc-c++
 scl enable devtoolset-9 bash
 yum install -y tcl
+yum install -y git
 yum install -y make
 yum install -y openssh-server openssh-clients
 yum install -y which
@@ -24,6 +25,7 @@ yum install -y xorg-x11-server-Xvfb
 yum install -y mesa-libGL-devel
 yum install -y libxcb libxcb-devel xcb-util xcb-util-devel libxkbcommon-devel libxkbcommon-x11-devel
 yum install -y xcb-util-image-devel xcb-util-keysyms-devel xcb-util-renderutil-devel xcb-util-wm-devel
+
 ln -s $PWD/cmake-3.15.7-Linux-x86_64/bin/ctest /usr/bin/ctest
 echo 'QMAKE_CC=/opt/rh/devtoolset-9/root/usr/bin/gcc' >> $GITHUB_ENV
 echo 'QMAKE_CXX=/opt/rh/devtoolset-9/root/usr/bin/g++' >> $GITHUB_ENV
