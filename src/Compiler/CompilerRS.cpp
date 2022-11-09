@@ -272,7 +272,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
 
 CompilerRS::CompilerRS() : CompilerOpenFPGA() {
   m_synthType = SynthesisType::RS;
-  m_netlistType = NetlistType::Blif;
+  m_netlistType = NetlistType::Verilog;
   m_channel_width = 200;
 }
 
