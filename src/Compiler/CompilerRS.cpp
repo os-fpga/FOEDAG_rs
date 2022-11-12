@@ -811,6 +811,36 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
   }
 }
 
+std::string CompilerRS::BaseStaCommand() {
+  std::string command = m_staExecutablePath.string();
+  return command;
+}
+
+std::string CompilerRS::BaseStaScript(std::string libFileName,
+                                      std::string netlistFileName,
+                                      std::string sdfFileName,
+                                      std::string sdcFileName) {
+  std::string script =
+      std::string("read_liberty ") + libFileName +
+      std::string("\n") +  // add lib for test only, need to research on this
+      std::string("read_verilog ") + netlistFileName + std::string("\n") +
+      std::string("link_design ") +
+      ProjManager()->getDesignTopModule().toStdString() + std::string("\n") +
+      std::string("read_sdf ") + sdfFileName + std::string("\n") +
+      std::string("read_sdc ") + sdcFileName + std::string("\n") +
+      std::string("report_checks\n") +
+      std::string("report_clock_min_period\n") + std::string("report_wns\n") +
+      std::string("exit\n");
+  const std::string openStaFile =
+      (std::filesystem::path(ProjManager()->projectPath()) /
+       std::string(ProjManager()->projectName() + "_opensta.tcl"))
+          .string();
+  std::ofstream ofssta(openStaFile);
+  ofssta << script << "\n";
+  ofssta.close();
+  return openStaFile;
+}
+
 bool CompilerRS::TimingAnalysis() {
   if (!ProjManager()->HasDesign()) {
     ErrorMessage("No design specified");

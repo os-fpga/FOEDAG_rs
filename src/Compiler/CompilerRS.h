@@ -70,7 +70,11 @@ class CompilerRS : public CompilerOpenFPGA {
 
  protected:
   bool LicenseDevice(const std::string& deviceName);
-
+  virtual std::string BaseStaCommand();
+  virtual std::string BaseStaScript(std::string libFileName,
+                                    std::string netlistFileName,
+                                    std::string sdfFileName,
+                                    std::string sdcFileName);
   SynthesisEffort m_synthEffort = SynthesisEffort::None;
   SynthesisCarryInference m_synthCarry = SynthesisCarryInference::None;
   SynthesisFsmEncoding m_synthFsm = SynthesisFsmEncoding::None;
