@@ -896,20 +896,24 @@ bool CompilerRS::TimingAnalysis() {
     // find files
     std::string libFileName =
         (std::filesystem::path(ProjManager()->projectPath()) /
-         std::string(ProjManager()->projectName() + "_stars.lib"))
+         std::string(ProjManager()->getDesignTopModule().toStdString() +
+                     "_stars.lib"))
             .string();
     std::string netlistFileName =
         (std::filesystem::path(ProjManager()->projectPath()) /
-         std::string(ProjManager()->projectName() + "_stars.v"))
+         std::string(ProjManager()->getDesignTopModule().toStdString() +
+                     "_stars.v"))
             .string();
     std::string sdfFileName =
         (std::filesystem::path(ProjManager()->projectPath()) /
-         std::string(ProjManager()->projectName() + "_stars.sdf"))
+         std::string(ProjManager()->getDesignTopModule().toStdString() +
+                     "_stars.sdf"))
             .string();
     // std::string sdcFile = ProjManager()->getConstrFiles();
     std::string sdcFileName =
         (std::filesystem::path(ProjManager()->projectPath()) /
-         std::string(ProjManager()->projectName() + "_stars.sdc"))
+         std::string(ProjManager()->getDesignTopModule().toStdString() +
+                     "_stars.sdc"))
             .string();
     if (std::filesystem::is_regular_file(libFileName) &&
         std::filesystem::is_regular_file(netlistFileName) &&
