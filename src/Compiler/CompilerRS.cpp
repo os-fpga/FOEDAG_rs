@@ -828,8 +828,7 @@ std::string CompilerRS::BaseStaScript(std::string libFileName,
       ProjManager()->getDesignTopModule().toStdString() + std::string("\n") +
       std::string("read_sdf ") + sdfFileName + std::string("\n") +
       std::string("read_sdc ") + sdcFileName + std::string("\n") +
-      std::string("report_checks\n") +
-      std::string("report_clock_min_period\n") + std::string("report_wns\n") +
+      std::string("report_checks\n") + std::string("report_wns\n") +
       std::string("exit\n");
   const std::string openStaFile =
       (std::filesystem::path(ProjManager()->projectPath()) /
