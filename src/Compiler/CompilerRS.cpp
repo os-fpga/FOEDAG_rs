@@ -829,7 +829,7 @@ std::string CompilerRS::BaseStaScript(std::string libFileName,
       std::string("read_sdf ") + sdfFileName + std::string("\n") +
       std::string("read_sdc ") + sdcFileName + std::string("\n") +
       std::string("report_checks\n") + std::string("report_wns\n") +
-      std::string("exit\n");
+      std::string("report_tns\n") + std::string("exit\n");
   const std::string openStaFile =
       (std::filesystem::path(ProjManager()->projectPath()) /
        std::string(ProjManager()->projectName() + "_opensta.tcl"))
@@ -855,6 +855,9 @@ bool CompilerRS::TimingAnalysis() {
     std::filesystem::remove(
         std::filesystem::path(ProjManager()->projectPath()) /
         std::string(ProjManager()->projectName() + "_sta.cmd"));
+    std::filesystem::remove(
+        std::filesystem::path(ProjManager()->projectPath()) /
+        std::string("timing_analysis.rpt"));
     return true;
   }
 
@@ -885,7 +888,7 @@ bool CompilerRS::TimingAnalysis() {
            std::string(ProjManager()->projectName() + "_post_synth.route"))
               .string(),
           (std::filesystem::path(ProjManager()->projectPath()) /
-           std::string(ProjManager()->projectName() + "_sta.cmd"))
+           std::string("timing_analysis.rpt"))
               .string())) {
     (*m_out) << "Design " << ProjManager()->projectName()
              << " timing didn't change" << std::endl;
@@ -971,7 +974,7 @@ bool CompilerRS::TimingAnalysis() {
     ofs.close();
   }
 
-  status = ExecuteAndMonitorSystemCommand(taCommand);
+  status = ExecuteAndMonitorSystemCommand(taCommand, "timing_analysis.rpt");
   if (status) {
     ErrorMessage("Design " + ProjManager()->projectName() +
                  " timing analysis failed!");
@@ -981,6 +984,5 @@ bool CompilerRS::TimingAnalysis() {
   (*m_out) << "Design " << ProjManager()->projectName()
            << " is timing analysed!" << std::endl;
 
-  copyLog(ProjManager(), "vpr_stdout.log", "timing_analysis.rpt");
   return true;
 }
