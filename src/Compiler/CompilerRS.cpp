@@ -34,23 +34,6 @@ extern FOEDAG::Session *GlobalSession;
 
 using namespace FOEDAG;
 
-static auto copyLog = [](FOEDAG::ProjectManager *projManager,
-                         const std::string &srcFileName,
-                         const std::string &destFileName) -> bool {
-  bool result = false;
-  if (projManager) {
-    std::filesystem::path projectPath(projManager->projectPath());
-    std::filesystem::path src = projectPath / srcFileName;
-    std::filesystem::path dest = projectPath / destFileName;
-    if (FileUtils::FileExists(src)) {
-      std::filesystem::remove(dest);
-      std::filesystem::copy_file(src, dest);
-      result = true;
-    }
-  }
-  return result;
-};
-
 const std::string QLYosysScript = R"( 
 # Yosys synthesis script for ${TOP_MODULE}
 # Read source files
