@@ -259,6 +259,13 @@ CompilerRS::CompilerRS() : CompilerOpenFPGA() {
   m_channel_width = 200;
 }
 
+void CompilerRS::CustomSimulatorSetup() {
+  std::filesystem::path datapath =
+      GlobalSession->Context()->DataPath().parent_path();
+  datapath = datapath / "yosys" / "rapidsilicon" / m_mapToTechnology;
+  GetSimulator()->AddGateSimulationModel(datapath / "cells_sim.v");
+}
+
 CompilerRS::~CompilerRS() {
 #ifdef PRODUCTION_BUILD
   if (licensePtr) delete licensePtr;

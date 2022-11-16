@@ -69,6 +69,7 @@ class CompilerRS : public CompilerOpenFPGA {
   bool TimingAnalysis();
 
  protected:
+  void CustomSimulatorSetup();
   bool LicenseDevice(const std::string& deviceName);
   virtual std::string BaseStaCommand();
   virtual std::string BaseStaScript(std::string libFileName,
