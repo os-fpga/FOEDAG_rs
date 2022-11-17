@@ -435,8 +435,7 @@ std::string CompilerRS::BaseVprCommand() {
           netlistFile + std::string(" --sdc_file ") +
           std::string(m_projManager->projectName() + "_openfpga.sdc") +
           std::string(" --route_chan_width ") +
-          std::to_string(m_channel_width) +
-          " --gen_post_synthesis_netlist on " +
+          std::to_string(m_channel_width) + " --gen_post_synthesis_netlist on" +
           " --suppress_warnings check_rr_node_warnings.log,check_rr_node"
           " --clock_modeling ideal --timing_report_npaths 100 "
           "--absorb_buffer_luts off --constant_net_method route "
