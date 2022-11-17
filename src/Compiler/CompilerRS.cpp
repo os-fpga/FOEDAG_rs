@@ -427,6 +427,9 @@ std::string CompilerRS::BaseVprCommand() {
 
   std::string pnrOptions;
   if (!PnROpt().empty()) pnrOptions = " " + PnROpt();
+  if (pnrOptions.find("gen_post_synthesis_netlist") == std::string::npos) {
+    pnrOptions += " --gen_post_synthesis_netlist on";
+  }
   if (!PerDevicePnROptions().empty()) pnrOptions += " " + PerDevicePnROptions();
   std::string command =
       m_vprExecutablePath.string() + std::string(" ") +
@@ -435,7 +438,7 @@ std::string CompilerRS::BaseVprCommand() {
           netlistFile + std::string(" --sdc_file ") +
           std::string(m_projManager->projectName() + "_openfpga.sdc") +
           std::string(" --route_chan_width ") +
-          std::to_string(m_channel_width) + " --gen_post_synthesis_netlist on" +
+          std::to_string(m_channel_width) +
           " --suppress_warnings check_rr_node_warnings.log,check_rr_node"
           " --clock_modeling ideal --timing_report_npaths 100 "
           "--absorb_buffer_luts off --constant_net_method route "
