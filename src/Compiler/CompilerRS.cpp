@@ -34,23 +34,6 @@ extern FOEDAG::Session *GlobalSession;
 
 using namespace FOEDAG;
 
-static auto copyLog = [](FOEDAG::ProjectManager *projManager,
-                         const std::string &srcFileName,
-                         const std::string &destFileName) -> bool {
-  bool result = false;
-  if (projManager) {
-    std::filesystem::path projectPath(projManager->projectPath());
-    std::filesystem::path src = projectPath / srcFileName;
-    std::filesystem::path dest = projectPath / destFileName;
-    if (FileUtils::FileExists(src)) {
-      std::filesystem::remove(dest);
-      std::filesystem::copy_file(src, dest);
-      result = true;
-    }
-  }
-  return result;
-};
-
 const std::string QLYosysScript = R"( 
 # Yosys synthesis script for ${TOP_MODULE}
 # Read source files
@@ -279,8 +262,11 @@ CompilerRS::CompilerRS() : CompilerOpenFPGA() {
 void CompilerRS::CustomSimulatorSetup() {
   std::filesystem::path datapath =
       GlobalSession->Context()->DataPath().parent_path();
-  datapath = datapath / "yosys" / "rapidsilicon" / m_mapToTechnology;
-  GetSimulator()->AddGateSimulationModel(datapath / "cells_sim.v");
+  std::filesystem::path tech_datapath =
+      datapath / "sim_models" / "rapidsilicon" / m_mapToTechnology;
+  GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.v");
+  GetSimulator()->AddGateSimulationModel(tech_datapath / "simlib.v");
+  GetSimulator()->AddGateSimulationModel(tech_datapath / "primitives.v");
 }
 
 CompilerRS::~CompilerRS() {
@@ -441,6 +427,9 @@ std::string CompilerRS::BaseVprCommand() {
 
   std::string pnrOptions;
   if (!PnROpt().empty()) pnrOptions = " " + PnROpt();
+  if (pnrOptions.find("gen_post_synthesis_netlist") == std::string::npos) {
+    pnrOptions += " --gen_post_synthesis_netlist on";
+  }
   if (!PerDevicePnROptions().empty()) pnrOptions += " " + PerDevicePnROptions();
   std::string command =
       m_vprExecutablePath.string() + std::string(" ") +
@@ -515,7 +504,7 @@ void CompilerRS::Help(std::ostream *out) {
          << std::endl;
   (*out) << "                       <type> : -VHDL_1987, -VHDL_1993, "
             "-VHDL_2000, -VHDL_2008, -V_1995, "
-            "-V_2001, -SV_2005, -SV_2009, -SV_2012, -SV_2017> "
+            "-V_2001, -SV_2005, -SV_2009, -SV_2012, -SV_2017, -C, -CPP> "
          << std::endl;
   (*out) << "              -work <libName> : Compiles the compilation unit "
             "into library <libName>, default is \"work\""
@@ -686,6 +675,14 @@ void CompilerRS::Help(std::ostream *out) {
 #else
   (*out) << "   bitstream ?force? ?clean?  : Bitstream generation" << std::endl;
 #endif
+  (*out) << "   simulate <level> ?<simulator>? : Simulates the design and "
+            "testbench"
+         << std::endl;
+  (*out) << "            <level> : rtl, gate, pnr. rtl: RTL simulation, gate: "
+            "post-synthesis simulation, pnr: post-pnr simulation"
+         << std::endl;
+  (*out) << "            <simulator> : verilator, vcs, questa, icarus, xcelium"
+         << std::endl;
   (*out) << "-----------------------------------------------" << std::endl;
 }
 
@@ -912,7 +909,7 @@ bool CompilerRS::TimingAnalysis() {
     // then it does it work based on that
     std::string vpr_executable_path =
         m_vprExecutablePath.string() + std::string(" ");
-    std::string command = BaseVprCommand() + " --gen_post_synthesis_netlist on";
+    std::string command = BaseVprCommand();
     if (command.find(vpr_executable_path) != std::string::npos) {
       command = ReplaceAll(command, vpr_executable_path,
                            m_starsExecutablePath.string() + " ");
