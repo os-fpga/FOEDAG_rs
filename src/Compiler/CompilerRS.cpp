@@ -262,8 +262,11 @@ CompilerRS::CompilerRS() : CompilerOpenFPGA() {
 void CompilerRS::CustomSimulatorSetup() {
   std::filesystem::path datapath =
       GlobalSession->Context()->DataPath().parent_path();
-  datapath = datapath / "yosys" / "rapidsilicon" / m_mapToTechnology;
-  GetSimulator()->AddGateSimulationModel(datapath / "cells_sim.v");
+  std::filesystem::path tech_datapath =
+      datapath / "sim_models" / "rapidsilicon" / m_mapToTechnology;
+  GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.v");
+  GetSimulator()->AddGateSimulationModel(tech_datapath / "simlib.v");
+  GetSimulator()->AddGateSimulationModel(tech_datapath / "primitives.v");
 }
 
 CompilerRS::~CompilerRS() {
@@ -433,6 +436,7 @@ std::string CompilerRS::BaseVprCommand() {
           std::string(m_projManager->projectName() + "_openfpga.sdc") +
           std::string(" --route_chan_width ") +
           std::to_string(m_channel_width) +
+          " --gen_post_synthesis_netlist on " +
           " --suppress_warnings check_rr_node_warnings.log,check_rr_node"
           " --clock_modeling ideal --timing_report_npaths 100 "
           "--absorb_buffer_luts off --constant_net_method route "
@@ -669,6 +673,14 @@ void CompilerRS::Help(std::ostream *out) {
 #else
   (*out) << "   bitstream ?force? ?clean?  : Bitstream generation" << std::endl;
 #endif
+  (*out) << "   simulate <level> ?<simulator>? : Simulates the design and "
+            "testbench"
+         << std::endl;
+  (*out) << "            <level> : rtl, gate, pnr. rtl: RTL simulation, gate: "
+            "post-synthesis simulation, pnr: post-pnr simulation"
+         << std::endl;
+  (*out) << "            <simulator> : verilator, vcs, questa, icarus, xcelium"
+         << std::endl;
   (*out) << "-----------------------------------------------" << std::endl;
 }
 
@@ -895,7 +907,7 @@ bool CompilerRS::TimingAnalysis() {
     // then it does it work based on that
     std::string vpr_executable_path =
         m_vprExecutablePath.string() + std::string(" ");
-    std::string command = BaseVprCommand() + " --gen_post_synthesis_netlist on";
+    std::string command = BaseVprCommand();
     if (command.find(vpr_executable_path) != std::string::npos) {
       command = ReplaceAll(command, vpr_executable_path,
                            m_starsExecutablePath.string() + " ");
