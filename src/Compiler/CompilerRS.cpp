@@ -675,7 +675,8 @@ void CompilerRS::Help(std::ostream *out) {
 #else
   (*out) << "   bitstream ?force? ?clean?  : Bitstream generation" << std::endl;
 #endif
-  (*out) << "   simulate <level> ?<simulator>? : Simulates the design and "
+  (*out) << "   simulate <level> ?<simulator>? ?<waveform_file>?: Simulates "
+            "the design and "
             "testbench"
          << std::endl;
   (*out) << "            <level> : rtl, gate, pnr. rtl: RTL simulation, gate: "
