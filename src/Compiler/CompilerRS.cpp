@@ -263,7 +263,7 @@ void CompilerRS::CustomSimulatorSetup() {
   std::filesystem::path datapath =
       GlobalSession->Context()->DataPath().parent_path();
   std::filesystem::path tech_datapath =
-      datapath / "sim_models" / "rapidsilicon" / m_mapToTechnology;
+      datapath / "raptor" / "sim_models" / "rapidsilicon" / m_mapToTechnology;
   GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.v");
   GetSimulator()->AddGateSimulationModel(tech_datapath / "simlib.v");
   GetSimulator()->AddGateSimulationModel(tech_datapath / "primitives.v");
@@ -675,13 +675,15 @@ void CompilerRS::Help(std::ostream *out) {
 #else
   (*out) << "   bitstream ?force? ?clean?  : Bitstream generation" << std::endl;
 #endif
-  (*out) << "   simulate <level> ?<simulator>? : Simulates the design and "
+  (*out) << "   simulate <level> ?<simulator>? ?<waveform_file>?: Simulates "
+            "the design and "
             "testbench"
          << std::endl;
   (*out) << "            <level> : rtl, gate, pnr. rtl: RTL simulation, gate: "
             "post-synthesis simulation, pnr: post-pnr simulation"
          << std::endl;
-  (*out) << "            <simulator> : verilator, vcs, questa, icarus, xcelium"
+  (*out) << "            <simulator> : verilator, vcs, questa, icarus, ghdl, "
+            "xcelium"
          << std::endl;
   (*out) << "-----------------------------------------------" << std::endl;
 }
