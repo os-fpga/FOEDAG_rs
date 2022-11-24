@@ -441,7 +441,8 @@ std::string CompilerRS::BaseVprCommand() {
           std::to_string(m_channel_width) +
           " --suppress_warnings check_rr_node_warnings.log,check_rr_node"
           " --clock_modeling ideal --timing_report_npaths 100 "
-          "--absorb_buffer_luts off --constant_net_method route "
+          "--absorb_buffer_luts off --skip_sync_clustering_and_routing_results "
+          "on --constant_net_method route "
           "--timing_report_detail detailed --post_place_timing_report " +
           m_projManager->projectName() + "_post_place_timing.rpt" +
           device_size + pnrOptions);
