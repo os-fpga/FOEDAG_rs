@@ -701,12 +701,14 @@ void CompilerRS::Help(std::ostream *out) {
             "the design and "
             "testbench"
          << std::endl;
-  (*out) << "            <level> : rtl, gate, pnr. rtl: RTL simulation, gate: "
-            "post-synthesis simulation, pnr: post-pnr simulation"
+  (*out)
+      << "            <level>           : rtl, gate, pnr. rtl: RTL simulation, "
+         "gate: post-synthesis simulation, pnr: post-pnr simulation"
+      << std::endl;
+  (*out) << "            <simulator>       : verilator, vcs, questa, icarus, "
+            "ghdl, xcelium"
          << std::endl;
-  (*out) << "            <simulator> : verilator, vcs, questa, icarus, ghdl, "
-            "xcelium"
-         << std::endl;
+  writeWaveHelp(out, 3, 30);  // 30 is the col count of the : in the line above
   (*out) << "-----------------------------------------------" << std::endl;
 }
 
