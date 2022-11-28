@@ -56,6 +56,7 @@ write_edif ${OUTPUT_EDIF}
 const std::string RapidSiliconYosysScript = R"( 
 # Yosys synthesis script for ${TOP_MODULE}
 # Read source files
+read -vlog2k ${PRIMITIVES_BLACKBOX}
 ${READ_DESIGN_FILES}
 
 # Technology mapping
@@ -97,6 +98,14 @@ std::string CompilerRS::InitSynthesisScript() {
 
 std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   std::string result = script;
+  std::filesystem::path sharePath =
+      GlobalSession->Context()->BinaryPath().parent_path() / "share";
+  std::filesystem::path technologyPath =
+      sharePath / "yosys" / "rapidsilicon" / m_mapToTechnology;
+  std::filesystem::path primitivesBlackboxPath =
+      technologyPath / "cell_sim_blackbox.v";
+  result = ReplaceAll(result, "${PRIMITIVES_BLACKBOX}",
+                      primitivesBlackboxPath.string());
   // Keeps for Synthesis, preserve nodes used in constraints
   std::string keeps;
   if (m_keepAllSignals) {
