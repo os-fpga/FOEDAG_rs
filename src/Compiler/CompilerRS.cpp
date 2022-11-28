@@ -96,14 +96,26 @@ std::string CompilerRS::InitSynthesisScript() {
   return m_yosysScript;
 }
 
+std::string CompilerRS::FinishAnalyzeScript(const std::string &script) {
+  std::filesystem::path datapath =
+      GlobalSession->Context()->DataPath().parent_path();
+  std::filesystem::path tech_datapath =
+      datapath / "raptor" / "sim_models" / "rapidsilicon" / m_mapToTechnology;
+  std::filesystem::path primitivesBlackboxPath =
+      tech_datapath / "cell_sim_blackbox.v";
+  std::string result = "-sv2009 " + primitivesBlackboxPath.string() + "\n";
+  result += script;
+  return result;
+}
+
 std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   std::string result = script;
-  std::filesystem::path sharePath =
-      GlobalSession->Context()->BinaryPath().parent_path() / "share";
-  std::filesystem::path technologyPath =
-      sharePath / "yosys" / "rapidsilicon" / m_mapToTechnology;
+  std::filesystem::path datapath =
+      GlobalSession->Context()->DataPath().parent_path();
+  std::filesystem::path tech_datapath =
+      datapath / "raptor" / "sim_models" / "rapidsilicon" / m_mapToTechnology;
   std::filesystem::path primitivesBlackboxPath =
-      technologyPath / "cell_sim_blackbox.v";
+      tech_datapath / "cell_sim_blackbox.v";
   result = ReplaceAll(result, "${PRIMITIVES_BLACKBOX}",
                       primitivesBlackboxPath.string());
   // Keeps for Synthesis, preserve nodes used in constraints
