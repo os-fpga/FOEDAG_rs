@@ -98,14 +98,14 @@ std::string CompilerRS::InitSynthesisScript() {
 
 std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   std::string result = script;
-  std::filesystem::path sharePath = 
+  std::filesystem::path sharePath =
       GlobalSession->Context()->BinaryPath().parent_path() / "share";
-  std::filesystem::path technologyPath = 
+  std::filesystem::path technologyPath =
       sharePath / "yosys" / "rapidsilicon" / m_mapToTechnology;
-  std::filesystem::path primitivesBlackboxPath = 
+  std::filesystem::path primitivesBlackboxPath =
       technologyPath / "cell_sim_blackbox.v";
-  result = ReplaceAll(result, "${PRIMITIVES_BLACKBOX}", 
-          primitivesBlackboxPath.string());
+  result = ReplaceAll(result, "${PRIMITIVES_BLACKBOX}",
+                      primitivesBlackboxPath.string());
   // Keeps for Synthesis, preserve nodes used in constraints
   std::string keeps;
   if (m_keepAllSignals) {
