@@ -36,6 +36,7 @@ class CompilerRS : public CompilerOpenFPGA {
   std::string BaseVprCommand();
   virtual std::string InitSynthesisScript();
   virtual std::string FinishSynthesisScript(const std::string& script);
+  virtual std::string FinishAnalyzeScript(const std::string& script);
   virtual bool RegisterCommands(TclInterpreter* interp, bool batchMode);
 
   SynthesisEffort SynthEffort() { return m_synthEffort; }
