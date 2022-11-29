@@ -707,6 +707,9 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "            <simulator> : verilator, vcs, questa, icarus, ghdl, "
             "xcelium"
          << std::endl;
+  (*out) << "   set_top_testbench <module> : Sets the top-level testbench "
+            "module/entity"
+         << std::endl;
   (*out) << "-----------------------------------------------" << std::endl;
 }
 
