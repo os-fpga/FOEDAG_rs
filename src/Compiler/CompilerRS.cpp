@@ -496,8 +496,10 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "   run_project <file>         : Opens and immediately runs the "
             "project"
          << std::endl;
-  (*out) << "   create_design <name>       : Creates a design with <name> name"
+  (*out) << "   create_design <name> ?-type <project type>? : Creates a design "
+            "with <name> name"
          << std::endl;
+  (*out) << "               <project type> : rtl, gate-level" << std::endl;
   (*out) << "   target_device <name>       : Targets a device with <name> name "
             "(MPW1, GEMINI)"
          << std::endl;
