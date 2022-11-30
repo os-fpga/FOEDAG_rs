@@ -708,6 +708,17 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "            <simulator>       : verilator, vcs, questa, icarus, "
             "ghdl, xcelium"
          << std::endl;
+  (*out) << "   set_top_testbench <module> : Sets the top-level testbench "
+            "module/entity"
+         << std::endl;
+  (*out) << "   set_simulation_options <simulator> <phase> <options>"
+         << std::endl;
+  (*out) << "                                Sets the simulator specific "
+            "options for the speicifed phase"
+         << std::endl;
+  (*out)
+      << "                      <phase> : compilation, elaboration, simulation"
+      << std::endl;
   writeWaveHelp(out, 3, 30);  // 30 is the col count of the : in the line above
   (*out) << "-----------------------------------------------" << std::endl;
 }
