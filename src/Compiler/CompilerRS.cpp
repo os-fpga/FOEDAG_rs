@@ -499,7 +499,8 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "   create_design <name> ?-type <project type>? : Creates a design "
             "with <name> name"
          << std::endl;
-  (*out) << "               <project type> : rtl, gate-level" << std::endl;
+  (*out) << "               <project type> : rtl (Default), gate-level"
+         << std::endl;
   (*out) << "   target_device <name>       : Targets a device with <name> name "
             "(MPW1, GEMINI)"
          << std::endl;
@@ -510,7 +511,7 @@ void CompilerRS::Help(std::ostream *out) {
             "file list into a compilation unit "
          << std::endl;
   (*out) << "                       <type> : -VHDL_1987, -VHDL_1993, "
-            "-VHDL_2000, -VHDL_2008, -V_1995, "
+            "-VHDL_2000, -VHDL_2008, -VHDL_2019, -V_1995, "
             "-V_2001, -SV_2005, -SV_2009, -SV_2012, -SV_2017> "
          << std::endl;
   (*out) << "              -work <libName> : Compiles the compilation unit "
@@ -527,7 +528,7 @@ void CompilerRS::Help(std::ostream *out) {
             "file list into a compilation unit "
          << std::endl;
   (*out) << "                       <type> : -VHDL_1987, -VHDL_1993, "
-            "-VHDL_2000, -VHDL_2008, -V_1995, "
+            "-VHDL_2000, -VHDL_2008, -VHDL_2019, -V_1995, "
             "-V_2001, -SV_2005, -SV_2009, -SV_2012, -SV_2017, -C, -CPP> "
          << std::endl;
   (*out) << "              -work <libName> : Compiles the compilation unit "
@@ -699,28 +700,24 @@ void CompilerRS::Help(std::ostream *out) {
 #else
   (*out) << "   bitstream ?force? ?clean?  : Bitstream generation" << std::endl;
 #endif
-  (*out) << "   simulate <level> ?<simulator>? ?<waveform_file>?: Simulates "
-            "the design and "
-            "testbench"
-         << std::endl;
-  (*out)
-      << "            <level>           : rtl, gate, pnr. rtl: RTL simulation, "
-         "gate: post-synthesis simulation, pnr: post-pnr simulation"
-      << std::endl;
-  (*out) << "            <simulator>       : verilator, vcs, questa, icarus, "
-            "ghdl, xcelium"
-         << std::endl;
   (*out) << "   set_top_testbench <module> : Sets the top-level testbench "
             "module/entity"
          << std::endl;
-  (*out) << "   set_simulation_options <simulator> <phase> <options>"
-         << std::endl;
-  (*out) << "                                Sets the simulator specific "
-            "options for the speicifed phase"
+  (*out) << "   simulation_options <simulator> <task> <options> : Sets the "
+            "simulator-specific "
+            "options for the specified simulator task"
          << std::endl;
   (*out)
-      << "                      <phase> : compilation, elaboration, simulation"
+      << "                       <task> : compilation, elaboration, simulation"
       << std::endl;
+  (*out) << "   simulate <level> ?<simulator>? ?<waveform_file>?: Simulates "
+            "the design and testbench"
+         << std::endl;
+  (*out)
+      << "                      <level> : rtl, gate, pnr. rtl: RTL simulation, "
+         "gate: post-synthesis simulation, pnr: post-pnr simulation"
+      << std::endl;
+  (*out) << "                  <simulator> : verilator, ghdl" << std::endl;
   writeWaveHelp(out, 3, 30);  // 30 is the col count of the : in the line above
   (*out) << "-----------------------------------------------" << std::endl;
 }
