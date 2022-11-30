@@ -701,11 +701,12 @@ void CompilerRS::Help(std::ostream *out) {
             "the design and "
             "testbench"
          << std::endl;
-  (*out) << "            <level> : rtl, gate, pnr. rtl: RTL simulation, gate: "
-            "post-synthesis simulation, pnr: post-pnr simulation"
-         << std::endl;
-  (*out) << "            <simulator> : verilator, vcs, questa, icarus, ghdl, "
-            "xcelium"
+  (*out)
+      << "            <level>           : rtl, gate, pnr. rtl: RTL simulation, "
+         "gate: post-synthesis simulation, pnr: post-pnr simulation"
+      << std::endl;
+  (*out) << "            <simulator>       : verilator, vcs, questa, icarus, "
+            "ghdl, xcelium"
          << std::endl;
   (*out) << "   set_top_testbench <module> : Sets the top-level testbench "
             "module/entity"
@@ -718,6 +719,7 @@ void CompilerRS::Help(std::ostream *out) {
   (*out)
       << "                      <phase> : compilation, elaboration, simulation"
       << std::endl;
+  writeWaveHelp(out, 3, 30);  // 30 is the col count of the : in the line above
   (*out) << "-----------------------------------------------" << std::endl;
 }
 
