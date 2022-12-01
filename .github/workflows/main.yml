@@ -59,8 +59,8 @@ jobs:
 
     - name: Configure shell
       run: |
-        echo 'CC=gcc-9' >> $GITHUB_ENV
-        echo 'CXX=g++-9' >> $GITHUB_ENV
+        echo 'CC=gcc-11' >> $GITHUB_ENV
+        echo 'CXX=g++-11' >> $GITHUB_ENV
         echo 'PATH=/usr/lib/ccache:'"$PATH" >> $GITHUB_ENV
         echo 'PREFIX=/tmp/raptor_gui-install' >> $GITHUB_ENV
         echo "$PREFIX" >> $GITHUB_PATH
@@ -196,9 +196,9 @@ jobs:
 
     - name: Configure shell
       run: |
-        source /opt/rh/devtoolset-9/enable
-        echo 'CC=/opt/rh/devtoolset-9/root/usr/bin/gcc' >> $GITHUB_ENV
-        echo 'CXX=/opt/rh/devtoolset-9/root/usr/bin/g++' >> $GITHUB_ENV
+        source /opt/rh/devtoolset-11/enable
+        echo 'CC=/opt/rh/devtoolset-11/root/usr/bin/gcc' >> $GITHUB_ENV
+        echo 'CXX=/opt/rh/devtoolset-11/root/usr/bin/g++' >> $GITHUB_ENV
         echo 'PATH=/usr/local/Qt-5.15.0/bin:/usr/lib/ccache:'"$PATH" >> $GITHUB_ENV
         echo 'PREFIX=/tmp/raptor_gui-install' >> $GITHUB_ENV
         echo "$PREFIX" >> $GITHUB_PATH
@@ -280,8 +280,8 @@ jobs:
         export CWD=`pwd`
         echo "Qt5_DIR=$Qt5_DIR" >> $GITHUB_ENV
         echo 'CMAKE_GENERATOR=Ninja' >> $GITHUB_ENV
-        echo 'CC=gcc' >> $GITHUB_ENV
-        echo 'CXX=g++' >> $GITHUB_ENV
+        echo 'CC=gcc-11' >> $GITHUB_ENV
+        echo 'CXX=g++-11' >> $GITHUB_ENV
         echo 'NO_TCMALLOC=On' >> $GITHUB_ENV
         echo "PREFIX=$CWD/install" >> $GITHUB_ENV
 
@@ -443,8 +443,8 @@ jobs:
 
     - name: Configure shell
       run: |
-        echo 'CC=gcc-9' >> $GITHUB_ENV
-        echo 'CXX=g++-9' >> $GITHUB_ENV
+        echo 'CC=gcc-11' >> $GITHUB_ENV
+        echo 'CXX=g++-11' >> $GITHUB_ENV
         echo "PATH=$(brew --prefix)/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
         echo 'PREFIX=${GITHUB_WORKSPACE}/install' >> $GITHUB_ENV
         echo "$PREFIX" >> $GITHUB_PATH
@@ -572,7 +572,7 @@ jobs:
       run: |
         sudo apt-get update -qq
         sudo apt -qq -y install clang-tidy-12 \
-                                g++-9 tclsh  default-jre cmake \
+                                g++-11 tclsh  default-jre cmake \
                                 uuid-dev build-essential xorg \
                                 qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools qtdeclarative5-dev xvfb
 
