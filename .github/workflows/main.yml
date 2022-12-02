@@ -280,8 +280,8 @@ jobs:
         export CWD=`pwd`
         echo "Qt5_DIR=$Qt5_DIR" >> $GITHUB_ENV
         echo 'CMAKE_GENERATOR=Ninja' >> $GITHUB_ENV
-        echo 'CC=gcc-11' >> $GITHUB_ENV
-        echo 'CXX=g++-11' >> $GITHUB_ENV
+        echo 'CC=gcc' >> $GITHUB_ENV
+        echo 'CXX=g++' >> $GITHUB_ENV
         echo 'NO_TCMALLOC=On' >> $GITHUB_ENV
         echo "PREFIX=$CWD/install" >> $GITHUB_ENV
 
