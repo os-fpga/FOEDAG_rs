@@ -66,7 +66,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} ${ABC_SCRIPT} -tech ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
@@ -251,8 +251,23 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   result = ReplaceAll(result, "${PLUGIN_LIB}", YosysPluginLibName());
   result = ReplaceAll(result, "${PLUGIN_NAME}", YosysPluginName());
   result = ReplaceAll(result, "${MAP_TO_TECHNOLOGY}", YosysMapTechnology());
-  result = ReplaceAll(result, "${LUT_SIZE}", std::to_string(m_lut_size));
 
+  if ((m_mapToTechnology == "genesis2") && getenv("GENESIS2_LUT5")) {
+    // Hack for genesis2 untill we fix the LUT6 packing, this disables all
+    // optimizations.
+    result = ReplaceAll(result, "${LUT_SIZE}", std::to_string(5));
+    result = ReplaceAll(result, "${ABC_SCRIPT}", "-abc lut.scr");
+    std::filesystem::path scr =
+        std::filesystem::path(ProjManager()->projectPath()) / "lut.scr";
+    std::ofstream ofs(scr.string());
+    ofs << "if -K 5 -a\n";
+    ofs.close();
+
+  } else {
+    result = ReplaceAll(result, "${ABC_SCRIPT}", "");
+  }
+
+  result = ReplaceAll(result, "${LUT_SIZE}", std::to_string(m_lut_size));
   switch (GetNetlistType()) {
     case NetlistType::Verilog:
       // Temporary, once pin_c works with Verilog, only output Verilog
