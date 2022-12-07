@@ -24,6 +24,7 @@ All rights reserved
 #include "MainWindow/Session.h"
 #include "NewProject/ProjectManager/project_manager.h"
 #include "Utils/FileUtils.h"
+#include "Utils/LogUtils.h"
 #include "Utils/StringUtils.h"
 
 #ifdef PRODUCTION_BUILD
@@ -489,7 +490,7 @@ std::string CompilerRS::BaseVprCommand() {
 void CompilerRS::Version(std::ostream *out) {
   (*out) << "Rapid Silicon Raptor Design Suite"
          << "\n";
-  PrintVersion(out);
+  LogUtils::PrintVersion(out);
 }
 
 void CompilerRS::Help(std::ostream *out) {
