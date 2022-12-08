@@ -919,10 +919,9 @@ bool CompilerRS::TimingAnalysis() {
   }
 
   PERF_LOG("TimingAnalysis has started");
-  (*m_out) << "##################################################" << std::endl;
-  (*m_out) << "Timing Analysis for design: " << ProjManager()->projectName()
-           << std::endl;
-  (*m_out) << "##################################################" << std::endl;
+  Message("##################################################");
+  Message("Timing Analysis for design: " + ProjManager()->projectName());
+  Message("##################################################");
   if (!FileUtils::FileExists(m_vprExecutablePath)) {
     ErrorMessage("Cannot find executable: " + m_vprExecutablePath.string());
     return false;
@@ -947,8 +946,7 @@ bool CompilerRS::TimingAnalysis() {
           (std::filesystem::path(ProjManager()->projectPath()) /
            std::string("timing_analysis.rpt"))
               .string())) {
-    (*m_out) << "Design " << ProjManager()->projectName()
-             << " timing didn't change" << std::endl;
+    Message("Design " + ProjManager()->projectName() + " timing didn't change");
     return true;
   }
   int status = 0;
