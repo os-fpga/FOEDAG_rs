@@ -127,7 +127,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   for (auto keep : m_constraints->GetKeeps()) {
     keep = ReplaceAll(keep, "@", "[");
     keep = ReplaceAll(keep, "%", "]");
-    (*m_out) << "Keep name: " << keep << "\n";
+    Message("Keep name: " + keep);
     keeps += "setattr -set keep 1 w:\\" + keep + "\n";
   }
   result = ReplaceAll(result, "${KEEP_NAMES}", keeps);
@@ -1036,8 +1036,7 @@ bool CompilerRS::TimingAnalysis() {
     return false;
   }
 
-  (*m_out) << "Design " << ProjManager()->projectName()
-           << " is timing analysed!" << std::endl;
+  Message("Design " + ProjManager()->projectName() + " is timing analysed!");
 
   return true;
 }
