@@ -41,7 +41,7 @@ echo "Downloading QT..."
 curl -L https://download.qt.io/official_releases/qt/5.15/5.15.4/single/qt-everywhere-opensource-src-5.15.4.tar.xz --output qt-everywhere-src-5.15.4.tar.xz
 tar -xf qt-everywhere-src-5.15.4.tar.xz
 
-if [ -d "buildqt5_" ] 
+if [ -d "buildqt5" ] 
 then
   echo "Installing QT..."
   cd buildqt5  
