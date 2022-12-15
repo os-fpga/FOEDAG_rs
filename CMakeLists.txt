@@ -273,6 +273,11 @@ add_custom_command(TARGET raptor_gui POST_BUILD
           ${CMAKE_CURRENT_SOURCE_DIR}/FOEDAG/third_party/tcl8.6.12/library/init.tcl
           ${CMAKE_CURRENT_BINARY_DIR}/lib/tcl8.6/init.tcl)
           
+add_custom_command(TARGET raptor_gui POST_BUILD
+COMMENT "Extracting gtkwave"
+COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_SOURCE_DIR}/FOEDAG/third_party/gtkwave_cmake/gtkwaveTCL.tar.gz
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 # Explicit lib build order
 #add_dependencies(raptor_gui )
 
@@ -448,6 +453,8 @@ install(
     DIRECTORY etc/settings/ DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/raptor/etc/settings/)
 install(
     DIRECTORY tests/Arch/ DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/raptor/Arch/)  
+install(
+    DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gtkwave DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_custom_target(raptor_gui_link_target ALL
     COMMAND ${CMAKE_COMMAND} -E create_symlink
