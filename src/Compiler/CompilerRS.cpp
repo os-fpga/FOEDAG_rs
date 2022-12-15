@@ -705,7 +705,7 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "   set_device_size XxY        : Device fabric size selection"
          << std::endl;
   (*out) << "   packing ?clean?            : Packing" << std::endl;
-  (*out) << "   global_placement ?clean?   : Analytical placer" << std::endl;
+  // (*out) << "   global_placement ?clean?   : Analytical placer" << std::endl;
   (*out) << "   place ?clean?              : Detailed placer" << std::endl;
   (*out) << "   route ?clean?              : Router" << std::endl;
   (*out) << "   sta ?clean? ?opensta?      : Statistical Timing Analysis with "
