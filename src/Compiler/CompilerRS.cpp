@@ -659,6 +659,8 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "       onehot                 : One hot encoding - using N "
             "registers for N states"
          << std::endl;
+  /*
+    Comment out the carry mode options until we support it in the HW
   (*out) << "     -carry <mode>            : Carry logic inference mode:"
          << std::endl;
   (*out) << "       all                    : Infer as much as possible"
@@ -667,6 +669,7 @@ void CompilerRS::Help(std::ostream *out) {
             "heuristics"
          << std::endl;
   (*out) << "       none                   : Do not infer carries" << std::endl;
+  */
   (*out) << "     -no_dsp                  : Do not use DSP blocks to "
             "implement multipliers and associated logic"
          << std::endl;
@@ -705,10 +708,10 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "                                free , no automatic pin assignment"
          << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
-  (*out) << "   pnr_netlist_lang <blif, edif, verilog> : Chooses vpr input "
-            "netlist "
-            "format"
-         << std::endl;
+  (*out)
+      << "   pnr_netlist_lang <blif, edif, verilog, vhdl> : Chooses post-synthesis "
+         "netlist format"
+      << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
          << std::endl;
   (*out) << "   architecture <vpr_file.xml> ?<openfpga_file.xml>?" << std::endl;
