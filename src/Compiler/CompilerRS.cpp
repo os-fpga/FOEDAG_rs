@@ -276,6 +276,13 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
                           "write_verilog -noexpr -nodec -norename "
                           "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
       break;
+    case NetlistType::VHDL:
+      // Temporary, once pin_c and the Packer work with VHDL, replace by just
+      // VHDL
+      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
+                          "write_vhdl ${OUTPUT_VHDL}\nwrite_verilog "
+                          "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
+      break;
     case NetlistType::Edif:
       result =
           ReplaceAll(result, "${OUTPUT_NETLIST}", "write_edif ${OUTPUT_EDIF}");
@@ -301,9 +308,21 @@ void CompilerRS::CustomSimulatorSetup() {
       GlobalSession->Context()->DataPath().parent_path();
   std::filesystem::path tech_datapath =
       datapath / "raptor" / "sim_models" / "rapidsilicon" / m_mapToTechnology;
-  GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.v");
-  GetSimulator()->AddGateSimulationModel(tech_datapath / "simlib.v");
-  GetSimulator()->AddGateSimulationModel(tech_datapath / "primitives.v");
+  GetSimulator()->ResetGateSimulationModel();
+  switch (GetNetlistType()) {
+    case NetlistType::Verilog:
+      GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.v");
+      GetSimulator()->AddGateSimulationModel(tech_datapath / "simlib.v");
+      GetSimulator()->AddGateSimulationModel(tech_datapath / "primitives.v");
+      break;
+    case NetlistType::VHDL:
+      GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.vhd");
+      break;
+    case NetlistType::Edif:
+      break;
+    case NetlistType::Blif:
+      break;
+  }
 }
 
 CompilerRS::~CompilerRS() {
@@ -434,6 +453,9 @@ std::string CompilerRS::BaseVprCommand() {
   std::string netlistFile;
   switch (GetNetlistType()) {
     case NetlistType::Verilog:
+      netlistFile = ProjManager()->projectName() + "_post_synth.v";
+      break;
+    case NetlistType::VHDL:
       netlistFile = ProjManager()->projectName() + "_post_synth.v";
       break;
     case NetlistType::Edif:
