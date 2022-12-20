@@ -75,29 +75,24 @@ ${OUTPUT_NETLIST}
 
 std::string CompilerRS::InitSynthesisScript() {
   switch (m_synthType) {
-  case SynthesisType::Yosys:
-    Message("Yosys Synthesis");
-    return CompilerOpenFPGA::InitSynthesisScript();
-  case SynthesisType::QL: {
-    Message("QL Synthesis");
-    if (m_yosysPluginLib.empty())
-      m_yosysPluginLib = "ql-qlf";
-    if (m_yosysPlugin.empty())
-      m_yosysPlugin = "synth_ql";
-    YosysScript(QLYosysScript);
-    break;
-  }
-  case SynthesisType::RS: {
-    Message("RS Synthesis");
-    if (m_mapToTechnology.empty())
-      m_mapToTechnology = "genesis";
-    if (m_yosysPluginLib.empty())
-      m_yosysPluginLib = "synth-rs";
-    if (m_yosysPlugin.empty())
-      m_yosysPlugin = "synth_rs";
-    YosysScript(RapidSiliconYosysScript);
-    break;
-  }
+    case SynthesisType::Yosys:
+      Message("Yosys Synthesis");
+      return CompilerOpenFPGA::InitSynthesisScript();
+    case SynthesisType::QL: {
+      Message("QL Synthesis");
+      if (m_yosysPluginLib.empty()) m_yosysPluginLib = "ql-qlf";
+      if (m_yosysPlugin.empty()) m_yosysPlugin = "synth_ql";
+      YosysScript(QLYosysScript);
+      break;
+    }
+    case SynthesisType::RS: {
+      Message("RS Synthesis");
+      if (m_mapToTechnology.empty()) m_mapToTechnology = "genesis";
+      if (m_yosysPluginLib.empty()) m_yosysPluginLib = "synth-rs";
+      if (m_yosysPlugin.empty()) m_yosysPlugin = "synth_rs";
+      YosysScript(RapidSiliconYosysScript);
+      break;
+    }
   }
   return m_yosysScript;
 }
@@ -138,61 +133,61 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   result = ReplaceAll(result, "${KEEP_NAMES}", keeps);
   std::string optimization;
   switch (m_synthOpt) {
-  case SynthesisOpt::None:
-    // None means none
-    // Aram: DE optimization and mapping is mandatory for July release.
-    optimization = "-de";
-    break;
-  case SynthesisOpt::Area:
-    optimization = "-de -goal area";
-    break;
-  case SynthesisOpt::Delay:
-    optimization = "-de -goal delay";
-    break;
-  case SynthesisOpt::Mixed:
-    optimization = "-de -goal mixed";
-    break;
-  case SynthesisOpt::Clean:
-    break;
+    case SynthesisOpt::None:
+      // None means none
+      // Aram: DE optimization and mapping is mandatory for July release.
+      optimization = "-de";
+      break;
+    case SynthesisOpt::Area:
+      optimization = "-de -goal area";
+      break;
+    case SynthesisOpt::Delay:
+      optimization = "-de -goal delay";
+      break;
+    case SynthesisOpt::Mixed:
+      optimization = "-de -goal mixed";
+      break;
+    case SynthesisOpt::Clean:
+      break;
   }
   std::string effort;
   switch (m_synthEffort) {
-  case SynthesisEffort::None:
-    break;
-  case SynthesisEffort::High:
-    effort = "-effort high";
-    break;
-  case SynthesisEffort::Low:
-    effort = "-effort low";
-    break;
-  case SynthesisEffort::Medium:
-    effort = "-effort medium";
-    break;
+    case SynthesisEffort::None:
+      break;
+    case SynthesisEffort::High:
+      effort = "-effort high";
+      break;
+    case SynthesisEffort::Low:
+      effort = "-effort low";
+      break;
+    case SynthesisEffort::Medium:
+      effort = "-effort medium";
+      break;
   }
   std::string fsm_encoding;
   switch (m_synthFsm) {
-  case SynthesisFsmEncoding::None:
-    break;
-  case SynthesisFsmEncoding::Binary:
-    fsm_encoding = "-fsm_encoding binary";
-    break;
-  case SynthesisFsmEncoding::Onehot:
-    fsm_encoding = "-fsm_encoding onehot";
-    break;
+    case SynthesisFsmEncoding::None:
+      break;
+    case SynthesisFsmEncoding::Binary:
+      fsm_encoding = "-fsm_encoding binary";
+      break;
+    case SynthesisFsmEncoding::Onehot:
+      fsm_encoding = "-fsm_encoding onehot";
+      break;
   }
   std::string carry_inference;
   switch (m_synthCarry) {
-  case SynthesisCarryInference::None:
-    break;
-  case SynthesisCarryInference::All:
-    carry_inference = "-carry all";
-    break;
-  case SynthesisCarryInference::Auto:
-    carry_inference = "-carry auto";
-    break;
-  case SynthesisCarryInference::NoCarry:
-    carry_inference = "-carry no";
-    break;
+    case SynthesisCarryInference::None:
+      break;
+    case SynthesisCarryInference::All:
+      carry_inference = "-carry all";
+      break;
+    case SynthesisCarryInference::Auto:
+      carry_inference = "-carry auto";
+      break;
+    case SynthesisCarryInference::NoCarry:
+      carry_inference = "-carry no";
+      break;
   }
   std::string no_dsp;
   if (m_synthNoDsp) {
@@ -213,14 +208,14 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   }
   std::string clke_strategy;
   switch (m_synthClke) {
-  case SynthesisClkeStrategy::None:
-    break;
-  case SynthesisClkeStrategy::Early:
-    clke_strategy = "-clock_enable_strategy early";
-    break;
-  case SynthesisClkeStrategy::Late:
-    clke_strategy = "-clock_enable_strategy late";
-    break;
+    case SynthesisClkeStrategy::None:
+      break;
+    case SynthesisClkeStrategy::Early:
+      clke_strategy = "-clock_enable_strategy early";
+      break;
+    case SynthesisClkeStrategy::Late:
+      clke_strategy = "-clock_enable_strategy late";
+      break;
   }
   std::string cec;
   if (m_synthCec) {
@@ -275,29 +270,30 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
 
   result = ReplaceAll(result, "${LUT_SIZE}", std::to_string(m_lut_size));
   switch (GetNetlistType()) {
-  case NetlistType::Verilog:
-    // Temporary, once pin_c works with Verilog, only output Verilog
-    result = ReplaceAll(result, "${OUTPUT_NETLIST}",
-                        "write_verilog -noexpr -nodec -norename "
-                        "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
-    break;
-  case NetlistType::VHDL:
-    // Temporary, once pin_c and the Packer work with VHDL, replace by just
-    // VHDL
-    result = ReplaceAll(result, "${OUTPUT_NETLIST}",
-                        "write_vhdl ${OUTPUT_VHDL}\nwrite_verilog "
-                        "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
-    break;
-  case NetlistType::Edif:
+    case NetlistType::Verilog:
+      // Temporary, once pin_c works with Verilog, only output Verilog
+      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
+                          "write_verilog -noexpr -nodec -norename "
+                          "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
+      break;
+    case NetlistType::VHDL:
+      // Temporary, once pin_c and the Packer work with VHDL, replace by just
+      // VHDL
+      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
+                          "write_vhdl ${OUTPUT_VHDL}\nwrite_verilog "
+                          "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
+      break;
+    case NetlistType::Edif:
     // Temporary, once pin_c works with Verilog, only output edif
-    result = ReplaceAll(result, "${OUTPUT_NETLIST}",
-                        "write_edif ${OUTPUT_EDIF}\nwrite_blif ${OUTPUT_BLIF}");
-    break;
-  case NetlistType::Blif:
-    result = ReplaceAll(result, "${OUTPUT_NETLIST}",
-                        "write_verilog -noexpr -nodec -norename "
-                        "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
-    break;
+      result =
+          ReplaceAll(result, "${OUTPUT_NETLIST}",
+                     "write_edif ${OUTPUT_EDIF}\nwrite_blif ${OUTPUT_BLIF}");
+      break;
+    case NetlistType::Blif:
+      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
+                          "write_verilog -noexpr -nodec -norename "
+                          "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
+      break;
   }
 
   return result;
@@ -316,25 +312,24 @@ void CompilerRS::CustomSimulatorSetup() {
       datapath / "raptor" / "sim_models" / "rapidsilicon" / m_mapToTechnology;
   GetSimulator()->ResetGateSimulationModel();
   switch (GetNetlistType()) {
-  case NetlistType::Verilog:
-    GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.v");
-    GetSimulator()->AddGateSimulationModel(tech_datapath / "simlib.v");
-    GetSimulator()->AddGateSimulationModel(tech_datapath / "primitives.v");
-    break;
-  case NetlistType::VHDL:
-    GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.vhd");
-    break;
-  case NetlistType::Edif:
-    break;
-  case NetlistType::Blif:
-    break;
+    case NetlistType::Verilog:
+      GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.v");
+      GetSimulator()->AddGateSimulationModel(tech_datapath / "simlib.v");
+      GetSimulator()->AddGateSimulationModel(tech_datapath / "primitives.v");
+      break;
+    case NetlistType::VHDL:
+      GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.vhd");
+      break;
+    case NetlistType::Edif:
+      break;
+    case NetlistType::Blif:
+      break;
   }
 }
 
 CompilerRS::~CompilerRS() {
 #ifdef PRODUCTION_BUILD
-  if (licensePtr)
-    delete licensePtr;
+  if (licensePtr) delete licensePtr;
 #endif
 }
 
@@ -459,46 +454,44 @@ std::string CompilerRS::BaseVprCommand() {
   }
   std::string netlistFile;
   switch (GetNetlistType()) {
-  case NetlistType::Verilog:
-    netlistFile = ProjManager()->projectName() + "_post_synth.v";
-    break;
-  case NetlistType::VHDL:
-    netlistFile = ProjManager()->projectName() + "_post_synth.v";
-    break;
-  case NetlistType::Edif:
-    netlistFile = ProjManager()->projectName() + "_post_synth.edif";
-    break;
-  case NetlistType::Blif:
-    netlistFile = ProjManager()->projectName() + "_post_synth.blif";
-    break;
+    case NetlistType::Verilog:
+      netlistFile = ProjManager()->projectName() + "_post_synth.v";
+      break;
+    case NetlistType::VHDL:
+      netlistFile = ProjManager()->projectName() + "_post_synth.v";
+      break;
+    case NetlistType::Edif:
+      netlistFile = ProjManager()->projectName() + "_post_synth.edif";
+      break;
+    case NetlistType::Blif:
+      netlistFile = ProjManager()->projectName() + "_post_synth.blif";
+      break;
   }
   for (const auto &lang_file : m_projManager->DesignFiles()) {
     switch (lang_file.first.language) {
-    case Design::Language::VERILOG_NETLIST:
-    case Design::Language::BLIF:
-    case Design::Language::EBLIF: {
-      netlistFile = lang_file.second;
-      std::filesystem::path the_path = netlistFile;
-      if (!the_path.is_absolute()) {
-        netlistFile =
-            std::filesystem::path(std::filesystem::path("..") / netlistFile)
-                .string();
+      case Design::Language::VERILOG_NETLIST:
+      case Design::Language::BLIF:
+      case Design::Language::EBLIF: {
+        netlistFile = lang_file.second;
+        std::filesystem::path the_path = netlistFile;
+        if (!the_path.is_absolute()) {
+          netlistFile =
+              std::filesystem::path(std::filesystem::path("..") / netlistFile)
+                  .string();
+        }
+        break;
       }
-      break;
-    }
-    default:
-      break;
+      default:
+        break;
     }
   }
 
   std::string pnrOptions;
-  if (!PnROpt().empty())
-    pnrOptions = " " + PnROpt();
+  if (!PnROpt().empty()) pnrOptions = " " + PnROpt();
   if (pnrOptions.find("gen_post_synthesis_netlist") == std::string::npos) {
     pnrOptions += " --gen_post_synthesis_netlist on";
   }
-  if (!PerDevicePnROptions().empty())
-    pnrOptions += " " + PerDevicePnROptions();
+  if (!PerDevicePnROptions().empty()) pnrOptions += " " + PerDevicePnROptions();
   std::string command =
       m_vprExecutablePath.string() + std::string(" ") +
       m_architectureFile.string() + std::string(" ") +
@@ -717,10 +710,10 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "                                free , no automatic pin assignment"
          << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
-  (*out) << "   pnr_netlist_lang <blif, edif, verilog, vhdl> : Chooses "
-            "post-synthesis "
-            "netlist format"
-         << std::endl;
+  (*out)
+      << "   pnr_netlist_lang <blif, edif, verilog, vhdl> : Chooses post-synthesis "
+         "netlist format"
+      << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
          << std::endl;
   (*out) << "   architecture <vpr_file.xml> ?<openfpga_file.xml>?" << std::endl;
@@ -769,13 +762,13 @@ void CompilerRS::Help(std::ostream *out) {
          "gate: post-synthesis simulation, pnr: post-pnr simulation"
       << std::endl;
   (*out) << "                  <simulator> : verilator, ghdl" << std::endl;
-  writeWaveHelp(out, 3, 30); // 30 is the col count of the : in the line above
+  writeWaveHelp(out, 3, 30);  // 30 is the col count of the : in the line above
   (*out) << "-----------------------------------------------" << std::endl;
 }
 
 bool CompilerRS::LicenseDevice(const std::string &deviceName) {
-// Should return false in Production build if the Device License Feature
-// cannot be check out.
+  // Should return false in Production build if the Device License Feature
+  // cannot be check out.
 #ifdef PRODUCTION_BUILD
   try {
     auto license = License_Manager(deviceName);
@@ -913,7 +906,7 @@ std::string CompilerRS::BaseStaScript(std::string libFileName,
                                       std::string sdcFileName) {
   std::string script =
       std::string("read_liberty ") + libFileName +
-      std::string("\n") + // add lib for test only, need to research on this
+      std::string("\n") +  // add lib for test only, need to research on this
       std::string("read_verilog ") + netlistFileName + std::string("\n") +
       std::string("link_design ") +
       ProjManager()->getDesignTopModule().toStdString() + std::string("\n") +
@@ -936,8 +929,7 @@ bool CompilerRS::TimingAnalysis() {
     ErrorMessage("No design specified");
     return false;
   }
-  if (!HasTargetDevice())
-    return false;
+  if (!HasTargetDevice()) return false;
 
   if (TimingAnalysisOpt() == STAOpt::Clean) {
     Message("Cleaning TimingAnalysis results for " +
@@ -1055,7 +1047,7 @@ bool CompilerRS::TimingAnalysis() {
           "for timing analysis");
       return false;
     }
-  } else { // use vpr/tatum engine
+  } else {  // use vpr/tatum engine
     taCommand = BaseVprCommand() + " --analysis";
     std::ofstream ofs((std::filesystem::path(ProjManager()->projectPath()) /
                        std::string(ProjManager()->projectName() + "_sta.cmd"))
