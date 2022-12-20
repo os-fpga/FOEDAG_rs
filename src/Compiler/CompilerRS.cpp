@@ -710,10 +710,10 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "                                free , no automatic pin assignment"
          << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
-  (*out)
-      << "   pnr_netlist_lang <blif, edif, verilog, vhdl> : Chooses post-synthesis "
-         "netlist format"
-      << std::endl;
+  (*out) << "   pnr_netlist_lang <blif, edif, verilog, vhdl> : Chooses "
+            "post-synthesis "
+            "netlist format"
+         << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
          << std::endl;
   (*out) << "   architecture <vpr_file.xml> ?<openfpga_file.xml>?" << std::endl;
@@ -767,8 +767,8 @@ void CompilerRS::Help(std::ostream *out) {
 }
 
 bool CompilerRS::LicenseDevice(const std::string &deviceName) {
-  // Should return false in Production build if the Device License Feature
-  // cannot be check out.
+// Should return false in Production build if the Device License Feature
+// cannot be check out.
 #ifdef PRODUCTION_BUILD
   try {
     auto license = License_Manager(deviceName);
