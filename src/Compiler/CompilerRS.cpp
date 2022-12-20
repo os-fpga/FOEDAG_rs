@@ -284,7 +284,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
                           "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
       break;
     case NetlistType::Edif:
-    // Temporary, once pin_c works with Verilog, only output edif
+      // Temporary, once pin_c works with Verilog, only output edif
       result =
           ReplaceAll(result, "${OUTPUT_NETLIST}",
                      "write_edif ${OUTPUT_EDIF}\nwrite_blif ${OUTPUT_BLIF}");
