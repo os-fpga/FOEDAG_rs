@@ -26,7 +26,7 @@ All rights reserved
 #include "Utils/FileUtils.h"
 #include "Utils/LogUtils.h"
 #include "Utils/StringUtils.h"
-#include "scope_guard/scope_guard.hpp"
+#include "scope_guard.hpp"
 
 #ifdef PRODUCTION_BUILD
 #include "License_manager.hpp"
