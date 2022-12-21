@@ -284,8 +284,10 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
                           "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
       break;
     case NetlistType::Edif:
+      // Temporary, once pin_c works with Verilog, only output edif
       result =
-          ReplaceAll(result, "${OUTPUT_NETLIST}", "write_edif ${OUTPUT_EDIF}");
+          ReplaceAll(result, "${OUTPUT_NETLIST}",
+                     "write_edif ${OUTPUT_EDIF}\nwrite_blif ${OUTPUT_BLIF}");
       break;
     case NetlistType::Blif:
       result = ReplaceAll(result, "${OUTPUT_NETLIST}",
@@ -708,10 +710,10 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "                                free , no automatic pin assignment"
          << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
-  (*out)
-      << "   pnr_netlist_lang <blif, edif, verilog, vhdl> : Chooses post-synthesis "
-         "netlist format"
-      << std::endl;
+  (*out) << "   pnr_netlist_lang <blif, edif, verilog, vhdl> : Chooses "
+            "post-synthesis "
+            "netlist format"
+         << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
          << std::endl;
   (*out) << "   architecture <vpr_file.xml> ?<openfpga_file.xml>?" << std::endl;
@@ -765,8 +767,8 @@ void CompilerRS::Help(std::ostream *out) {
 }
 
 bool CompilerRS::LicenseDevice(const std::string &deviceName) {
-  // Should return false in Production build if the Device License Feature
-  // cannot be check out.
+// Should return false in Production build if the Device License Feature
+// cannot be check out.
 #ifdef PRODUCTION_BUILD
   try {
     auto license = License_Manager(deviceName);
@@ -977,7 +979,8 @@ bool CompilerRS::TimingAnalysis() {
   int status = 0;
   std::string taCommand;
   // use OpenSTA to do the job
-  if (TimingAnalysisOpt() == STAOpt::Opensta) {
+  if (TimingAnalysisOpt() == STAOpt::Opensta ||
+      TimingAnalysisEngineOpt() == STAEngineOpt::Opensta) {
     // allows SDF to be generated for OpenSTA
 
     // calls stars to generate files for opensta
