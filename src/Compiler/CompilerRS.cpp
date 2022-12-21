@@ -748,10 +748,10 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "   set_top_testbench <module> : Sets the top-level testbench "
             "module/entity"
          << std::endl;
-  (*out) << "   simulation_options <simulator> <task> <options> : Sets the "
-            "simulator-specific "
-            "options for the specified simulator task"
-         << std::endl;
+  (*out)
+      << "   simulation_options <simulator> <task> ?<level>? <options> : "
+         "Sets the simulator-specific options for the specified simulator task"
+      << std::endl;
   (*out)
       << "                       <task> : compilation, elaboration, simulation"
       << std::endl;
@@ -989,7 +989,8 @@ bool CompilerRS::TimingAnalysis() {
   int status = 0;
   std::string taCommand;
   // use OpenSTA to do the job
-  if (TimingAnalysisOpt() == STAOpt::Opensta) {
+  if (TimingAnalysisOpt() == STAOpt::Opensta ||
+      TimingAnalysisEngineOpt() == STAEngineOpt::Opensta) {
     // allows SDF to be generated for OpenSTA
 
     // calls stars to generate files for opensta
