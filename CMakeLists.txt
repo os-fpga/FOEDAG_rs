@@ -180,7 +180,8 @@ target_include_directories(raptor_gui PRIVATE
   ${FLEX_LM_SRC_DIR}/machind
   ${CMAKE_CURRENT_BINARY_DIR}/include
   FOEDAG/third_party/googletest/googletest/include
-  FOEDAG/third_party/googletest/googlemock/include)
+  FOEDAG/third_party/googletest/googlemock/include
+  FOEDAG/third_party/scope_guard)
 target_include_directories(raptor_gui PUBLIC $<INSTALL_INTERFACE:include/raptor_gui>)
 
 if(MSVC)
