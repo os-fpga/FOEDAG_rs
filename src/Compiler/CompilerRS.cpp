@@ -806,6 +806,22 @@ std::string FOEDAG::TclArgs_getRsSynthesisOptions() {
     // short term fix for carry which currently seems to use both no and none
     tclOptions =
         StringUtils::replaceAll(tclOptions, "-carry no ", "-carry none ");
+
+    tclOptions += " -netlist_lang ";
+    switch (compiler->GetNetlistType()) {
+      case Compiler::NetlistType::Blif:
+        tclOptions += "blif";
+        break;
+      case Compiler::NetlistType::Edif:
+        tclOptions += "edif";
+        break;
+      case Compiler::NetlistType::VHDL:
+        tclOptions += "vhdl";
+        break;
+      case Compiler::NetlistType::Verilog:
+        tclOptions += "verilog";
+        break;
+    }
   };
   return tclOptions;
 }
@@ -867,6 +883,19 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
         compiler->SynthEffort(CompilerRS::SynthesisEffort::Medium);
       } else if (arg == "low") {
         compiler->SynthEffort(CompilerRS::SynthesisEffort::Low);
+      }
+      continue;
+    }
+    if (option == "-netlist_lang" && tokens.size() > 1) {
+      std::string arg = tokens[1];
+      if (arg == "blif") {
+        compiler->SetNetlistType(Compiler::NetlistType::Blif);
+      } else if (arg == "edif") {
+        compiler->SetNetlistType(Compiler::NetlistType::Edif);
+      } else if (arg == "vhdl") {
+        compiler->SetNetlistType(Compiler::NetlistType::VHDL);
+      } else if (arg == "verilog") {
+        compiler->SetNetlistType(Compiler::NetlistType::Verilog);
       }
       continue;
     }
