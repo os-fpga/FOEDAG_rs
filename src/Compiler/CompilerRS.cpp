@@ -306,7 +306,7 @@ CompilerRS::CompilerRS() : CompilerOpenFPGA() {
   m_channel_width = 200;
 }
 
-void CompilerRS::CustomSimulatorSetup() {
+void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
   std::filesystem::path datapath =
       GlobalSession->Context()->DataPath().parent_path();
   std::filesystem::path tech_datapath =
@@ -314,9 +314,14 @@ void CompilerRS::CustomSimulatorSetup() {
   GetSimulator()->ResetGateSimulationModel();
   switch (GetNetlistType()) {
     case NetlistType::Verilog:
-      GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.v");
-      GetSimulator()->AddGateSimulationModel(tech_datapath / "simlib.v");
-      GetSimulator()->AddGateSimulationModel(tech_datapath / "primitives.v");
+      if (action == Simulator::SimulationType::Gate ||
+          action == Simulator::SimulationType::PNR) {
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "simlib.v");
+      }
+      if (action == Simulator::SimulationType::PNR) {
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "primitives.v");
+      }
       break;
     case NetlistType::VHDL:
       GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.vhd");
