@@ -584,6 +584,8 @@ void CompilerRS::Help(std::ostream *out) {
             "needed to "
             "compile the compilation unit, default is \"work\""
          << std::endl;
+  (*out) << "   clear_simulation_files     : Remove all simulation files"
+         << std::endl;
   (*out) << "   read_netlist <file>        : Read a netlist (.blif/.eblif) "
             "instead of an RTL design (Skip Synthesis)"
          << std::endl;
