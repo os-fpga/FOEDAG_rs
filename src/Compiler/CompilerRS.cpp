@@ -273,30 +273,27 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   switch (GetNetlistType()) {
     case NetlistType::Verilog:
       // Temporary, once pin_c works with Verilog, only output Verilog
-      result =
-          ReplaceAll(result, "${OUTPUT_NETLIST}",
-                     "write_verilog -noexpr -nodec -norename "
-                     "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_BLIF}");
+      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
+                          "write_verilog -noexpr -nodec -norename "
+                          "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
       break;
     case NetlistType::VHDL:
       // Temporary, once pin_c and the Packer work with VHDL, replace by just
       // VHDL
-      result =
-          ReplaceAll(result, "${OUTPUT_NETLIST}",
-                     "write_vhdl ${OUTPUT_VHDL}\nwrite_verilog "
-                     "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_BLIF}");
+      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
+                          "write_vhdl ${OUTPUT_VHDL}\nwrite_verilog "
+                          "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
       break;
     case NetlistType::Edif:
       // Temporary, once pin_c works with Verilog, only output edif
-      result = ReplaceAll(
-          result, "${OUTPUT_NETLIST}",
-          "write_edif ${OUTPUT_EDIF}\nwrite_blif -param ${OUTPUT_BLIF}");
-      break;
-    case NetlistType::Blif:
       result =
           ReplaceAll(result, "${OUTPUT_NETLIST}",
-                     "write_verilog -noexpr -nodec -norename "
-                     "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_BLIF}");
+                     "write_edif ${OUTPUT_EDIF}\nwrite_blif ${OUTPUT_BLIF}");
+      break;
+    case NetlistType::Blif:
+      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
+                          "write_verilog -noexpr -nodec -norename "
+                          "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
       break;
   }
 
