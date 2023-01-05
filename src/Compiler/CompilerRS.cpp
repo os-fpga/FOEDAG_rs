@@ -769,7 +769,8 @@ void CompilerRS::Help(std::ostream *out) {
       << "                      <level> : rtl, gate, pnr. rtl: RTL simulation, "
          "gate: post-synthesis simulation, pnr: post-pnr simulation"
       << std::endl;
-  (*out) << "                  <simulator> : verilator, ghdl" << std::endl;
+  (*out) << "                  <simulator> : verilator, ghdl, icarus"
+         << std::endl;
   writeWaveHelp(out, 3, 30);  // 30 is the col count of the : in the line above
   (*out) << "-----------------------------------------------" << std::endl;
 }
