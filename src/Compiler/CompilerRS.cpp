@@ -1017,8 +1017,7 @@ bool CompilerRS::TimingAnalysis() {
   int status = 0;
   std::string taCommand;
   // use OpenSTA to do the job
-  if (TimingAnalysisOpt() == STAOpt::Opensta ||
-      TimingAnalysisEngineOpt() == STAEngineOpt::Opensta) {
+  if (TimingAnalysisEngineOpt() == STAEngineOpt::Opensta) {
     // allows SDF to be generated for OpenSTA
 
     // calls stars to generate files for opensta
