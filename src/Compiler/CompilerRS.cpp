@@ -963,6 +963,13 @@ std::string CompilerRS::BaseStaScript(std::string libFileName,
 }
 
 bool CompilerRS::TimingAnalysis() {
+  // Using a Scope Guard so this will fire even if we exit mid function
+  // This will fire when the containing function goes out of scope
+  auto guard = sg::make_scope_guard([this] {
+    // Rename log file
+    copyLog(ProjManager(), "vpr_stdout.log", TIMING_ANALYSIS_LOG);
+  });
+
   if (!ProjManager()->HasDesign()) {
     ErrorMessage("No design specified");
     return false;
@@ -974,12 +981,7 @@ bool CompilerRS::TimingAnalysis() {
             ProjManager()->projectName());
     TimingAnalysisOpt(STAOpt::None);
     m_state = State::Routed;
-    std::filesystem::remove(
-        std::filesystem::path(ProjManager()->projectPath()) /
-        std::string(ProjManager()->projectName() + "_sta.cmd"));
-    std::filesystem::remove(
-        std::filesystem::path(ProjManager()->projectPath()) /
-        std::string("timing_analysis.rpt"));
+    CleanFiles(Action::STA);
     return true;
   }
 
@@ -1104,4 +1106,18 @@ bool CompilerRS::TimingAnalysis() {
   Message("Design " + ProjManager()->projectName() + " is timing analysed!");
 
   return true;
+}
+
+std::vector<std::string> CompilerRS::GetCleanFiles(
+    Action action, const std::string &projectName,
+    const std::string &topModule) const {
+  auto files = CompilerOpenFPGA::GetCleanFiles(action, projectName, topModule);
+  if (action == Action::STA) {
+    files.push_back(std::string{topModule + "_stars.lib"});
+    files.push_back(std::string{topModule + "_stars.v"});
+    files.push_back(std::string{topModule + "_stars.sdf"});
+    files.push_back(std::string{topModule + "_stars.sdc"});
+    files.push_back(std::string{projectName + "_opensta.tcl"});
+  }
+  return files;
 }
