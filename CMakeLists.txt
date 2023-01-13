@@ -449,10 +449,6 @@ install(
     DIRECTORY etc/settings/ DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/raptor/etc/settings/)
 install(
     DIRECTORY tests/Arch/ DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/raptor/Arch/)  
-if (NOT RAPTOR)
-install(
-    DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin/gtkwave DESTINATION ${CMAKE_INSTALL_BINDIR} USE_SOURCE_PERMISSIONS)
-endif()
 
 add_custom_target(raptor_gui_link_target ALL
     COMMAND ${CMAKE_COMMAND} -E create_symlink
