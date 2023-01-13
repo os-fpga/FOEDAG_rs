@@ -458,6 +458,7 @@ if (NOT RAPTOR)
 install(
     DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin/gtkwave DESTINATION ${CMAKE_INSTALL_BINDIR} USE_SOURCE_PERMISSIONS)
 endif()
+
 add_custom_target(raptor_gui_link_target ALL
     COMMAND ${CMAKE_COMMAND} -E create_symlink
       build/compile_commands.json ../compile_commands.json)
