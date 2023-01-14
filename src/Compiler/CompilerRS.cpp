@@ -318,6 +318,8 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
           action == Simulator::SimulationType::PNR) {
         GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "simlib.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "dsp_sim.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "brams_sim.v");
       }
       if (action == Simulator::SimulationType::PNR) {
         GetSimulator()->AddGateSimulationModel(tech_datapath / "primitives.v");
