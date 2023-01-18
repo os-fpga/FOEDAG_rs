@@ -320,6 +320,9 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
         GetSimulator()->AddGateSimulationModel(tech_datapath / "simlib.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "dsp_sim.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "brams_sim.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "TDP18K_FIFO.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "ufifo_ctl.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "sram1024x18.v");
       }
       if (action == Simulator::SimulationType::PNR) {
         GetSimulator()->AddGateSimulationModel(tech_datapath / "primitives.v");
