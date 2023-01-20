@@ -166,13 +166,18 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Download workflow artifact
-      if: matrix.mode == 'test'
-      uses: dawidd6/action-download-artifact@v2.24.0
-      with:
-        workflow: main.yml
-        repo: ${{ github.repository }}
-        run_number: 1176
+    - name: Output Run Number and ID
+      run: |
+        echo ${{ github.run_number }}
+        echo ${{ github.run_id }}
+        
+#    - name: Download workflow artifact
+#      if: matrix.mode == 'test'
+#      uses: dawidd6/action-download-artifact@v2.24.0
+#      with:
+#        workflow: main.yml
+#        repo: ${{ github.repository }}
+#       run_number: 1176
 
     - name: Install dependencies and build QT
       run: |
