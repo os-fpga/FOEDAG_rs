@@ -968,13 +968,6 @@ std::string CompilerRS::BaseStaScript(std::string libFileName,
 }
 
 bool CompilerRS::TimingAnalysis() {
-  // Using a Scope Guard so this will fire even if we exit mid function
-  // This will fire when the containing function goes out of scope
-  auto guard = sg::make_scope_guard([this] {
-    // Rename log file
-    copyLog(ProjManager(), "vpr_stdout.log", TIMING_ANALYSIS_LOG);
-  });
-
   if (!ProjManager()->HasDesign()) {
     ErrorMessage("No design specified");
     return false;
@@ -1101,7 +1094,7 @@ bool CompilerRS::TimingAnalysis() {
     ofs.close();
   }
 
-  status = ExecuteAndMonitorSystemCommand(taCommand, "timing_analysis.rpt");
+  status = ExecuteAndMonitorSystemCommand(taCommand, TIMING_ANALYSIS_LOG);
   if (status) {
     ErrorMessage("Design " + ProjManager()->projectName() +
                  " timing analysis failed!");
