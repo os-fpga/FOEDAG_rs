@@ -737,7 +737,8 @@ void CompilerRS::Help(std::ostream *out) {
             "templatized script"
          << std::endl;
   (*out) << "   bitstream_config_files -bitstream <bitstream_setting.xml> "
-            "-sim <sim_setting.xml> -repack <repack_setting.xml>"
+            "-sim <sim_setting.xml> -repack <repack_setting.xml> -key "
+            "<fabric_key.xml>"
          << std::endl;
   (*out) << "                              : Uses alternate bitstream "
             "generation configuration files"
