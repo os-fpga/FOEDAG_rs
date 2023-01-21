@@ -447,10 +447,8 @@ install(
     FILES etc/settings/settings_test.json DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/raptor/etc/settings/)    
 install(
     DIRECTORY etc/settings/ DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/raptor/etc/settings/)
-if(NOT RAPTOR)
-    install(
-        DIRECTORY tests/Arch/ DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/raptor/Arch/)
-endif()
+install(
+    DIRECTORY tests/Arch/ DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/raptor/Arch/)  
 install(
     DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin/gtkwave DESTINATION ${CMAKE_INSTALL_BINDIR} USE_SOURCE_PERMISSIONS)
 
