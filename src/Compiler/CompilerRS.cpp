@@ -674,8 +674,6 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "       onehot                 : One hot encoding - using N "
             "registers for N states"
          << std::endl;
-  /*
-    Comment out the carry mode options until we support it in the HW
   (*out) << "     -carry <mode>            : Carry logic inference mode:"
          << std::endl;
   (*out) << "       all                    : Infer as much as possible"
@@ -684,7 +682,6 @@ void CompilerRS::Help(std::ostream *out) {
             "heuristics"
          << std::endl;
   (*out) << "       none                   : Do not infer carries" << std::endl;
-  */
   (*out) << "     -no_dsp                  : Do not use DSP blocks to "
             "implement multipliers and associated logic"
          << std::endl;
