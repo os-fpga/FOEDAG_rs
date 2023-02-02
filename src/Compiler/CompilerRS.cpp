@@ -749,7 +749,7 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "   sta ?clean? ?opensta?      : Statistical Timing Analysis with "
             "Tatum (Default) or OpenSTA"
          << std::endl;
-  (*out) << "   power ?clean?              : Power estimator" << std::endl;
+//  (*out) << "   power ?clean?              : Power estimator" << std::endl;
 #ifdef PRODUCTION_BUILD
   (*out) << "   bitstream ?clean?          : Bitstream generation" << std::endl;
 #else
