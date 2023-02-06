@@ -612,12 +612,14 @@ void CompilerRS::Help(std::ostream *out) {
       << "                                Constraints: set_pin_loc, set_mode, "
          "all SDC Standard commands"
       << std::endl;
-  (*out) << "   set_pin_loc <design_io_name> <device_io_name> : Constraints "
-            "pin location (Use in constraint file)"
+  (*out) << "   set_pin_loc <design_io_name> <device_io_name> "
+            "?<internal_pinname>?: Constraints "
+            "pin location (Use in constraint.pin file)"
          << std::endl;
-  (*out) << "   set_mode <io_mode_name> <device_io_name> : Constraints "
-            "pin mode (Use in constraint file)"
-         << std::endl;
+  (*out)
+      << "   set_property mode <io_mode_name> <device_io_name> : Constraints "
+         "pin mode (Use in constraint.pin file)"
+      << std::endl;
   (*out) << "   script_path                : Returns the path of the Tcl "
             "script passed "
             "with --script"
