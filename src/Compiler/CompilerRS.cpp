@@ -53,6 +53,7 @@ ${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} $
 
 write_verilog -noattr -nohex ${OUTPUT_VERILOG}
 write_edif ${OUTPUT_EDIF}
+write_blif -param ${OUTPUT_EBLIF}
   )";
 
 const std::string RapidSiliconYosysScript = R"( 
@@ -295,6 +296,11 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
                           "write_verilog -noexpr -nodec -norename "
                           "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
       break;
+    case NetlistType::EBlif:
+      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
+                          "write_verilog -noexpr -nodec -norename "
+                          "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
+      break;
   }
 
   return result;
@@ -334,6 +340,8 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
     case NetlistType::Edif:
       break;
     case NetlistType::Blif:
+      break;
+    case NetlistType::EBlif:
       break;
   }
 }
@@ -476,6 +484,9 @@ std::string CompilerRS::BaseVprCommand() {
       break;
     case NetlistType::Blif:
       netlistFile = ProjManager()->projectName() + "_post_synth.blif";
+      break;
+    case NetlistType::EBlif:
+      netlistFile = ProjManager()->projectName() + "_post_synth.eblif";
       break;
   }
   for (const auto &lang_file : m_projManager->DesignFiles()) {
@@ -823,6 +834,9 @@ std::string FOEDAG::TclArgs_getRsSynthesisOptions() {
       case Compiler::NetlistType::Blif:
         tclOptions += "blif";
         break;
+      case Compiler::NetlistType::EBlif:
+        tclOptions += "eblif";
+        break;
       case Compiler::NetlistType::Edif:
         tclOptions += "edif";
         break;
@@ -901,9 +915,11 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
       std::string arg = tokens[1];
       if (arg == "blif") {
         compiler->SetNetlistType(Compiler::NetlistType::Blif);
+      } else if (arg == "eblif") {
+        compiler->SetNetlistType(Compiler::NetlistType::EBlif);
       } else if (arg == "edif") {
         compiler->SetNetlistType(Compiler::NetlistType::Edif);
-      } else if (arg == "vhdl") {
+      }  else if (arg == "vhdl") {
         compiler->SetNetlistType(Compiler::NetlistType::VHDL);
       } else if (arg == "verilog") {
         compiler->SetNetlistType(Compiler::NetlistType::Verilog);
