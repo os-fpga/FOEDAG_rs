@@ -553,7 +553,7 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "               <project type> : rtl (Default), gate-level"
          << std::endl;
   (*out) << "   target_device <name>       : Targets a device with <name> name "
-            "(MPW1, GEMINI)"
+            "(1GE75)"
          << std::endl;
   (*out) << "   add_design_file <file list> ?type?   ?-work <libName>?   ?-L "
             "<libName>? "
