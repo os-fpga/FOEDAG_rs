@@ -748,9 +748,14 @@ void CompilerRS::Help(std::ostream *out) {
   // (*out) << "   global_placement ?clean?   : Analytical placer" << std::endl;
   (*out) << "   place ?clean?              : Detailed placer" << std::endl;
   (*out) << "   route ?clean?              : Router" << std::endl;
+#ifdef PRODUCTION_BUILD
+  (*out) << "   sta ?clean?                : Statistical Timing Analysis"
+         << std::endl;
+#else
   (*out) << "   sta ?clean? ?opensta?      : Statistical Timing Analysis with "
             "Tatum (Default) or OpenSTA"
          << std::endl;
+#endif
 //  (*out) << "   power ?clean?              : Power estimator" << std::endl;
 #ifdef PRODUCTION_BUILD
   (*out) << "   bitstream ?clean?          : Bitstream generation" << std::endl;
