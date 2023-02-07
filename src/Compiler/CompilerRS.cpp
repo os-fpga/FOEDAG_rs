@@ -42,7 +42,7 @@ const std::string QLYosysScript = R"(
 ${READ_DESIGN_FILES}
 
 # Technology mapping
-hierarchy -top ${TOP_MODULE}
+hierarchy ${TOP_MODULE_DIRECTIVE}
 
 ${KEEP_NAMES}
 
@@ -62,13 +62,13 @@ read -vlog2k ${PRIMITIVES_BLACKBOX}
 ${READ_DESIGN_FILES}
 
 # Technology mapping
-hierarchy -top ${TOP_MODULE}
+hierarchy ${TOP_MODULE_DIRECTIVE}
 
 ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} ${ABC_SCRIPT} -tech ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} ${ABC_SCRIPT} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
