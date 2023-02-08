@@ -297,7 +297,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
                           "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
       break;
     case NetlistType::EBlif:
-      result = 
+      result =
           ReplaceAll(result, "${OUTPUT_NETLIST}",
                      "write_verilog -noexpr -nodec -norename "
                      "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
