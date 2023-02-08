@@ -42,7 +42,7 @@ const std::string QLYosysScript = R"(
 ${READ_DESIGN_FILES}
 
 # Technology mapping
-hierarchy -top ${TOP_MODULE}
+hierarchy ${TOP_MODULE_DIRECTIVE}
 
 ${KEEP_NAMES}
 
@@ -63,13 +63,13 @@ read -vlog2k ${PRIMITIVES_BLACKBOX}
 ${READ_DESIGN_FILES}
 
 # Technology mapping
-hierarchy -top ${TOP_MODULE}
+hierarchy ${TOP_MODULE_DIRECTIVE}
 
 ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} ${ABC_SCRIPT} -tech ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} ${ABC_SCRIPT} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
@@ -275,7 +275,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
     case NetlistType::Verilog:
       // Temporary, once pin_c works with Verilog, only output Verilog
       result = ReplaceAll(result, "${OUTPUT_NETLIST}",
-                          "write_verilog -noexpr -nodec -norename "
+                          "write_verilog -noexpr -nodec -v "
                           "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
       break;
     case NetlistType::VHDL:
@@ -293,7 +293,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
       break;
     case NetlistType::Blif:
       result = ReplaceAll(result, "${OUTPUT_NETLIST}",
-                          "write_verilog -noexpr -nodec -norename "
+                          "write_verilog -noexpr -nodec -v "
                           "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
       break;
     case NetlistType::EBlif:
@@ -564,7 +564,7 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "               <project type> : rtl (Default), gate-level"
          << std::endl;
   (*out) << "   target_device <name>       : Targets a device with <name> name "
-            "(MPW1, GEMINI)"
+            "(1GE75)"
          << std::endl;
   (*out) << "   add_design_file <file list> ?type?   ?-work <libName>?   ?-L "
             "<libName>? "
@@ -623,12 +623,14 @@ void CompilerRS::Help(std::ostream *out) {
       << "                                Constraints: set_pin_loc, set_mode, "
          "all SDC Standard commands"
       << std::endl;
-  (*out) << "   set_pin_loc <design_io_name> <device_io_name> : Constraints "
-            "pin location (Use in constraint file)"
+  (*out) << "   set_pin_loc <design_io_name> <device_io_name> "
+            "?<internal_pinname>?: Constraints "
+            "pin location (Use in constraint.pin file)"
          << std::endl;
-  (*out) << "   set_mode <io_mode_name> <device_io_name> : Constraints "
-            "pin mode (Use in constraint file)"
-         << std::endl;
+  (*out)
+      << "   set_property mode <io_mode_name> <device_io_name> : Constraints "
+         "pin mode (Use in constraint.pin file)"
+      << std::endl;
   (*out) << "   script_path                : Returns the path of the Tcl "
             "script passed "
             "with --script"
@@ -757,10 +759,15 @@ void CompilerRS::Help(std::ostream *out) {
   // (*out) << "   global_placement ?clean?   : Analytical placer" << std::endl;
   (*out) << "   place ?clean?              : Detailed placer" << std::endl;
   (*out) << "   route ?clean?              : Router" << std::endl;
+#ifdef PRODUCTION_BUILD
+  (*out) << "   sta ?clean?                : Statistical Timing Analysis"
+         << std::endl;
+#else
   (*out) << "   sta ?clean? ?opensta?      : Statistical Timing Analysis with "
             "Tatum (Default) or OpenSTA"
          << std::endl;
-  (*out) << "   power ?clean?              : Power estimator" << std::endl;
+#endif
+//  (*out) << "   power ?clean?              : Power estimator" << std::endl;
 #ifdef PRODUCTION_BUILD
   (*out) << "   bitstream ?clean?          : Bitstream generation" << std::endl;
 #else
