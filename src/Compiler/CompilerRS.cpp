@@ -840,6 +840,13 @@ std::string FOEDAG::TclArgs_getRsSynthesisOptions() {
         tclOptions += "verilog";
         break;
     }
+
+    if (compiler->SynthEffort() == CompilerRS::SynthesisEffort::None) {
+      tclOptions += "-effort none";
+    }
+    if (compiler->SynthFsm() == CompilerRS::SynthesisFsmEncoding::None) {
+      tclOptions += "-fsm_encoding none";
+    }
   };
   return tclOptions;
 }
@@ -890,6 +897,8 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
         compiler->SynthFsm(CompilerRS::SynthesisFsmEncoding::Binary);
       } else if (arg == "onehot") {
         compiler->SynthFsm(CompilerRS::SynthesisFsmEncoding::Onehot);
+      } else if (arg == "none") {
+        compiler->SynthFsm(CompilerRS::SynthesisFsmEncoding::None);
       }
       continue;
     }
@@ -901,6 +910,8 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
         compiler->SynthEffort(CompilerRS::SynthesisEffort::Medium);
       } else if (arg == "low") {
         compiler->SynthEffort(CompilerRS::SynthesisEffort::Low);
+      } else if (arg == "none") {
+        compiler->SynthEffort(CompilerRS::SynthesisEffort::None);
       }
       continue;
     }
@@ -925,6 +936,8 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
         compiler->SynthCarry(CompilerRS::SynthesisCarryInference::Auto);
       } else if (arg == "all") {
         compiler->SynthCarry(CompilerRS::SynthesisCarryInference::All);
+      } else if (arg == "<unset>") {
+        compiler->SynthCarry(CompilerRS::SynthesisCarryInference::None);
       }
       continue;
     }
