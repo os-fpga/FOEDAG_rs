@@ -297,9 +297,10 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
                           "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
       break;
     case NetlistType::EBlif:
-      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
-                          "write_verilog -noexpr -nodec -norename "
-                          "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
+      result = 
+          ReplaceAll(result, "${OUTPUT_NETLIST}",
+                     "write_verilog -noexpr -nodec -norename "
+                     "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
       break;
   }
 
@@ -926,7 +927,7 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
         compiler->SetNetlistType(Compiler::NetlistType::EBlif);
       } else if (arg == "edif") {
         compiler->SetNetlistType(Compiler::NetlistType::Edif);
-      }  else if (arg == "vhdl") {
+      } else if (arg == "vhdl") {
         compiler->SetNetlistType(Compiler::NetlistType::VHDL);
       } else if (arg == "verilog") {
         compiler->SetNetlistType(Compiler::NetlistType::Verilog);
