@@ -871,6 +871,9 @@ std::string FOEDAG::TclArgs_getRsSynthesisOptions() {
 void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
   CompilerRS *compiler = (CompilerRS *)GlobalSession->GetCompiler();
 
+  bool noBram{false};
+  bool noDsp{false};
+  bool fast{false};
   // Split into args by -
   std::vector<std::string> args;
   StringUtils::tokenize(argsStr, "-", args);
@@ -959,18 +962,21 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
       continue;
     }
     if (option == "-no_dsp") {
-      compiler->SynthNoDsp(true);
+      noDsp = true;
       continue;
     }
     if (option == "-no_bram") {
-      compiler->SynthNoBram(true);
+      noBram = true;
       continue;
     }
     if (option == "-fast") {
-      compiler->SynthFast(true);
+      fast = true;
       continue;
     }
   }
+  compiler->SynthNoBram(noBram);
+  compiler->SynthNoDsp(noDsp);
+  compiler->SynthFast(fast);
 }
 
 std::string CompilerRS::BaseStaCommand() {
