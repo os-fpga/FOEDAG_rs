@@ -69,7 +69,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} ${ABC_SCRIPT} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} ${ABC_SCRIPT} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${LIMITS} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
@@ -224,6 +224,18 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
     cec = "-cec";
   }
 
+  std::string limits;
+  limits += std::string("-max_device_dsp ") +
+            std::to_string(MaxDeviceDSPCount()) + std::string(" ");
+  limits += std::string("-max_device_bram ") +
+            std::to_string(MaxDeviceBRAMCount()) + std::string(" ");
+  if (MaxUserDSPCount())
+    limits += std::string("-max_dsp ") + std::to_string(MaxUserDSPCount()) +
+              std::string(" ");
+  if (MaxUserBRAMCount())
+    limits += std::string("-max_bram ") + std::to_string(MaxUserBRAMCount()) +
+              std::string(" ");
+
   if (m_synthType == SynthesisType::QL) {
     optimization = "";
     effort = "";
@@ -240,6 +252,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   }
   optimization += " " + PerDeviceSynthOptions();
   optimization += " " + SynthMoreOpt();
+  result = ReplaceAll(result, "${LIMITS}", limits);
   result = ReplaceAll(result, "${OPTIMIZATION}", optimization);
   result = ReplaceAll(result, "${EFFORT}", effort);
   result = ReplaceAll(result, "${FSM_ENCODING}", fsm_encoding);
@@ -740,6 +753,12 @@ void CompilerRS::Help(std::ostream *out) {
          << std::endl;
   (*out) << "   set_channel_width <int>    : VPR Routing channel setting"
          << std::endl;
+  (*out) << "   set_limits <type> <int>    : Sets a user limit on object of "
+            "type <type>"
+         << std::endl;
+  (*out) << "                       <type> : dsp, bram" << std::endl;
+  (*out) << "                          dsp : Max usable DSPs" << std::endl;
+  (*out) << "                         bram : Max usable BRAMs" << std::endl;
   (*out) << "   architecture <vpr_file.xml> ?<openfpga_file.xml>?" << std::endl;
   (*out) << "                              : Uses the architecture file and "
             "optional openfpga arch file (For bitstream generation)"
