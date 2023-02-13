@@ -979,6 +979,9 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
         compiler->SynthCarry(CompilerRS::SynthesisCarryInference::None);
       }
       continue;
+    } else if (option == "-carry") {
+      compiler->SynthCarry(CompilerRS::SynthesisCarryInference::None);
+      continue;
     }
     if (option == "-no_dsp") {
       noDsp = true;
