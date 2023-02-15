@@ -21,6 +21,7 @@ All rights reserved
 #include "Compiler/CompilerRS.h"
 #include "Compiler/Constraints.h"
 #include "Compiler/Log.h"
+#include "Main/Settings.h"
 #include "MainWindow/Session.h"
 #include "NewProject/ProjectManager/project_manager.h"
 #include "Utils/FileUtils.h"
@@ -996,6 +997,7 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
   compiler->SynthNoBram(noBram);
   compiler->SynthNoDsp(noDsp);
   compiler->SynthFast(fast);
+  GlobalSession->GetSettings()->syncWith(PACKING_SETTING_KEY);
 }
 
 std::string CompilerRS::BaseStaCommand() {
