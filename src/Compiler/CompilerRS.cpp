@@ -631,7 +631,8 @@ void CompilerRS::Help(std::ostream *out) {
          << std::endl;
   (*out) << "   set_macro <name>=<value>...: As in -D<macro>=<value>"
          << std::endl;
-  (*out) << "   set_top_module <top>       : Sets the top module" << std::endl;
+  (*out) << "   set_top_module <top> ?-work <libName>? : Sets the top module"
+         << std::endl;
   (*out) << "   add_constraint_file <file> : Sets SDC + location constraints"
          << std::endl;
   (*out)
