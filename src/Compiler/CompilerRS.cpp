@@ -653,8 +653,7 @@ void CompilerRS::Help(std::ostream *out) {
             "clk[0],clk[1]....,clk[15]."
          << std::endl;
   (*out) << "                                and e.g. user clocks are clk_a, "
-            "clk_b and want"
-            " to map clk_a with clk[15]"
+            "clk_b and want to map clk_a with clk[15]"
          << std::endl;
   (*out)
       << "                               Constraints : set clocks for repacking"
