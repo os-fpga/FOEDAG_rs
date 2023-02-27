@@ -279,7 +279,6 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
     std::ofstream ofs(scr.string());
     ofs << "if -K 5 -a\n";
     ofs.close();
-
   } else {
     result = ReplaceAll(result, "${ABC_SCRIPT}", "");
   }
@@ -646,6 +645,19 @@ void CompilerRS::Help(std::ostream *out) {
   (*out)
       << "   set_property mode <io_mode_name> <device_io_name> : Constraints "
          "pin mode (Use in constraint.pin file)"
+      << std::endl;
+  (*out) << "   set_clock_pin -device_clock <device_clock_name> -design_clock "
+            "<design_clock_name>"
+         << std::endl;
+  (*out) << "                              : like gemini has 16 clocks "
+            "clk[0],clk[1]....,clk[15]."
+         << std::endl;
+  (*out) << "                                and e.g. user clocks are clk_a, "
+            "clk_b and want to map clk_a with clk[15]"
+         << std::endl;
+  (*out)
+      << "                               Constraints : set clocks for repacking"
+         " constraints (Use in constraint.pin file)"
       << std::endl;
   (*out) << "   script_path                : Returns the path of the Tcl "
             "script passed "
