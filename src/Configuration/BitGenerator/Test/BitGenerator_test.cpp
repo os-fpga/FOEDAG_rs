@@ -21,4 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 
-int main(int argc, char** argv) { printf("This is Bit Generator unit test\n"); }
+int main(int argc, char** argv) {
+  printf("This is Bit Generator unit test\n");
+}

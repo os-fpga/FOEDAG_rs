@@ -25,18 +25,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "CFGObject_auto.h"
 
 const std::vector<std::string> EMPTY_OBJECT_ERRORS = {
-    "boolean does not exist", "u8 does not exist",  "u16 does not exist",
-    "u32 does not exist",     "i64 does not exist", "u8s does not exist",
-    "i64s does not exist",    "str does not exist", "list0 does not exist",
-    "object does not exist"};
+  "boolean does not exist",
+  "u8 does not exist",
+  "u16 does not exist",
+  "u32 does not exist",
+  "i64 does not exist",
+  "u8s does not exist",
+  "i64s does not exist",
+  "str does not exist",
+  "list0 does not exist",
+  "object does not exist"
+};
 
 const std::vector<std::string> FIRST_TEST_OBJECT_ERRORS = {
-    "u8 does not exist",    "u32 does not exist",  "i64s does not exist",
-    "str does not exist",   "i32s does not exist", "list01 does not exist",
-    "object does not exist"};
+  "u8 does not exist",
+  "u32 does not exist",
+  "i64s does not exist",
+  "str does not exist",
+  "i32s does not exist",
+  "list01 does not exist",
+  "object does not exist"
+};
 
 const std::vector<std::string> SECOND_TEST_OBJECT_ERRORS = {
-    "u64s does not exist", "str0 does not exist"};
+  "u64s does not exist",
+  "str0 does not exist"
+}; 
 
 int main(int argc, char** argv) {
   printf("This is CFGObject unit test\n");
@@ -45,9 +59,8 @@ int main(int argc, char** argv) {
   CFG_ASSERT(utst.error_msgs.size() == EMPTY_OBJECT_ERRORS.size());
   size_t index = 0;
   for (auto str : utst.error_msgs) {
-    CFG_ASSERT_MSG(str == EMPTY_OBJECT_ERRORS[index],
-                   "Empty Object Test: \"%s\" vs \"%s\"", str.c_str(),
-                   EMPTY_OBJECT_ERRORS[index].c_str());
+    CFG_ASSERT_MSG(str == EMPTY_OBJECT_ERRORS[index], 
+                    "Empty Object Test: \"%s\" vs \"%s\"", str.c_str(), EMPTY_OBJECT_ERRORS[index].c_str());
     index++;
   }
 
@@ -88,9 +101,8 @@ int main(int argc, char** argv) {
   CFG_ASSERT(utst.error_msgs.size() == FIRST_TEST_OBJECT_ERRORS.size());
   index = 0;
   for (auto str : utst.error_msgs) {
-    CFG_ASSERT_MSG(str == FIRST_TEST_OBJECT_ERRORS[index],
-                   "First test Object Test: \"%s\" vs \"%s\"", str.c_str(),
-                   FIRST_TEST_OBJECT_ERRORS[index].c_str());
+    CFG_ASSERT_MSG(str == FIRST_TEST_OBJECT_ERRORS[index], 
+                    "First test Object Test: \"%s\" vs \"%s\"", str.c_str(), FIRST_TEST_OBJECT_ERRORS[index].c_str());
     index++;
   }
 
@@ -110,9 +122,8 @@ int main(int argc, char** argv) {
   CFG_ASSERT(utst.error_msgs.size() == SECOND_TEST_OBJECT_ERRORS.size());
   index = 0;
   for (auto str : utst.error_msgs) {
-    CFG_ASSERT_MSG(str == SECOND_TEST_OBJECT_ERRORS[index],
-                   "Second test Object Test: \"%s\" vs \"%s\"", str.c_str(),
-                   SECOND_TEST_OBJECT_ERRORS[index].c_str());
+    CFG_ASSERT_MSG(str == SECOND_TEST_OBJECT_ERRORS[index], 
+                    "Second test Object Test: \"%s\" vs \"%s\"", str.c_str(), SECOND_TEST_OBJECT_ERRORS[index].c_str());
     index++;
   }
 

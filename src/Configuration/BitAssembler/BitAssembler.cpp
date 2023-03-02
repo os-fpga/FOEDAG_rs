@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "BitAssembler.h"
-
 #include "BitAssembler_mgr.h"
 #include "CFGCommon/CFGHelper.h"
 #include "CFGObject/CFGObject_auto.h"
@@ -32,8 +31,7 @@ void BitAssembler_entry(const BitAssemblerArg& args, CFGMessager& msger) {
   msger.add_msg(CFG_print("   project: %s", args.project_name.c_str()));
   msger.add_msg(CFG_print("   device: %s", args.device_name.c_str()));
   msger.add_msg(CFG_print("   time: %s", CFG_get_time().c_str()));
-  std::string bitasm_file = CFG_print("%s/%s.bitasm", args.project_path.c_str(),
-                                      args.project_name.c_str());
+  std::string bitasm_file = CFG_print("%s/%s.bitasm", args.project_path.c_str(), args.project_name.c_str());
   msger.add_msg(CFG_print("   Output: %s", bitasm_file.c_str()));
   msger.add_msg(CFG_print("   Clean: %d", args.clean));
   if (args.clean) {
@@ -55,6 +53,5 @@ void BitAssembler_entry(const BitAssemblerArg& args, CFGMessager& msger) {
       msger.add_msg(CFG_print("   Error: %s", msg.c_str()));
     }
   }
-  msger.add_msg(CFG_print("Assembler elapsed time: %.3f seconds",
-                          CFG_time_elapse(time_begin)));
+  msger.add_msg(CFG_print("Assembler elapsed time: %.3f seconds", CFG_time_elapse(time_begin)));
 }
