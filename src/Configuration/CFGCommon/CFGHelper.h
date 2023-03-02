@@ -29,11 +29,23 @@ void CFG_assertion
     
 #define CFG_INTERNAL_ERROR(...) { CFG_assertion(__FILE__, __LINE__, CFG_print(__VA_ARGS__)); }
 
-#define CFG_ASSERT(truth) \
-  if (!(__builtin_expect(!!(truth), 0))) { CFG_assertion(__FILE__, __LINE__, #truth); }
+#if defined(_MSC_VER)
 
-#define CFG_ASSERT_MSG(truth, ...) \
-  if (!(__builtin_expect(!!(truth), 0))) { CFG_assertion(__FILE__, __LINE__, CFG_print(__VA_ARGS__)); }
+  #define CFG_ASSERT(truth) \
+    if (!(truth)) { CFG_assertion(__FILE__, __LINE__, #truth); }
+
+  #define CFG_ASSERT_MSG(truth, ...) \
+    if (!(truth)) { CFG_assertion(__FILE__, __LINE__, CFG_print(__VA_ARGS__)); }
+
+#else
+
+  #define CFG_ASSERT(truth) \
+    if (!(__builtin_expect(!!(truth), 0))) { CFG_assertion(__FILE__, __LINE__, #truth); }
+
+  #define CFG_ASSERT_MSG(truth, ...) \
+    if (!(__builtin_expect(!!(truth), 0))) { CFG_assertion(__FILE__, __LINE__, CFG_print(__VA_ARGS__)); }
+
+#endif
 
 std::string CFG_get_time();
 

@@ -65,7 +65,7 @@ void CFG_assertion
   size_t line,
   std::string msg
 ) {
-  printf("Assertion at %s (line: %ld)\n", file, line);
+  printf("Assertion at %s (line: %d)\n", file, (uint32_t)(line));
   printf("   MSG: %s\n\n", msg.c_str());
   exit(-1);
 }
