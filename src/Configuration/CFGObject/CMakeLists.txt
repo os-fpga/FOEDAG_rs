@@ -93,7 +93,6 @@ target_link_libraries(${test_bin} ${subsystem})
 ###################
 set(
   SRC_H_INSTALL_LIST
-  tcl/BitGenerator_tcl.h
 )
 
 set(
