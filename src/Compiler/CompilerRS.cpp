@@ -29,6 +29,10 @@ All rights reserved
 #include "Utils/StringUtils.h"
 #include "scope_guard.hpp"
 
+// Configuration
+#include "Configuration/BitAssembler/BitAssembler.h"
+#include "Configuration/BitGenerator/BitGenerator.h"
+
 #ifdef PRODUCTION_BUILD
 #include "License_manager.hpp"
 #endif
@@ -477,6 +481,54 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
   };
   interp->registerCmd("max_threads", max_threads, this, 0);
 
+  // Configuration
+  auto assembler = [](void *clientData, Tcl_Interp *interp, int argc,
+                        const char *argv[]) -> int {
+    CompilerRS *compiler = (CompilerRS *)clientData;
+    compiler->BitsOpt(BitstreamOpt::DefaultBitsOpt);
+    for (int i = 1; i < argc; i++) {
+      std::string arg = argv[i];
+      if (arg == "force") {
+        compiler->BitsOpt(Compiler::BitstreamOpt::Force);
+      } else if (arg == "clean") {
+        compiler->BitsOpt(Compiler::BitstreamOpt::Clean);
+      } else if (arg == "enable_simulation") {
+        compiler->BitsOpt(Compiler::BitstreamOpt::EnableSimulation);
+      } else {
+        compiler->ErrorMessage("Unknown bitstream option: " + arg);
+      }
+    }
+    
+    // Store info before Compile() is called (some data will be reset)
+    BitAssemblerArg bitasm_arg;
+    bitasm_arg.project_name = compiler->ProjManager()->projectName();
+    bitasm_arg.device_name = compiler->ProjManager()->getTargetDevice();
+    bitasm_arg.project_path = compiler->ProjManager()->projectPath();
+    bitasm_arg.clean = compiler->BitsOpt() == Compiler::BitstreamOpt::Clean;
+    
+    // Call Compile()
+    if (!compiler->Compile(Action::Bitstream))
+    {
+      return TCL_ERROR;
+    }
+    
+    // Call BITASM
+    CFGMessager msger;
+    BitAssembler_entry(bitasm_arg, msger);
+    for (auto m : msger.msgs)
+    {
+      if (m.type == CFGMessageType::INFO)
+      {
+        compiler->Message(m.msg);
+      }
+      else
+      {
+        compiler->ErrorMessage(m.msg, m.type == CFGMessageType::ERROR_APPEND);
+      }
+    }
+    return TCL_OK;
+  };
+  interp->registerCmd("assembler", assembler, this, 0);
   return true;
 }
 
