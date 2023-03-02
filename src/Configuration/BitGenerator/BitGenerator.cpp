@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "BitGenerator.h"
 
-void BitGenerator_entry(CFGMessager& msger)
-{
-	msger.add_msg("This is BITGEN entry function");
+void BitGenerator_entry(CFGMessager& msger) {
+  msger.add_msg("This is BITGEN entry function");
 }

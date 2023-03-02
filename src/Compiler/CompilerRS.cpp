@@ -483,7 +483,7 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
 
   // Configuration
   auto assembler = [](void *clientData, Tcl_Interp *interp, int argc,
-                        const char *argv[]) -> int {
+                      const char *argv[]) -> int {
     CompilerRS *compiler = (CompilerRS *)clientData;
     compiler->BitsOpt(BitstreamOpt::DefaultBitsOpt);
     for (int i = 1; i < argc; i++) {
@@ -498,31 +498,26 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
         compiler->ErrorMessage("Unknown bitstream option: " + arg);
       }
     }
-    
+
     // Store info before Compile() is called (some data will be reset)
     BitAssemblerArg bitasm_arg;
     bitasm_arg.project_name = compiler->ProjManager()->projectName();
     bitasm_arg.device_name = compiler->ProjManager()->getTargetDevice();
     bitasm_arg.project_path = compiler->ProjManager()->projectPath();
     bitasm_arg.clean = compiler->BitsOpt() == Compiler::BitstreamOpt::Clean;
-    
+
     // Call Compile()
-    if (!compiler->Compile(Action::Bitstream))
-    {
+    if (!compiler->Compile(Action::Bitstream)) {
       return TCL_ERROR;
     }
-    
+
     // Call BITASM
     CFGMessager msger;
     BitAssembler_entry(bitasm_arg, msger);
-    for (auto m : msger.msgs)
-    {
-      if (m.type == CFGMessageType::INFO)
-      {
+    for (auto m : msger.msgs) {
+      if (m.type == CFGMessageType::INFO) {
         compiler->Message(m.msg);
-      }
-      else
-      {
+      } else {
         compiler->ErrorMessage(m.msg, m.type == CFGMessageType::ERROR_APPEND);
       }
     }

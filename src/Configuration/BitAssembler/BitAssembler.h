@@ -24,12 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Configuration/CFGCommon/CFGMessage.h"
 
-struct BitAssemblerArg
-{
-    std::string project_path = "";
-    std::string project_name = "";
-    std::string device_name = "";
-    bool clean = false;
+struct BitAssemblerArg {
+  std::string project_path = "";
+  std::string project_name = "";
+  std::string device_name = "";
+  bool clean = false;
 };
 
 void BitAssembler_entry(const BitAssemblerArg& args, CFGMessager& msger);
