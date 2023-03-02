@@ -59,7 +59,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SUBMODULE_BUILD_ROOT_DIR}/bin)
 #
 ###################
 add_library(
-  ${subsystem} STATIC
+  ${subsystem} SHARED
   BitAssembler.cpp
   BitAssembler_mgr.cpp
 )

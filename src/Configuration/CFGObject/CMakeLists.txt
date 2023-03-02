@@ -69,7 +69,7 @@ add_custom_command(
 #
 ###################
 add_library(
-  ${subsystem} STATIC
+  ${subsystem} SHARED
   CFGObject.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/CFGObject_auto.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/CFGObject_auto.h
