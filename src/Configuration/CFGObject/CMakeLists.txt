@@ -58,8 +58,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SUBMODULE_BUILD_ROOT_DIR}/bin)
 #
 ###################
 add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/CFGObject_auto.h
-  COMMAND python3 ${PROJECT_SOURCE_DIR}/CFGObject.py ${PROJECT_SOURCE_DIR}/CFGObject.json ${CMAKE_CURRENT_BINARY_DIR}/CFGObject_auto.h
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/CFGObject_auto. ${CMAKE_CURRENT_BINARY_DIR}/CFGObject_auto.cpp
+  COMMAND python3 ${PROJECT_SOURCE_DIR}/CFGObject.py ${PROJECT_SOURCE_DIR}/CFGObject.json ${CMAKE_CURRENT_BINARY_DIR}/CFGObject_auto.h ${CMAKE_CURRENT_BINARY_DIR}/CFGObject_auto.cpp
   DEPENDS ${PROJECT_SOURCE_DIR}/CFGObject.py ${PROJECT_SOURCE_DIR}/CFGObject.json
 )
 
@@ -71,6 +71,7 @@ add_custom_command(
 add_library(
   ${subsystem} STATIC
   CFGObject.cpp
+  ${CMAKE_CURRENT_BINARY_DIR}/CFGObject_auto.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/CFGObject_auto.h
 )
 

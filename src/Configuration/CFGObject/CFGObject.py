@@ -175,10 +175,11 @@ def main() :
     print("*")
     print("* Auto generate CFB Objects")
     print("*")
-    assert len(sys.argv) == 3, "CFGObject.py need input json file and output auto.h arguments"
+    assert len(sys.argv) == 4, "CFGObject.py need input json file and output auto.h/auto.cpp arguments"
     assert os.path.exists(sys.argv[1]), "Input json file %s does not exist" % sys.argv[1]
-    print("*    Input : %s" % sys.argv[1])
-    print("*    Output: %s" % sys.argv[2])
+    print("*    Input:      %s" % sys.argv[1])
+    print("*    Output H:   %s" % sys.argv[2])
+    print("*    Output CPP: %s" % sys.argv[3])
     print("*")
     print("****************************************")
 
@@ -223,14 +224,19 @@ def main() :
                     write_class(file, child.childs, "%s_%s" % (class_name, child.name.upper()), 0, level)
         write_class(file, childs, class_name, 0, 0)
     # Global class creater
-    file.write("static void CFGObject_create_child_from_names(const std::string& parent, const std::string& child, void * ptr)\n")
+    file.write("void CFGObject_create_child_from_names(const std::string& parent, const std::string& child, void * ptr);\n")
+    # Close output file
+    file.write("#endif\n")
+    file.close()
+
+    file = open(sys.argv[3], 'w')
+    file.write("#include \"CFGObject_auto.h\"\n\n")
+    file.write("void CFGObject_create_child_from_names(const std::string& parent, const std::string& child, void * ptr)\n")
     file.write("{\n")
     for creator in CLASS_CREATOR :
         file.write("    if (parent == \"%s\") { CFGObject_%s * class_ptr = reinterpret_cast<CFGObject_%s *>(ptr); class_ptr->create_child(child); return; }\n" % (creator, creator, creator))
     file.write("    CFG_INTERNAL_ERROR(\"Invalid parent %s CFGObject\", parent.c_str());\n")
-    file.write("}\n\n")
-    # Close output file
-    file.write("#endif\n")
+    file.write("}\n")
     file.close()
 
 if __name__ == "__main__":
