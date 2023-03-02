@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef BITASSEMBLER_H
 #define BITASSEMBLER_H
 
-#include "Configuration/CFGCommon/CFGMessage.h"
+#include "Configuration/CFGCommon/CFGMessager.h"
 
 struct BitAssemblerArg {
   std::string project_path = "";

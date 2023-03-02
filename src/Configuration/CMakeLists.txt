@@ -13,7 +13,8 @@ add_custom_target(pre-configuration
 		echo "This is top level build for Pre-Configuration subsystem. It does not really build any target but it defines all subsystem or subdirectory that need to be built in configuration first"
 	)
 
-list(APPEND PRE-SUBSYSTEMS CFGObject)
+list(APPEND NO-COMMON-PRE-SUBSYSTEMS CFGObject)
+list(APPEND PRE-SUBSYSTEMS CFGCommon ${NO-COMMON-PRE-SUBSYSTEMS})
 list(APPEND POST-SUBSYSTEMS BitAssembler BitGenerator)
 list(APPEND SUBSYSTEMS ${PRE-SUBSYSTEMS} ${POST-SUBSYSTEMS})
 
@@ -63,6 +64,16 @@ endforeach()
 foreach(SUBSYSTEM ${SUBSYSTEMS})
 	string(TOLOWER ${SUBSYSTEM} SUBSYSTEM)
 	add_dependencies(configuration ${SUBSYSTEM})
+endforeach()
+
+foreach(SUBSYSTEM ${NO-COMMON-PRE-SUBSYSTEMS})
+	string(TOLOWER ${SUBSYSTEM} SUBSYSTEM)
+	target_link_libraries(${SUBSYSTEM} INTERFACE cfgcommon)
+endforeach()
+
+foreach(SUBSYSTEM ${POST-SUBSYSTEMS})
+	string(TOLOWER ${SUBSYSTEM} SUBSYSTEM)
+	target_link_libraries(${SUBSYSTEM} INTERFACE cfgcommon)
 endforeach()
 
 # Custom dependencies

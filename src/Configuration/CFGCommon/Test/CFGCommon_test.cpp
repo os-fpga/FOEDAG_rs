@@ -19,11 +19,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BITGENERATOR_H
-#define BITGENERATOR_H
+#include <stdio.h>
 
-#include "Configuration/CFGCommon/CFGMessager.h"
+#include "CFGHelper.h"
+#include "CFGMessager.h"
 
-void BitGenerator_entry(CFGMessager& msger);
 
-#endif
+int main(int argc, char** argv) {
+  printf("This is CFGCommon unit test\n");
+  return 0;
+}

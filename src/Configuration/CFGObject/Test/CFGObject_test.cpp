@@ -59,8 +59,7 @@ int main(int argc, char** argv) {
   CFG_ASSERT(utst.error_msgs.size() == EMPTY_OBJECT_ERRORS.size());
   size_t index = 0;
   for (auto str : utst.error_msgs) {
-    CFG_ASSERT_MSG(str == EMPTY_OBJECT_ERRORS[index], 
-                    "Empty Object Test: \"%s\" vs \"%s\"", str.c_str(), EMPTY_OBJECT_ERRORS[index].c_str());
+    CFG_ASSERT_MSG(str == EMPTY_OBJECT_ERRORS[index], "Empty Object Test: \"%s\" vs \"%s\"", str.c_str(), EMPTY_OBJECT_ERRORS[index].c_str());
     index++;
   }
 
@@ -101,8 +100,7 @@ int main(int argc, char** argv) {
   CFG_ASSERT(utst.error_msgs.size() == FIRST_TEST_OBJECT_ERRORS.size());
   index = 0;
   for (auto str : utst.error_msgs) {
-    CFG_ASSERT_MSG(str == FIRST_TEST_OBJECT_ERRORS[index], 
-                    "First test Object Test: \"%s\" vs \"%s\"", str.c_str(), FIRST_TEST_OBJECT_ERRORS[index].c_str());
+    CFG_ASSERT_MSG(str == FIRST_TEST_OBJECT_ERRORS[index], "First test Object Test: \"%s\" vs \"%s\"", str.c_str(), FIRST_TEST_OBJECT_ERRORS[index].c_str());
     index++;
   }
 
@@ -122,8 +120,7 @@ int main(int argc, char** argv) {
   CFG_ASSERT(utst.error_msgs.size() == SECOND_TEST_OBJECT_ERRORS.size());
   index = 0;
   for (auto str : utst.error_msgs) {
-    CFG_ASSERT_MSG(str == SECOND_TEST_OBJECT_ERRORS[index], 
-                    "Second test Object Test: \"%s\" vs \"%s\"", str.c_str(), SECOND_TEST_OBJECT_ERRORS[index].c_str());
+    CFG_ASSERT_MSG(str == SECOND_TEST_OBJECT_ERRORS[index], "Second test Object Test: \"%s\" vs \"%s\"", str.c_str(), SECOND_TEST_OBJECT_ERRORS[index].c_str());
     index++;
   }
 
@@ -139,4 +136,6 @@ int main(int argc, char** argv) {
   CFGObject_UTST rdback;
   CFG_ASSERT(rdback.read("utst.bin"));
   CFG_ASSERT(rdback.error_msgs.size() == 0);
+
+  return 0;
 }
