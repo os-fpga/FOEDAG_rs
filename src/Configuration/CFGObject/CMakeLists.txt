@@ -36,10 +36,6 @@ else()
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Werror")
 endif()
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${SUBMODULE_BUILD_ROOT_DIR}/lib)
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SUBMODULE_BUILD_ROOT_DIR}/bin)
-
 #################################################################################################################
 #
 # Three elements will be built 
@@ -69,7 +65,7 @@ add_custom_command(
 #
 ###################
 add_library(
-  ${subsystem} SHARED
+  ${subsystem} ${CFG_LIB_TYPE}
   CFGObject.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/CFGObject_auto.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/CFGObject_auto.h
@@ -103,7 +99,7 @@ set(
 
 foreach(file ${SRC_LIB_INSTALL_LIST})
   install(
-    FILES ${SUBMODULE_BUILD_ROOT_DIR}/lib/$<TARGET_FILE_NAME:${file}>
+    FILES ${CFG_BUILD_ROOT_DIR}/lib/$<TARGET_FILE_NAME:${file}>
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/foedag
   )
 endforeach()

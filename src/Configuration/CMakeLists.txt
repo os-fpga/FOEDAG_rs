@@ -20,12 +20,17 @@ list(APPEND SUBSYSTEMS ${PRE-SUBSYSTEMS} ${POST-SUBSYSTEMS})
 
 # set parent scope directory definition before subdirectory is added so that it can be inherited
 #	in each subdirectory avoid using using ".." relative path -- it is very hard to manage if we have multiple layer
-set(SUBMODULE_PROJECT_ROOT_DIR ${PROJECT_SOURCE_DIR}/../..)
-set(SUBMODULE_BUILD_ROOT_DIR ${CMAKE_CURRENT_BINARY_DIR}/../..)
+set(CFG_PROJECT_ROOT_DIR ${PROJECT_SOURCE_DIR}/../..)
+set(CFG_BUILD_ROOT_DIR ${CMAKE_CURRENT_BINARY_DIR}/../..)
 message("Configuration source dirctory is ${PROJECT_SOURCE_DIR}")
 message("Configuration binary dirctory is ${CMAKE_CURRENT_BINARY_DIR}")
-message("Configuration set project root directory as ${SUBMODULE_PROJECT_ROOT_DIR}")
-message("Configuration set build root directory as ${SUBMODULE_BUILD_ROOT_DIR}")
+message("Configuration set project root directory as ${CFG_PROJECT_ROOT_DIR}")
+message("Configuration set build root directory as ${CFG_BUILD_ROOT_DIR}")
+
+# Determine the library type for configuration
+set(CFG_LIB_TYPE STATIC)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CFG_BUILD_ROOT_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CFG_BUILD_ROOT_DIR}/bin)
 
 # subdirectory
 foreach(SUBSYSTEM ${SUBSYSTEMS})
@@ -36,12 +41,12 @@ endforeach()
 foreach(SUBSYSTEM ${SUBSYSTEMS})
 	string(TOLOWER ${SUBSYSTEM} SUBSYSTEM)
 	target_include_directories(${SUBSYSTEM} PUBLIC
-        ${SUBMODULE_PROJECT_ROOT_DIR}/FOEDAG/src
-        ${SUBMODULE_PROJECT_ROOT_DIR}/src
-        ${SUBMODULE_PROJECT_ROOT_DIR}/src/Configuration
-        ${SUBMODULE_BUILD_ROOT_DIR}/include
-        ${SUBMODULE_BUILD_ROOT_DIR}/src
-        ${SUBMODULE_BUILD_ROOT_DIR}/src/Configuration
+        ${CFG_PROJECT_ROOT_DIR}/FOEDAG/src
+        ${CFG_PROJECT_ROOT_DIR}/src
+        ${CFG_PROJECT_ROOT_DIR}/src/Configuration
+        ${CFG_BUILD_ROOT_DIR}/include
+        ${CFG_BUILD_ROOT_DIR}/src
+        ${CFG_BUILD_ROOT_DIR}/src/Configuration
     )
 endforeach()
 
