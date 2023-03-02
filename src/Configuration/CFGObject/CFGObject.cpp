@@ -229,12 +229,12 @@ bool CFGObject::read(const std::string& path) {
   CFG_ASSERT(index < data.size());
 
   // Parse
-  uint64_t parsed_object_count = 0;
+  size_t parsed_object_count = 0;
   while (index < data.size()) {
     parse_object(&data[0], data.size(), index, parsed_object_count);
   }
   CFG_ASSERT(index == data.size());
-  CFG_ASSERT(parsed_object_count == object_count);
+  CFG_ASSERT((uint64_t)(parsed_object_count) == object_count);
 
   // Check rule
   return check_rule(error_msgs);
