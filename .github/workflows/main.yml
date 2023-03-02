@@ -2,8 +2,6 @@ name: 'main'
 
 on:
   push:
-    branches:
-    - 'FOEDAG_rs_cfg'
   pull_request:
 
 jobs:
