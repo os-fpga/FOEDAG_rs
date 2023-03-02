@@ -160,8 +160,8 @@ public:
 
   // Members
   const CFGObject * parent_ptr = nullptr;
-  const std::vector<CFGObject_RULE> rules;
   const std::string name = "";
+  const std::vector<CFGObject_RULE> rules;
 };
 
 #endif
