@@ -78,9 +78,8 @@ class CFGObject {
 public:
   CFGObject() {
   }
-  CFGObject(const std::string& n, const CFGObject * pp, const std::vector<CFGObject_RULE> &r) :
+  CFGObject(const std::string& n, const std::vector<CFGObject_RULE> &r) :
     name(n),
-    parent_ptr(pp),
     rules(r) {
   }
 
@@ -119,6 +118,7 @@ public:
   bool read(const std::string& path);
 
   // Generic, Helper (Public)
+  void set_parent_ptr(const CFGObject * pp) const;
   uint64_t get_object_count() const;
   bool check_exist(const std::string& name) const;
 

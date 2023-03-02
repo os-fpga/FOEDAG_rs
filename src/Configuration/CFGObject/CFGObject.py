@@ -122,17 +122,17 @@ def write_class(file, elements, class_name, current_level, target_level) :
         file.write("{\n")
         file.write("public:\n")
         # Constructor
-        file.write("    %s(CFGObject * parent_ptr = nullptr) :\n" % (class_name))
-        for element in elements :
-            if element.type == None :
-                assert element.class_type == None
-                if not element.list :
-                    file.write("        %s(this),\n" % (element.name))
-        file.write("        CFGObject(\"%s\", parent_ptr, {\n" % class_name[10:])
+        file.write("    %s() :\n" % (class_name))
+        file.write("        CFGObject(\"%s\", {\n" % class_name[10:])
         for i, element in enumerate(elements) :
             write_rule(file, element, "", "                     ", i == (len(elements) - 1))
         file.write("                 })\n")
         file.write("        {\n")
+        for element in elements :
+            if element.type == None :
+                assert element.class_type == None
+                if not element.list :
+                    file.write("            %s.set_parent_ptr(this);\n" % (element.name))
         file.write("        }\n\n")
         # Destructor
         file.write("    ~%s()\n" % (class_name))

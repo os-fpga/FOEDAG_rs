@@ -224,6 +224,11 @@ bool CFGObject::read(const std::string& path) {
 }
 
 // Generic, Helper
+void CFGObject::set_parent_ptr(const CFGObject * pp) const {
+  CFGObject ** ptr = const_cast<CFGObject **>(&parent_ptr);
+  (* ptr) = const_cast<CFGObject *>(pp);
+}
+
 const CFGObject_RULE * CFGObject::get_rule(const std::string& name) const {
   const CFGObject_RULE * rule = nullptr;
   for (auto& r : rules) {
@@ -309,7 +314,6 @@ uint8_t CFGObject::get_type_enum(const std::string& type) const {
 
 uint64_t CFGObject::get_object_count() const {
   uint64_t count = 0;
-  bool status = true;
   // Must follow the rule
   for (auto &r : rules) {
     // If the rule said this member must exist then we further check the existence
