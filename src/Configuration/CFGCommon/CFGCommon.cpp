@@ -141,15 +141,15 @@ float CFG_time_elapse(CFG_TIME begin) {
 */
 
 void CFGMessager::add_msg(const std::string &m) {
-  msgs.push_back(CFGMessage(CFGMessageType::INFO, m));
+  msgs.push_back(CFGMessage(CFGMessageType_INFO, m));
 }
 
 void CFGMessager::add_error(const std::string &m) {
-  msgs.push_back(CFGMessage(CFGMessageType::ERROR, m));
+  msgs.push_back(CFGMessage(CFGMessageType_ERROR, m));
 }
 
 void CFGMessager::append_error(const std::string &m) {
-  msgs.push_back(CFGMessage(CFGMessageType::ERROR_APPEND, m));
+  msgs.push_back(CFGMessage(CFGMessageType_ERROR_APPEND, m));
 }
 
 void CFGMessager::clear() {

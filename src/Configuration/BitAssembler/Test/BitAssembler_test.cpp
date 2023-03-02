@@ -23,4 +23,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 int main(int argc, char** argv) {
   printf("This is dummy Bit Generator unit test\n");
+  return 0;
 }

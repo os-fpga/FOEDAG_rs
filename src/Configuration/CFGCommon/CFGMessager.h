@@ -5,9 +5,9 @@
 #include <vector>
 
 enum CFGMessageType {
-  INFO,
-  ERROR,
-  ERROR_APPEND
+  CFGMessageType_INFO,
+  CFGMessageType_ERROR,
+  CFGMessageType_ERROR_APPEND
 };
 
 struct CFGMessage {
@@ -16,7 +16,7 @@ struct CFGMessage {
     msg(m) {
 
   }
-  const CFGMessageType type = CFGMessageType::INFO;
+  const CFGMessageType type = CFGMessageType_INFO;
   const std::string msg = "";
 };
 

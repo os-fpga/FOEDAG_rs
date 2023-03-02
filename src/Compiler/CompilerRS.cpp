@@ -515,10 +515,10 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
     CFGMessager msger;
     BitAssembler_entry(bitasm_arg, msger);
     for (auto m : msger.msgs) {
-      if (m.type == CFGMessageType::INFO) {
+      if (m.type == CFGMessageType_INFO) {
         compiler->Message(m.msg);
       } else {
-        compiler->ErrorMessage(m.msg, m.type == CFGMessageType::ERROR_APPEND);
+        compiler->ErrorMessage(m.msg, m.type == CFGMessageType_ERROR_APPEND);
       }
     }
     return TCL_OK;
