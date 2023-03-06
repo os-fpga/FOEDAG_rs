@@ -77,7 +77,6 @@ size_t CFG_COMPRESS::analyze_chunk_pattern
   CFG_ASSERT(length >= CFG_CMP_MIN_REPEAT_LENGTH_SEARCH);
   size_t zero_length = 0;
   size_t high_length = 0;
-  size_t variable_length = 0;
   for (size_t i = 0; i < length; i++, index++) {
     CFG_ASSERT(index < input_size);
     if (input[index] == 0) {
@@ -394,38 +393,39 @@ void CFG_COMPRESS::decompress
   const std::vector<uint8_t> header = { 'C', 'F', 'G', '_', 'C', 'M', 'P' };
   CFG_ASSERT(memcmp(input, &header[0], 7) == 0);
   uint8_t version = header[7];
+  CFG_ASSERT(version == 0); // currently only support version 0
   size_t index = 8;
   size_t original_size = CFG_read_variable_u64(input, input_size, index);
   size_t compress_size = CFG_read_variable_u64(input, input_size, index);
   CFG_ASSERT(original_size > 0);
   CFG_ASSERT(compress_size > 0);
-  CFG_ASSERT((compress_size + index) <= input_size);
-  printf("decompress: (%ld + %ld) vs %ld\n", compress_size, index, input_size);
+  CFG_ASSERT((index + compress_size) <= input_size);
   // Do not use std::vector, so that firmware can implement the same
-  uint64_t output_index = output.size();
-  while (index < input_size) {
-    uint64_t flag = CFG_read_variable_u64(input, input_size, index);
+  size_t output_original_size = output.size();
+  size_t end_index = index + compress_size;
+  while (index < end_index) {
+    uint64_t flag = CFG_read_variable_u64(input, end_index, index);
     uint64_t pattern = flag & 0x7;
     uint64_t repeat = (flag & 0x8) != 0;
     size_t length = (size_t)(flag >> 4);
     size_t temp_output_index = output.size();
     if (pattern == CFG_CMP_NONE) {
       for (uint64_t i = 0; i < length; i++) {
-        CFG_ASSERT(index < input_size);
+        CFG_ASSERT(index < end_index);
         output.push_back(input[index]);
         index++;
       }
     } else {
       uint8_t compress_byte = 0;
       if (pattern == CFG_CMP_VAR) {
-        CFG_ASSERT(index < input_size);
+        CFG_ASSERT(index < end_index);
         compress_byte = input[index];
         index++;
       } else if (pattern == CFG_CMP_HIGH || pattern == CFG_CMP_VAR_HIGH || pattern == CFG_CMP_HIGH_VAR) {
         compress_byte = 0xFF;
       }
       if (pattern == CFG_CMP_VAR_ZERO || pattern == CFG_CMP_VAR_HIGH) {
-        CFG_ASSERT(index < input_size);
+        CFG_ASSERT(index < end_index);
         output.push_back(input[index]);
         index++;
       }
@@ -433,7 +433,7 @@ void CFG_COMPRESS::decompress
         output.push_back(compress_byte);
       }
       if (pattern == CFG_CMP_ZERO_VAR || pattern == CFG_CMP_HIGH_VAR) {
-        CFG_ASSERT(index < input_size);
+        CFG_ASSERT(index < end_index);
         output.push_back(input[index]);
         index++;
       }
@@ -444,7 +444,7 @@ void CFG_COMPRESS::decompress
     }
     CFG_ASSERT(length == (output.size() - temp_output_index));
     if (repeat) {
-      size_t repeat_size = (size_t)(CFG_read_variable_u64(input, input_size, index));
+      size_t repeat_size = (size_t)(CFG_read_variable_u64(input, end_index, index));
       for (uint64_t i = 0; i < repeat_size; i++) {
         output.insert(output.end(), 
                       output.begin() + temp_output_index, 
@@ -452,5 +452,7 @@ void CFG_COMPRESS::decompress
       }
     }
   }
-  CFG_ASSERT(index == input_size);	
+  CFG_ASSERT(index == end_index);
+  size_t uncompress_size = output.size() - output_original_size;
+  CFG_ASSERT(uncompress_size == original_size);
 }
