@@ -324,6 +324,7 @@ CompilerRS::CompilerRS() : CompilerOpenFPGA() {
   m_synthType = SynthesisType::RS;
   m_netlistType = NetlistType::Verilog;
   m_channel_width = 200;
+  PnROpt("--allow_unrelated_clustering on --balance_block_type_utilization on");
 }
 
 void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
