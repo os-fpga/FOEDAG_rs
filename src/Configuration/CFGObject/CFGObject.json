@@ -24,7 +24,8 @@
 								 	},
 								 	{
 										"name"  : "data",
-										"type"  : "u8s"
+										"type"  : "u8s",
+										"cmp"   : true
 								 	}
 								]
 					} 

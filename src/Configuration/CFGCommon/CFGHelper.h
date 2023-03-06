@@ -69,8 +69,59 @@ void CFG_get_rid_whitespace
 
 CFG_TIME CFG_time_begin();
 
-uint64_t CFG_nano_time_elapse(CFG_TIME begin);
+uint64_t CFG_nano_time_elapse
+(
+  CFG_TIME begin
+);
 
-float CFG_time_elapse(CFG_TIME begin);
+float CFG_time_elapse
+(
+  CFG_TIME begin
+);
+
+uint8_t CFG_write_variable_u64
+(
+  std::vector<uint8_t>& data,
+  uint64_t value
+);
+
+uint64_t CFG_read_variable_u64
+(
+  const uint8_t * data,
+  size_t data_size,
+  size_t& index,
+  int max_size = -1
+);
+
+void CFG_read_binary_file
+(
+  const std::string& filepath,
+  std::vector<uint8_t>& data
+);
+
+void CFG_write_binary_file
+(
+  const std::string& filepath,
+  const uint8_t * data,
+  const size_t data_size
+);
+
+void CFG_compress
+(
+  const uint8_t * input, 
+  const size_t input_size, 
+  std::vector<uint8_t>& output, 
+  size_t * header_size = nullptr,
+  const bool debug = false,
+  const bool retry = true
+);
+
+void CFG_decompress
+(
+  const uint8_t * input, 
+  const size_t input_size, 
+  std::vector<uint8_t>& output,
+  const bool debug = false
+);
 
 #endif

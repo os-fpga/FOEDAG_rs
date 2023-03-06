@@ -1,5 +1,6 @@
 import sys
 import os
+import CFGObject_compress
 
 SUPPORTED_TYPE = [
     "bool", 
@@ -96,11 +97,31 @@ def get_values(data, index, length) :
     assert length in [1, 2, 4, 8]
     # First thing to get the variable vector length
     (vector_length, index) = get_variable_length(data, index)
+    compress = (vector_length & 1) != 0
+    vector_length >>= 1
     assert vector_length > 0
     values = []
-    for i in range(vector_length) :
-        (value, index) = get_value(data, index, length)
-        values.append(value)
+    if compress :
+        (header, index) = get_string(data, index, 7, 7)
+        assert header == "CFG_CMP"
+        assert index < len(data)
+        version = data[index]
+        index += 1
+        (original_size, index) = get_variable_length(data, index)
+        (cmp_size, index) = get_variable_length(data, index)
+        assert original_size == (vector_length * length), "Original size: %d vs (%d * %d)" % (original_size, vector_length, length)
+        assert (index + cmp_size) <= len(data)
+        new_data = CFGObject_compress.uncompress_data(data[index:index+cmp_size], False)
+        assert len(new_data) == original_size
+        new_index = 0
+        for i in range(vector_length) :
+            (value, new_index) = get_value(new_data, new_index, length)
+            values.append(value)
+        index = index + cmp_size
+    else :
+        for i in range(vector_length) :
+            (value, index) = get_value(data, index, length)
+            values.append(value)
     return [values, index]
     
 def print_values(stdout, values, byte_size, space) :

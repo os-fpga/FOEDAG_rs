@@ -50,9 +50,10 @@ const std::vector<std::string> SUPPORTED_TYPES = {
 };
 
 struct CFGObject_RULE {
-  CFGObject_RULE(std::string n, bool e, void * p, const std::string &t) :
+  CFGObject_RULE(std::string n, bool e, bool c, void * p, const std::string &t) :
     name(n),
     exist(e),
+    compress(c),
     ptr(p),
     type(t) {
     // name
@@ -69,6 +70,7 @@ struct CFGObject_RULE {
   }
   const std::string name;
   const bool exist;
+  const bool compress;
   const void * ptr;
   const std::string type;
   bool is_exist = false;
@@ -114,8 +116,8 @@ public:
   void append_char(const std::string& name, char value) const;
 
   // File IO
-  bool write(const std::string& path);
-  bool read(const std::string& path);
+  bool write(const std::string& filepath);
+  bool read(const std::string& filepath);
 
   // Generic, Helper (Public)
   void set_parent_ptr(const CFGObject * pp) const;
@@ -139,14 +141,12 @@ public:
   void serialize(std::vector<uint8_t>& data) const;
   void serialize_type_and_name(std::vector<uint8_t>& data, const CFGObject_RULE * rule) const;
   void serialize_value(std::vector<uint8_t>& data, const CFGObject_RULE * rule) const;
-  uint8_t write_variable_u64(std::vector<uint8_t>& data, uint64_t value) const;
 
   // Read
   void parse_object(const uint8_t * data, size_t data_size, size_t& index, size_t& object_count) const;
   void parse_class_object(const uint8_t * data, size_t data_size, size_t& index, size_t& object_count) const;
   std::string get_string(const uint8_t * data, size_t data_size, size_t& index, int max_size = -1, int min_size = -1, int null_check = -1) const;
-  uint64_t get_variable_u64(const uint8_t * data, size_t data_size, size_t& index, int max_size = -1) const;
-
+  
   // Using template
   template <typename T> void write_data(const CFGObject_RULE * rule, T value) const;
   template <typename T> void write_data(const std::string& name, const std::string& type, T value) const;
@@ -156,7 +156,7 @@ public:
   template <typename T> void append_data(const std::string& name, const std::string& type, T value) const;
   template <typename T> void serialize_data(std::vector<uint8_t>& data, T value) const;
   template <typename T> void deserialize_data(const uint8_t * data, size_t data_size, size_t& index, T& value) const;
-  template <typename T> void serialize_datas(std::vector<uint8_t>& data, std::vector<T>& value) const;
+  template <typename T> void serialize_datas(std::vector<uint8_t>& data, std::vector<T>& value, bool compress) const;
 
   // Members
   const CFGObject * parent_ptr = nullptr;

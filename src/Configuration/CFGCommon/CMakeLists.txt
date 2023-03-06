@@ -54,6 +54,7 @@ endif()
 add_library(
   ${subsystem} ${CFG_LIB_TYPE}
   CFGCommon.cpp
+  CFGCompress.cpp
 )
 
 ###################

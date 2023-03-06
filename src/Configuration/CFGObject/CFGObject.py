@@ -51,18 +51,20 @@ def get_c_type_default(type) :
 
 class element :
 
-    def __init__(self, n, t, e, l) :
+    def __init__(self, n, t, e, l, c) :
 
         self.name = n
         self.type = None if isinstance(t, list) else t
         self.class_type = None
         self.exist = e
         self.list = l
+        self.compress = c
         self.childs = []
         assert len(self.name) <= 16, "Element name must not more than 16 characters, but found %s" % self.name
         check_case(self.name, False)
         assert isinstance(self.exist, bool), "Element %s exist paramter must be boolean, but found %s" % type(self.exist)
         assert isinstance(self.list, bool), "Element %s list paramter must be boolean, but found %s" % type(self.list)
+        assert isinstance(self.compress, bool), "Element %s compress paramter must be boolean, but found %s" % type(self.compress)
         assert self.type in SUPPORTED_TYPES, "Element %s type %s is not supported (%s)" % (self.name, self.type, SUPPORTED_TYPES)
         if self.type != None :
             assert not self.list, "None-clasee element %s (%s) does not support list parameter" % (self.name, self.type)
@@ -79,10 +81,13 @@ def check_element(values, name, siblings, level=0) :
     if "list" not in values :
         values["list"] = False
         additional += 1
+    if "cmp" not in values :
+        values["cmp"] = False
+        additional += 1
     assert "name" in values, "Object %s element must have have a \"name\" key" % name
     assert "type" in values, "Object %s element must have have a \"type\" key" % name
-    assert len(values) == 4, "Object %s element %s should only has %d entries, but found %d" % (name, values["name"], 4 - additional, len(element) - additional)
-    e = element(values["name"], values["type"], values["exist"], values["list"])
+    assert len(values) == 5, "Object %s element %s should only has %d entries, but found %d" % (name, values["name"], 4 - additional, len(element) - additional)
+    e = element(values["name"], values["type"], values["exist"], values["list"], values["cmp"])
     for sibling in siblings :
         assert sibling.name != e.name, "Object %s found duplicate element name %s" % (name, e.name)
     siblings.append(e)
@@ -106,8 +111,10 @@ def write_rule(file, element, parent_name, space, last) :
             element_type = "class"
     else :
         element_type = element.type
-    file.write("%sCFGObject_RULE(\"%s\", %s, &%s, \"%s\")" % \
-                (space, name, "true" if element.exist else "false", name, element_type))
+    file.write("%sCFGObject_RULE(\"%s\", %s, %s, &%s, \"%s\")" % \
+                (space, name, 
+                    "true" if element.exist else "false",
+                    "true" if element.compress else "false", name, element_type))
     if not last :
         file.write(",")
     file.write("\n")
