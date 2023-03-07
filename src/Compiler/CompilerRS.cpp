@@ -80,13 +80,8 @@ ${OUTPUT_NETLIST}
 
   )";
 
-static auto assembler_flow
-(
-  CompilerRS * compiler,
-  bool batchMode,
-  int argc,
-  const char *argv[]
-) {
+static auto assembler_flow(CompilerRS *compiler, bool batchMode, int argc,
+                           const char *argv[]) {
   compiler->BitsOpt(Compiler::BitstreamOpt::DefaultBitsOpt);
   for (int i = 1; i < argc; i++) {
     std::string arg = argv[i];
@@ -114,7 +109,8 @@ static auto assembler_flow
       return TCL_ERROR;
     }
   } else {
-    WorkerThread* wthread = new WorkerThread("bitstream_th", Compiler::Action::Bitstream, compiler);
+    WorkerThread *wthread =
+        new WorkerThread("bitstream_th", Compiler::Action::Bitstream, compiler);
     if (!wthread->start()) {
       return TCL_ERROR;
     }

@@ -11,17 +11,13 @@ enum CFGMessageType {
 };
 
 struct CFGMessage {
-  CFGMessage(const CFGMessageType t, const std::string &m) :
-    type(t), 
-    msg(m) {
-
-  }
+  CFGMessage(const CFGMessageType t, const std::string &m) : type(t), msg(m) {}
   const CFGMessageType type = CFGMessageType_INFO;
   const std::string msg = "";
 };
 
 class CFGMessager {
-public:
+ public:
   void add_msg(const std::string &m);
   void add_error(const std::string &m);
   void append_error(const std::string &m);

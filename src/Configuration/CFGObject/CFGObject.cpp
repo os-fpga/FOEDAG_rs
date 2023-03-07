@@ -52,59 +52,73 @@ void CFGObject::write_i64(const std::string& name, int64_t value) const {
   write_data(name, "i64", value);
 }
 
-void CFGObject::write_u8s(const std::string& name, std::vector<uint8_t> value) const {
+void CFGObject::write_u8s(const std::string& name,
+                          std::vector<uint8_t> value) const {
   write_data(name, "u8s", value);
 }
 
-void CFGObject::write_u16s(const std::string& name, std::vector<uint16_t> value) const {
+void CFGObject::write_u16s(const std::string& name,
+                           std::vector<uint16_t> value) const {
   write_data(name, "u16s", value);
 }
 
-void CFGObject::write_u32s(const std::string& name, std::vector<uint32_t> value) const {
+void CFGObject::write_u32s(const std::string& name,
+                           std::vector<uint32_t> value) const {
   write_data(name, "u32s", value);
 }
 
-void CFGObject::write_u64s(const std::string& name, std::vector<uint64_t> value) const {
+void CFGObject::write_u64s(const std::string& name,
+                           std::vector<uint64_t> value) const {
   write_data(name, "u64s", value);
 }
 
-void CFGObject::write_i32s(const std::string& name, std::vector<int32_t> value) const {
+void CFGObject::write_i32s(const std::string& name,
+                           std::vector<int32_t> value) const {
   write_data(name, "i32s", value);
 }
 
-void CFGObject::write_i64s(const std::string& name, std::vector<int64_t> value) const {
+void CFGObject::write_i64s(const std::string& name,
+                           std::vector<int64_t> value) const {
   write_data(name, "i64s", value);
 }
 
-void CFGObject::write_str(const std::string& name, const std::string& value) const {
+void CFGObject::write_str(const std::string& name,
+                          const std::string& value) const {
   write_data(name, "str", value);
 }
 
-void CFGObject::append_u8s(const std::string& name, std::vector<uint8_t> value) const {
+void CFGObject::append_u8s(const std::string& name,
+                           std::vector<uint8_t> value) const {
   append_datas(name, "u8s", value);
 }
 
-void CFGObject::append_u16s(const std::string& name, std::vector<uint16_t> value) const {
+void CFGObject::append_u16s(const std::string& name,
+                            std::vector<uint16_t> value) const {
   append_datas(name, "u16s", value);
 }
 
-void CFGObject::append_u32s(const std::string& name, std::vector<uint32_t> value) const {
+void CFGObject::append_u32s(const std::string& name,
+                            std::vector<uint32_t> value) const {
   append_datas(name, "u32s", value);
 }
 
-void CFGObject::append_u64s(const std::string& name, std::vector<uint64_t> value) const {
+void CFGObject::append_u64s(const std::string& name,
+                            std::vector<uint64_t> value) const {
   append_datas(name, "u64s", value);
 }
 
-void CFGObject::append_i32s(const std::string& name, std::vector<int32_t> value) const {
+void CFGObject::append_i32s(const std::string& name,
+                            std::vector<int32_t> value) const {
   append_datas(name, "i32s", value);
 }
 
-void CFGObject::append_i64s(const std::string& name, std::vector<int64_t> value) const {
+void CFGObject::append_i64s(const std::string& name,
+                            std::vector<int64_t> value) const {
   append_datas(name, "i64s", value);
 }
 
-void CFGObject::append_str(const std::string& name, const std::string& value) const {
+void CFGObject::append_str(const std::string& name,
+                           const std::string& value) const {
   append_datas(name, "str", value);
 }
 
@@ -133,9 +147,10 @@ void CFGObject::append_i64(const std::string& name, int64_t value) const {
 }
 
 void CFGObject::append_char(const std::string& name, char value) const {
-  const CFGObject_RULE * rule = get_rule(name);
+  const CFGObject_RULE* rule = get_rule(name);
   CFG_ASSERT(rule->type == "str");
-  std::string * ptr = reinterpret_cast<std::string *>(const_cast<void *>(rule->ptr));
+  std::string* ptr =
+      reinterpret_cast<std::string*>(const_cast<void*>(rule->ptr));
   ptr->push_back(value);
   update_exist(rule);
 }
@@ -183,7 +198,8 @@ bool CFGObject::read(const std::string& filepath) {
 
   std::vector<uint8_t> data;
   CFG_read_binary_file(filepath, data);
-  // at least 8 bytes name, 1 byte total object, 1 byte object (smallest bool or uint8_t), 1 byte value
+  // at least 8 bytes name, 1 byte total object, 1 byte object (smallest bool or
+  // uint8_t), 1 byte value
   CFG_ASSERT(data.size() >= 11);
 
   // Make sure filename is good
@@ -208,13 +224,13 @@ bool CFGObject::read(const std::string& filepath) {
 }
 
 // Generic, Helper
-void CFGObject::set_parent_ptr(const CFGObject * pp) const {
-  CFGObject ** ptr = const_cast<CFGObject **>(&parent_ptr);
-  (* ptr) = const_cast<CFGObject *>(pp);
+void CFGObject::set_parent_ptr(const CFGObject* pp) const {
+  CFGObject** ptr = const_cast<CFGObject**>(&parent_ptr);
+  (*ptr) = const_cast<CFGObject*>(pp);
 }
 
-const CFGObject_RULE * CFGObject::get_rule(const std::string& name) const {
-  const CFGObject_RULE * rule = nullptr;
+const CFGObject_RULE* CFGObject::get_rule(const std::string& name) const {
+  const CFGObject_RULE* rule = nullptr;
   for (auto& r : rules) {
     if (r.name == name) {
       rule = &r;
@@ -225,8 +241,8 @@ const CFGObject_RULE * CFGObject::get_rule(const std::string& name) const {
   return rule;
 }
 
-const CFGObject_RULE * CFGObject::get_rule(const void * ptr) const {
-  const CFGObject_RULE * rule = nullptr;
+const CFGObject_RULE* CFGObject::get_rule(const void* ptr) const {
+  const CFGObject_RULE* rule = nullptr;
   for (auto& r : rules) {
     if (r.ptr == ptr) {
       rule = &r;
@@ -237,18 +253,18 @@ const CFGObject_RULE * CFGObject::get_rule(const void * ptr) const {
   return rule;
 }
 
-void CFGObject::update_exist(const CFGObject_RULE * rule) const {
+void CFGObject::update_exist(const CFGObject_RULE* rule) const {
   if (!rule->is_exist) {
     rule->set_exist(true);
     if (parent_ptr != nullptr) {
-      const CFGObject_RULE * rule = parent_ptr->get_rule(this);
+      const CFGObject_RULE* rule = parent_ptr->get_rule(this);
       parent_ptr->update_exist(rule);
     }
   }
 }
 
 void CFGObject::update_exist(const std::string& name) const {
-  const CFGObject_RULE * rule = CFGObject::get_rule(name);
+  const CFGObject_RULE* rule = CFGObject::get_rule(name);
   update_exist(rule);
 }
 
@@ -258,29 +274,31 @@ bool CFGObject::check_rule(std::vector<std::string>& errors) const {
 }
 
 bool CFGObject::check_exist(const std::string& name) const {
-  const CFGObject_RULE * rule = get_rule(name);
+  const CFGObject_RULE* rule = get_rule(name);
   return rule->is_exist;
 }
 
 bool CFGObject::check_exist(std::vector<std::string>& errors) const {
   bool status = true;
   // Must follow the rule
-  for (auto &r : rules) {
-    // If the rule said this member must exist then we further check the existence
+  for (auto& r : rules) {
+    // If the rule said this member must exist then we further check the
+    // existence
     if (r.exist && !r.is_exist) {
       errors.push_back(CFG_print("%s does not exist", r.name.c_str()));
       status = false;
     }
     // Check if it has child
     if (r.type == "list") {
-      const std::vector<CFGObject *> * ptr = reinterpret_cast<const std::vector<CFGObject *> *>(r.ptr);
-      for (auto child_ptr : * ptr) {
+      const std::vector<CFGObject*>* ptr =
+          reinterpret_cast<const std::vector<CFGObject*>*>(r.ptr);
+      for (auto child_ptr : *ptr) {
         status = child_ptr->check_exist(errors) && status;
       }
     } else if (r.type == "class") {
       if (r.is_exist) {
         // For a class, only if the parent exist, we need to check the child
-        const CFGObject * ptr = reinterpret_cast<const CFGObject *>(r.ptr);
+        const CFGObject* ptr = reinterpret_cast<const CFGObject*>(r.ptr);
         status = ptr->check_exist(errors) && status;
       }
     }
@@ -292,24 +310,27 @@ uint8_t CFGObject::get_type_enum(const std::string& type) const {
   auto iter = std::find(SUPPORTED_TYPES.begin(), SUPPORTED_TYPES.end(), type);
   CFG_ASSERT(iter != SUPPORTED_TYPES.end());
   size_t distance = std::distance(SUPPORTED_TYPES.begin(), iter);
-  CFG_ASSERT(distance < 64); // The rest reserved
+  CFG_ASSERT(distance < 64);  // The rest reserved
   return (uint8_t)(distance);
 }
 
 uint64_t CFGObject::get_object_count() const {
   uint64_t count = 0;
   // Must follow the rule
-  for (auto &r : rules) {
-    // If the rule said this member must exist then we further check the existence
+  for (auto& r : rules) {
+    // If the rule said this member must exist then we further check the
+    // existence
     if (r.type == "list") {
       // For list, as long as the size() > 0, it exists
-      const std::vector<CFGObject *> * ptr = reinterpret_cast<const std::vector<CFGObject *> *>(r.ptr);
+      const std::vector<CFGObject*>* ptr =
+          reinterpret_cast<const std::vector<CFGObject*>*>(r.ptr);
       if (ptr->size()) {
         // list exist
         count++;
         // further loop each object in the list
-        const std::vector<CFGObject *> * ptr = reinterpret_cast<const std::vector<CFGObject *> *>(r.ptr);
-        for (auto child_ptr : * ptr) {
+        const std::vector<CFGObject*>* ptr =
+            reinterpret_cast<const std::vector<CFGObject*>*>(r.ptr);
+        for (auto child_ptr : *ptr) {
           count += child_ptr->get_object_count();
         }
       }
@@ -318,25 +339,26 @@ uint64_t CFGObject::get_object_count() const {
       count++;
       if (r.type == "class") {
         // if this is a class, further check the child
-        const CFGObject * ptr = reinterpret_cast<const CFGObject *>(r.ptr);
+        const CFGObject* ptr = reinterpret_cast<const CFGObject*>(r.ptr);
         count += ptr->get_object_count();
       }
     }
   }
-  return count;  
+  return count;
 }
 
 // Write
 void CFGObject::serialize(std::vector<uint8_t>& data) const {
   // Only serialize those that exists
-  for (auto &r : rules) {
+  for (auto& r : rules) {
     // Check if it has child
     if (r.type == "list") {
-      const std::vector<CFGObject *> * ptr = reinterpret_cast<const std::vector<CFGObject *> *>(r.ptr);
+      const std::vector<CFGObject*>* ptr =
+          reinterpret_cast<const std::vector<CFGObject*>*>(r.ptr);
       if (ptr->size()) {
         serialize_type_and_name(data, &r);
         CFG_write_variable_u64(data, (uint64_t)(ptr->size()));
-        for (auto child_ptr : * ptr) {
+        for (auto child_ptr : *ptr) {
           child_ptr->serialize(data);
           data.push_back(0xFF);
         }
@@ -344,7 +366,7 @@ void CFGObject::serialize(std::vector<uint8_t>& data) const {
     } else if (r.is_exist) {
       serialize_type_and_name(data, &r);
       if (r.type == "class") {
-        const CFGObject * ptr = reinterpret_cast<const CFGObject *>(r.ptr);
+        const CFGObject* ptr = reinterpret_cast<const CFGObject*>(r.ptr);
         ptr->serialize(data);
         data.push_back(0xFF);
       } else {
@@ -354,7 +376,8 @@ void CFGObject::serialize(std::vector<uint8_t>& data) const {
   }
 }
 
-void CFGObject::serialize_type_and_name(std::vector<uint8_t>& data, const CFGObject_RULE * rule) const {
+void CFGObject::serialize_type_and_name(std::vector<uint8_t>& data,
+                                        const CFGObject_RULE* rule) const {
   CFG_ASSERT(rule != nullptr);
   CFG_ASSERT(rule->name.size() >= 2 && rule->name.size() <= 16);
   uint8_t type_enum = get_type_enum(rule->type);
@@ -367,48 +390,57 @@ void CFGObject::serialize_type_and_name(std::vector<uint8_t>& data, const CFGObj
   }
 }
 
-void CFGObject::serialize_value(std::vector<uint8_t>& data, const CFGObject_RULE * rule) const {
+void CFGObject::serialize_value(std::vector<uint8_t>& data,
+                                const CFGObject_RULE* rule) const {
   CFG_ASSERT(rule != nullptr);
-  void * ptr = const_cast<void *>(rule->ptr);
+  void* ptr = const_cast<void*>(rule->ptr);
   if (rule->type == "bool") {
-    serialize_data(data, *(reinterpret_cast<bool *>(ptr)));
+    serialize_data(data, *(reinterpret_cast<bool*>(ptr)));
   } else if (rule->type == "u8") {
-    serialize_data(data, *(reinterpret_cast<uint8_t *>(ptr)));
+    serialize_data(data, *(reinterpret_cast<uint8_t*>(ptr)));
   } else if (rule->type == "u16") {
-    serialize_data(data, *(reinterpret_cast<uint16_t *>(ptr)));
+    serialize_data(data, *(reinterpret_cast<uint16_t*>(ptr)));
   } else if (rule->type == "u32") {
-    serialize_data(data, *(reinterpret_cast<uint32_t *>(ptr)));
+    serialize_data(data, *(reinterpret_cast<uint32_t*>(ptr)));
   } else if (rule->type == "u64") {
-    serialize_data(data, *(reinterpret_cast<uint64_t *>(ptr)));
+    serialize_data(data, *(reinterpret_cast<uint64_t*>(ptr)));
   } else if (rule->type == "i32") {
-    serialize_data(data, *(reinterpret_cast<int32_t *>(ptr)));
+    serialize_data(data, *(reinterpret_cast<int32_t*>(ptr)));
   } else if (rule->type == "i64") {
-    serialize_data(data, *(reinterpret_cast<int64_t *>(ptr)));
+    serialize_data(data, *(reinterpret_cast<int64_t*>(ptr)));
   } else if (rule->type == "u8s") {
-    serialize_datas(data, *(reinterpret_cast<std::vector<uint8_t> *>(ptr)), rule->compress);
+    serialize_datas(data, *(reinterpret_cast<std::vector<uint8_t>*>(ptr)),
+                    rule->compress);
   } else if (rule->type == "u16s") {
-    serialize_datas(data, *(reinterpret_cast<std::vector<uint16_t> *>(ptr)), rule->compress);
+    serialize_datas(data, *(reinterpret_cast<std::vector<uint16_t>*>(ptr)),
+                    rule->compress);
   } else if (rule->type == "u32s") {
-    serialize_datas(data, *(reinterpret_cast<std::vector<uint32_t> *>(ptr)), rule->compress);
+    serialize_datas(data, *(reinterpret_cast<std::vector<uint32_t>*>(ptr)),
+                    rule->compress);
   } else if (rule->type == "u64s") {
-    serialize_datas(data, *(reinterpret_cast<std::vector<uint64_t> *>(ptr)), rule->compress);
+    serialize_datas(data, *(reinterpret_cast<std::vector<uint64_t>*>(ptr)),
+                    rule->compress);
   } else if (rule->type == "i32s") {
-    serialize_datas(data, *(reinterpret_cast<std::vector<int32_t> *>(ptr)), rule->compress);
+    serialize_datas(data, *(reinterpret_cast<std::vector<int32_t>*>(ptr)),
+                    rule->compress);
   } else if (rule->type == "i64s") {
-    serialize_datas(data, *(reinterpret_cast<std::vector<int64_t> *>(ptr)), rule->compress);
+    serialize_datas(data, *(reinterpret_cast<std::vector<int64_t>*>(ptr)),
+                    rule->compress);
   } else if (rule->type == "str") {
-    std::string * string = reinterpret_cast<std::string *>(ptr);
-    for (auto c : * string) {
+    std::string* string = reinterpret_cast<std::string*>(ptr);
+    for (auto c : *string) {
       data.push_back((uint8_t)(c));
     }
     data.push_back(0);
   } else {
-    CFG_INTERNAL_ERROR("serialize_value(): Unsupported type %s", rule->type.c_str());
+    CFG_INTERNAL_ERROR("serialize_value(): Unsupported type %s",
+                       rule->type.c_str());
   }
 }
 
 // Read
-void CFGObject::parse_object(const uint8_t * data, size_t data_size, size_t& index, size_t& object_count) const {
+void CFGObject::parse_object(const uint8_t* data, size_t data_size,
+                             size_t& index, size_t& object_count) const {
   CFG_ASSERT(data != nullptr && data_size > 0);
   CFG_ASSERT(index < data_size);
   CFG_ASSERT(data[index] < (uint8_t)(SUPPORTED_TYPES.size()));
@@ -416,7 +448,7 @@ void CFGObject::parse_object(const uint8_t * data, size_t data_size, size_t& ind
   index++;
   CFG_ASSERT(index < data_size);
   std::string object_name = get_string(data, data_size, index, 16, 2);
-  const CFGObject_RULE * rule = get_rule(object_name);
+  const CFGObject_RULE* rule = get_rule(object_name);
   CFG_ASSERT(rule->type == object_type);
   if (object_type == "bool") {
     read_data(data, data_size, index, rule, bool(false));
@@ -447,22 +479,26 @@ void CFGObject::parse_object(const uint8_t * data, size_t data_size, size_t& ind
   } else if (object_type == "str") {
     write_data(rule, get_string(data, data_size, index));
   } else if (object_type == "class") {
-    const CFGObject * ptr = reinterpret_cast<const CFGObject *>(rule->ptr);
+    const CFGObject* ptr = reinterpret_cast<const CFGObject*>(rule->ptr);
     ptr->parse_class_object(data, data_size, index, object_count);
   } else if (object_type == "list") {
     uint64_t list_count = CFG_read_variable_u64(data, data_size, index, 10);
-    std::vector<CFGObject *> * list = reinterpret_cast<std::vector<CFGObject *> *>(const_cast<void *>(rule->ptr));
+    std::vector<CFGObject*>* list = reinterpret_cast<std::vector<CFGObject*>*>(
+        const_cast<void*>(rule->ptr));
     for (uint64_t i = 0; i < list_count; i++) {
-      CFGObject_create_child_from_names(name, object_name, const_cast<CFGObject *>(this));
+      CFGObject_create_child_from_names(name, object_name,
+                                        const_cast<CFGObject*>(this));
       list->back()->parse_class_object(data, data_size, index, object_count);
     }
   } else {
-    CFG_INTERNAL_ERROR("parse_object(): Unsupport type %s", object_type.c_str());
+    CFG_INTERNAL_ERROR("parse_object(): Unsupport type %s",
+                       object_type.c_str());
   }
   object_count++;
 }
 
-void CFGObject::parse_class_object(const uint8_t * data, size_t data_size, size_t& index, size_t& object_count) const {
+void CFGObject::parse_class_object(const uint8_t* data, size_t data_size,
+                                   size_t& index, size_t& object_count) const {
   CFG_ASSERT(data != nullptr && data_size > 0);
   CFG_ASSERT(index < data_size);
   CFG_ASSERT(data[index] != 0xFF);
@@ -475,7 +511,9 @@ void CFGObject::parse_class_object(const uint8_t * data, size_t data_size, size_
   index++;
 }
 
-std::string CFGObject::get_string(const uint8_t * data, size_t data_size, size_t& index, int max_size, int min_size, int null_check) const {
+std::string CFGObject::get_string(const uint8_t* data, size_t data_size,
+                                  size_t& index, int max_size, int min_size,
+                                  int null_check) const {
   CFG_ASSERT(data != nullptr && data_size > 0);
   std::string string = "";
   int current_index = 0;
@@ -507,24 +545,31 @@ std::string CFGObject::get_string(const uint8_t * data, size_t data_size, size_t
 }
 
 // Template
-template <typename T> void CFGObject::write_data(const CFGObject_RULE * rule, T value) const {
-  T * ptr = reinterpret_cast<T *>(const_cast<void *>(rule->ptr));
-  (* ptr) = value;
+template <typename T>
+void CFGObject::write_data(const CFGObject_RULE* rule, T value) const {
+  T* ptr = reinterpret_cast<T*>(const_cast<void*>(rule->ptr));
+  (*ptr) = value;
   update_exist(rule);
 }
 
-template <typename T> void CFGObject::write_data(const std::string& name, const std::string& type, T value) const {
-  const CFGObject_RULE * rule = get_rule(name);
+template <typename T>
+void CFGObject::write_data(const std::string& name, const std::string& type,
+                           T value) const {
+  const CFGObject_RULE* rule = get_rule(name);
   CFG_ASSERT(rule->type == type);
   write_data(rule, value);
 }
 
-template <typename T> void CFGObject::read_data(const uint8_t * data, size_t data_size, size_t& index, const CFGObject_RULE * rule, T value) const {
+template <typename T>
+void CFGObject::read_data(const uint8_t* data, size_t data_size, size_t& index,
+                          const CFGObject_RULE* rule, T value) const {
   deserialize_data(data, data_size, index, value);
   write_data(rule, value);
 }
 
-template <typename T> void CFGObject::read_datas(const uint8_t * data, size_t data_size, size_t& index, const CFGObject_RULE * rule, T value) const {
+template <typename T>
+void CFGObject::read_datas(const uint8_t* data, size_t data_size, size_t& index,
+                           const CFGObject_RULE* rule, T value) const {
   std::vector<T> values;
   uint64_t list_count = CFG_read_variable_u64(data, data_size, index, 10);
   CFG_ASSERT(list_count > 0);
@@ -535,31 +580,37 @@ template <typename T> void CFGObject::read_datas(const uint8_t * data, size_t da
   write_data(rule, values);
 }
 
-template <typename T> void CFGObject::append_datas(const std::string& name, const std::string& type, T value) const {
-  const CFGObject_RULE * rule = get_rule(name);
+template <typename T>
+void CFGObject::append_datas(const std::string& name, const std::string& type,
+                             T value) const {
+  const CFGObject_RULE* rule = get_rule(name);
   CFG_ASSERT(rule->type == type);
-  T * ptr = reinterpret_cast<T *>(const_cast<void *>(rule->ptr));
+  T* ptr = reinterpret_cast<T*>(const_cast<void*>(rule->ptr));
   ptr->insert(ptr->end(), value.begin(), value.end());
   update_exist(rule);
 }
 
-template <typename T> void CFGObject::append_data(const std::string& name, const std::string& type, T value) const {
-  const CFGObject_RULE * rule = get_rule(name);
+template <typename T>
+void CFGObject::append_data(const std::string& name, const std::string& type,
+                            T value) const {
+  const CFGObject_RULE* rule = get_rule(name);
   CFG_ASSERT(rule->type == type);
-  std::vector<T> * ptr = reinterpret_cast<std::vector<T> *>(const_cast<void *>(rule->ptr));
+  std::vector<T>* ptr =
+      reinterpret_cast<std::vector<T>*>(const_cast<void*>(rule->ptr));
   ptr->push_back(value);
   update_exist(rule);
 }
 
-template <typename T> void CFGObject::serialize_data(std::vector<uint8_t>& data, T value) const {
+template <typename T>
+void CFGObject::serialize_data(std::vector<uint8_t>& data, T value) const {
 #if defined(OPTIMIZE_DATA_LENGTH)
   if (sizeof(T) == 1) {
     data.push_back((uint8_t)(value));
   } else if (sizeof(T) == 2) {
-    uint8_t count = CFG_write_variable_u64(data, (uint64_t)(value) & 0xFFFF);
+    uint8_t count = CFG_write_variable_u64(data, (uint64_t)(value)&0xFFFF);
     CFG_ASSERT(count <= 3);
   } else if (sizeof(T) == 4) {
-    uint8_t count = CFG_write_variable_u64(data, (uint64_t)(value) & 0xFFFFFFFF);
+    uint8_t count = CFG_write_variable_u64(data, (uint64_t)(value)&0xFFFFFFFF);
     CFG_ASSERT(count <= 5);
   } else if (sizeof(T) == 8) {
     uint8_t count = CFG_write_variable_u64(data, (uint64_t)(value));
@@ -575,7 +626,9 @@ template <typename T> void CFGObject::serialize_data(std::vector<uint8_t>& data,
 #endif
 }
 
-template <typename T> void CFGObject::deserialize_data(const uint8_t * data, size_t data_size, size_t& index, T& value) const {
+template <typename T>
+void CFGObject::deserialize_data(const uint8_t* data, size_t data_size,
+                                 size_t& index, T& value) const {
   CFG_ASSERT(data != nullptr && data_size > 0);
   CFG_ASSERT(index < data_size);
 #if defined(OPTIMIZE_DATA_LENGTH)
@@ -583,7 +636,8 @@ template <typename T> void CFGObject::deserialize_data(const uint8_t * data, siz
     value = (T)(data[index]);
     index++;
   } else {
-    value = (T)(CFG_read_variable_u64(data, data_size, index, int(sizeof(T) + (sizeof(T) == 8 ? 2 : 1))));
+    value = (T)(CFG_read_variable_u64(
+        data, data_size, index, int(sizeof(T) + (sizeof(T) == 8 ? 2 : 1))));
   }
 #else
   value = 0;
@@ -593,9 +647,11 @@ template <typename T> void CFGObject::deserialize_data(const uint8_t * data, siz
 #endif
 }
 
-template <typename T> void CFGObject::serialize_datas(std::vector<uint8_t>& data, std::vector<T>& value, bool compress) const {
+template <typename T>
+void CFGObject::serialize_datas(std::vector<uint8_t>& data,
+                                std::vector<T>& value, bool compress) const {
   if (compress) {
-    uint8_t * original_data = reinterpret_cast<uint8_t *>(&value[0]);
+    uint8_t* original_data = reinterpret_cast<uint8_t*>(&value[0]);
     size_t original_size = (value.size() * sizeof(T));
     std::vector<uint8_t> compress_data;
     CFG_compress(original_data, original_size, compress_data, nullptr, false);

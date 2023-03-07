@@ -1,35 +1,32 @@
-#include <iostream>
-#include <fstream>
-#include "CFGCommon/CFGHelper.h"
 #include "BitAssembler_mgr.h"
+
 #include <stdio.h>
+
+#include <fstream>
+#include <iostream>
+
+#include "CFGCommon/CFGHelper.h"
 
 BitAssembler_MGR::BitAssembler_MGR() {
   CFG_INTERNAL_ERROR("This constructor is not supported");
 }
 
-BitAssembler_MGR::BitAssembler_MGR
-(
-  const std::string& project_path, 
-  const std::string& device
-) :
-  m_project_path(project_path),
-  m_device(device) {
+BitAssembler_MGR::BitAssembler_MGR(const std::string& project_path,
+                                   const std::string& device)
+    : m_project_path(project_path), m_device(device) {
   CFG_ASSERT(m_project_path.size());
   CFG_ASSERT(m_device.size());
 }
 
-void BitAssembler_MGR::get_fcb
-(
-  const CFGObject_BITOBJ_FCB * fcb
-) {
-  // For FCB, compiler already generate the full data in text format: fabric_bitstream.bit
-  // Manager just read it and convert it to binary
-  // Nothing much need to be done
+void BitAssembler_MGR::get_fcb(const CFGObject_BITOBJ_FCB* fcb) {
+  // For FCB, compiler already generate the full data in text format:
+  // fabric_bitstream.bit Manager just read it and convert it to binary. Nothing
+  // much need to be done
   CFG_ASSERT(fcb->get_object_count() == 0);
-  
+
   // Read fabric_bitstream.bit as text line by line, parse info out
-  std::string filepath = CFG_print("%s/fabric_bitstream.bit", m_project_path.c_str());
+  std::string filepath =
+      CFG_print("%s/fabric_bitstream.bit", m_project_path.c_str());
   std::fstream file;
   file.open(filepath.c_str(), std::ios::in);
   CFG_ASSERT_MSG(file.is_open(), "Fail to open %s", filepath.c_str());
@@ -41,12 +38,12 @@ void BitAssembler_MGR::get_fcb
   while (getline(file, line)) {
     // Only trim the trailing whitespace
     CFG_get_rid_trailing_whitespace(line);
-    
+
     if (line.size() == 0) {
       // allow blank line
       continue;
     }
-    
+
     // Strict checking on the format
     if (line_tracking == 0) {
       // First line must start with this keyword
@@ -84,7 +81,8 @@ void BitAssembler_MGR::get_fcb
           CFG_ASSERT(fcb->width);
         } else {
           // Unknown -- put it into warning
-          m_warnings.push_back(CFG_print("FCB Parser :: unknown :: %s", line.c_str()));
+          m_warnings.push_back(
+              CFG_print("FCB Parser :: unknown :: %s", line.c_str()));
         }
       } else {
         // Start of data
@@ -102,12 +100,9 @@ void BitAssembler_MGR::get_fcb
   file.close();
 }
 
-template <typename T> uint32_t BitAssembler_MGR::get_bitline_into_bytes
-(
-  T start, 
-  T end,
-  std::vector<uint8_t>& bytes
-) {
+template <typename T>
+uint32_t BitAssembler_MGR::get_bitline_into_bytes(T start, T end,
+                                                  std::vector<uint8_t>& bytes) {
   CFG_ASSERT(start != end);
   uint32_t index = 0;
   while (start != end) {
@@ -125,14 +120,12 @@ template <typename T> uint32_t BitAssembler_MGR::get_bitline_into_bytes
   return index;
 }
 
-uint32_t BitAssembler_MGR::get_bitline_into_bytes
-(
-  const std::string& line, 
-  std::vector<uint8_t>& bytes, 
-  const uint32_t expected_bit, 
-  const bool lsb
-) {
+uint32_t BitAssembler_MGR::get_bitline_into_bytes(const std::string& line,
+                                                  std::vector<uint8_t>& bytes,
+                                                  const uint32_t expected_bit,
+                                                  const bool lsb) {
   CFG_ASSERT(line.size());
   CFG_ASSERT(expected_bit == 0 || expected_bit == line.size());
-  return (lsb ? get_bitline_into_bytes(line.begin(), line.end(), bytes) : get_bitline_into_bytes(line.rbegin(), line.rend(), bytes));
+  return (lsb ? get_bitline_into_bytes(line.begin(), line.end(), bytes)
+              : get_bitline_into_bytes(line.rbegin(), line.rend(), bytes));
 }

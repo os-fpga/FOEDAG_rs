@@ -22,25 +22,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef BITASSEMBLER_MGR_H
 #define BITASSEMBLER_MGR_H
 
-#include "CFGObject/CFGObject_auto.h"
 #include <string>
 #include <vector>
 
-class BitAssembler_MGR {
+#include "CFGObject/CFGObject_auto.h"
 
-public:
-    
+class BitAssembler_MGR {
+ public:
   BitAssembler_MGR();
-  
+
   BitAssembler_MGR(const std::string& project_path, const std::string& device);
-  void get_fcb(const CFGObject_BITOBJ_FCB * fcb);
+  void get_fcb(const CFGObject_BITOBJ_FCB* fcb);
   std::vector<std::string> m_warnings;
 
-private:
-    
-  template <typename T> uint32_t get_bitline_into_bytes(T start, T end, std::vector<uint8_t>& bytes);
-  uint32_t get_bitline_into_bytes(const std::string& line, std::vector<uint8_t>& bytes, const uint32_t expected_bit = 0, const bool lsb = true);
-    
+ private:
+  template <typename T>
+  uint32_t get_bitline_into_bytes(T start, T end, std::vector<uint8_t>& bytes);
+  uint32_t get_bitline_into_bytes(const std::string& line,
+                                  std::vector<uint8_t>& bytes,
+                                  const uint32_t expected_bit = 0,
+                                  const bool lsb = true);
+
   const std::string m_project_path;
   const std::string m_device;
 };
