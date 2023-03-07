@@ -50,6 +50,17 @@ foreach(SUBSYSTEM ${SUBSYSTEMS})
     )
 endforeach()
 
+if(MSVC)
+	foreach(SUBSYSTEM ${SUBSYSTEMS})
+		string(TOLOWER ${SUBSYSTEM} SUBSYSTEM)
+	  set_property(TARGET ${SUBSYSTEM} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+	  set_property(TARGET ${SUBSYSTEM} PROPERTY COMPILER_FLAGS /DSTATIC_BUILD)
+	  set_target_properties(${SUBSYSTEM} PROPERTIES
+	    COMPILE_OPTIONS "$<$<CONFIG:Debug>:/MTd>$<$<CONFIG:Release>:/MT>"
+	  )
+	endforeach()
+endif()
+
 # default dependencies on pre-configuration (within configuration itself)
 foreach(SUBSYSTEM ${PRE-SUBSYSTEMS})
 	string(TOLOWER ${SUBSYSTEM} SUBSYSTEM)

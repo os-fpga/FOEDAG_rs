@@ -231,8 +231,8 @@ void CFG_write_binary_file
 
 void CFG_compress
 (
-  const uint8_t * input, 
-  const size_t input_size, 
+  const uint8_t * input,
+  const size_t input_size,
   std::vector<uint8_t>& output,
   size_t * header_size,
   const bool debug,
