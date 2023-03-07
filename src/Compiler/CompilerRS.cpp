@@ -878,13 +878,14 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "   set_top_testbench <module> : Sets the top-level testbench "
             "module/entity"
          << std::endl;
-  (*out)
-      << "   simulation_options <simulator> <task> ?<level>? <options> : "
-         "Sets the simulator-specific options for the specified simulator task"
-      << std::endl;
-  (*out)
-      << "                       <task> : compilation, elaboration, simulation"
-      << std::endl;
+  (*out) << "   simulation_options <simulator> <phase> ?<level>? <options>"
+         << std::endl;
+  (*out) << "                                Sets the simulator specific "
+            "options for the specified phase"
+         << std::endl;
+  (*out) << "                      <phase> : compilation, elaboration, "
+            "simulation, extra_options"
+         << std::endl;
   (*out) << "   simulate <level> ?<simulator>? ?<waveform_file>?: Simulates "
             "the design and testbench"
          << std::endl;
