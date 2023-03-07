@@ -52,12 +52,35 @@ endforeach()
 
 if(MSVC)
 	foreach(SUBSYSTEM ${SUBSYSTEMS})
+		list(FIND ${POST-SUBSYSTEMS} ${SUBSYSTEM} subsystem_index)	
 		string(TOLOWER ${SUBSYSTEM} SUBSYSTEM)
-	  set_property(TARGET ${SUBSYSTEM} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-	  set_property(TARGET ${SUBSYSTEM} PROPERTY COMPILER_FLAGS /DSTATIC_BUILD)
-	  set_target_properties(${SUBSYSTEM} PROPERTIES
-	    COMPILE_OPTIONS "$<$<CONFIG:Debug>:/MTd>$<$<CONFIG:Release>:/MT>"
-	  )
+		set_property(TARGET ${SUBSYSTEM} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+		set_property(TARGET ${SUBSYSTEM} PROPERTY COMPILER_FLAGS /DSTATIC_BUILD)
+		set_target_properties(${SUBSYSTEM} PROPERTIES
+			COMPILE_OPTIONS "$<$<CONFIG:Debug>:/MTd>$<$<CONFIG:Release>:/MT>"
+		)
+		# Every subsystem will have test
+		set_property(TARGET ${SUBSYSTEM}_test 
+			PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+		)
+		set_property(TARGET ${SUBSYSTEM}_test 
+			PROPERTY COMPILER_FLAGS /DSTATIC_BUILD
+		)
+		set_target_properties(${SUBSYSTEM}_test PROPERTIES
+			COMPILE_OPTIONS "$<$<CONFIG:Debug>:/MTd>$<$<CONFIG:Release>:/MT>"
+		)
+		if (${subsystem_index} GREATER -1)
+			# Currently only ${POST-SUBSYSTEMS} has raptor_xxxx
+			set_property(TARGET raptor_${SUBSYSTEM} 
+				PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+			)
+			set_property(TARGET raptor_${SUBSYSTEM}
+				PROPERTY COMPILER_FLAGS /DSTATIC_BUILD
+			)
+			set_target_properties(raptor_${SUBSYSTEM} PROPERTIES
+				COMPILE_OPTIONS "$<$<CONFIG:Debug>:/MTd>$<$<CONFIG:Release>:/MT>"
+			)
+		endif()
 	endforeach()
 endif()
 
