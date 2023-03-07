@@ -52,7 +52,7 @@ endforeach()
 
 if(MSVC)
 	foreach(SUBSYSTEM ${SUBSYSTEMS})
-		list(FIND ${POST-SUBSYSTEMS} ${SUBSYSTEM} subsystem_index)	
+		list(FIND POST-SUBSYSTEMS ${SUBSYSTEM} subsystem_index)	
 		string(TOLOWER ${SUBSYSTEM} SUBSYSTEM)
 		set_property(TARGET ${SUBSYSTEM} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 		set_property(TARGET ${SUBSYSTEM} PROPERTY COMPILER_FLAGS /DSTATIC_BUILD)
