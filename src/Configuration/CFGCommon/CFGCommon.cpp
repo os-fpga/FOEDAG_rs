@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "CFGCompress.h"
 #include "CFGHelper.h"
-#include "CFGMessager.h"
 
 /*
   All about Helper
@@ -234,21 +233,3 @@ void CFG_decompress(const uint8_t* input, const size_t input_size,
   CFG_ASSERT(input_size > 0);
   CFG_COMPRESS::decompress(input, input_size, output, debug);
 }
-
-/*
-  All about Messager
-*/
-
-void CFGMessager::add_msg(const std::string& m) {
-  msgs.push_back(CFGMessage(CFGMessageType_INFO, m));
-}
-
-void CFGMessager::add_error(const std::string& m) {
-  msgs.push_back(CFGMessage(CFGMessageType_ERROR, m));
-}
-
-void CFGMessager::append_error(const std::string& m) {
-  msgs.push_back(CFGMessage(CFGMessageType_ERROR_APPEND, m));
-}
-
-void CFGMessager::clear() { msgs.clear(); }

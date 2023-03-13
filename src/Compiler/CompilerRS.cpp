@@ -32,6 +32,7 @@ All rights reserved
 // Configuration
 #include "Configuration/BitAssembler/BitAssembler.h"
 #include "Configuration/BitGenerator/BitGenerator.h"
+#include "Configuration/CFGCommon/CFGHelper.h"
 
 #ifdef PRODUCTION_BUILD
 #include "License_manager.hpp"
@@ -116,15 +117,7 @@ static auto assembler_flow(CompilerRS *compiler, bool batchMode, int argc,
     }
   }
   // Call BITASM
-  CFGMessager msger;
-  BitAssembler_entry(bitasm_arg, msger);
-  for (auto m : msger.msgs) {
-    if (m.type == CFGMessageType_INFO) {
-      compiler->Message(m.msg);
-    } else {
-      compiler->ErrorMessage(m.msg, m.type == CFGMessageType_ERROR_APPEND);
-    }
-  }
+  BitAssembler_entry(bitasm_arg);
   return TCL_OK;
 }
 
@@ -376,6 +369,7 @@ CompilerRS::CompilerRS() : CompilerOpenFPGA() {
   m_synthType = SynthesisType::RS;
   m_netlistType = NetlistType::Verilog;
   m_channel_width = 200;
+  CFGManager::register_compiler(this);
 }
 
 void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {

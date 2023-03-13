@@ -3,6 +3,7 @@
 
 #define CFG_CMP_MIN_REPEAT_LENGTH_SEARCH (3)
 #define CFG_CMP_MAX_REPEAT_LENGTH_SEARCH (50)
+#define CFG_CMP_MAX_REPEAT_SAME_PATTERN (100)
 #define CFG_CMP_NONE (0)
 #define CFG_CMP_ZERO (1)
 #define CFG_CMP_ZERO_VAR (2)
@@ -23,6 +24,10 @@ void CFG_COMPRESS::analyze_repeat(const uint8_t* input, const size_t input_size,
     return;
   }
   size_t temp_length = CFG_CMP_MIN_REPEAT_LENGTH_SEARCH;
+  uint8_t repeated_check_seq = 0;
+  uint8_t repeated_byte = input[index];
+  size_t repeated_check_index = index;
+  size_t repeated_check_size = 0;
   while (temp_length <= (size_t)(total_length / 2)) {
     if (length == 0 && temp_length > CFG_CMP_MAX_REPEAT_LENGTH_SEARCH) {
       break;
@@ -33,6 +38,27 @@ void CFG_COMPRESS::analyze_repeat(const uint8_t* input, const size_t input_size,
     size_t chunk1_start = chunk0_start + temp_length;
     CFG_ASSERT(chunk1_start < input_size);
     CFG_ASSERT((chunk1_start + temp_length) <= input_size);
+    if (repeated_check_seq == 0) {
+      repeated_check_seq = 1;
+      for (uint32_t i = 0; i < (2 * CFG_CMP_MIN_REPEAT_LENGTH_SEARCH); i++, repeated_check_index++, repeated_check_size++) {
+        if (input[repeated_check_index] != repeated_byte) {
+          repeated_check_seq = 2;
+          break;
+        }
+      }
+    } else if (repeated_check_seq == 1) {
+      if (input[repeated_check_index++] == repeated_byte &&
+          input[repeated_check_index++] == repeated_byte) {
+        repeated_check_size += 2;
+        if (repeated_check_size >= CFG_CMP_MAX_REPEAT_SAME_PATTERN) {
+          length = 0;
+          repeat = 0;
+          break;
+        }
+      } else {
+        repeated_check_seq = 2;
+      }
+    }
     if (memcmp(&input[chunk0_start], &input[chunk1_start], temp_length) == 0) {
       length = temp_length;
     } else if (length) {
@@ -307,19 +333,20 @@ void CFG_COMPRESS::compress(const uint8_t* input, const size_t input_size,
       size_t chunk_pattern =
           analyze_chunk_pattern(input, input_size, index, length);
       CFG_ASSERT(chunk_pattern < CFG_CMP_INVALID);
-      if (chunk_pattern == CFG_CMP_ZERO || chunk_pattern == CFG_CMP_HIGH) {
+      if (chunk_pattern == CFG_CMP_ZERO || chunk_pattern == CFG_CMP_HIGH || chunk_pattern == CFG_CMP_VAR) {
         // There might be more 0's or FF's
         length = length * (repeat + 1);
-        uint8_t compress_byte = chunk_pattern == CFG_CMP_ZERO ? 0 : 0xFF;
+        uint8_t compress_byte = chunk_pattern == CFG_CMP_VAR ? input[index] : (chunk_pattern == CFG_CMP_ZERO ? 0 : 0xFF);
         index += length;
         int followup_byte = -1;
         while (index < input_size) {
           if (input[index] == compress_byte) {
             length++;
+          } else if (chunk_pattern == CFG_CMP_VAR) {
+            break;
+          } else if (!support_followup_byte) {
+            break;
           } else {
-            if (!support_followup_byte) {
-              break;
-            }
             followup_byte = int(input[index]) & 0xFF;
           }
           index++;

@@ -94,16 +94,13 @@ class CFGObject {
   void append_char(const std::string& name, char value) const;
 
   // File IO
-  bool write(const std::string& filepath);
-  bool read(const std::string& filepath);
+  bool write(const std::string& filepath, std::vector<std::string>* errors = nullptr);
+  bool read(const std::string& filepath, std::vector<std::string>* errors = nullptr);
 
   // Generic, Helper (Public)
   void set_parent_ptr(const CFGObject* pp) const;
   uint64_t get_object_count() const;
   bool check_exist(const std::string& name) const;
-
-  // Member
-  std::vector<std::string> error_msgs;
 
  protected:
   // Generic, Helper
@@ -111,8 +108,8 @@ class CFGObject {
   const CFGObject_RULE* get_rule(const void* ptr) const;
   void update_exist(const CFGObject_RULE* rule) const;
   void update_exist(const std::string& name) const;
-  bool check_rule(std::vector<std::string>& errors) const;
-  bool check_exist(std::vector<std::string>& errors) const;
+  bool check_rule(std::vector<std::string>* errors) const;
+  bool check_exist(std::vector<std::string>* errors) const;
   uint8_t get_type_enum(const std::string& type) const;
 
   // Write

@@ -107,6 +107,6 @@ endforeach()
 foreach(file ${SRC_H_INSTALL_LIST})
   install(
     FILES ${PROJECT_SOURCE_DIR}/${file}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/foedag/BitGenerator
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/foedag/CFGObject
   )
 endforeach()

@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 
 #include "CFGHelper.h"
-#include "CFGMessager.h"
 
 void test_case_compression(uint32_t& index, std::vector<uint8_t> input) {
   printf("********************** Test Case #%d **********************\n",
@@ -70,7 +69,9 @@ void test_compression() {
   test_case_compression(
       index, {1, 2, 3, 3, 4, 5, 6, 0, 0, 1, 2, 3, 4, 4, 5, 6, 6, 0, 0});
 }
+
 int main(int argc, char** argv) {
   printf("This is CFGCommon unit test\n");
   test_compression();
+  return 0;
 }

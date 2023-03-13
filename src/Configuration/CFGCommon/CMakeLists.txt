@@ -51,11 +51,14 @@ endif()
 # subsystem library
 #
 ###################
+include (${CFG_PROJECT_ROOT_DIR}/FOEDAG/cmake/cmake_qt.txt)
 add_library(
   ${subsystem} ${CFG_LIB_TYPE}
   CFGCommon.cpp
   CFGCompress.cpp
+  CFGManager.cpp
 )
+target_link_libraries(${subsystem} PUBLIC Qt5::Widgets)
 
 ###################
 #
@@ -93,6 +96,6 @@ endforeach()
 foreach(file ${SRC_H_INSTALL_LIST})
   install(
     FILES ${PROJECT_SOURCE_DIR}/${file}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/foedag/BitGenerator
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/foedag/CFGCommon
   )
 endforeach()

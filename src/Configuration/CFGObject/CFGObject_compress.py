@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 
 CMP_NONE = 0
 CMP_ZERO = 1
@@ -10,7 +11,9 @@ CMP_HIGH_VAR = 5
 CMP_VAR_HIGH = 6
 CMP_VAR = 7
 CMP_INVALID = 8
+MIN_REPEAT_SEARCH = 3
 MAX_REPEAT_SEARCH = 50
+MAX_REPEAT_SAME_PATTERN = 100
 
 def write_variable_length(data, value) :
 
@@ -76,11 +79,15 @@ def analyze_single_chunk(data, index, length) :
 def analyze_repeat(data, index, debug) :
 
     total_length = len(data) - index
-    if total_length < 6 :
+    if total_length < (2 * MIN_REPEAT_SEARCH) :
         return (0, 0)
-    length = 3
+    length = MIN_REPEAT_SEARCH
     repeat_length = 0
     repeat = 0
+    repeated_check_seq = 0
+    repeated_byte = data[index]
+    repeated_check_index = index
+    repeated_check_size = 0
     while length <= (total_length//2) :
         # if we still cannot find any repeat for consecutive MAX_REPEAT_SEARCH, just terminate
         if repeat_length == 0 and length > MAX_REPEAT_SEARCH :
@@ -93,6 +100,26 @@ def analyze_repeat(data, index, debug) :
         assert chunk0_end_p1 < len(data)
         assert chunk1_start < len(data)
         assert chunk1_end_p1 <= len(data)
+        # If too many repeat, we break early otherwise if the file is big, it take a lot of time to process
+        if repeated_check_seq == 0 :
+            repeated_check_seq = 1
+            for i in range(2 * MIN_REPEAT_SEARCH) :
+                if data[repeated_check_index] != repeated_byte :
+                    repeated_check_seq = 2
+                    break
+                repeated_check_index += 1
+                repeated_check_size += 1
+        elif repeated_check_seq == 1 :
+            if data[repeated_check_index] == repeated_byte and \
+                data[repeated_check_index+1] == repeated_byte :
+                repeated_check_index += 2
+                repeated_check_size += 2
+                if repeated_check_size >= MAX_REPEAT_SAME_PATTERN :
+                    repeat_length = 0
+                    repeat = 0
+                    break
+            else :
+                repeated_check_seq = 2
         identical = data[chunk0_start:chunk0_end_p1] == data[chunk1_start:chunk1_end_p1]
         if identical :
             # look for next
@@ -386,6 +413,8 @@ def uncompress(filepath, debug) :
     file.close()
 
 if __name__ == "__main__":
+
+    start_time = time.time()
     assert len(sys.argv) >= 3
     assert sys.argv[1] in ["compress", "uncompress"]
     assert os.path.exists(sys.argv[2])
@@ -394,3 +423,5 @@ if __name__ == "__main__":
         compress(sys.argv[2], debug)
     else :
         uncompress(sys.argv[2], debug)
+    end_time = time.time()
+    print("Elapsed time: %d second(s)" % (end_time - start_time))

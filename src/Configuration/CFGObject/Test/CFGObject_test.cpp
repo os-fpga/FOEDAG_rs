@@ -41,15 +41,17 @@ const std::vector<std::string> SECOND_TEST_OBJECT_ERRORS = {
 int main(int argc, char** argv) {
   printf("This is CFGObject unit test\n");
   CFGObject_UTST utst;
-  CFG_ASSERT(!utst.write("utst.bin"));
-  CFG_ASSERT(utst.error_msgs.size() == EMPTY_OBJECT_ERRORS.size());
+  std::vector<std::string> errors;
+  CFG_ASSERT(!utst.write("utst.bin", &errors));
+  CFG_ASSERT(errors.size() == EMPTY_OBJECT_ERRORS.size());
   size_t index = 0;
-  for (auto str : utst.error_msgs) {
+  for (auto str : errors) {
     CFG_ASSERT_MSG(str == EMPTY_OBJECT_ERRORS[index],
                    "Empty Object Test: \"%s\" vs \"%s\"", str.c_str(),
                    EMPTY_OBJECT_ERRORS[index].c_str());
     index++;
   }
+  errors.clear();
 
   // Write some data and re-check
   CFG_ASSERT(!utst.boolean);
@@ -84,15 +86,16 @@ int main(int argc, char** argv) {
   CFG_ASSERT(utst.list0.back()->u16s[0] == 1000);
 
   // Check the error msg again
-  CFG_ASSERT(!utst.write("utst.bin"));
-  CFG_ASSERT(utst.error_msgs.size() == FIRST_TEST_OBJECT_ERRORS.size());
+  CFG_ASSERT(!utst.write("utst.bin", &errors));
+  CFG_ASSERT(errors.size() == FIRST_TEST_OBJECT_ERRORS.size());
   index = 0;
-  for (auto str : utst.error_msgs) {
+  for (auto str : errors) {
     CFG_ASSERT_MSG(str == FIRST_TEST_OBJECT_ERRORS[index],
                    "First test Object Test: \"%s\" vs \"%s\"", str.c_str(),
                    FIRST_TEST_OBJECT_ERRORS[index].c_str());
     index++;
   }
+  errors.clear();
 
   // Assign almost all needed data
   utst.write_u8("u8", 3);
@@ -106,28 +109,29 @@ int main(int argc, char** argv) {
   utst.object.write_u8s("u8s0", {8, 9});
 
   // Check the error msg again
-  CFG_ASSERT(!utst.write("utst.bin"));
-  CFG_ASSERT(utst.error_msgs.size() == SECOND_TEST_OBJECT_ERRORS.size());
+  CFG_ASSERT(!utst.write("utst.bin", &errors));
+  CFG_ASSERT(errors.size() == SECOND_TEST_OBJECT_ERRORS.size());
   index = 0;
-  for (auto str : utst.error_msgs) {
+  for (auto str : errors) {
     CFG_ASSERT_MSG(str == SECOND_TEST_OBJECT_ERRORS[index],
                    "Second test Object Test: \"%s\" vs \"%s\"", str.c_str(),
                    SECOND_TEST_OBJECT_ERRORS[index].c_str());
     index++;
   }
+  errors.clear();
 
   // Assign all needed data
   utst.list0.back()->list01.back()->write_u64s("u64s", {0, 1, 2});
   utst.object.write_str("str0", "This is second string");
 
   // Successfully write
-  CFG_ASSERT(utst.write("utst.bin"));
-  CFG_ASSERT(utst.error_msgs.size() == 0);
+  CFG_ASSERT(utst.write("utst.bin", &errors));
+  CFG_ASSERT(errors.size() == 0);
 
   // Read back
   CFGObject_UTST rdback;
-  CFG_ASSERT(rdback.read("utst.bin"));
-  CFG_ASSERT(rdback.error_msgs.size() == 0);
+  CFG_ASSERT(rdback.read("utst.bin", &errors));
+  CFG_ASSERT(errors.size() == 0);
 
   return 0;
 }

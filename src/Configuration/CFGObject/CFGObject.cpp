@@ -18,8 +18,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#include <stdio.h>
 #include "CFGObject_auto.h"
-#include "stdio.h"
 
 #define OPTIMIZE_DATA_LENGTH
 
@@ -155,14 +156,13 @@ void CFGObject::append_char(const std::string& name, char value) const {
   update_exist(rule);
 }
 
-bool CFGObject::write(const std::string& filepath) {
+bool CFGObject::write(const std::string& filepath, std::vector<std::string>* errors) {
   // Only allow writing data at top level
   CFG_ASSERT(parent_ptr == nullptr);
   CFG_ASSERT(name.size() >= 2 && name.size() <= 8);
-  error_msgs.clear();
 
   // Make sure all the rule meet
-  bool status = check_rule(error_msgs);
+  bool status = check_rule(errors);
   if (status) {
     // Serialize data (fixed 8 bytes)
     std::vector<uint8_t> data;
@@ -186,11 +186,10 @@ bool CFGObject::write(const std::string& filepath) {
   return status;
 }
 
-bool CFGObject::read(const std::string& filepath) {
+bool CFGObject::read(const std::string& filepath, std::vector<std::string>* errors) {
   // Only allow reading data at top level
   CFG_ASSERT(parent_ptr == nullptr);
   CFG_ASSERT(name.size() >= 2 && name.size() <= 8);
-  error_msgs.clear();
 
   // The class should be started from a blank one
   uint64_t object_count = get_object_count();
@@ -220,7 +219,7 @@ bool CFGObject::read(const std::string& filepath) {
   CFG_ASSERT((uint64_t)(parsed_object_count) == object_count);
 
   // Check rule
-  return check_rule(error_msgs);
+  return check_rule(errors);
 }
 
 // Generic, Helper
@@ -268,7 +267,7 @@ void CFGObject::update_exist(const std::string& name) const {
   update_exist(rule);
 }
 
-bool CFGObject::check_rule(std::vector<std::string>& errors) const {
+bool CFGObject::check_rule(std::vector<std::string>* errors) const {
   // Currently only support one ruleis_exist
   return check_exist(errors);
 }
@@ -278,14 +277,14 @@ bool CFGObject::check_exist(const std::string& name) const {
   return rule->is_exist;
 }
 
-bool CFGObject::check_exist(std::vector<std::string>& errors) const {
+bool CFGObject::check_exist(std::vector<std::string>* errors) const {
   bool status = true;
   // Must follow the rule
   for (auto& r : rules) {
     // If the rule said this member must exist then we further check the
     // existence
     if (r.exist && !r.is_exist) {
-      errors.push_back(CFG_print("%s does not exist", r.name.c_str()));
+      CFG_POST_ERR("%s does not exist", r.name.c_str());
       status = false;
     }
     // Check if it has child

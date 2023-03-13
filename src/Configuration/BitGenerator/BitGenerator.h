@@ -22,8 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef BITGENERATOR_H
 #define BITGENERATOR_H
 
-#include "Configuration/CFGCommon/CFGMessager.h"
-
-void BitGenerator_entry(CFGMessager& msger);
+void BitGenerator_entry();
 
 #endif

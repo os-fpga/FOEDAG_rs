@@ -19,6 +19,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
+#include "CFGCommon/CFGHelper.h"
 
-int main(int argc, char** argv) { printf("This is dummy Bit Generator\n"); }
+int main(int argc, char** argv) { 
+  CFG_POST_MSG("This is dummy Bit Generator\n"); 
+}

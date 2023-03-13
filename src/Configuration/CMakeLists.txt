@@ -13,9 +13,14 @@ add_custom_target(pre-configuration
 		echo "This is top level build for Pre-Configuration subsystem. It does not really build any target but it defines all subsystem or subdirectory that need to be built in configuration first"
 	)
 
-list(APPEND NO-COMMON-PRE-SUBSYSTEMS CFGObject)
-list(APPEND PRE-SUBSYSTEMS CFGCommon ${NO-COMMON-PRE-SUBSYSTEMS})
-list(APPEND POST-SUBSYSTEMS BitAssembler BitGenerator)
+# Define the subsystem here
+list(APPEND LEVEL1_SUBSYSTEMS CFGCommon)
+list(APPEND LEVEL2_SUBSYSTEMS CFGObject)
+list(APPEND LEVEL3_SUBSYSTEMS BitAssembler BitGenerator)
+
+# Only change this if you know what it does
+list(APPEND PRE-SUBSYSTEMS ${LEVEL1_SUBSYSTEMS} ${LEVEL2_SUBSYSTEMS})
+list(APPEND POST-SUBSYSTEMS ${LEVEL3_SUBSYSTEMS})
 list(APPEND SUBSYSTEMS ${PRE-SUBSYSTEMS} ${POST-SUBSYSTEMS})
 
 # set parent scope directory definition before subdirectory is added so that it can be inherited
@@ -41,12 +46,14 @@ endforeach()
 foreach(SUBSYSTEM ${SUBSYSTEMS})
 	string(TOLOWER ${SUBSYSTEM} SUBSYSTEM)
 	target_include_directories(${SUBSYSTEM} PUBLIC
+				${CFG_PROJECT_ROOT_DIR}
         ${CFG_PROJECT_ROOT_DIR}/FOEDAG/src
         ${CFG_PROJECT_ROOT_DIR}/src
         ${CFG_PROJECT_ROOT_DIR}/src/Configuration
         ${CFG_BUILD_ROOT_DIR}/include
         ${CFG_BUILD_ROOT_DIR}/src
         ${CFG_BUILD_ROOT_DIR}/src/Configuration
+        ${CFG_BUILD_ROOT_DIR}/FOEDAG/include
     )
 endforeach()
 
@@ -105,17 +112,19 @@ foreach(SUBSYSTEM ${SUBSYSTEMS})
 	add_dependencies(configuration ${SUBSYSTEM})
 endforeach()
 
-foreach(SUBSYSTEM ${NO-COMMON-PRE-SUBSYSTEMS})
+# default dependencies on configuraiton (with outside world)
+# 	at top-level CMakeLists.txt, we defined configuration dependencies
+#		for example: add_dependencies(configuration xxxxx)
+#   this default dependencis make sure all the subsystem inherit configuration dependencies
+foreach(SUBSYSTEM ${SUBSYSTEMS})
 	string(TOLOWER ${SUBSYSTEM} SUBSYSTEM)
-	target_link_libraries(${SUBSYSTEM} INTERFACE cfgcommon)
-endforeach()
-
-foreach(SUBSYSTEM ${POST-SUBSYSTEMS})
-	string(TOLOWER ${SUBSYSTEM} SUBSYSTEM)
-	target_link_libraries(${SUBSYSTEM} INTERFACE cfgcommon)
+	if (NOT SUBSYSTEM STREQUAL "cfgcommon")
+		target_link_libraries(${SUBSYSTEM} INTERFACE cfgcommon)
+	endif()
 endforeach()
 
 # Custom dependencies
 # 	This is custom dependencies within configuration subsystem
 # Example BitAssembler use CFGObject library 
+add_dependencies(cfgcommon tcl_stubb_build)
 target_link_libraries(bitassembler INTERFACE cfgobject)
