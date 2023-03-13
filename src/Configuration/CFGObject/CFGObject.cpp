@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <stdio.h>
+
 #include "CFGObject_auto.h"
 
 #define OPTIMIZE_DATA_LENGTH
@@ -156,7 +157,8 @@ void CFGObject::append_char(const std::string& name, char value) const {
   update_exist(rule);
 }
 
-bool CFGObject::write(const std::string& filepath, std::vector<std::string>* errors) {
+bool CFGObject::write(const std::string& filepath,
+                      std::vector<std::string>* errors) {
   // Only allow writing data at top level
   CFG_ASSERT(parent_ptr == nullptr);
   CFG_ASSERT(name.size() >= 2 && name.size() <= 8);
@@ -186,7 +188,8 @@ bool CFGObject::write(const std::string& filepath, std::vector<std::string>* err
   return status;
 }
 
-bool CFGObject::read(const std::string& filepath, std::vector<std::string>* errors) {
+bool CFGObject::read(const std::string& filepath,
+                     std::vector<std::string>* errors) {
   // Only allow reading data at top level
   CFG_ASSERT(parent_ptr == nullptr);
   CFG_ASSERT(name.size() >= 2 && name.size() <= 8);

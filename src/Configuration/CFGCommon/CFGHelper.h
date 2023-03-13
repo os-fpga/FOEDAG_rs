@@ -85,9 +85,8 @@ void CFG_compress(const uint8_t* input, const size_t input_size,
 void CFG_decompress(const uint8_t* input, const size_t input_size,
                     std::vector<uint8_t>& output, const bool debug = false);
 
-class CFGManager
-{
-public:
+class CFGManager {
+ public:
   static void post_msg(const std::string& msg);
   static void post_err(const std::string& msg);
   static void post_err_no_append(const std::string& msg);

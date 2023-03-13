@@ -51,7 +51,9 @@ void BitAssembler_entry(const BitAssemblerArg& args) {
     mgr.get_fcb(&bitobj.fcb);
 
     // Writing out
-    CFG_POST_MSG("   Status: %s", bitobj.write(bitasm_file) ? "success" : "fail");
+    CFG_POST_MSG("   Status: %s",
+                 bitobj.write(bitasm_file) ? "success" : "fail");
   }
-  CFG_POST_MSG("BITASM elapsed time: %.3f seconds", CFG_time_elapse(time_begin));
+  CFG_POST_MSG("BITASM elapsed time: %.3f seconds",
+               CFG_time_elapse(time_begin));
 }

@@ -40,7 +40,8 @@ void CFG_COMPRESS::analyze_repeat(const uint8_t* input, const size_t input_size,
     CFG_ASSERT((chunk1_start + temp_length) <= input_size);
     if (repeated_check_seq == 0) {
       repeated_check_seq = 1;
-      for (uint32_t i = 0; i < (2 * CFG_CMP_MIN_REPEAT_LENGTH_SEARCH); i++, repeated_check_index++, repeated_check_size++) {
+      for (uint32_t i = 0; i < (2 * CFG_CMP_MIN_REPEAT_LENGTH_SEARCH);
+           i++, repeated_check_index++, repeated_check_size++) {
         if (input[repeated_check_index] != repeated_byte) {
           repeated_check_seq = 2;
           break;
@@ -333,10 +334,14 @@ void CFG_COMPRESS::compress(const uint8_t* input, const size_t input_size,
       size_t chunk_pattern =
           analyze_chunk_pattern(input, input_size, index, length);
       CFG_ASSERT(chunk_pattern < CFG_CMP_INVALID);
-      if (chunk_pattern == CFG_CMP_ZERO || chunk_pattern == CFG_CMP_HIGH || chunk_pattern == CFG_CMP_VAR) {
+      if (chunk_pattern == CFG_CMP_ZERO || chunk_pattern == CFG_CMP_HIGH ||
+          chunk_pattern == CFG_CMP_VAR) {
         // There might be more 0's or FF's
         length = length * (repeat + 1);
-        uint8_t compress_byte = chunk_pattern == CFG_CMP_VAR ? input[index] : (chunk_pattern == CFG_CMP_ZERO ? 0 : 0xFF);
+        uint8_t compress_byte =
+            chunk_pattern == CFG_CMP_VAR
+                ? input[index]
+                : (chunk_pattern == CFG_CMP_ZERO ? 0 : 0xFF);
         index += length;
         int followup_byte = -1;
         while (index < input_size) {
