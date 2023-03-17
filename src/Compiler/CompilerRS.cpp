@@ -523,6 +523,14 @@ std::string CompilerRS::BaseVprCommand() {
   }
 
   std::string pnrOptions;
+  if (ClbPackingOption() == ClbPacking::Auto) {
+    pnrOptions +=
+        " --allow_unrelated_clustering off --balance_block_type_utilization "
+        "off";
+  } else {
+    pnrOptions +=
+        " --allow_unrelated_clustering on --balance_block_type_utilization on";
+  }
   if (!PnROpt().empty()) pnrOptions = " " + PnROpt();
   if (pnrOptions.find("gen_post_synthesis_netlist") == std::string::npos) {
     pnrOptions += " --gen_post_synthesis_netlist on";
@@ -761,6 +769,16 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "                                free , no automatic pin assignment"
          << std::endl;
   (*out) << "   pnr_options <option list>  : VPR options" << std::endl;
+  (*out) << "     clb_packing <directive>  : Performance optimization flags"
+         << std::endl;
+  (*out) << "                 <directive>  : auto, dense" << std::endl;
+  (*out) << "                        auto  : CLB packing automatically "
+            "determined to optimize performance"
+         << std::endl;
+  (*out)
+      << "                       dense  : Pack logic more densely into CLBs "
+         "resulting in fewer utilized CLBs however may negatively impact timing"
+      << std::endl;
   (*out) << "   pnr_netlist_lang <blif, edif, verilog, vhdl> : Chooses "
             "post-synthesis "
             "netlist format"
