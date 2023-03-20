@@ -528,7 +528,7 @@ std::string CompilerRS::BaseVprCommand() {
   } else {
     pnrOptions += " --allow_unrelated_clustering on";
   }
-  if (!PnROpt().empty()) pnrOptions = " " + PnROpt();
+  if (!PnROpt().empty()) pnrOptions += " " + PnROpt();
   if (pnrOptions.find("gen_post_synthesis_netlist") == std::string::npos) {
     pnrOptions += " --gen_post_synthesis_netlist on";
   }
