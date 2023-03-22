@@ -77,6 +77,7 @@ int main(int argc, char** argv) {
     std::filesystem::path repackConstraintPath = datapath / "etc" / "devices" /
                                                  "gemini" /
                                                  "repack_design_constraint.xml";
+    std::filesystem::path openOcdPath = binpath / "openocd";
     opcompiler->AnalyzeExecPath(analyzePath);
     opcompiler->YosysExecPath(yosysPath);
     opcompiler->VprExecPath(vprPath);
@@ -87,6 +88,7 @@ int main(int argc, char** argv) {
     opcompiler->OpenFpgaSimSettingFile(simSettingPath);
     opcompiler->OpenFpgaRepackConstraintsFile(repackConstraintPath);
     opcompiler->PinConvExecPath(pinConvPath);
+    opcompiler->OpenOcdExecPath(openOcdPath);
     opcompiler->GetSimulator()->SetSimulatorPath(
         FOEDAG::Simulator::SimulatorType::Verilator,
         (binpath / "HDL_simulator" / "verilator" / "bin").string());
@@ -96,6 +98,12 @@ int main(int argc, char** argv) {
     opcompiler->GetSimulator()->SetSimulatorPath(
         FOEDAG::Simulator::SimulatorType::Icarus,
         (binpath / "HDL_simulator" / "iverilog" / "bin").string());
+    
+    std::filesystem::path bitstreamFileSearchDir =
+        datapath / "configuration" / "bitstream";
+    std::filesystem::path configFileSearchDir = datapath / "configuration";
+    opcompiler->SetBitstreamFileSearchDirectory(bitstreamFileSearchDir);
+    opcompiler->SetConfigFileSearchDirectory(configFileSearchDir);
   }
   return foedag->init(guiType);
 }
