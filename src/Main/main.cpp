@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
     opcompiler->GetSimulator()->SetSimulatorPath(
         FOEDAG::Simulator::SimulatorType::Icarus,
         (binpath / "HDL_simulator" / "iverilog" / "bin").string());
-    
+
     std::filesystem::path bitstreamFileSearchDir =
         datapath / "configuration" / "bitstream";
     std::filesystem::path configFileSearchDir = datapath / "configuration";
