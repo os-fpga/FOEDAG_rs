@@ -17,6 +17,7 @@ add_custom_target(pre-configurationRS
 list(APPEND LEVEL1_SUBSYSTEMS CFGCommonRS)
 list(APPEND LEVEL2_SUBSYSTEMS CFGObject)
 list(APPEND LEVEL3_SUBSYSTEMS BitAssembler BitGenerator)
+list(APPEND EXE_SUBSYSTEMS BitGenerator)
 
 # Only change this if you know what it does
 list(APPEND PRE-SUBSYSTEMS ${LEVEL1_SUBSYSTEMS} ${LEVEL2_SUBSYSTEMS})
@@ -61,7 +62,7 @@ endforeach()
 
 if(MSVC)
 	foreach(SUBSYSTEM ${SUBSYSTEMS})
-		list(FIND POST-SUBSYSTEMS ${SUBSYSTEM} subsystem_index)	
+		list(FIND EXE_SUBSYSTEMS ${SUBSYSTEM} subsystem_index)	
 		string(TOLOWER ${SUBSYSTEM} SUBSYSTEM)
 		set_property(TARGET ${SUBSYSTEM} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 		set_property(TARGET ${SUBSYSTEM} PROPERTY COMPILER_FLAGS /DSTATIC_BUILD)

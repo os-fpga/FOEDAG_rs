@@ -1,24 +1,3 @@
-/*
-Copyright 2022 The Foedag team
-
-GPL License
-
-Copyright (c) 2022 The Open-Source FPGA Foundation
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 #include "BitGenerator.h"
 
 #include "BitGen_gemini.h"
@@ -73,6 +52,7 @@ void BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
 
   if (arg->operation == "parse") {
     if (CFG_check_file_extensions(arg->Args[0], {".bitasm"}) == 0) {
+      CFGObject::parse(arg->Args[0], arg->Args[1], arg->detail);
     } else {
       uint64_t bit_index = 0;
       std::vector<uint8_t> data;

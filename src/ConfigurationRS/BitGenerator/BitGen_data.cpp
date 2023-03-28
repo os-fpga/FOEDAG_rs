@@ -121,7 +121,8 @@ uint64_t BitGen_DATA::print(std::ofstream& file, std::string space,
       if (print_info == 0 || print_info == 1) {
         if (print_info == 1 || r.size > 64) {
           uint64_t u8 = convert_to8(r.size);
-          file << space.c_str() <<  CFG_print("  Size (Bit: %d, Byte: %d)\n", r.size, u8).c_str();
+          file << space.c_str()
+               << CFG_print("  Size (Bit: %d, Byte: %d)\n", r.size, u8).c_str();
           CFG_print_hex(file, &r.data[0], u8, 1, space + "    ", detail);
         } else {
           std::string binary = "";
@@ -367,7 +368,7 @@ uint64_t BitGen_DATA::get_src_data_size(const std::string& name) {
 uint64_t BitGen_DATA::get_defined_value(const std::string& name) {
   auto defined_iter = defineds.find(name);
   CFG_ASSERT(defined_iter != defineds.end());
-  BitGEN_SRC_DATA* defined_data =  &defined_iter->second;
+  BitGEN_SRC_DATA* defined_data = &defined_iter->second;
   uint64_t value = 0;
   memcpy(&value, &defined_data->data[0], sizeof(value));
   return value;

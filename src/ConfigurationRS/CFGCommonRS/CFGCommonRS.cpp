@@ -1,24 +1,3 @@
-/*
-Copyright 2022 The Foedag team
-
-GPL License
-
-Copyright (c) 2022 The Open-Source FPGA Foundation
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 #include "CFGCommonRS.h"
 
 #include <algorithm>
@@ -330,7 +309,9 @@ void CFG_print_binary_line_by_line(std::ofstream& file, const uint8_t* data,
       if (total_line <= 5 || detail || (line_index < 2) ||
           line_index >= (total_line - 2)) {
         file << "\n";
-        file << space.c_str() << CFG_print("#%*lu  | ", max_line_string_size, line_index).c_str();
+        file
+            << space.c_str()
+            << CFG_print("#%*lu  | ", max_line_string_size, line_index).c_str();
         if (dot == 1) {
           dot++;
         }

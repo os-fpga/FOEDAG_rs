@@ -21,7 +21,6 @@
 
 cmake_minimum_required(VERSION 3.15)
 set(subsystem bitassembler)
-set(raptor_bin raptor_${subsystem})
 set(test_bin ${subsystem}_test)
 
 project(${subsystem} LANGUAGES CXX)
@@ -39,13 +38,12 @@ endif()
 
 #################################################################################################################
 #
-# Three elements will be built 
+# Two elements will be built 
 #
 # 1. subsystem library (in this case ${subsystem}) - it contains all the core code to generate bitstream. It will be called by other elements
 #
-# 2. raptor_bin executable (in this case raptor_${subsystem} exe) - it is external command line entry which eventually call subsystem library (item 1)
 #
-# 3. test_bin executable (in this case ${subsystem}_test exe) - it is external command line entry which eventually call subsystem library (item 1) for unit testing
+# 2. test_bin executable (in this case ${subsystem}_test exe) - it is external command line entry which eventually call subsystem library (item 1) for unit testing
 #
 #################################################################################################################
 
@@ -59,17 +57,6 @@ add_library(
   BitAssembler.cpp
   BitAssembler_mgr.cpp
 )
-
-###################
-#
-# raptor_bin which also has dependency on its own subsystem library
-#
-###################
-add_executable(
-  ${raptor_bin}
-  BitAssembler_cmd.cpp
-)
-target_link_libraries(${raptor_bin} ${subsystem})
 
 ###################
 #

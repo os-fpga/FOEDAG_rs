@@ -1,24 +1,3 @@
-/*
-Copyright 2021 The Foedag team
-
-GPL License
-
-Copyright (c) 2021 The Open-Source FPGA Foundation
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 #ifndef CFGOBJECT_H
 #define CFGOBJECT_H
 
@@ -103,6 +82,18 @@ class CFGObject {
   void set_parent_ptr(const CFGObject* pp) const;
   uint64_t get_object_count() const;
   bool check_exist(const std::string& name) const;
+  // Static
+  static void parse(const std::string& input_filepath,
+                    const std::string& output_filepath, bool detail);
+  static std::string get_string(const uint8_t* data, size_t data_size,
+                                size_t& index, int max_size = -1,
+                                int min_size = -1, int null_check = -1);
+  template <typename T>
+  static void deserialize_data(const uint8_t* data, size_t data_size,
+                               size_t& index, T& value);
+  template <typename T>
+  static std::vector<T> read_raw_datas(const uint8_t* data, size_t data_size,
+                                       size_t& index, T value);
 
  protected:
   // Generic, Helper
@@ -128,9 +119,6 @@ class CFGObject {
                     size_t& object_count) const;
   void parse_class_object(const uint8_t* data, size_t data_size, size_t& index,
                           size_t& object_count) const;
-  std::string get_string(const uint8_t* data, size_t data_size, size_t& index,
-                         int max_size = -1, int min_size = -1,
-                         int null_check = -1) const;
 
   // Using template
   template <typename T>
@@ -152,9 +140,7 @@ class CFGObject {
                    T value) const;
   template <typename T>
   void serialize_data(std::vector<uint8_t>& data, T value) const;
-  template <typename T>
-  void deserialize_data(const uint8_t* data, size_t data_size, size_t& index,
-                        T& value) const;
+
   template <typename T>
   void serialize_datas(std::vector<uint8_t>& data, std::vector<T>& value,
                        bool compress) const;

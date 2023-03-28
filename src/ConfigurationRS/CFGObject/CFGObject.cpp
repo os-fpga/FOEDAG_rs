@@ -1,24 +1,3 @@
-/*
-Copyright 2022 The Foedag team
-
-GPL License
-
-Copyright (c) 2022 The Open-Source FPGA Foundation
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 #include "CFGObject_auto.h"
 
 #define OPTIMIZE_DATA_LENGTH
@@ -531,39 +510,6 @@ void CFGObject::parse_class_object(const uint8_t* data, size_t data_size,
   index++;
 }
 
-std::string CFGObject::get_string(const uint8_t* data, size_t data_size,
-                                  size_t& index, int max_size, int min_size,
-                                  int null_check) const {
-  CFG_ASSERT(data != nullptr && data_size > 0);
-  std::string string = "";
-  int current_index = 0;
-  while (1) {
-    CFG_ASSERT(index < data_size);
-    current_index++;
-    if (data[index]) {
-      string.push_back(char(data[index]));
-      index++;
-    } else {
-      index++;
-      break;
-    }
-    if (max_size != -1 && current_index == max_size) {
-      break;
-    }
-  }
-  CFG_ASSERT(min_size == -1 || int(string.size()) >= min_size);
-  if (null_check != -1) {
-    CFG_ASSERT(current_index <= null_check);
-    while (current_index < null_check) {
-      CFG_ASSERT(index < data_size);
-      CFG_ASSERT(data[index] == 0);
-      index++;
-      current_index++;
-    }
-  }
-  return string;
-}
-
 // Template
 template <typename T>
 void CFGObject::write_data(const CFGObject_RULE* rule, T value) const {
@@ -588,8 +534,8 @@ void CFGObject::read_data(const uint8_t* data, size_t data_size, size_t& index,
 }
 
 template <typename T>
-void CFGObject::read_datas(const uint8_t* data, size_t data_size, size_t& index,
-                           const CFGObject_RULE* rule, T value) const {
+std::vector<T> CFGObject::read_raw_datas(const uint8_t* data, size_t data_size,
+                                         size_t& index, T value) {
   std::vector<T> values;
   uint64_t list_count = CFG_read_variable_u64(data, data_size, index, 10);
   bool compress = bool(list_count & 1);
@@ -625,6 +571,13 @@ void CFGObject::read_datas(const uint8_t* data, size_t data_size, size_t& index,
       values.push_back(value);
     }
   }
+  return values;
+}
+
+template <typename T>
+void CFGObject::read_datas(const uint8_t* data, size_t data_size, size_t& index,
+                           const CFGObject_RULE* rule, T value) const {
+  std::vector<T> values = read_raw_datas(data, data_size, index, value);
   write_data(rule, values);
 }
 
@@ -676,7 +629,7 @@ void CFGObject::serialize_data(std::vector<uint8_t>& data, T value) const {
 
 template <typename T>
 void CFGObject::deserialize_data(const uint8_t* data, size_t data_size,
-                                 size_t& index, T& value) const {
+                                 size_t& index, T& value) {
   CFG_ASSERT(data != nullptr && data_size > 0);
   CFG_ASSERT(index < data_size);
 #if defined(OPTIMIZE_DATA_LENGTH)

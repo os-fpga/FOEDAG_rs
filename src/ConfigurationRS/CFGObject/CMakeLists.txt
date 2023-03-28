@@ -67,6 +67,7 @@ add_custom_command(
 add_library(
   ${subsystem} ${CFG_LIB_TYPE}
   CFGObject.cpp
+  CFGObject_parse.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/CFGObject_auto.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/CFGObject_auto.h
 )
