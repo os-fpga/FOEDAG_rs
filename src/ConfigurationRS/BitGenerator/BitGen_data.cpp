@@ -18,6 +18,16 @@ void BitGen_DATA::set_src(const std::string& name,
   srcs[name] = BitGEN_SRC_DATA(data);
 }
 
+void BitGen_DATA::set_src(const std::string& name, const uint8_t* data,
+                          const size_t data_size) {
+  CFG_ASSERT(data != nullptr && data_size > 0);
+  std::vector<uint8_t> temp;
+  for (size_t i = 0; i < data_size; i++) {
+    temp.push_back(data[i]);
+  }
+  set_src(name, temp);
+}
+
 uint64_t BitGen_DATA::generate(std::vector<uint8_t>& data) {
   size_t retry = rules.size() * 2;
   bool complete = false;
@@ -118,12 +128,20 @@ uint64_t BitGen_DATA::print(std::ofstream& file, std::string space,
     if (r.size > 0) {
       file << CFG_print("%s%s\n", space.c_str(), r.name.c_str()).c_str();
       uint64_t print_info = get_print_info(r.name);
-      if (print_info == 0 || print_info == 1) {
-        if (print_info == 1 || r.size > 64) {
+      if (print_info >= 0 && print_info <= 5) {
+        if (print_info != 0 || r.size > 64) {
+          // 1 : 1
+          // 2 : 2
+          // 3 : 4
+          // 4 : 8
+          // 5 : 16
           uint64_t u8 = convert_to8(r.size);
+          uint32_t data_alignment =
+              print_info == 0 ? 1 : (1 << (print_info - 1));
           file << space.c_str()
                << CFG_print("  Size (Bit: %d, Byte: %d)\n", r.size, u8).c_str();
-          CFG_print_hex(file, &r.data[0], u8, 1, space + "    ", detail);
+          CFG_print_hex(file, &r.data[0], u8, data_alignment, space + "    ",
+                        detail);
         } else {
           std::string binary = "";
           uint64_t data = 0;
@@ -136,7 +154,7 @@ uint64_t BitGen_DATA::print(std::ofstream& file, std::string space,
             }
           }
           binary = CFG_print("%d\'b%s", r.size, binary.c_str());
-          file << CFG_print("%s  %s (0x%lX) (%lud)\n", space.c_str(),
+          file << CFG_print("%s  %s (0x%lX) (%lu)\n", space.c_str(),
                             binary.c_str(), data, data);
         }
       } else {
@@ -145,7 +163,7 @@ uint64_t BitGen_DATA::print(std::ofstream& file, std::string space,
         uint32_t data_alignment = (uint32_t)(print_info >> 40) & 0xFF;
         uint32_t print_detail = (uint32_t)(print_info);
         // Only support type1 for now
-        CFG_ASSERT(print_type == 1);
+        CFG_ASSERT(print_type == 1 || print_type == 2);
         if (print_type == 1) {
           CFG_ASSERT(print_detail);
           std::vector<uint8_t> source_data;
@@ -161,6 +179,26 @@ uint64_t BitGen_DATA::print(std::ofstream& file, std::string space,
               file, &(*data_to_print)[0], data_to_print->size() * 8,
               (uint64_t)(print_detail), (uint64_t)data_alignment, space + "  ",
               detail);
+        } else {
+          CFG_ASSERT(print_detail);
+          uint64_t u8 = convert_to8(r.size);
+          file << space.c_str()
+               << CFG_print("  Size (Bit: %d, Byte: %d)\n", r.size, u8).c_str();
+          size_t print_size = 0;
+          if (data_alignment == 0) {
+            data_alignment = 1;
+          }
+          for (size_t i = 0, j = 0; i < r.data.size(); i += print_size, j++) {
+            print_size = r.data.size() - i;
+            if (print_size > print_detail) {
+              print_size = print_detail;
+            }
+            file << CFG_print("%s    #%lu (Byte: %lu)\n", space.c_str(), j,
+                              print_size)
+                        .c_str();
+            CFG_print_hex(file, &r.data[i], print_size, data_alignment,
+                          space + "      ", detail);
+          }
         }
       }
     }
@@ -295,6 +333,27 @@ bool BitGen_DATA::check_rules_readiness(std::vector<uint32_t> field_enums) {
   return ready;
 }
 
+bool BitGen_DATA::check_all_rules_readiness_but(
+    std::vector<uint32_t> field_enums) {
+  // For a rule to be ready, the size and data have been determined
+  bool ready = true;
+  for (uint32_t i = 0; i < uint32_t(rules.size()); i++) {
+    if (CFG_find_u32_in_vector(field_enums, i) >= 0) {
+      if (check_rule_size_readiness(i)) {
+        BitGen_DATA_RULE* rule = get_rule(i);
+        if (rule->data.size() == 0) {
+          ready = false;
+          break;
+        }
+      } else {
+        ready = false;
+        break;
+      }
+    }
+  }
+  return ready;
+}
+
 BitGen_DATA_RULE* BitGen_DATA::get_rule(const std::string& field) {
   BitGen_DATA_RULE* rule = nullptr;
   for (auto& r : rules) {
@@ -375,7 +434,7 @@ uint64_t BitGen_DATA::get_defined_value(const std::string& name) {
 }
 
 void BitGen_DATA::set_size(BitGen_DATA_RULE* rule, uint64_t value,
-                           const uint8_t property) {
+                           const uint32_t property) {
   if (property != 0) {
     CFG_ASSERT((value % property) == 0);
   }
@@ -384,12 +443,12 @@ void BitGen_DATA::set_size(BitGen_DATA_RULE* rule, uint64_t value,
 }
 
 void BitGen_DATA::set_size(const uint32_t field_enum, uint64_t value,
-                           const uint8_t property) {
-  set_size(get_rule(field_enum), value);
+                           const uint32_t property) {
+  set_size(get_rule(field_enum), value, property);
 }
 
 void BitGen_DATA::set_data(BitGen_DATA_RULE* rule, uint64_t value,
-                           const uint8_t property) {
+                           const uint32_t property) {
   CFG_ASSERT(rule->size > 0 && rule->size <= 64);
   if (property != 0) {
     CFG_ASSERT((value % property) == 0);
@@ -403,7 +462,7 @@ void BitGen_DATA::set_data(BitGen_DATA_RULE* rule, uint64_t value,
 }
 
 void BitGen_DATA::set_data(const uint32_t field_enum, uint64_t value,
-                           const uint8_t property) {
+                           const uint32_t property) {
   set_data(get_rule(field_enum), value, property);
 }
 
@@ -500,6 +559,40 @@ uint64_t BitGen_DATA::calc_checksum(std::vector<uint8_t>& data, uint8_t type) {
     CFG_INTERNAL_ERROR("Does not support checksum type %d", type);
   }
   return checksum;
+}
+
+uint64_t BitGen_DATA::calc_crc(const std::string& name, uint8_t type,
+                               uint8_t data_type) {
+  // type
+  //   0 : crc16 A001
+  // data_type
+  //   0 : all the rule before me
+  uint64_t crc = 0;
+  std::vector<uint8_t> data;
+  if (data_type == 0) {
+    uint64_t dest = 0;
+    for (auto& rule : rules) {
+      if (rule.name != name && rule.size != 0) {
+        for (uint64_t i = 0; i < rule.size; i++, dest++) {
+          if ((dest % 8) == 0) {
+            data.push_back(0);
+          }
+          if (rule.data[i >> 3] & (1 << (i & 7))) {
+            data[dest >> 3] |= (1 << (dest & 7));
+          }
+        }
+      }
+    }
+  } else {
+    CFG_INTERNAL_ERROR("Does not support CRC data type %d", data_type);
+  }
+  if (type == 0) {
+    // crc16 A001
+    crc = (uint64_t)(CFG_bop_A001_crc16(&data[0], data.size()) & 0xFFFF);
+  } else {
+    CFG_INTERNAL_ERROR("Does not support CRC type %d", type);
+  }
+  return crc;
 }
 
 uint8_t BitGen_DATA::set_sizes(const std::string& field) {

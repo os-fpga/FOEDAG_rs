@@ -30,6 +30,10 @@ uint16_t CFG_crc16(const uint8_t* addr, size_t size,
                    bool final_xor = true,
                    const uint16_t* custom_table = nullptr);
 
+uint16_t CFG_bop_A001_crc16(const uint8_t* addr, size_t size,
+                            uint16_t lfsr_init = 0, bool final_xor = false,
+                            const uint16_t* custom_table = nullptr);
+
 void CFG_append_u8(std::vector<uint8_t>& data, uint8_t value);
 
 void CFG_append_u16(std::vector<uint8_t>& data, uint16_t value);

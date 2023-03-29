@@ -43,8 +43,8 @@ void BitAssembler_entry(const CFGCommon_ARG* cmdarg) {
   if (bitgen) {
     CFGCommon_ARG* cmdarg_ptr = const_cast<CFGCommon_ARG*>(cmdarg);
     CFGArg_BITGEN bitgen_arg;
-    bitgen_arg.Args.push_back(bitasm_file);
-    bitgen_arg.Args.push_back(cfgbit_file);
+    bitgen_arg.m_args.push_back(bitasm_file);
+    bitgen_arg.m_args.push_back(cfgbit_file);
     cmdarg_ptr->arg = &bitgen_arg;
     BitGenerator_entry(cmdarg_ptr);
   }

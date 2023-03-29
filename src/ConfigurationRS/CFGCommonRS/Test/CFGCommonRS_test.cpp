@@ -47,8 +47,21 @@ void test_compression() {
       index, {1, 2, 3, 3, 4, 5, 6, 0, 0, 1, 2, 3, 4, 4, 5, 6, 6, 0, 0});
 }
 
+void test_crc() {
+  CFG_POST_MSG("CRC Test");
+  uint16_t expected_crc16 = 0xA161;
+  const uint8_t* data = (uint8_t*)(const_cast<char*>(
+      "\x31\x50\x4F\x42\x01\x00\x01\x00\x01\x00\x00\x00\x80\x4A\x01\x00\x00\x00"
+      "\x01\x80\x00\x00\x01\x80\x40\x00\x00\x00\xD0\x4C\x01\x00\x02\x00\x00\x00"
+      "\x04\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+      "\x00\x00\x00\x00\x00\x00\x00\x00"));
+  uint16_t crc16 = CFG_bop_A001_crc16(data, 62);
+  CFG_ASSERT(crc16 == expected_crc16);
+}
+
 int main(int argc, const char** argv) {
   CFG_POST_MSG("This is CFGCommon unit test");
   test_compression();
+  test_crc();
   return 0;
 }

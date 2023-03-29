@@ -17,15 +17,23 @@ def check_case(name, upper) :
 
 class RULE :
 
-    def __init__(self, name, size, data, sdata_size, sdata, print_info) : 
+    def __init__(self, field) : 
 
         global RESERVED
+        name = field["name"]
+        size = field["size"]
+        data = field["data"]
+        sdata_size = field["sdata_size"]
+        sdata = field["sdata"]
+        print_info = field["print_info"]
+        dependency = field["dependency"]
         assert isinstance(name, str)
         assert isinstance(size, (int, str))
         assert isinstance(data, (int, str))
         assert sdata_size == None or isinstance(sdata_size, str)
         assert sdata == None or isinstance(sdata, str)
         assert print_info == None or isinstance(print_info, str)
+        assert dependency == None or isinstance(dependency, str)
         size_type = 0
         rule_size = size
         rule_data = data
@@ -48,6 +56,7 @@ class RULE :
         self.sdata_size = sdata_size
         self.sdata = sdata
         self.print_info = print_info
+        self.dependency = dependency
 
 def write_rule(cfile, rule) :
 
@@ -56,20 +65,20 @@ def write_rule(cfile, rule) :
                                                                 rule.rule_data, \
                                                                 rule.size_type))
 
-def match_dependancy(dependancy, rules) :
+def match_dependency(dependency, rules) :
 
     found_rule = False
     for rule in rules :
-        if rule.name == dependancy :
+        if rule.name == dependency :
             found_rule = True
             break
-    assert found_rule, "Cannot find rule %s" % (dependancy)
+    assert found_rule, "Cannot find rule %s" % (dependency)
 
-def check_dependancy(equation, rules, current_rule_name, keywords = { "@get_rule_size(" : ")",
+def check_dependency(equation, rules, current_rule_name, keywords = { "@get_rule_size(" : ")",
                                                                       "@get_rule_value(" : ")",
                                                                       "@get_rule_data(" : ")"}) :
     assert isinstance(equation, str) and len(equation) > 0
-    dependancies = []
+    dependencies = []
     for keyword in keywords :
         assert isinstance(keyword, str) and len(keyword) > 0
         assert isinstance(keywords[keyword], str) and len(keywords[keyword]) > 0
@@ -83,23 +92,23 @@ def check_dependancy(equation, rules, current_rule_name, keywords = { "@get_rule
             string = equation[start_insert:end_index]
             check_case(string, False)
             assert string != current_rule_name
-            match_dependancy(string, rules)
-            dependancies.append(string)
+            match_dependency(string, rules)
+            dependencies.append(string)
             index = equation.find(keyword, end_index+len(keywords[keyword]))
             end_index = -1
             if index != -1 :
                 end_index = equation.find(keywords[keyword], index + len(keyword))
-    return dependancies 
+    return dependencies 
 
-def replace_equation_string(equation, keywords = { "@get_src_value(" : ")",
-                                                   "@get_src_data(" : ")", 
-                                                   "@get_src_data_size(" : ")", 
-                                                   "@get_rule_size(" : ")",
-                                                   "@get_rule_value(" : ")",
-                                                   "@get_rule_data_ptr(" : ")",
-                                                   "@get_rule_data(" : ")",
-                                                   "@get_defined_value(" : ")"} ) :
-
+def replace_equation_string(equation, rule_name, keywords = {"@get_src_value(" : ")",
+                                                             "@get_src_data(" : ")", 
+                                                             "@get_src_data_size(" : ")", 
+                                                             "@get_rule_size(" : ")",
+                                                             "@get_rule_value(" : ")",
+                                                             "@get_rule_data_ptr(" : ")",
+                                                             "@get_rule_data(" : ")",
+                                                             "@get_defined_value(" : ")"} ) :
+    INC_RULE_NAME_KEYWORDS = [ "@calc_crc(" ]
     assert isinstance(equation, str) and len(equation) > 0
     for keyword in keywords :
         assert isinstance(keyword, str) and len(keyword) > 0
@@ -119,6 +128,16 @@ def replace_equation_string(equation, keywords = { "@get_src_value(" : ")",
             end_index = -1
             if index != -1 :
                 end_index = equation.find(keywords[keyword], index + len(keyword))
+    for keyword in INC_RULE_NAME_KEYWORDS :
+        assert isinstance(keyword, str) and len(keyword) > 0
+        index = equation.find(keyword)
+        while index != -1 :
+            print(index, equation, keyword)
+            assert len(rule_name)
+            index += len(keyword)
+            equation = equation[:index] + ("\"%s\", " % rule_name) + equation[index:]
+            index += (4 + len(rule_name))
+            index = equation.find(keyword, index)
     return equation
 
 def replace_equation_function(equation, keywords = { "size8" : "convert_to8",
@@ -141,6 +160,33 @@ def replace_equation_function(equation, keywords = { "size8" : "convert_to8",
     # lastly all remaining @, replace with empty string
     equation = equation.replace("@", "")
     return equation
+
+def get_explicite_dependency(data_name, rule_name, dependency, rules) :
+
+    dependency_string = None
+    if dependency != None :
+        dependencies = dependency.strip().split(",")
+        assert len(dependencies) >= 1
+        dependency = int(dependencies[0].strip())
+        assert dependency in [0, 1] # only support two function
+        ds = []
+        for d in dependencies[1:] :
+            d = d.strip()
+            check_case(d, False)
+            if dependency == 0 :
+                assert d != rule_name
+            match_dependency(d, rules)
+            ds.append(d)
+        if dependency == 1 : 
+            if rule_name not in ds :
+                ds.append(rule_name)
+        assert len(ds)
+        dependency_string = ",".join([("%s_%%s" % data_name) % d.upper() for d in ds])
+        if dependency == 0 :
+            dependency_string = "check_rules_readiness({%s})" % dependency_string
+        else :
+            dependency_string = "check_all_rules_readiness_but({%s})" % dependency_string
+    return dependency_string;
 
 def main() :
 
@@ -220,13 +266,10 @@ def main() :
                 field["sdata"] = None
             if "print_info" not in field :
                 field["print_info"] = None
-            size = field["size"]
-            data = field["data"]
-            sdata_size = field["sdata_size"]
-            sdata = field["sdata"]
-            print_info = field["print_info"]
-            assert len(field) == 6
-            rules.append(RULE(name, size, data, sdata_size, sdata, print_info))
+            if "dependency" not in field :
+                field["dependency"] = None
+            assert len(field) == 7
+            rules.append(RULE(field))
             write_rule(cfile, rules[-1])
             file.write("    %s_%s = %d" % (data_name, rules[-1].name.upper(), i))
             if i == (len(fields)-1) :
@@ -249,18 +292,18 @@ def main() :
             if rule.size_type == 1 :
                 rule_enum = "%s_%s" % (data_name, rule.name.upper())
                 assert isinstance(rule.size, str)
-                equation = replace_equation_string(rule.size)
+                equation = replace_equation_string(rule.size, rule.name)
                 equation = replace_equation_function(equation)
-                dependancies = check_dependancy(rule.size, rules, rule.name)
+                dependencies = check_dependency(rule.size, rules, rule.name)
                 if index == 0 :
                     cfile.write("  uint8_t set = 1;\n")
                     cfile.write("  if (field == \"%s\")\n" % rule.name)
                 else :
                     cfile.write("  else if (field == \"%s\")\n" % rule.name)
                 cfile.write("  {\n")
-                if len(dependancies) :
-                    dependancy_string = ",".join([("%s_%%s" % data_name) % d.upper() for d in dependancies])
-                    cfile.write("    if (!check_rules_readiness({%s})) { return 2; }\n" % dependancy_string)    
+                if len(dependencies) :
+                    dependency_string = ",".join([("%s_%%s" % data_name) % d.upper() for d in dependencies])
+                    cfile.write("    if (!check_rules_readiness({%s})) { return 2; }\n" % dependency_string)    
                 cfile.write("    set_size(%s, %s);\n" % (rule_enum, equation))
                 cfile.write("  }\n")
                 index += 1
@@ -283,6 +326,7 @@ def main() :
             if isinstance(rule.data, str) :
                 rule_enum = "%s_%s" % (data_name, rule.name.upper())
                 rule_ptr = "rules[%s]" % (rule_enum)
+                explicite_dependency = get_explicite_dependency(data_name, rule.name, rule.dependency, rules)
                 if index == 0 :
                     cfile.write("  uint8_t set = 1;\n")
                     cfile.write("  if (field == \"%s\")\n" % rule.name)
@@ -291,28 +335,15 @@ def main() :
                 cfile.write("  {\n")
                 cfile.write("    if (!check_rule_size_readiness(%s)) { return 2; }\n" % (rule_enum))
                 if rule.data.find("@func(") == 0 and rule.data[-1] == ')' :
-                    func_name = rule.data[6:-1].split(",")
-                    assert len(func_name) >= 1
-                    dependancies = []
-                    if len(func_name) > 1 :
-                        dependancies = func_name[1:]
-                    func_name = func_name[0].strip()
-                    check_case(func_name, False)
-                    for d in dependancies :
-                        d = d.strip()
-                        check_case(d, False)
-                        assert d != rule.name
-                        match_dependancy(d, rules)
+                    func_name = rule.data[6:-1]
                     cfile.write("    %s(&%s);\n" % (func_name, rule_ptr))
-                    if func_name not in funcs :
-                        funcs.append(func_name)
                 else :
-                    equation = replace_equation_string(rule.data)
+                    equation = replace_equation_string(rule.data, rule.name)
                     equation = replace_equation_function(equation)
-                    dependancies = check_dependancy(rule.data, rules, rule.name)
-                    if len(dependancies) :
-                        dependancy_string = ",".join([("%s_%%s" % data_name) % d.upper() for d in dependancies])
-                        cfile.write("    if (!check_rules_readiness({%s})) { return 2; }\n" % dependancy_string)
+                    dependencies = check_dependency(rule.data, rules, rule.name)
+                    if len(dependencies) :
+                        dependency_string = ",".join([("%s_%%s" % data_name) % d.upper() for d in dependencies])
+                        cfile.write("    if (!check_rules_readiness({%s})) { return 2; }\n" % dependency_string)
                     cfile.write("    set_data(%s, %s);\n" % (rule_enum, equation))
                 cfile.write("  }\n")
                 index += 1
@@ -333,7 +364,7 @@ def main() :
             for define in defined :
                 assert isinstance(define, str)
                 assert isinstance(defined[define], str)
-                equation = replace_equation_string(defined[define])
+                equation = replace_equation_string(defined[define], "")
                 equation = replace_equation_function(equation)
                 cfile.write("    defineds[\"%s\"] = BitGEN_SRC_DATA(%s);\n" % (define, equation))
         cfile.write("}\n\n")        
@@ -352,7 +383,7 @@ def main() :
                 else :
                     cfile.write("  else if (field == \"%s\")\n" % rule.name)
                 cfile.write("  {\n")
-                equation = replace_equation_string(rule.sdata_size)
+                equation = replace_equation_string(rule.sdata_size, rule.name)
                 equation = replace_equation_function(equation)
                 cfile.write("    data_size = %s;\n" % (equation))
                 cfile.write("  }\n")
@@ -376,7 +407,7 @@ def main() :
                 else :
                     cfile.write("  else if (field == \"%s\")\n" % rule.name)
                 cfile.write("  {\n")
-                equation = replace_equation_string(rule.sdata)
+                equation = replace_equation_string(rule.sdata, rule.name)
                 equation = replace_equation_function(equation)
                 cfile.write("    %s;\n" % (equation))
                 cfile.write("  }\n")
@@ -396,7 +427,7 @@ def main() :
                 else :
                     cfile.write("  else if (field == \"%s\")\n" % rule.name)
                 cfile.write("  {\n")
-                equation = replace_equation_string(rule.print_info)
+                equation = replace_equation_string(rule.print_info, rule.name)
                 equation = replace_equation_function(equation)
                 cfile.write("    info = (%s);\n" % (equation))
                 cfile.write("  }\n")
