@@ -109,7 +109,6 @@ class BitGen_DATA {
   const std::string name = "";
   const uint8_t size_alignment = 0;
   std::vector<BitGen_DATA_RULE> rules = {};
-
 };
 
 #endif

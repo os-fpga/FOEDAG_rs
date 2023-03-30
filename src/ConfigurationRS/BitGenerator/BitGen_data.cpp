@@ -128,7 +128,7 @@ uint64_t BitGen_DATA::print(std::ofstream& file, std::string space,
     if (r.size > 0) {
       file << CFG_print("%s%s\n", space.c_str(), r.name.c_str()).c_str();
       uint64_t print_info = get_print_info(r.name);
-      if (print_info >= 0 && print_info <= 5) {
+      if (print_info <= 5) {
         if (print_info != 0 || r.size > 64) {
           // 1 : 1
           // 2 : 2
