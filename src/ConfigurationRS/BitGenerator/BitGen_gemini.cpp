@@ -142,6 +142,7 @@ void BitGen_GEMINI::parse(const std::string& input_filepath,
     BitGen_GEMINI_BOP_IMPL bop;
     uint64_t bop_data_size =
         bop.parse(file, &input_data[0], total_bits, bit_index, "", detail);
+    file.flush();
     CFG_ASSERT(bop_data_size > 0 && (bop_data_size % 32) == 0);
     std::vector<uint8_t>& id = bop.get_rule_data("id");
     const std::string image =

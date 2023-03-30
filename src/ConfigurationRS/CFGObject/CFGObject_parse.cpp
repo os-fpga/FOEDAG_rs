@@ -202,12 +202,12 @@ void CFGObject::parse(const std::string& input_filepath,
   CFG_ASSERT(index < input_data.size());
 
   file << "  Objects\n";
-  uint64_t parsed_object_count = 0;
+  size_t parsed_object_count = 0;
   while (index < input_data.size()) {
     CFGObject_parse_object(file, &input_data[0], input_data.size(), index,
                            parsed_object_count, "    ", detail);
     file.flush();
   }
   file.close();
-  CFG_ASSERT(object_count == parsed_object_count);
+  CFG_ASSERT(object_count == (uint64_t)(parsed_object_count));
 }
