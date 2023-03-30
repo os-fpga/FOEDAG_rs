@@ -158,6 +158,7 @@ void BitGen_GEMINI::parse(const std::string& input_filepath,
       BitGen_GEMINI_FCB_IMPL fcb;
       uint64_t fcb_data_size =
           fcb.parse(file, &input_data[0], total_bits, bit_index, space, detail);
+          file.flush();
       CFG_ASSERT(fcb_data_size > 0 && (fcb_data_size % 32) == 0);
       CFG_ASSERT(fcb_data_size == (image_size * 8));
     } else if (image == "icb") {
@@ -172,6 +173,7 @@ void BitGen_GEMINI::parse(const std::string& input_filepath,
         BitGen_GEMINI_ICB_PACKET_IMPL icb;
         uint64_t icb_packet_size = icb.parse(file, &input_data[0], total_bits,
                                              bit_index, space + "    ", detail);
+        file.flush();
         CFG_ASSERT(icb_packet_size > 0 && (icb_packet_size % 32) == 0);
         icb_data_size += icb_packet_size;
       }
@@ -181,6 +183,7 @@ void BitGen_GEMINI::parse(const std::string& input_filepath,
       BitGen_GEMINI_PCB_PACKET_IMPL pcb;
       uint64_t pcb_data_size =
           pcb.parse(file, &input_data[0], total_bits, bit_index, space, detail);
+      file.flush();
       CFG_ASSERT(pcb_data_size > 0 && (pcb_data_size % 32) == 0);
       CFG_ASSERT(pcb_data_size == (image_size * 8));
     } else {
