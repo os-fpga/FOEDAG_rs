@@ -102,13 +102,14 @@ class BitGen_DATA {
                                const std::string& field);
   virtual uint64_t get_print_info(const std::string& field);
 
-  std::vector<BitGen_DATA_RULE> rules = {};
   std::map<std::string, BitGEN_SRC_DATA> srcs = {};
   std::map<std::string, BitGEN_SRC_DATA> defineds = {};
 
  private:
   const std::string name = "";
   const uint8_t size_alignment = 0;
+  std::vector<BitGen_DATA_RULE> rules = {};
+
 };
 
 #endif
