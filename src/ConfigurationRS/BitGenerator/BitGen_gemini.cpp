@@ -159,7 +159,7 @@ void BitGen_GEMINI::parse(const std::string& input_filepath,
       BitGen_GEMINI_FCB_IMPL fcb;
       uint64_t fcb_data_size =
           fcb.parse(file, &input_data[0], total_bits, bit_index, space, detail);
-          file.flush();
+      file.flush();
       CFG_ASSERT(fcb_data_size > 0 && (fcb_data_size % 32) == 0);
       CFG_ASSERT(fcb_data_size == (image_size * 8));
     } else if (image == "icb") {

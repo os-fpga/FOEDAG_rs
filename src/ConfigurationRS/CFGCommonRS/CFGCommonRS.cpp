@@ -214,7 +214,7 @@ static void CFG_append_T(std::vector<uint8_t>& data, T value) {
 }
 
 void CFG_append_u8(std::vector<uint8_t>& data, uint8_t value) {
-  CFG_append_T(data, value);
+  data.push_back(value);
 }
 
 void CFG_append_u16(std::vector<uint8_t>& data, uint16_t value) {
