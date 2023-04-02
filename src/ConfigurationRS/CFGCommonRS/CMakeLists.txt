@@ -38,26 +38,39 @@ endif()
 
 #################################################################################################################
 #
-# Three elements will be built 
+# Three elements will be built
 #
-# 1. subsystem library (in this case cfgcommonrs) - it contains all the core code to help configuration. It will be called by other elements
+# 1. auto generate all the argument file
 #
-# 2. test_bin executable (in this case cfgcommonrs_test exe) - it is external command line entry which eventually call subsystem library (item 1) for unit testing
+# 2. subsystem library (in this case cfgcommonrs) - it contains all the core code to help configuration. It will be called by other elements
+#
+# 3. test_bin executable (in this case cfgcommonrs_test exe) - it is external command line entry which eventually call subsystem library (item 1) for unit testing
 #
 #################################################################################################################
+
+###################
+#
+# auto generate argument file
+#
+###################
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/CFGArgRS_auto.h ${CMAKE_CURRENT_BINARY_DIR}/CFGArgRS_auto.cpp
+  COMMAND python3 ${CFG_FOEDAG_PROJECT_ROOT_DIR}/CFGCommon/CFGArg.py ${PROJECT_SOURCE_DIR}/CFGArgRS.json ${CMAKE_CURRENT_BINARY_DIR}/CFGArgRS_auto.h ${CMAKE_CURRENT_BINARY_DIR}/CFGArgRS_auto.cpp ${CFG_FOEDAG_PROJECT_ROOT_DIR}/CFGCommon/CFGArg.json
+  DEPENDS ${CFG_FOEDAG_PROJECT_ROOT_DIR}/CFGCommon/CFGArg.py ${PROJECT_SOURCE_DIR}/CFGArgRS.json ${CFG_FOEDAG_PROJECT_ROOT_DIR}/CFGCommon/CFGArg.json
+)
 
 ###################
 #
 # subsystem library
 #
 ###################
-include (${CFG_PROJECT_ROOT_DIR}/FOEDAG/cmake/cmake_qt.txt)
 add_library(
   ${subsystem} ${CFG_LIB_TYPE}
   CFGCommonRS.cpp
   CFGCompress.cpp
+  ${CMAKE_CURRENT_BINARY_DIR}/CFGArgRS_auto.cpp
+  ${CMAKE_CURRENT_BINARY_DIR}/CFGArgRS_auto.h
 )
-target_link_libraries(${subsystem} PUBLIC Qt5::Widgets)
 
 ###################
 #

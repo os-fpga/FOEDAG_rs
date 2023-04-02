@@ -2,7 +2,7 @@
 
 #include "BitAssembler_mgr.h"
 #include "BitGenerator/BitGenerator.h"
-#include "CFGCommon/CFGArg_auto.h"
+#include "CFGCommonRS/CFGArgRS_auto.h"
 #include "CFGObject/CFGObject_auto.h"
 #include "Utils/FileUtils.h"
 

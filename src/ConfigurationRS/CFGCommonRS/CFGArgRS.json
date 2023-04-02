@@ -1,0 +1,55 @@
+{
+   "bitgen": {
+      "option" : [
+         {  
+            "name" : "detail",
+            "short" : "d",
+            "type" : "flag", 
+            "optional" : true,
+            "hide" : true,
+            "help" : "Show information in detail"
+         },
+         {  
+            "name" : "operation",
+            "short" : "o",
+            "type" : "gen_bitstream|gen_private_pem|gen_public_key|parse", 
+            "optional" : true,
+            "help" : "File generation operation"
+         },
+         {  
+            "name" : "no_passphrase",
+            "short" : "n",
+            "type" : "flag", 
+            "optional" : true,
+            "help" : "Do not need passphrase for private pem file generation"
+         },
+         {  
+            "name" : "passphrase",
+            "short" : "p",
+            "type" : "str", 
+            "optional" : true,
+            "help" : ["Passphrase or text file where entire file content is",
+                      "treated as passphrase to the private pem"]
+         },
+         {
+            "name" : "curve",
+            "short" : "c",
+            "type" : "prime256v1|rsa2048",
+            "optional" : true,
+            "help" : "Private pem curve type"
+         }
+      ],
+      "help" : [
+         "Configuration file generation tool. To generate:\n",
+         "1. Configuration bitstream file\n",
+         "  bitgenerator <{option}>s <input file .bitasm> <output file .cfgbit>\n",
+         "2. Signing private pem\n",
+         "  bitgenerator --operation=gen_private_pem --{no_passphrase} --passphase={passphase or text file}",
+         "               --curve={curve name} <output file .pem>\n",
+         "3. Signing public pem\n",
+         "  bitgenerator --operation=gen_public_pem --passphase={passphase or text file} <input file .pem>",
+         "               <output file .pem>"
+      ],
+      "arg" : [1, 2]
+   }
+}

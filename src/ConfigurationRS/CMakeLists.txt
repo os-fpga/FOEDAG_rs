@@ -27,6 +27,7 @@ list(APPEND SUBSYSTEMS ${PRE-SUBSYSTEMS} ${POST-SUBSYSTEMS})
 # set parent scope directory definition before subdirectory is added so that it can be inherited
 #	in each subdirectory avoid using using ".." relative path -- it is very hard to manage if we have multiple layer
 set(CFG_PROJECT_ROOT_DIR ${PROJECT_SOURCE_DIR}/../..)
+set(CFG_FOEDAG_PROJECT_ROOT_DIR ${CFG_PROJECT_ROOT_DIR}/FOEDAG/src/Configuration)
 set(CFG_BUILD_ROOT_DIR ${CMAKE_CURRENT_BINARY_DIR}/../..)
 message("ConfigurationRS source dirctory is ${PROJECT_SOURCE_DIR}")
 message("ConfigurationRS binary dirctory is ${CMAKE_CURRENT_BINARY_DIR}")

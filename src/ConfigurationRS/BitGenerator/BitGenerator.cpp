@@ -1,7 +1,7 @@
 #include "BitGenerator.h"
 
 #include "BitGen_gemini.h"
-#include "CFGCommon/CFGArg_auto.h"
+#include "CFGCommonRS/CFGArgRS_auto.h"
 #include "CFGCommonRS/CFGCommonRS.h"
 
 const std::map<std::string, std::vector<std::string>> FAMILY_DATABASE = {
@@ -32,8 +32,7 @@ void BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
   CFG_POST_MSG("  Output: %s", arg->m_args[1].c_str());
 
   if (arg->operation == "parse") {
-    if (CFG_check_file_extensions(arg->m_args[0],
-                                  {".bitasm", ".cfgbit", ".bin"}) < 0 ||
+    if (CFG_check_file_extensions(arg->m_args[0], {".bitasm", ".cfgbit"}) < 0 ||
         CFG_check_file_extensions(arg->m_args[1], {".debug.txt"}) != 0) {
       CFG_POST_ERR(
           "BITGEN: For parse operation, input should be in .bitasm or .cfgbit "
@@ -45,7 +44,7 @@ void BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
     if (CFG_check_file_extensions(arg->m_args[0], {".bitasm"}) != 0 ||
         CFG_check_file_extensions(arg->m_args[1], {".cfgbit"}) != 0) {
       CFG_POST_ERR(
-          "BITGEN: For generate operation, input should be in .bitasm "
+          "BITGEN: For gen_bitstream operation, input should be in .bitasm "
           "extension, and output should be in .cfgbit extension");
       return;
     }
