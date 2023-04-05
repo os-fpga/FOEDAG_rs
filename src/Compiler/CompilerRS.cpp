@@ -908,14 +908,10 @@ std::string FOEDAG::TclArgs_getRsSynthesisOptions() {
     if (compiler->SynthFsm() == CompilerRS::SynthesisFsmEncoding::None) {
       tclOptions += " -fsm_encoding none";
     }
-    auto [dsp, dsp_ok] = StringUtils::to_string(compiler->MaxUserDSPCount());
-    if (dsp_ok) {
-      tclOptions += " -dsp_limit " + dsp;
-    }
-    auto [bram, bram_ok] = StringUtils::to_string(compiler->MaxUserBRAMCount());
-    if (bram_ok) {
-      tclOptions += " -bram_limit " + bram;
-    }
+    auto dsp = StringUtils::to_string(compiler->MaxUserDSPCount());
+    tclOptions += " -dsp_limit " + dsp;
+    auto bram = StringUtils::to_string(compiler->MaxUserBRAMCount());
+    tclOptions += " -bram_limit " + bram;
   };
   return tclOptions;
 }
