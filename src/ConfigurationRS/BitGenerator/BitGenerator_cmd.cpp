@@ -13,7 +13,7 @@ int main(int argc, const char** argv) {
         cmdarg.arg = &bitgen_arg;
         BitGenerator_entry(&cmdarg);
       } else {
-        CFG_POST_ERR("BITGEN %s operation need input and output arguments",
+        CFG_POST_ERR("BITGEN: %s operation need input and output arguments",
                      bitgen_arg.operation.c_str());
         status = 1;
       }
