@@ -6,8 +6,8 @@ int main(int argc, const char** argv) {
   auto arg = std::make_shared<CFGArg_BITGEN>();
   int status = 0;
   if (arg->parse(argc - 1, &argv[1]) && !arg->m_help) {
-    if (CFG_find_string_in_vector({"gen_bitstream", "parse"},
-                                  arg->operation) >= 0) {
+    if (CFG_find_string_in_vector({"gen_bitstream", "parse"}, arg->operation) >=
+        0) {
       if (arg->m_args.size() == 2) {
         CFGCommon_ARG cmdarg;
         cmdarg.arg = arg;
@@ -18,8 +18,7 @@ int main(int argc, const char** argv) {
         status = 1;
       }
     } else {
-      CFG_POST_ERR("BITGEN: Invalid operation %s",
-                   arg->operation.c_str());
+      CFG_POST_ERR("BITGEN: Invalid operation %s", arg->operation.c_str());
       status = 1;
     }
   }
