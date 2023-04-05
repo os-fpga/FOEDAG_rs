@@ -27,7 +27,6 @@ All rights reserved
 #include "Utils/FileUtils.h"
 #include "Utils/LogUtils.h"
 #include "Utils/StringUtils.h"
-#include "scope_guard.hpp"
 
 #ifdef PRODUCTION_BUILD
 #include "License_manager.hpp"
@@ -192,14 +191,6 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
       carry_inference = "-carry no";
       break;
   }
-  std::string no_dsp;
-  if (m_synthNoDsp) {
-    no_dsp = "-no_dsp";
-  }
-  std::string no_bram;
-  if (m_synthNoBram) {
-    no_bram = "-no_bram";
-  }
   std::string fast_mode;
   if (m_synthFast) {
     fast_mode = "-fast";
@@ -258,8 +249,8 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   result = ReplaceAll(result, "${EFFORT}", effort);
   result = ReplaceAll(result, "${FSM_ENCODING}", fsm_encoding);
   result = ReplaceAll(result, "${CARRY}", carry_inference);
-  result = ReplaceAll(result, "${NO_DSP}", no_dsp);
-  result = ReplaceAll(result, "${NO_BRAM}", no_bram);
+  result = ReplaceAll(result, "${NO_DSP}", {});
+  result = ReplaceAll(result, "${NO_BRAM}", {});
   result = ReplaceAll(result, "${FAST}", fast_mode);
   result = ReplaceAll(result, "${MAX_THREADS}", max_threads);
   result = ReplaceAll(result, "${NO_SIMPLIFY}", no_simplify);
@@ -418,12 +409,18 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
         }
         continue;
       }
-      if (option == "-no_dsp") {
-        compiler->SynthNoDsp(true);
+      if (option == "-dsp_limit" && i + 1 < argc) {
+        std::string arg = argv[++i];
+        const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
+        if (ok)
+          compiler->MaxUserDSPCount(value);
         continue;
       }
-      if (option == "-no_bram") {
-        compiler->SynthNoBram(true);
+      if (option == "-bram_limit" && i + 1 < argc) {
+        std::string arg = argv[++i];
+        const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
+        if (ok)
+          compiler->MaxUserBRAMCount(value);
         continue;
       }
       if (option == "-no_adder") {
@@ -906,10 +903,18 @@ std::string FOEDAG::TclArgs_getRsSynthesisOptions() {
     }
 
     if (compiler->SynthEffort() == CompilerRS::SynthesisEffort::None) {
-      tclOptions += "-effort none";
+      tclOptions += " -effort none";
     }
     if (compiler->SynthFsm() == CompilerRS::SynthesisFsmEncoding::None) {
-      tclOptions += "-fsm_encoding none";
+      tclOptions += " -fsm_encoding none";
+    }
+    auto [dsp, dsp_ok] = StringUtils::to_string(compiler->MaxUserDSPCount());
+    if (dsp_ok) {
+      tclOptions += " -dsp_limit " + dsp;
+    }
+    auto [bram, bram_ok] = StringUtils::to_string(compiler->MaxUserBRAMCount());
+    if (bram_ok) {
+      tclOptions += " -bram_limit " + bram;
     }
   };
   return tclOptions;
@@ -920,8 +925,6 @@ std::string FOEDAG::TclArgs_getRsSynthesisOptions() {
 void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
   CompilerRS *compiler = (CompilerRS *)GlobalSession->GetCompiler();
 
-  bool noBram{false};
-  bool noDsp{false};
   bool fast{false};
   // Split into args by -
   std::vector<std::string> args;
@@ -1010,12 +1013,18 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
       }
       continue;
     }
-    if (option == "-no_dsp") {
-      noDsp = true;
+    if (option == "-dsp_limit" && tokens.size() > 1) {
+      std::string arg = tokens[1];
+      const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
+      if (ok)
+        compiler->MaxUserDSPCount(value);
       continue;
     }
-    if (option == "-no_bram") {
-      noBram = true;
+    if (option == "-bram_limit" && tokens.size() > 1) {
+      std::string arg = tokens[1];
+      const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
+      if (ok)
+        compiler->MaxUserBRAMCount(value);
       continue;
     }
     if (option == "-fast") {
@@ -1023,8 +1032,6 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
       continue;
     }
   }
-  compiler->SynthNoBram(noBram);
-  compiler->SynthNoDsp(noDsp);
   compiler->SynthFast(fast);
   GlobalSession->GetSettings()->syncWith(PACKING_SETTING_KEY);
 }
