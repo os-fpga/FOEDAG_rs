@@ -412,15 +412,13 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
       if (option == "-dsp_limit" && i + 1 < argc) {
         std::string arg = argv[++i];
         const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
-        if (ok)
-          compiler->MaxUserDSPCount(value);
+        if (ok) compiler->MaxUserDSPCount(value);
         continue;
       }
       if (option == "-bram_limit" && i + 1 < argc) {
         std::string arg = argv[++i];
         const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
-        if (ok)
-          compiler->MaxUserBRAMCount(value);
+        if (ok) compiler->MaxUserBRAMCount(value);
         continue;
       }
       if (option == "-no_adder") {
@@ -1012,15 +1010,13 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
     if (option == "-dsp_limit" && tokens.size() > 1) {
       std::string arg = tokens[1];
       const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
-      if (ok)
-        compiler->MaxUserDSPCount(value);
+      if (ok) compiler->MaxUserDSPCount(value);
       continue;
     }
     if (option == "-bram_limit" && tokens.size() > 1) {
       std::string arg = tokens[1];
       const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
-      if (ok)
-        compiler->MaxUserBRAMCount(value);
+      if (ok) compiler->MaxUserBRAMCount(value);
       continue;
     }
     if (option == "-fast") {
