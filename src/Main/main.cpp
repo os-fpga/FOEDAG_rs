@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
     opcompiler->OpenFpgaSimSettingFile(simSettingPath);
     opcompiler->OpenFpgaRepackConstraintsFile(repackConstraintPath);
     opcompiler->PinConvExecPath(pinConvPath);
-    opcompiler->OpenOcdExecPath(openOcdPath);
+    opcompiler->ProgrammerToolExecPath(openOcdPath);
     opcompiler->GetSimulator()->SetSimulatorPath(
         FOEDAG::Simulator::SimulatorType::Verilator,
         (binpath / "HDL_simulator" / "verilator" / "bin").string());
@@ -99,10 +99,7 @@ int main(int argc, char** argv) {
         FOEDAG::Simulator::SimulatorType::Icarus,
         (binpath / "HDL_simulator" / "iverilog" / "bin").string());
 
-    std::filesystem::path bitstreamFileSearchDir =
-        datapath / "configuration" / "bitstream";
     std::filesystem::path configFileSearchDir = datapath / "configuration";
-    opcompiler->SetBitstreamFileSearchDirectory(bitstreamFileSearchDir);
     opcompiler->SetConfigFileSearchDirectory(configFileSearchDir);
   }
   return foedag->init(guiType);
