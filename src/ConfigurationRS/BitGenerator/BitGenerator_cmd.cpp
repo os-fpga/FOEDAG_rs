@@ -23,5 +23,5 @@ int main(int argc, const char** argv) {
       status = 1;
     }
   }
-  return 0;
+  return status;
 }
