@@ -48,7 +48,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} -blif ${OUTPUT_BLIF} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${FSM_ENCODING} -blif ${OUTPUT_BLIF} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 
 write_verilog -noattr -nohex ${OUTPUT_VERILOG}
@@ -69,7 +69,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} ${ABC_SCRIPT} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${LIMITS} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} ${ABC_SCRIPT} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${LIMITS} ${FSM_ENCODING} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
@@ -249,8 +249,6 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   result = ReplaceAll(result, "${EFFORT}", effort);
   result = ReplaceAll(result, "${FSM_ENCODING}", fsm_encoding);
   result = ReplaceAll(result, "${CARRY}", carry_inference);
-  result = ReplaceAll(result, "${NO_DSP}", {});
-  result = ReplaceAll(result, "${NO_BRAM}", {});
   result = ReplaceAll(result, "${FAST}", fast_mode);
   result = ReplaceAll(result, "${MAX_THREADS}", max_threads);
   result = ReplaceAll(result, "${NO_SIMPLIFY}", no_simplify);
@@ -723,12 +721,6 @@ void CompilerRS::Help(std::ostream *out) {
             "heuristics"
          << std::endl;
   (*out) << "       none                   : Do not infer carries" << std::endl;
-  (*out) << "     -no_dsp                  : Do not use DSP blocks to "
-            "implement multipliers and associated logic"
-         << std::endl;
-  (*out) << "     -no_bram                 : Do not use Block RAM to "
-            "implement memory components"
-         << std::endl;
   (*out) << "     -fast                    : Perform the fastest synthesis. "
             "Don't expect good QoR."
          << std::endl;
@@ -864,8 +856,7 @@ std::string FOEDAG::TclArgs_getRsSynthesisOptions() {
     // Use the script completer to generate an arg list w/ current values
     // Note we are only grabbing the values that matter for the settings ui
     tclOptions = compiler->FinishSynthesisScript(
-        "${OPTIMIZATION} ${EFFORT} ${FSM_ENCODING} ${CARRY} ${NO_DSP} "
-        "${NO_BRAM} ${FAST}");
+        "${OPTIMIZATION} ${EFFORT} ${FSM_ENCODING} ${CARRY} ${FAST}");
 
     // The settings UI provides a single argument value pair for each field.
     // Optimization uses -de -goal so we convert that to the settings specific
