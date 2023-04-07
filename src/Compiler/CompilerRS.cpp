@@ -21,6 +21,8 @@ All rights reserved
 #include "Compiler/CompilerRS.h"
 #include "Compiler/Constraints.h"
 #include "Compiler/Log.h"
+#include "Configuration/CFGCompiler/CFGCompiler.h"
+#include "ConfigurationRS/BitAssembler/BitAssembler.h"
 #include "Main/Settings.h"
 #include "MainWindow/Session.h"
 #include "NewProject/ProjectManager/project_manager.h"
@@ -74,6 +76,42 @@ ${PLUGIN_NAME} ${ABC_SCRIPT} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT
 ${OUTPUT_NETLIST}
 
   )";
+
+static auto assembler_flow(CompilerRS *compiler, bool batchMode, int argc,
+                           const char *argv[]) {
+  CFGCompiler *cfgcompiler = compiler->GetConfiguration();
+  compiler->BitsOpt(Compiler::BitstreamOpt::DefaultBitsOpt);
+  for (int i = 1; i < argc; i++) {
+    std::string arg = argv[i];
+    if (arg == "force") {
+      compiler->BitsOpt(Compiler::BitstreamOpt::Force);
+    } else if (arg == "clean") {
+      compiler->BitsOpt(Compiler::BitstreamOpt::Clean);
+    } else if (arg == "enable_simulation") {
+      compiler->BitsOpt(Compiler::BitstreamOpt::EnableSimulation);
+    } else {
+      compiler->ErrorMessage("Unknown bitstream option: " + arg);
+      return TCL_ERROR;
+    }
+  }
+  cfgcompiler->m_cmdarg.command = "assembler";
+  cfgcompiler->m_cmdarg.clean =
+      compiler->BitsOpt() == Compiler::BitstreamOpt::Clean;
+
+  // Call Compile()
+  if (batchMode) {
+    if (!compiler->Compile(Compiler::Action::Bitstream)) {
+      return TCL_ERROR;
+    }
+  } else {
+    WorkerThread *wthread =
+        new WorkerThread("bitstream_th", Compiler::Action::Bitstream, compiler);
+    if (!wthread->start()) {
+      return TCL_ERROR;
+    }
+  }
+  return TCL_OK;
+}
 
 std::string CompilerRS::InitSynthesisScript() {
   switch (m_synthType) {
@@ -470,6 +508,36 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
   };
   interp->registerCmd("max_threads", max_threads, this, 0);
 
+  // Configuration
+  CFGCompiler *cfgcompiler = GetConfiguration();
+  if (batchMode) {
+    auto assembler = [](void *clientData, Tcl_Interp *interp, int argc,
+                        const char *argv[]) -> int {
+      CompilerRS *compiler = (CompilerRS *)clientData;
+      CFGCompiler *cfgcompiler = compiler->GetConfiguration();
+      int status = TCL_OK;
+      if ((status = assembler_flow(compiler, true, argc, argv)) != TCL_OK) {
+        return CFGCompiler::Compile(cfgcompiler, true);
+      } else {
+        return status;
+      }
+    };
+    interp->registerCmd("assembler", assembler, this, 0);
+  } else {
+    auto assembler = [](void *clientData, Tcl_Interp *interp, int argc,
+                        const char *argv[]) -> int {
+      CompilerRS *compiler = (CompilerRS *)clientData;
+      CFGCompiler *cfgcompiler = compiler->GetConfiguration();
+      int status = TCL_OK;
+      if ((status = assembler_flow(compiler, false, argc, argv)) == TCL_OK) {
+        return CFGCompiler::Compile(cfgcompiler, false);
+      } else {
+        return status;
+      }
+    };
+    interp->registerCmd("assembler", assembler, this, 0);
+  }
+  cfgcompiler->RegisterCallbackFunction("assembler", BitAssembler_entry);
   return true;
 }
 
