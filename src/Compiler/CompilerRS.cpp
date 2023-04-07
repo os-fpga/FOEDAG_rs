@@ -543,7 +543,9 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
 
 std::string CompilerRS::BaseVprCommand() {
   std::string device_size = "";
-  if (!m_deviceSize.empty()) {
+  if (PackOpt() == Compiler::PackingOpt::Debug) {
+    device_size = " --device auto";
+  } else if (!m_deviceSize.empty()) {
     device_size = " --device " + m_deviceSize;
   }
   std::string netlistFile;
@@ -897,6 +899,7 @@ void CompilerRS::Help(std::ostream *out) {
       << std::endl;
   (*out) << "                  <simulator> : verilator, ghdl, icarus"
          << std::endl;
+  (*out) << "   diagnostic <type>: Debug mode. Types: packer" << std::endl;
   writeWaveHelp(out, 3, 30);  // 30 is the col count of the : in the line above
   (*out) << "-----------------------------------------------" << std::endl;
 }
