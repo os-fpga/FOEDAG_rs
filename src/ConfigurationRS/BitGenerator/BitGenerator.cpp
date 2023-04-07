@@ -26,7 +26,8 @@ void BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
   // Validate arg
   // Make sure correct argument is set before we do the casting
   CFG_ASSERT(cmdarg->arg->m_name == "bitgen");
-  CFGArg_BITGEN* arg = reinterpret_cast<CFGArg_BITGEN*>(cmdarg->arg);
+  // CFGArg_BITGEN* arg = reinterpret_cast<CFGArg_BITGEN*>(cmdarg->arg);
+  auto arg = std::static_pointer_cast<CFGArg_BITGEN>(cmdarg->arg);
   CFG_ASSERT(arg->m_args.size() == 2);
   CFG_POST_MSG("  Input: %s", arg->m_args[0].c_str());
   CFG_POST_MSG("  Output: %s", arg->m_args[1].c_str());

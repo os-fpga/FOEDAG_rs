@@ -42,10 +42,10 @@ void BitAssembler_entry(const CFGCommon_ARG* cmdarg) {
                CFG_time_elapse(time_begin));
   if (bitgen) {
     CFGCommon_ARG* cmdarg_ptr = const_cast<CFGCommon_ARG*>(cmdarg);
-    CFGArg_BITGEN bitgen_arg;
-    bitgen_arg.m_args.push_back(bitasm_file);
-    bitgen_arg.m_args.push_back(cfgbit_file);
-    cmdarg_ptr->arg = &bitgen_arg;
+    auto arg = std::make_shared<CFGArg_BITGEN>();
+    arg->m_args.push_back(bitasm_file);
+    arg->m_args.push_back(cfgbit_file);
+    cmdarg_ptr->arg = arg;
     BitGenerator_entry(cmdarg_ptr);
   }
 }
