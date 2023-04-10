@@ -59,7 +59,7 @@ add_library(
 if (MSVC)
   target_link_libraries(${subsystem} PRIVATE ${CFG_FOEDAGRS_PROJECT_ROOT_DIR}/CFGCrypto/lib/x64/libcrypto.lib ${CFG_FOEDAGRS_PROJECT_ROOT_DIR}/CFGCrypto/lib/x64/libssl.lib)
 else()
-  target_link_libraries(${subsystem} PRIVATE ${CFG_FOEDAGRS_PROJECT_ROOT_DIR}/CFGCrypto/lib/linux/libcrypto.a ${CFG_FOEDAGRS_PROJECT_ROOT_DIR}/CFGCrypto/lib/linux/libssl.a dl)
+  target_link_libraries(${subsystem} PRIVATE ${CFG_FOEDAGRS_PROJECT_ROOT_DIR}/CFGCrypto/lib/linux/libcrypto.a ${CFG_FOEDAGRS_PROJECT_ROOT_DIR}/CFGCrypto/lib/linux/libssl.a dl pthread)
 endif()
 
 ###################
