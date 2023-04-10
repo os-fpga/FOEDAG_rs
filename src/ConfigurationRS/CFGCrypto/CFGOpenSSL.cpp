@@ -49,7 +49,7 @@ static void SetStdinEcho(bool enable) {
 #if defined(_MSC_VER)
   HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
   uint32_t mode;
-  GetConsoleMode(hStdin, &mode);
+  GetConsoleMode(hStdin, (LPDWORD)(&mode));
   if (enable) {
     mode |= ENABLE_ECHO_INPUT;
   } else {
