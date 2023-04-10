@@ -900,6 +900,15 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "                  <simulator> : verilator, ghdl, icarus"
          << std::endl;
   (*out) << "   diagnostic <type>: Debug mode. Types: packer" << std::endl;
+  (*out) << "   chatgpt <command> \"<message>\" ?-c <path>?: Send message to "
+            "chatGPT"
+         << std::endl;
+  (*out)
+      << "                    <command> : Support two commands: send and reset"
+      << std::endl;
+  (*out) << "                         send : Send message" << std::endl;
+  (*out) << "                        reset : Reset context for chatGPT"
+         << std::endl;
   writeWaveHelp(out, 3, 30);  // 30 is the col count of the : in the line above
   (*out) << "-----------------------------------------------" << std::endl;
 }
