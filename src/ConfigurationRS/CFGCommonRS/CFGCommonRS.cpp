@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #if defined(_MSC_VER)
+#include <iptypes.h>
 #include <windows.h>
 #else
 #include <net/if.h>
