@@ -62,8 +62,6 @@ std::string CFG_get_machine_name();
 
 uint32_t CFG_get_volume_serial_number();
 
-std::vector<uint8_t> CFG_get_mac_info();
-
 uint64_t CFG_get_nano_time();
 
 uint64_t CFG_get_unique_nano_time();

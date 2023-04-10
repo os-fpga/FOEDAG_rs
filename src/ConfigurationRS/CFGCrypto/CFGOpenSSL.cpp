@@ -637,13 +637,11 @@ uint64_t CFGOpenSSL::generate_random_u64() {
 void CFGOpenSSL::generate_iv(uint8_t* iv, bool gcm) {
   std::vector<uint8_t> data;
   std::string n = CFG_get_machine_name();
-  std::vector<uint8_t> i = CFG_get_mac_info();
   uint64_t nt = CFG_get_unique_nano_time();
   CFG_append_u64(data, generate_random_u64());
   CFG_append_u64(data, nt);
   CFG_append_u32(data, CFG_get_volume_serial_number());
   data.insert(data.end(), n.begin(), n.end());
-  data.insert(data.end(), i.begin(), i.end());
 #if 0
   printf("Unique Time: 0x%016lX\n", nt);
   printf("Machine name: %s (%ld)\n", n.c_str(), n.size());
@@ -666,7 +664,6 @@ void CFGOpenSSL::generate_iv(uint8_t* iv, bool gcm) {
     iv[j] ^= sha512[i];
   }
   memset(&n[0], 0, n.size());
-  memset(&i[0], 0, i.size());
   memset(&data[0], 0, data.size());
   memset(sha512, 0, sizeof(sha512));
 }
