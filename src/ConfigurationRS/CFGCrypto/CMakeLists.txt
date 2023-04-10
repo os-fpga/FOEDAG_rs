@@ -61,6 +61,7 @@ if (MSVC)
 else()
   target_link_libraries(${subsystem} PRIVATE ${CFG_FOEDAGRS_PROJECT_ROOT_DIR}/CFGCrypto/lib/linux/libcrypto.a ${CFG_FOEDAGRS_PROJECT_ROOT_DIR}/CFGCrypto/lib/linux/libssl.a)
 endif()
+target_link_options(${subsystem} PUBLIC "LINKER:--no-as-needed")
 
 ###################
 #
@@ -72,6 +73,7 @@ add_executable(
   Test/CFGCrypto_test.cpp
 )
 target_link_libraries(${test_bin} ${subsystem})
+target_link_options(${test_bin} PUBLIC "LINKER:--no-as-needed")
 link_directories(${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/)
 
 ###################
