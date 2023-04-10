@@ -396,7 +396,7 @@ std::string CFG_get_machine_name() {
 #if defined(_MSC_VER)
   char computer_name[1024];
   uint32_t size = 1024;
-  GetComputerName(computerName, &size);
+  GetComputerName(computer_name, &size);
   return std::string(computer_name, size);
 #else
   static struct utsname u;
@@ -411,8 +411,8 @@ uint32_t CFG_get_volume_serial_number() {
   uint32_t serial_number = 0;
 #if defined(_MSC_VER)
   // Determine if this volume uses an NTFS file system.
-  GetVolumeInformation("c:\\", nullptr, 0, &serial_number, nullptr, nullptr,
-                       nullptr, 0);
+  GetVolumeInformation("c:\\", nullptr, 0, (LPDWORD)(&serial_number), nullptr,
+                       nullptr, nullptr, 0);
 #else
   // linux does not have
 #endif
