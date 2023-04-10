@@ -1,0 +1,115 @@
+{
+	"BITOBJ" : [
+					{ 	"name"  : "version",
+						"type"  : "str"
+					},
+                    { 	"name"  : "project", 
+						"type"  : "str"
+					},
+					{ 	"name"  : "device",
+						"type"  : "str"
+					},
+					{ 	"name"  : "time", 
+						"type"  : "str"
+					},
+					{ 	"name"  : "fcb",
+						"type"  : [
+									{
+										"name"  : "length",
+										"type"  : "u32"
+								 	},
+								 	{
+										"name"  : "width",
+										"type"  : "u32"
+								 	},
+								 	{
+										"name"  : "data",
+										"type"  : "u8s",
+										"cmp"   : true
+								 	}
+								]
+					} 
+			],
+	"UTST" : [
+                { 	"name"  : "boolean",
+                    "type"  : "bool"
+                }, 
+                { 	"name"  : "u8",
+                    "type"  : "u8"
+                },
+                { 	"name"  : "u16", 
+                    "type"  : "u16"
+                },
+                { 	"name"  : "u32",
+                    "type"  : "u32"
+                },
+                { 	"name"  : "i64", 
+                    "type"  : "i64"
+                },
+                { 	"name"  : "u8s",
+                    "type"  : "u8s"
+                },
+                { 	"name"  : "i64s", 
+                    "type"  : "i64s"
+                },
+                { 	"name"  : "str",
+                    "type"  : "str"
+                },
+                { 	"name"  : "list0",
+                    "type"  : [
+                                {
+                                    "name"  : "u64",
+                                    "type"  : "u64"
+                                },
+                                {
+                                    "name"  : "u16s",
+                                    "type"  : "u16s"
+                                },
+                                {
+                                    "name"  : "u32s",
+                                    "type"  : "u32s",
+                                    "exist" : false
+                                },
+                                {
+                                    "name"  : "i32s",
+                                    "type"  : "i32s"
+                                },
+                                {
+                                    "name"	: "list01",
+                                    "type"  : [
+                                                {
+                                                    "name"  : "i32",
+                                                    "type"  : "i32",
+                                                    "exist" : false
+                                                },
+                                                {
+                                                    "name"  : "u64s",
+                                                    "type"  : "u64s"
+                                                }
+                                            ],
+                                    "list"  : true
+                                }
+                            ],
+                    "list"  : true
+                },
+                { 	"name"  : "object",
+                    "type"  : [
+                                {
+                                    "name"  : "u8s0",
+                                    "type"  : "u8s"
+                                },
+                                {
+                                    "name"  : "str0",
+                                    "type"  : "str"
+                                }
+                            ]
+                },
+                {   "name"  : "cmp",
+                    "type"  : "u8s",
+                    "cmp"   : true
+                },
+                {   "name"  : "data_after_cmp",
+                    "type"  : "u64"
+                }
+        ]
+}

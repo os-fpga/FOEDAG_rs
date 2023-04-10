@@ -49,10 +49,6 @@ class CompilerRS : public CompilerOpenFPGA {
   void SynthClke(SynthesisClkeStrategy clkeStrategy) {
     m_synthClke = clkeStrategy;
   }
-  bool SynthNoDsp() { return m_synthNoDsp; }
-  void SynthNoDsp(bool noDsp) { m_synthNoDsp = noDsp; }
-  bool SynthNoBram() { return m_synthNoBram; }
-  void SynthNoBram(bool noBram) { m_synthNoBram = noBram; }
   bool SynthNoAdder() { return m_synthNoAdder; }
   void SynthNoAdder(bool noAdder) { m_synthNoAdder = noAdder; }
   bool SynthFast() { return m_synthFast; }
@@ -84,8 +80,6 @@ class CompilerRS : public CompilerOpenFPGA {
   SynthesisCarryInference m_synthCarry = SynthesisCarryInference::None;
   SynthesisFsmEncoding m_synthFsm = SynthesisFsmEncoding::None;
   SynthesisClkeStrategy m_synthClke = SynthesisClkeStrategy::None;
-  bool m_synthNoDsp = false;
-  bool m_synthNoBram = false;
   bool m_synthNoAdder = false;
   bool m_synthFast = false;
   bool m_synthCec = false;

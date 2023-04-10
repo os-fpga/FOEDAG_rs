@@ -21,13 +21,14 @@ All rights reserved
 #include "Compiler/CompilerRS.h"
 #include "Compiler/Constraints.h"
 #include "Compiler/Log.h"
+#include "Configuration/CFGCompiler/CFGCompiler.h"
+#include "ConfigurationRS/BitAssembler/BitAssembler.h"
 #include "Main/Settings.h"
 #include "MainWindow/Session.h"
 #include "NewProject/ProjectManager/project_manager.h"
 #include "Utils/FileUtils.h"
 #include "Utils/LogUtils.h"
 #include "Utils/StringUtils.h"
-#include "scope_guard.hpp"
 
 #ifdef PRODUCTION_BUILD
 #include "License_manager.hpp"
@@ -49,7 +50,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} -blif ${OUTPUT_BLIF} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${FSM_ENCODING} -blif ${OUTPUT_BLIF} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 
 write_verilog -noattr -nohex ${OUTPUT_VERILOG}
@@ -70,11 +71,47 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} ${ABC_SCRIPT} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${LIMITS} ${NO_DSP} ${NO_BRAM} ${FSM_ENCODING} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} ${ABC_SCRIPT} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${LIMITS} ${FSM_ENCODING} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
   )";
+
+static auto assembler_flow(CompilerRS *compiler, bool batchMode, int argc,
+                           const char *argv[]) {
+  CFGCompiler *cfgcompiler = compiler->GetConfiguration();
+  compiler->BitsOpt(Compiler::BitstreamOpt::DefaultBitsOpt);
+  for (int i = 1; i < argc; i++) {
+    std::string arg = argv[i];
+    if (arg == "force") {
+      compiler->BitsOpt(Compiler::BitstreamOpt::Force);
+    } else if (arg == "clean") {
+      compiler->BitsOpt(Compiler::BitstreamOpt::Clean);
+    } else if (arg == "enable_simulation") {
+      compiler->BitsOpt(Compiler::BitstreamOpt::EnableSimulation);
+    } else {
+      compiler->ErrorMessage("Unknown bitstream option: " + arg);
+      return TCL_ERROR;
+    }
+  }
+  cfgcompiler->m_cmdarg.command = "assembler";
+  cfgcompiler->m_cmdarg.clean =
+      compiler->BitsOpt() == Compiler::BitstreamOpt::Clean;
+
+  // Call Compile()
+  if (batchMode) {
+    if (!compiler->Compile(Compiler::Action::Bitstream)) {
+      return TCL_ERROR;
+    }
+  } else {
+    WorkerThread *wthread =
+        new WorkerThread("bitstream_th", Compiler::Action::Bitstream, compiler);
+    if (!wthread->start()) {
+      return TCL_ERROR;
+    }
+  }
+  return TCL_OK;
+}
 
 std::string CompilerRS::InitSynthesisScript() {
   switch (m_synthType) {
@@ -192,14 +229,6 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
       carry_inference = "-carry no";
       break;
   }
-  std::string no_dsp;
-  if (m_synthNoDsp) {
-    no_dsp = "-no_dsp";
-  }
-  std::string no_bram;
-  if (m_synthNoBram) {
-    no_bram = "-no_bram";
-  }
   std::string fast_mode;
   if (m_synthFast) {
     fast_mode = "-fast";
@@ -258,8 +287,6 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   result = ReplaceAll(result, "${EFFORT}", effort);
   result = ReplaceAll(result, "${FSM_ENCODING}", fsm_encoding);
   result = ReplaceAll(result, "${CARRY}", carry_inference);
-  result = ReplaceAll(result, "${NO_DSP}", no_dsp);
-  result = ReplaceAll(result, "${NO_BRAM}", no_bram);
   result = ReplaceAll(result, "${FAST}", fast_mode);
   result = ReplaceAll(result, "${MAX_THREADS}", max_threads);
   result = ReplaceAll(result, "${NO_SIMPLIFY}", no_simplify);
@@ -418,12 +445,16 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
         }
         continue;
       }
-      if (option == "-no_dsp") {
-        compiler->SynthNoDsp(true);
+      if (option == "-dsp_limit" && i + 1 < argc) {
+        std::string arg = argv[++i];
+        const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
+        if (ok) compiler->MaxUserDSPCount(value);
         continue;
       }
-      if (option == "-no_bram") {
-        compiler->SynthNoBram(true);
+      if (option == "-bram_limit" && i + 1 < argc) {
+        std::string arg = argv[++i];
+        const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
+        if (ok) compiler->MaxUserBRAMCount(value);
         continue;
       }
       if (option == "-no_adder") {
@@ -477,12 +508,44 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
   };
   interp->registerCmd("max_threads", max_threads, this, 0);
 
+  // Configuration
+  CFGCompiler *cfgcompiler = GetConfiguration();
+  if (batchMode) {
+    auto assembler = [](void *clientData, Tcl_Interp *interp, int argc,
+                        const char *argv[]) -> int {
+      CompilerRS *compiler = (CompilerRS *)clientData;
+      CFGCompiler *cfgcompiler = compiler->GetConfiguration();
+      int status = TCL_OK;
+      if ((status = assembler_flow(compiler, true, argc, argv)) != TCL_OK) {
+        return CFGCompiler::Compile(cfgcompiler, true);
+      } else {
+        return status;
+      }
+    };
+    interp->registerCmd("assembler", assembler, this, 0);
+  } else {
+    auto assembler = [](void *clientData, Tcl_Interp *interp, int argc,
+                        const char *argv[]) -> int {
+      CompilerRS *compiler = (CompilerRS *)clientData;
+      CFGCompiler *cfgcompiler = compiler->GetConfiguration();
+      int status = TCL_OK;
+      if ((status = assembler_flow(compiler, false, argc, argv)) == TCL_OK) {
+        return CFGCompiler::Compile(cfgcompiler, false);
+      } else {
+        return status;
+      }
+    };
+    interp->registerCmd("assembler", assembler, this, 0);
+  }
+  cfgcompiler->RegisterCallbackFunction("assembler", BitAssembler_entry);
   return true;
 }
 
 std::string CompilerRS::BaseVprCommand() {
   std::string device_size = "";
-  if (!m_deviceSize.empty()) {
+  if (PackOpt() == Compiler::PackingOpt::Debug) {
+    device_size = " --device auto";
+  } else if (!m_deviceSize.empty()) {
     device_size = " --device " + m_deviceSize;
   }
   std::string netlistFile;
@@ -728,12 +791,6 @@ void CompilerRS::Help(std::ostream *out) {
             "heuristics"
          << std::endl;
   (*out) << "       none                   : Do not infer carries" << std::endl;
-  (*out) << "     -no_dsp                  : Do not use DSP blocks to "
-            "implement multipliers and associated logic"
-         << std::endl;
-  (*out) << "     -no_bram                 : Do not use Block RAM to "
-            "implement memory components"
-         << std::endl;
   (*out) << "     -fast                    : Perform the fastest synthesis. "
             "Don't expect good QoR."
          << std::endl;
@@ -842,6 +899,7 @@ void CompilerRS::Help(std::ostream *out) {
       << std::endl;
   (*out) << "                  <simulator> : verilator, ghdl, icarus"
          << std::endl;
+  (*out) << "   diagnostic <type>: Debug mode. Types: packer" << std::endl;
   writeWaveHelp(out, 3, 30);  // 30 is the col count of the : in the line above
   (*out) << "-----------------------------------------------" << std::endl;
 }
@@ -869,8 +927,7 @@ std::string FOEDAG::TclArgs_getRsSynthesisOptions() {
     // Use the script completer to generate an arg list w/ current values
     // Note we are only grabbing the values that matter for the settings ui
     tclOptions = compiler->FinishSynthesisScript(
-        "${OPTIMIZATION} ${EFFORT} ${FSM_ENCODING} ${CARRY} ${NO_DSP} "
-        "${NO_BRAM} ${FAST}");
+        "${OPTIMIZATION} ${EFFORT} ${FSM_ENCODING} ${CARRY} ${FAST}");
 
     // The settings UI provides a single argument value pair for each field.
     // Optimization uses -de -goal so we convert that to the settings specific
@@ -906,11 +963,15 @@ std::string FOEDAG::TclArgs_getRsSynthesisOptions() {
     }
 
     if (compiler->SynthEffort() == CompilerRS::SynthesisEffort::None) {
-      tclOptions += "-effort none";
+      tclOptions += " -effort none";
     }
     if (compiler->SynthFsm() == CompilerRS::SynthesisFsmEncoding::None) {
-      tclOptions += "-fsm_encoding none";
+      tclOptions += " -fsm_encoding none";
     }
+    auto dsp = StringUtils::to_string(compiler->MaxUserDSPCount());
+    tclOptions += " -dsp_limit " + dsp;
+    auto bram = StringUtils::to_string(compiler->MaxUserBRAMCount());
+    tclOptions += " -bram_limit " + bram;
   };
   return tclOptions;
 }
@@ -920,8 +981,6 @@ std::string FOEDAG::TclArgs_getRsSynthesisOptions() {
 void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
   CompilerRS *compiler = (CompilerRS *)GlobalSession->GetCompiler();
 
-  bool noBram{false};
-  bool noDsp{false};
   bool fast{false};
   // Split into args by -
   std::vector<std::string> args;
@@ -1010,12 +1069,16 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
       }
       continue;
     }
-    if (option == "-no_dsp") {
-      noDsp = true;
+    if (option == "-dsp_limit" && tokens.size() > 1) {
+      std::string arg = tokens[1];
+      const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
+      if (ok) compiler->MaxUserDSPCount(value);
       continue;
     }
-    if (option == "-no_bram") {
-      noBram = true;
+    if (option == "-bram_limit" && tokens.size() > 1) {
+      std::string arg = tokens[1];
+      const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
+      if (ok) compiler->MaxUserBRAMCount(value);
       continue;
     }
     if (option == "-fast") {
@@ -1023,8 +1086,6 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
       continue;
     }
   }
-  compiler->SynthNoBram(noBram);
-  compiler->SynthNoDsp(noDsp);
   compiler->SynthFast(fast);
   GlobalSession->GetSettings()->syncWith(PACKING_SETTING_KEY);
 }
