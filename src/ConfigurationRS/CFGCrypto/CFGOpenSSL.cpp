@@ -108,7 +108,7 @@ static int PASSPHRASE_CALLBACK(char* buf, int max_len, int flag, void* pwd) {
   if (pass.size() == 0) {
     CFG_INTERNAL_ERROR("No passphrase is specified");
   }
-  if (pass.size() > max_len) {
+  if (pass.size() > (size_t)(max_len)) {
     memset(const_cast<char*>(pass.c_str()), 0, pass.size());
     CFG_INTERNAL_ERROR(
         "Caller to PASSPHRASE_CALLBACK does not provide enough memory "
@@ -241,7 +241,7 @@ const CFGOpenSSL_KEY_INFO* CFGOpenSSL::get_key_info(int nid, int size) {
   for (auto& c : CFGOpenSSL_KEY_INFO_DATABASE) {
     if (c.nid == nid) {
       if (c.nid == NID_rsa) {
-        if (c.size != size) {
+        if (c.size != (uint32_t)(size)) {
           // For RSA, we do not have specific NID for different size
           // So further check the size
           continue;
