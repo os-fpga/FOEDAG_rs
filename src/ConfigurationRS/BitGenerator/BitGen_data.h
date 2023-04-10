@@ -8,9 +8,16 @@
 #include "CFGCommonRS/CFGCommonRS.h"
 
 struct BitGen_DATA_RULE {
-  BitGen_DATA_RULE(const std::string& n, uint64_t s, uint64_t d, uint8_t t)
-      : name(n), size(s), default_value(d), size_type(t) {
+  BitGen_DATA_RULE(const std::string& n, uint64_t s, uint64_t d, uint8_t t,
+                   uint32_t p)
+      : name(n), size(s), default_value(d), size_type(t), property(p) {
     CFG_ASSERT(name.size());
+  }
+  ~BitGen_DATA_RULE() {
+    if (data.size()) {
+      memset(&data[0], 0, data.size());
+      data.resize(0);
+    }
   }
   const std::string name = "";
   uint64_t size = 0;
@@ -18,6 +25,7 @@ struct BitGen_DATA_RULE {
   const uint8_t size_type = 0;
   uint8_t info = 0;
   std::vector<uint8_t> data = {};
+  const uint32_t property = 0;
 };
 
 struct BitGEN_SRC_DATA {
@@ -30,6 +38,12 @@ struct BitGEN_SRC_DATA {
     data.resize(value.size());
     memcpy(&data[0], &value[0], value.size());
   }
+  ~BitGEN_SRC_DATA() {
+    if (data.size()) {
+      memset(&data[0], 0, data.size());
+      data.resize(0);
+    }
+  }
   std::vector<uint8_t> data = {};
 };
 
@@ -37,10 +51,12 @@ class BitGen_DATA {
  public:
   BitGen_DATA(const std::string& n, const uint8_t s,
               std::vector<BitGen_DATA_RULE> r);
+  void set_rule_size(const std::string& field, uint64_t size);
   void set_src(const std::string& name, uint64_t value);
   void set_src(const std::string& name, const std::vector<uint8_t>& data);
   void set_src(const std::string& name, const uint8_t* data, size_t data_size);
-  uint64_t generate(std::vector<uint8_t>& data);
+  uint64_t generate(std::vector<uint8_t>& data, std::vector<uint8_t>& key,
+                    uint8_t* iv, std::vector<std::string> data_to_encrypt = {});
   uint64_t parse(std::ofstream& file, const uint8_t* data,
                  uint64_t total_bit_size, uint64_t& bit_index,
                  std::string space, const bool detail = false);
@@ -49,6 +65,7 @@ class BitGen_DATA {
   uint64_t get_rule_value(const std::string& field);
   std::vector<uint8_t>& get_rule_data(const std::string& field);
   std::vector<uint8_t>* get_rule_data_ptr(const std::string& field);
+  uint64_t get_header_size();
 
  protected:
   uint64_t validate();

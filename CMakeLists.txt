@@ -168,7 +168,7 @@ set(raptor_gui_SRC
 add_library(raptor_gui STATIC ${raptor_gui_SRC})
 #target_link_libraries(raptor_gui PUBLIC Qt5::Widgets Qt5::Core Qt5::Gui Qt5::Xml Qt5::Quick)
 target_link_libraries(raptor_gui PUBLIC Qt5::Widgets Qt5::Core Qt5::Gui Qt5::Xml)
-target_link_libraries(raptor_gui INTERFACE bitassembler bitgenerator)
+target_link_libraries(raptor_gui INTERFACE bitassembler)
 
 if (PRODUCTION_BUILD)
 target_link_libraries(raptor_gui PUBLIC rs_licenseManager)

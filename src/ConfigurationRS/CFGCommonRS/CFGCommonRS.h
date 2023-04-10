@@ -58,4 +58,14 @@ void CFG_print_binary_line_by_line(std::ofstream& file, const uint8_t* data,
                                    const uint64_t data_alignment,
                                    const std::string space, bool detail);
 
+std::string CFG_get_machine_name();
+
+uint32_t CFG_get_volume_serial_number();
+
+std::vector<uint8_t> CFG_get_mac_info();
+
+uint64_t CFG_get_nano_time();
+
+uint64_t CFG_get_unique_nano_time();
+
 #endif

@@ -1,5 +1,7 @@
 #include "BitGen_data.h"
 
+#include "CFGCrypto/CFGOpenSSL.h"
+
 BitGen_DATA::BitGen_DATA(const std::string& n, const uint8_t s,
                          std::vector<BitGen_DATA_RULE> r)
     : name(n), size_alignment(s), rules(r) {
@@ -28,7 +30,9 @@ void BitGen_DATA::set_src(const std::string& name, const uint8_t* data,
   set_src(name, temp);
 }
 
-uint64_t BitGen_DATA::generate(std::vector<uint8_t>& data) {
+uint64_t BitGen_DATA::generate(std::vector<uint8_t>& data,
+                               std::vector<uint8_t>& key, uint8_t* iv,
+                               std::vector<std::string> data_to_encrypt) {
   size_t retry = rules.size() * 2;
   bool complete = false;
   // set_data: outside world can overwrite anything -- highest priority
@@ -63,6 +67,88 @@ uint64_t BitGen_DATA::generate(std::vector<uint8_t>& data) {
   }
   CFG_ASSERT(complete);
   uint64_t total_bit_size = validate();
+
+  // encrypt data
+  if (key.size()) {
+    CFG_ASSERT(key.size() == 16 || key.size() == 32);
+    CFG_ASSERT(iv != nullptr);
+    // Let's support only one continuous data
+    if (data_to_encrypt.size() == 0) {
+      // caller does not explicitely tell which data to encrypt
+      // so we get it from JSON
+      for (auto& rule : rules) {
+        if (rule.size != 0) {
+          if (rule.property & 1) {
+            data_to_encrypt.push_back(rule.name);
+          }
+        }
+      }
+    }
+    if (data_to_encrypt.size()) {
+      uint8_t tracking = 0;
+      uint64_t pre_encryption_size = 0;
+      uint64_t encryption_size = 0;
+      for (auto& rule : rules) {
+        if (rule.size != 0) {
+          if (CFG_find_string_in_vector(data_to_encrypt, rule.name) >= 0) {
+            CFG_ASSERT(tracking == 0 || tracking == 1);
+            if (tracking == 0) {
+              CFG_ASSERT((pre_encryption_size % 8) == 0);
+              tracking++;
+            }
+            encryption_size += rule.size;
+          } else {
+            // do not need to encrypt this
+            if (tracking == 0) {
+              pre_encryption_size += rule.size;
+            } else if (tracking == 1) {
+              tracking++;
+            }
+          }
+        }
+      }
+      // No violation
+      CFG_ASSERT(encryption_size > 0 && (encryption_size % 8) == 0);
+      // Start to copy plaintext
+      std::vector<uint8_t> plaintext(encryption_size / 8);
+      std::vector<uint8_t> ciphertext(encryption_size / 8);
+      uint64_t dest = 0;
+      for (auto& rule : rules) {
+        if (rule.size != 0) {
+          if (CFG_find_string_in_vector(data_to_encrypt, rule.name) >= 0) {
+            for (uint64_t i = 0; i < rule.size; i++, dest++) {
+              if (rule.data[i >> 3] & (1 << (i & 7))) {
+                plaintext[dest >> 3] |= (1 << (dest & 7));
+              }
+            }
+          }
+        }
+      }
+      CFG_ASSERT(dest == encryption_size);
+      CFGOpenSSL::ctr_encrypt(&plaintext[0], &ciphertext[0], plaintext.size(),
+                              &key[0], key.size(), iv, 16);
+      dest = 0;
+      for (auto& rule : rules) {
+        if (rule.size != 0) {
+          if (CFG_find_string_in_vector(data_to_encrypt, rule.name) >= 0) {
+            memset(&rule.data[0], 0, rule.data.size());
+            for (uint64_t i = 0; i < rule.size; i++, dest++) {
+              if (ciphertext[dest >> 3] & (1 << (dest & 7))) {
+                rule.data[i >> 3] |= (1 << (i & 7));
+              }
+            }
+          }
+        }
+      }
+      CFG_ASSERT(dest == encryption_size);
+      memset(&plaintext[0], 0, plaintext.size());
+      memset(&ciphertext[0], 0, ciphertext.size());
+      plaintext.resize(0);
+      ciphertext.resize(0);
+    }
+  }
+
+  // copy all data into one continuous piece
   uint64_t dest = 0;
   uint64_t total_size8 = convert_to8(total_bit_size);
   data.resize(total_size8);
@@ -77,6 +163,20 @@ uint64_t BitGen_DATA::generate(std::vector<uint8_t>& data) {
     }
   }
   return total_bit_size;
+}
+
+uint64_t BitGen_DATA::get_header_size() {
+  uint64_t header_size = 0;
+  for (auto& rule : rules) {
+    if (rule.size != 0) {
+      if ((rule.property & 1) == 0) {
+        header_size += rule.size;
+      }
+    } else {
+      CFG_ASSERT(rule.info & 1);
+    }
+  }
+  return header_size;
 }
 
 uint64_t BitGen_DATA::parse(std::ofstream& file, const uint8_t* data,
@@ -119,6 +219,12 @@ uint64_t BitGen_DATA::parse(std::ofstream& file, const uint8_t* data,
 
 uint64_t BitGen_DATA::print(std::ofstream& file, std::string space,
                             const bool detail) {
+  // print_info
+  //    0:      - nature printing
+  //    1-5:    - alignment printing
+  //    b32:b35 - special printing method
+  //    b36:b39 - source data to print
+  //    b40:b47 - alignment printing
   CFG_ASSERT(file.is_open());
   // Validate before print
   uint64_t total_bit_size = validate();
@@ -217,6 +323,9 @@ void BitGen_DATA::check_rule_size(BitGen_DATA_RULE* rule, size_t& incomplete,
       } else {
         incomplete--;
       }
+    } else if (rule->size_type == 2) {
+      rule->info |= 1;
+      incomplete--;
     } else {
       // This is reserved
       // To auto-determine reserve size, all previous rule must be
@@ -433,6 +542,11 @@ uint64_t BitGen_DATA::get_defined_value(const std::string& name) {
   return value;
 }
 
+void BitGen_DATA::set_rule_size(const std::string& field, uint64_t size) {
+  BitGen_DATA_RULE* rule = get_rule(field);
+  rule->size = size;
+}
+
 void BitGen_DATA::set_size(BitGen_DATA_RULE* rule, uint64_t value,
                            const uint32_t property) {
   if (property != 0) {
@@ -467,7 +581,7 @@ void BitGen_DATA::set_data(const uint32_t field_enum, uint64_t value,
 }
 
 void BitGen_DATA::set_data(BitGen_DATA_RULE* rule, std::vector<uint8_t> data) {
-  CFG_ASSERT(rule->size > 0);
+  CFG_ASSERT_MSG(rule->size > 0, "%s set_data() failed", rule->name.c_str());
   size_t length = (size_t)(convert_to8(rule->size));
   if (rule->data.size() == 0) {
     rule->data.resize(length);

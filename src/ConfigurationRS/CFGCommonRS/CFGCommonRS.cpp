@@ -3,7 +3,16 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-
+#if defined(_MSC_VER)
+#include <windows.h>
+#else
+#include <net/if.h>
+#include <netinet/in.h>
+#include <sys/ioctl.h>
+#include <sys/time.h>
+#include <sys/utsname.h>
+#include <unistd.h>
+#endif
 #include "CFGCompress.h"
 
 const uint16_t CFGCommonRS_CRC_8408_TABLE[256] = {
@@ -384,4 +393,113 @@ void CFG_print_binary_line_by_line(std::ofstream& file, const uint8_t* data,
     }
   }
   file << "\n";
+}
+
+std::string CFG_get_machine_name() {
+#if defined(_MSC_VER)
+  char computer_name[1024];
+  uint32_t size = 1024;
+  GetComputerName(computerName, &size);
+  return std::string(computer_name, size);
+#else
+  static struct utsname u;
+  if (uname(&u) < 0) {
+    return "unknown";
+  }
+  return std::string(u.nodename);
+#endif
+}
+
+uint32_t CFG_get_volume_serial_number() {
+  uint32_t serial_number = 0;
+#if defined(_MSC_VER)
+  // Determine if this volume uses an NTFS file system.
+  GetVolumeInformation("c:\\", nullptr, 0, &serial_number, nullptr, nullptr,
+                       nullptr, 0);
+#else
+  // linux does not have
+#endif
+  return serial_number;
+}
+
+std::vector<uint8_t> CFG_get_mac_info() {
+  std::vector<uint8_t> info;
+#if defined(_MSC_VER)
+  IP_ADAPTER_INFO AdapterInfo[32];
+  uint32_t dwBufLen = sizeof(AdapterInfo);
+  uint32_t dwStatus = GetAdaptersInfo(AdapterInfo, &dwBufLen);
+  if (dwStatus == ERROR_SUCCESS) {
+    PIP_ADAPTER_INFO pAdapterInfo = AdapterInfo;
+    for (uint32_t i = 0; i < pAdapterInfo->AddressLength; i++) {
+      info.push_back((uint8_t)(pAdapterInfo->AddressLength[i]));
+    }
+    if (pAdapterInfo->Next) {
+      for (uint32_t i = 0; i < pAdapterInfo->Next->AddressLength; i++) {
+        info.push_back((uint8_t)(pAdapterInfo->Next->AddressLength[i]));
+      }
+    }
+  }
+#else
+  int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+  if (sock >= 0) {
+    // enumerate all IP addresses of the system
+    struct ifconf conf;
+    char ifconfbuf[128 * sizeof(struct ifreq)];
+    memset(ifconfbuf, 0, sizeof(ifconfbuf));
+    conf.ifc_buf = ifconfbuf;
+    conf.ifc_len = sizeof(ifconfbuf);
+    if (ioctl(sock, SIOCGIFCONF, &conf) == 0) {
+      // get MAC address
+      uint8_t found_count = 0;
+      struct ifreq* ifr;
+      for (ifr = conf.ifc_req; (char*)ifr < (char*)conf.ifc_req + conf.ifc_len;
+           ifr++) {
+        if (ifr->ifr_addr.sa_data == (ifr + 1)->ifr_addr.sa_data) {
+          continue;  // duplicate, skip it
+        }
+        if (ioctl(sock, SIOCGIFFLAGS, ifr)) {
+          continue;  // failed to get flags, skip it
+        }
+        if (ioctl(sock, SIOCGIFHWADDR, ifr) == 0) {
+          uint8_t* addr = (uint8_t*)&(ifr->ifr_addr.sa_data);
+          for (int i = 0; i < 6; i++) {
+            info.push_back(addr[i]);
+          }
+          found_count++;
+          if (found_count == 2) {
+            break;
+          }
+        }
+      }
+    }
+    close(sock);
+  }
+#endif
+  return info;
+}
+
+uint64_t CFG_get_nano_time() {
+  uint64_t current_time = 0;
+#if defined(_MSC_VER)
+  FILETIME ft;
+  ::GetSystemTimeAsFileTime(&ft);
+  uint32_t* ptr = (uint32_t*)(&current_time);
+  ptr[0] = uint32_t(ft.dwLowDateTime);
+  ptr[1] = uint32_t(ft.dwHighDateTime);
+#else
+  struct timespec tp;
+  clock_gettime(CLOCK_REALTIME, &tp);
+  current_time = (tp.tv_sec * uint64_t(1000000000)) + tp.tv_nsec;
+#endif
+  return current_time;
+}
+
+uint64_t CFG_get_unique_nano_time() {
+  static uint64_t backup_time = CFG_get_nano_time();
+  uint64_t time = CFG_get_nano_time();
+  if (backup_time >= time) {
+    time = backup_time + 1;
+  }
+  backup_time = time;
+  return time;
 }

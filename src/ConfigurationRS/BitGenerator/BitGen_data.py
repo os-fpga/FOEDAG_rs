@@ -27,13 +27,15 @@ class RULE :
         sdata = field["sdata"]
         print_info = field["print_info"]
         dependency = field["dependency"]
+        property = field["property"]
         assert isinstance(name, str)
-        assert isinstance(size, (int, str))
+        assert size == None or isinstance(size, (int, str))
         assert isinstance(data, (int, str))
         assert sdata_size == None or isinstance(sdata_size, str)
         assert sdata == None or isinstance(sdata, str)
         assert print_info == None or isinstance(print_info, str)
         assert dependency == None or isinstance(dependency, str)
+        assert isinstance(property, int)
         size_type = 0
         rule_size = size
         rule_data = data
@@ -45,6 +47,10 @@ class RULE :
         elif isinstance(size, str) :
             size_type = 1
             rule_size = 0
+        elif size == None :
+            size_type = 2
+            rule_size = 0
+            size = 0
         if isinstance(data, str) :
             rule_data = 0
         self.name = name
@@ -57,13 +63,15 @@ class RULE :
         self.sdata = sdata
         self.print_info = print_info
         self.dependency = dependency
+        self.property = property
 
 def write_rule(cfile, rule) :
 
-    cfile.write("    BitGen_DATA_RULE(\"%s\", %d, %d, %d)" % (rule.name, \
-                                                                rule.rule_size, \
-                                                                rule.rule_data, \
-                                                                rule.size_type))
+    cfile.write("    BitGen_DATA_RULE(\"%s\", %d, %d, %d, %d)" % (rule.name, \
+                                                                  rule.rule_size, \
+                                                                  rule.rule_data, \
+                                                                  rule.size_type, \
+                                                                  rule.property))
 
 def match_dependency(dependency, rules) :
 
@@ -268,7 +276,9 @@ def main() :
                 field["print_info"] = None
             if "dependency" not in field :
                 field["dependency"] = None
-            assert len(field) == 7
+            if "property" not in field :
+                field["property"] = 0
+            assert len(field) == 8
             rules.append(RULE(field))
             write_rule(cfile, rules[-1])
             file.write("    %s_%s = %d" % (data_name, rules[-1].name.upper(), i))
