@@ -396,7 +396,7 @@ std::string CFG_get_machine_name() {
 #if defined(_MSC_VER)
   char computer_name[1024];
   uint32_t size = 1024;
-  GetComputerName(computer_name, &size);
+  GetComputerName(computer_name, (LPDWORD)(&size));
   return std::string(computer_name, size);
 #else
   static struct utsname u;
