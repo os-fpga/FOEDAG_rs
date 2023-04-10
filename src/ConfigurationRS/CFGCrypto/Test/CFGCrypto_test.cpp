@@ -43,7 +43,7 @@ void test_encryption() {
   CFG_POST_MSG("Encryption Test");
   const size_t data_size = 34;
   std::vector<uint8_t> data;
-  for (int i = 0; i < data_size; i++) {
+  for (size_t i = 0; i < data_size; i++) {
     data.push_back((uint8_t)(i));
   }
   std::vector<uint8_t> key(16, 0);
@@ -64,7 +64,7 @@ void test_encryption() {
   }
   CFGOpenSSL::ctr_decrypt(&cipher[0], &plain[0], cipher.size(), &key[0],
                           key.size(), &iv[0], iv.size());
-  for (int i = 0; i < data_size; i++) {
+  for (size_t i = 0; i < data_size; i++) {
     CFG_ASSERT(plain[i] == (uint8_t)(i));
   }
 }
