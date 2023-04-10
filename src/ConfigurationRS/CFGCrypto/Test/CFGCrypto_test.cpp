@@ -59,7 +59,7 @@ void test_encryption() {
   CFGOpenSSL::ctr_encrypt(&data[0], &cipher[0], data.size(), &key[0],
                           key.size(), &iv[0], iv.size());
   CFG_ASSERT(cipher.size() == expected_cipher.size());
-  for (int i = 0; i < data_size; i++) {
+  for (size_t i = 0; i < data_size; i++) {
     CFG_ASSERT(cipher[i] == expected_cipher[i]);
   }
   CFGOpenSSL::ctr_decrypt(&cipher[0], &plain[0], cipher.size(), &key[0],
