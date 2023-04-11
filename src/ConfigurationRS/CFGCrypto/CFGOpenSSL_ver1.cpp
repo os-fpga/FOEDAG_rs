@@ -1,10 +1,9 @@
-#include "CFGOpenSSL.h"
-
 #include <fstream>
 #include <streambuf>
 #include <string>
 
 #include "CFGCrypto_key.h"
+#include "CFGOpenSSL.h"
 #if defined(_MSC_VER)
 #include <windows.h>
 #else
