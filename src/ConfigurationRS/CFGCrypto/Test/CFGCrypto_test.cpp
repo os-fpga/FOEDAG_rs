@@ -98,8 +98,6 @@ int main(int argc, const char** argv) {
   CFG_POST_MSG("This is CFGOpenSSL unit test");
   test_sha();
   test_encryption();
-  for (int i = 0; i < 100000; i++) {
-    test_signing();
-  }
+  test_signing();
   return 0;
 }

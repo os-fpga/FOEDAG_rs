@@ -12,9 +12,7 @@
 #include <unistd.h>
 #endif
 
-#include "openssl/aes.h"
 #include "openssl/bio.h"
-#include "openssl/core_names.h"
 #include "openssl/crypto.h"
 #include "openssl/ec.h"
 #include "openssl/evp.h"

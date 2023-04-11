@@ -29,6 +29,15 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(OpenSSL)
+if (OPENSSL_FOUND)
+  message (STATUS "OPENSSL found")
+  message (STATUS "OpenSSL Version: " ${OPENSSL_VERSION})
+  message (STATUS "OpenSSL Include directories: " ${OPENSSL_INCLUDE_DIR})
+else() 
+  message (FATAL_ERROR "OpenSSL Not found.")
+endif()
+
 if (MSVC)
 else()
   set(CMAKE_CXX_FLAGS_DEBUG
