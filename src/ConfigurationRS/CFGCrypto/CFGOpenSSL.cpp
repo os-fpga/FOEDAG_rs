@@ -14,10 +14,12 @@
 
 #include "openssl/aes.h"
 #include "openssl/bio.h"
+#include "openssl/core_names.h"
 #include "openssl/crypto.h"
 #include "openssl/ec.h"
 #include "openssl/evp.h"
 #include "openssl/modes.h"
+#include "openssl/param_build.h"
 #include "openssl/pem.h"
 #include "openssl/pkcs12.h"
 #include "openssl/rand.h"
@@ -120,45 +122,30 @@ static int PASSPHRASE_CALLBACK(char* buf, int max_len, int flag, void* pwd) {
   return int(pass.size());
 }
 
-static EC_GROUP* generate_ec_group(int nid) {
-  EC_GROUP* group = EC_GROUP_new_by_curve_name(nid);
-  CFG_ASSERT(group != nullptr);
-  EC_GROUP_set_asn1_flag(group, OPENSSL_EC_NAMED_CURVE);
-  EC_GROUP_set_point_conversion_form(group, POINT_CONVERSION_UNCOMPRESSED);
-  return group;
-}
-
-static EC_KEY* generate_ec_key(EC_GROUP* group) {
-  CFG_ASSERT(group != nullptr);
-  EC_KEY* key = EC_KEY_new();
-  CFG_ASSERT(key != nullptr);
-  CFG_ASSERT(EC_KEY_set_group(key, group) != 0);
-  CFG_ASSERT(EC_KEY_generate_key(key) != 0);
+static EVP_PKEY* generate_ec_key(const std::string& curvename) {
+  EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
+  EVP_PKEY* key = EVP_PKEY_new();
+  CFG_ASSERT(EVP_PKEY_keygen_init(ctx) == 1);
+  CFG_ASSERT(EVP_PKEY_CTX_set_group_name(ctx, curvename.c_str()) == 1);
+  CFG_ASSERT(EVP_PKEY_keygen(ctx, &key) == 1);
+  EVP_PKEY_CTX_free(ctx);
   return key;
 }
 
-static RSA* generate_rsa_key(uint32_t byte_size) {
+static EVP_PKEY* generate_rsa_key(uint32_t bits) {
   // Minimum 512 bits
   // Multiple of 256 bits
-  CFG_ASSERT((byte_size * 8) >= 512);
-  CFG_ASSERT(((byte_size * 8) % 256) == 0);
-  BIGNUM* bn = BN_new();
-  int status = BN_set_word(bn, RSA_F4);
-  if (status <= 0) {
-    BN_free(bn);
-    CFG_INTERNAL_ERROR("Fail to BN_set_word");
-  }
-
-  RSA* rsa = RSA_new();
-  status = RSA_generate_key_ex(rsa, byte_size * 8, bn, nullptr);
-  if (status <= 0) {
-    BN_free(bn);
-    RSA_free(rsa);
-    CFG_INTERNAL_ERROR("Fail to RSA_generate_key_ex");
-  }
-  return rsa;
+  CFG_ASSERT(bits >= 512);
+  CFG_ASSERT((bits % 256) == 0);
+  CFG_ASSERT(bits <= 16384);
+  EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+  EVP_PKEY* key = EVP_PKEY_new();
+  CFG_ASSERT(EVP_PKEY_keygen_init(ctx) == 1);
+  CFG_ASSERT(EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, int(bits)) == 1);
+  CFG_ASSERT(EVP_PKEY_keygen(ctx, &key) == 1);
+  EVP_PKEY_CTX_free(ctx);
+  return key;
 }
-
 void CFGOpenSSL::init_openssl() {
   if (!m_openssl_init) {
     // CFG_POST_MSG("OpenSSL Version: %s\n", OpenSSL_version(0));
@@ -204,7 +191,7 @@ void CFGOpenSSL::ctr_encrypt(const uint8_t* plain_data, uint8_t* cipher_data,
   init_openssl();
 
   // encrypt
-#if 1
+#if 0
   AES_KEY aes_key;
   unsigned char ecount_buf[16] = {0};
   unsigned char internal_iv[16] = {0};
@@ -221,12 +208,16 @@ void CFGOpenSSL::ctr_encrypt(const uint8_t* plain_data, uint8_t* cipher_data,
   int cipher_size = 0;
   const EVP_CIPHER* cipher =
       key_size == 16 ? EVP_aes_128_ctr() : EVP_aes_256_ctr();
-  crypto::ScopedEVP_CIPHER_CTX encryption_context(EVP_CIPHER_CTX_new());
-  CFG_ASSERT(!encryption_context);
-  CFG_ASSERT(EVP_EncryptInit_ex(encryption_context.get(), cipher, nullptr, key,
-                                iv) == 1);
-  CFG_ASSERT(EVP_EncryptUpdate(encryption_context.get(), cipher_data,
-                               &cipher_size, plain_data, int(data_size)) == 1);
+  EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+  CFG_ASSERT(ctx != nullptr);
+  CFG_ASSERT(EVP_EncryptInit(ctx, cipher, key, iv) == 1);
+  CFG_ASSERT(EVP_EncryptUpdate(ctx, cipher_data, &cipher_size, plain_data,
+                               int(data_size)) == 1);
+  CFG_ASSERT(cipher_size == int(data_size));
+  // To CTR this seems to be redundant
+  CFG_ASSERT(EVP_EncryptFinal(ctx, cipher_data, &cipher_size) == 1);
+  CFG_ASSERT(cipher_size == 0);
+  EVP_CIPHER_CTX_free(ctx);
 #endif
 }
 
@@ -368,15 +359,12 @@ void CFGOpenSSL::gen_private_pem(const std::string& key_type,
                                  const std::string& passphrase,
                                  const bool skip_passphrase) {
   init_openssl();
-  EC_GROUP* group = nullptr;
-  EC_KEY* ec_key = nullptr;
-  RSA* rsa_key = nullptr;
   const CFGOpenSSL_KEY_INFO* key_info = get_key_info(key_type);
+  EVP_PKEY* key = nullptr;
   if (key_info->evp_pkey_id == NID_X9_62_id_ecPublicKey) {
-    group = generate_ec_group(key_info->nid);
-    ec_key = generate_ec_key(group);
+    key = generate_ec_key(key_type);
   } else {
-    rsa_key = generate_rsa_key(key_info->size);
+    key = generate_rsa_key(key_info->size * 8);
   }
   BIO* bio = BIO_new(BIO_s_file());
   CFG_ASSERT(bio != nullptr);
@@ -385,16 +373,9 @@ void CFGOpenSSL::gen_private_pem(const std::string& key_type,
   CFG_ASSERT_MSG(status > 0, "Fail to open file %s for BIO write",
                  filepath.c_str());
   if (skip_passphrase) {
-    if (key_info->evp_pkey_id == NID_X9_62_id_ecPublicKey) {
-      CFG_ASSERT(PEM_write_bio_ECPKParameters(bio, group) > 0);
-      CFG_ASSERT(PEM_write_bio_ECPrivateKey(bio, ec_key, nullptr, nullptr, 0,
-                                            nullptr, nullptr) > 0);
-      EC_KEY_free(ec_key);
-    } else {
-      CFG_ASSERT(PEM_write_bio_RSAPrivateKey(bio, rsa_key, nullptr, nullptr, 0,
-                                             nullptr, nullptr) > 0);
-      RSA_free(rsa_key);
-    }
+    CFG_ASSERT(PEM_write_bio_PrivateKey(bio, key, nullptr, nullptr, 0, nullptr,
+                                        nullptr) == 1);
+    EVP_PKEY_free(key);
   } else {
     std::string final_passphrase = "";
     get_passphrase(final_passphrase, passphrase, MIN_PASSPHRASE_SIZE);
@@ -413,55 +394,41 @@ void CFGOpenSSL::gen_private_pem(const std::string& key_type,
       final_passphrase.resize(password_size);
     }
     // Convert EC Key to EVP Key
-    EVP_PKEY* evp_key = nullptr;
     PKCS8_PRIV_KEY_INFO* p8inf = nullptr;
     X509_ALGOR* pbe = nullptr;
     X509_SIG* p8 = nullptr;
-    evp_key = EVP_PKEY_new();
-    if (evp_key == nullptr) {
-      memory_clean(final_passphrase, evp_key, p8inf, p8);
-      CFG_INTERNAL_ERROR("Fail to create EVP Key");
-    }
-    if (key_info->evp_pkey_id == NID_X9_62_id_ecPublicKey) {
-      status = EVP_PKEY_assign(evp_key, NID_X9_62_id_ecPublicKey, ec_key);
-    } else {
-      status = EVP_PKEY_assign(evp_key, NID_rsaEncryption, rsa_key);
-    }
     if (status <= 0) {
-      memory_clean(final_passphrase, evp_key, p8inf, p8);
+      memory_clean(final_passphrase, key, p8inf, p8);
       CFG_INTERNAL_ERROR("Fail to assign EC Key to EVP Key");
     }
     // Convert EVP Key to PKCS8
-    p8inf = EVP_PKEY2PKCS8(evp_key);
+    p8inf = EVP_PKEY2PKCS8(key);
     if (p8inf == nullptr) {
-      memory_clean(final_passphrase, evp_key, p8inf, p8);
+      memory_clean(final_passphrase, key, p8inf, p8);
       CFG_INTERNAL_ERROR("Fail to convert EVP Key to PKCS8");
     }
     // Create PBE algorithm from ass256-cbc EVP_CIPHER and pbe_nid
     pbe = PKCS5_pbe2_set_iv(EVP_aes_256_cbc(), 5000000, nullptr, 0, nullptr,
                             NID_hmacWithSHA512);
     if (pbe == nullptr) {
-      memory_clean(final_passphrase, evp_key, p8inf, p8);
+      memory_clean(final_passphrase, key, p8inf, p8);
       CFG_INTERNAL_ERROR("Fail to create PBE X509_ALGOR");
     }
     // Encrypt
     p8 = PKCS8_set0_pbe(final_passphrase.c_str(), int(final_passphrase.size()),
                         p8inf, pbe);
     if (p8 == nullptr) {
-      memory_clean(final_passphrase, evp_key, p8inf, p8);
+      memory_clean(final_passphrase, key, p8inf, p8);
       CFG_INTERNAL_ERROR("Fail to create PKCS8 X509_SIG");
     }
     // Write to BIO
     status = PEM_write_bio_PKCS8(bio, p8);
     if (status <= 0) {
-      memory_clean(final_passphrase, evp_key, p8inf, p8);
+      memory_clean(final_passphrase, key, p8inf, p8);
       CFG_INTERNAL_ERROR("Fail to write X509_SIG to PEM BIO");
     }
     // Free
-    memory_clean(final_passphrase, evp_key, p8inf, p8);
-  }
-  if (group != nullptr) {
-    EC_GROUP_free(group);
+    memory_clean(final_passphrase, key, p8inf, p8);
   }
   BIO_free_all(bio);
 }
@@ -473,25 +440,25 @@ void CFGOpenSSL::gen_public_pem(const std::string& private_filepath,
   bool is_ec = false;
   EVP_PKEY* key =
       (EVP_PKEY*)(read_private_key(private_filepath, passphrase, is_ec));
+  EVP_PKEY* pubkey = NULL;
   BIO* bio = BIO_new(BIO_s_file());
   int status = BIO_ctrl(bio, BIO_C_SET_FILENAME, BIO_CLOSE | BIO_FP_WRITE,
                         const_cast<char*>(public_filepath.c_str()));
   CFG_ASSERT_MSG(status > 0, "Fail to open file %s for BIO write",
                  public_filepath.c_str());
-  // Currently only support two key type
-  if (is_ec) {
-    CFG_POST_MSG("Detected private EC Key");
-    EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(key);
-    status = PEM_write_bio_EC_PUBKEY(bio, ec_key);
-    CFG_ASSERT_MSG(status > 0, "Fail to write EC Public Key to PEM BIO");
-  } else {
-    CFG_POST_MSG("Detected private RSA Key");
-    RSA* rsa_key = EVP_PKEY_get0_RSA(key);
-    status = PEM_write_bio_RSAPublicKey(bio, rsa_key);
-    CFG_ASSERT_MSG(status > 0, "Fail to write RSA Public Key to PEM BIO");
-  }
-  EVP_PKEY_free(key);
+  OSSL_PARAM* params = NULL;
+  CFG_ASSERT(EVP_PKEY_todata(key, EVP_PKEY_PUBLIC_KEY, &params) == 1);
+  EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_from_pkey(nullptr, key, nullptr);
+  CFG_ASSERT(ctx != nullptr);
+  CFG_ASSERT(EVP_PKEY_fromdata_init(ctx) == 1);
+  CFG_ASSERT(EVP_PKEY_fromdata(ctx, &pubkey, EVP_PKEY_PUBLIC_KEY, params) == 1);
+  CFG_ASSERT(PEM_write_bio_PUBKEY(bio, pubkey) == 1);
+  // clean up
+  EVP_PKEY_free(pubkey);
+  EVP_PKEY_CTX_free(ctx);
+  OSSL_PARAM_free(params);
   BIO_free_all(bio);
+  EVP_PKEY_free(key);
 }
 
 void CFGOpenSSL::get_passphrase(std::string& final_passphrase,

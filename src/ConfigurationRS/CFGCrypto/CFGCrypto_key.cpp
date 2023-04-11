@@ -1,5 +1,6 @@
 #include "CFGCrypto_key.h"
 
+#include "openssl/core_names.h"
 #include "openssl/evp.h"
 #include "openssl/rsa.h"
 #include "openssl/x509.h"
@@ -33,18 +34,28 @@ CFGCrypto_KEY::CFGCrypto_KEY(const std::string& key_type,
   CFG_ASSERT(m_key_info != nullptr);
   m_is_ec = m_key_info->nid != NID_rsa;
   if (m_is_ec) {
+    EVP_PKEY* key = nullptr;
     CFG_ASSERT(pub_key_size == (2 * m_key_info->size));
-    BIGNUM* x = BN_bin2bn(pub_key, m_key_info->size, NULL);
-    BIGNUM* y = BN_bin2bn(&pub_key[m_key_info->size], m_key_info->size, NULL);
-    CFG_ASSERT(x != NULL && y != NULL)
-    EC_KEY* ec_key = EC_KEY_new_by_curve_name(m_key_info->nid);
-    CFG_ASSERT(EC_KEY_set_public_key_affine_coordinates(ec_key, x, y) == 1);
-    CFG_ASSERT(EC_KEY_check_key(ec_key) == 1);
-    CFG_ASSERT(EC_KEY_get0_public_key(ec_key) != NULL);
-    m_evp_key = EVP_PKEY_new();
+    CFG_ASSERT((pub_key_size + 1) <= sizeof(m_public_key));
+    OSSL_PARAM params[2];
+    params[0] = OSSL_PARAM_construct_utf8_string(
+        OSSL_PKEY_PARAM_GROUP_NAME, const_cast<char*>(key_type.c_str()), 0);
+    params[1] = OSSL_PARAM_construct_end();
+    EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
+    CFG_ASSERT(ctx != nullptr);
+    CFG_ASSERT(EVP_PKEY_fromdata_init(ctx) == 1);
+    CFG_ASSERT(EVP_PKEY_fromdata(ctx, &key,
+                                 OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS,
+                                 params) == 1);
+    CFG_ASSERT(key != nullptr);
+    m_public_key[0] = 0x4;
+    memcpy(&m_public_key[1], pub_key, pub_key_size);
+    uint8_t* ptr = &m_public_key[0];
+    key = d2i_PublicKey(EVP_PKEY_EC, &key, (const uint8_t**)(&ptr),
+                        long(pub_key_size + 1));
+    m_evp_key = key;
     CFG_ASSERT(m_evp_key != nullptr);
-    CFG_ASSERT(EVP_PKEY_assign(get_evp_pkey(m_evp_key),
-                               NID_X9_62_id_ecPublicKey, ec_key) == 1);
+    EVP_PKEY_CTX_free(ctx);
   } else {
     CFG_ASSERT((m_key_info->size + 4) <= pub_key_size);
     CFG_ASSERT((size_t)(m_key_info->size + 4) <= sizeof(m_public_key));
@@ -94,13 +105,9 @@ CFGCrypto_KEY::CFGCrypto_KEY(const std::string& key_type,
     printf("\n");
 #endif
     uint8_t* ptr = &m_public_key[0];
-    RSA* rsa_key =
-        d2i_RSAPublicKey(nullptr, (const uint8_t**)(&ptr), long(index));
-    CFG_ASSERT(rsa_key != nullptr);
-    m_evp_key = EVP_PKEY_new();
+    m_evp_key = d2i_PublicKey(EVP_PKEY_RSA, nullptr, (const uint8_t**)(&ptr),
+                              long(index));
     CFG_ASSERT(m_evp_key != nullptr);
-    CFG_ASSERT(EVP_PKEY_assign(get_evp_pkey(m_evp_key), NID_rsaEncryption,
-                               rsa_key) == 1);
   }
   // Double EC_KEY_check_key
   get_public_key();
@@ -137,14 +144,20 @@ void CFGCrypto_KEY::initial(const std::string& filepath,
     }
     CFG_ASSERT(m_evp_key != nullptr);
   }
-  // Make sure the real key (not just key type) is supported
   if (m_is_ec) {
-    EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(get_evp_pkey(m_evp_key));
-    m_nid = EC_GROUP_get_curve_name(EC_KEY_get0_group(ec_key));
-    m_key_info = CFGOpenSSL::get_key_info(m_nid, 0);
+    char group_name[64] = {0};
+    size_t group_name_size = 0;
+    CFG_ASSERT(EVP_PKEY_get_group_name(get_evp_pkey(m_evp_key), group_name,
+                                       sizeof(group_name),
+                                       &group_name_size) == 1);
+    m_key_info =
+        CFGOpenSSL::get_key_info(std::string(group_name, group_name_size));
   } else {
-    RSA* rsa_key = EVP_PKEY_get0_RSA(get_evp_pkey(m_evp_key));
-    m_key_info = CFGOpenSSL::get_key_info(NID_rsa, RSA_size(rsa_key));
+    int rsa_bits = EVP_PKEY_get_bits(get_evp_pkey(m_evp_key));
+    CFG_ASSERT(rsa_bits >= 512);
+    CFG_ASSERT((rsa_bits % 256) == 0);
+    CFG_ASSERT(rsa_bits <= 16384);
+    m_key_info = CFGOpenSSL::get_key_info(NID_rsa, rsa_bits / 8);
   }
   CFG_ASSERT(m_key_info != nullptr);
   get_public_key();
@@ -154,54 +167,36 @@ void CFGCrypto_KEY::get_public_key() {
   CFG_ASSERT(m_evp_key != nullptr);
   CFG_ASSERT(m_key_info != nullptr);
   memset(m_public_key, 0, sizeof(m_public_key));
+  uint8_t* ptr = &m_public_key[0];
+  int len = i2d_PublicKey(get_evp_pkey(m_evp_key), &ptr);
+  // Make sure m_public_key has enough memory space and no memory overwritten
+  // happen
+  CFG_ASSERT(len > 0 && ((size_t)(len) <= sizeof(m_public_key)));
+#if ENABLE_DEBUG
+  printf("Retrieved DER: %d\n ", len);
+  for (uint32_t i = 0; i < uint32_t(len); i++) {
+    printf(" %02X", m_public_key[i]);
+    if ((i % 16) == 15) {
+      printf("\n ");
+    }
+  }
+  printf("\n");
+#endif
+  // Retrieve public key from binary
   if (m_is_ec) {
     CFG_ASSERT((size_t)(m_key_info->size * 2) <= sizeof(m_public_key));
-    EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(get_evp_pkey(m_evp_key));
-    const EC_POINT* pub = EC_KEY_get0_public_key(ec_key);
-    BIGNUM* x = BN_new();
-    BIGNUM* y = BN_new();
-    CFG_ASSERT(EC_POINT_get_affine_coordinates_GFp(EC_KEY_get0_group(ec_key),
-                                                   pub, x, y, nullptr));
-
-    // X
-    uint32_t len = uint32_t(BN_num_bytes(x));
-    CFG_ASSERT(len <= m_key_info->size);
-    CFG_ASSERT(uint32_t(BN_bn2bin(x, &m_public_key[m_key_info->size - len])) ==
-               len);
-
-    // Y
-    len = uint32_t(BN_num_bytes(y));
-    CFG_ASSERT(len <= m_key_info->size);
-    CFG_ASSERT(uint32_t(BN_bn2bin(
-                   y, &m_public_key[2 * m_key_info->size - len])) == len);
-
-    // Free memory
-    BN_clear_free(x);
-    BN_clear_free(y);
-
+    CFG_ASSERT((size_t)(m_key_info->size * 2) == size_t(len - 1));
+    CFG_ASSERT(m_public_key[0] == 0x4);
     // Set the size
     m_public_key_size = 2 * m_key_info->size;
+    // Move the data
+    memcpy(m_public_key, &m_public_key[1], m_public_key_size);
+    memset(&m_public_key[m_public_key_size], 0,
+           sizeof(m_public_key) - size_t(m_public_key_size));
   } else {
     // RSA does not have x, y
     // It has public + 4 bytes length
     CFG_ASSERT((size_t)(m_key_info->size + 4) <= sizeof(m_public_key));
-    RSA* rsa_key = EVP_PKEY_get0_RSA(get_evp_pkey(m_evp_key));
-    // The information is stored in DER
-    uint8_t* ptr = &m_public_key[0];
-    int len = i2d_RSAPublicKey(rsa_key, &ptr);
-    // Make sure m_public_key has enough memory space and no memory overwritten
-    // happen
-    CFG_ASSERT(len > 0 && ((size_t)(len) <= sizeof(m_public_key)));
-#if ENABLE_DEBUG
-    printf("Retrieved DER: %d\n ", len);
-    for (uint32_t i = 0; i < uint32_t(len); i++) {
-      printf(" %02X", m_public_key[i]);
-      if ((i % 16) == 15) {
-        printf("\n ");
-      }
-    }
-    printf("\n");
-#endif
     // Need to interpret the DER
     uint32_t der_total_len = 0;
     size_t index = 0;
@@ -318,6 +313,31 @@ uint8_t CFGCrypto_KEY::get_der_type_and_length(const uint8_t* data,
   return type;
 }
 
+uint32_t CFGCrypto_KEY::get_der_compact_length(const uint8_t* data,
+                                               uint32_t data_size) {
+  CFG_ASSERT(data != nullptr && data_size > 0);
+  uint32_t original_data_size = data_size;
+  if (data[0] & 0x80) {
+    return data_size + 1;
+  } else {
+    uint32_t index = 0;
+    while (data_size) {
+      if (data[index]) {
+        if (data[index] & 0x80) {
+          data_size++;
+        }
+        break;
+      } else {
+        data_size--;
+        index++;
+      }
+    }
+  }
+  CFG_ASSERT(data_size);
+  CFG_ASSERT(data_size <= original_data_size);
+  return data_size;
+}
+
 bool CFGCrypto_KEY::verify_signature(const uint8_t* digest,
                                      const size_t digest_size,
                                      const uint8_t* signature,
@@ -327,23 +347,63 @@ bool CFGCrypto_KEY::verify_signature(const uint8_t* digest,
   bool status = false;
   CFG_ASSERT(m_evp_key != nullptr);
   CFG_ASSERT(m_key_info != nullptr);
+  EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(get_evp_pkey(m_evp_key), nullptr);
+  CFG_ASSERT(ctx != nullptr);
+  CFG_ASSERT(EVP_PKEY_verify_init(ctx) == 1);
   if (m_is_ec) {
-    CFG_ASSERT(signature_size == (size_t)(2 * m_key_info->size));
-    EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(get_evp_pkey(m_evp_key));
-    BIGNUM* r = BN_bin2bn(signature, m_key_info->size, nullptr);
-    BIGNUM* s =
-        BN_bin2bn(&signature[m_key_info->size], m_key_info->size, nullptr);
-    CFG_ASSERT(r != nullptr && s != nullptr);
-    ECDSA_SIG* ec_sig = ECDSA_SIG_new();
-    ECDSA_SIG_set0(ec_sig, r, s);
-    status = ECDSA_do_verify(digest, digest_size, ec_sig, ec_key) == 1;
-    ECDSA_SIG_free(ec_sig);
+    CFG_ASSERT(m_key_info->size < 128);
+    CFG_ASSERT(signature_size == get_signature_size());
+    uint8_t temp[1024] = {0};
+    // 0x30 + length
+    //    0x02 + length + R
+    //    0x02 + length + S
+    // Prepare to support
+    uint32_t xlen = get_der_compact_length(signature, m_key_info->size);
+    uint32_t ylen =
+        get_der_compact_length(&signature[m_key_info->size], m_key_info->size);
+    uint32_t total_der_size = 4 + xlen + ylen;
+    size_t index = 0;
+    temp[index++] = 0x30;
+    if (total_der_size >= 128) {
+      temp[index++] = 0x82;
+      temp[index++] = (total_der_size >> 8) & 0xFF;
+      temp[index++] = (total_der_size)&0xFF;
+    } else {
+      temp[index++] = (uint8_t)(total_der_size);
+    }
+    temp[index++] = 0x02;
+    temp[index++] = (uint8_t)(xlen);
+    if (xlen > m_key_info->size) {
+      temp[index++] = 0;
+      xlen = m_key_info->size;
+    }
+    memcpy(&temp[index], &signature[m_key_info->size - xlen], xlen);
+    index += (size_t)(xlen);
+    temp[index++] = 0x02;
+    temp[index++] = (uint8_t)(ylen);
+    if (ylen > m_key_info->size) {
+      temp[index++] = 0;
+      ylen = m_key_info->size;
+    }
+    memcpy(&temp[index], &signature[m_key_info->size + m_key_info->size - ylen],
+           ylen);
+    index += (size_t)(ylen);
+#if ENABLE_DEBUG
+    printf("Constructed DER Signature: %ld\n ", index);
+    for (size_t i = 0; i < index; i++) {
+      printf(" %02X", temp[i]);
+      if ((i % 16) == 15) {
+        printf("\n ");
+      }
+    }
+    printf("\n");
+#endif
+    status = EVP_PKEY_verify(ctx, temp, index, digest, digest_size) == 1;
+    memset(temp, 0, sizeof(temp));
   } else {
-    RSA* rsa_key = EVP_PKEY_get0_RSA(get_evp_pkey(m_evp_key));
-    status = RSA_verify(m_key_info->digest_nid, digest, digest_size, signature,
-                        signature_size, rsa_key) == 1;
+    status = EVP_PKEY_verify(ctx, signature, signature_size, digest,
+                             digest_size) == 1;
   }
-  printf("verify_signature: %d\n", status);
   return status;
 }
 
@@ -355,41 +415,71 @@ size_t CFGCrypto_KEY::sign(const uint8_t* digest, const size_t digest_size,
   CFG_ASSERT(signature_data != nullptr && signature_size > 0);
   CFG_ASSERT(m_evp_key != nullptr);
   CFG_ASSERT(m_key_info != nullptr);
-  size_t signed_size = 0;
-  if (m_is_ec) {
-    signed_size = (size_t)(2 * m_key_info->size);
-    CFG_ASSERT(signature_size >= signed_size);
-    EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(get_evp_pkey(m_evp_key));
-    ECDSA_SIG* signature = ECDSA_do_sign(digest, digest_size, ec_key);
-    CFG_ASSERT(signature != nullptr);
-    CFG_ASSERT(ECDSA_do_verify(digest, digest_size, signature, ec_key) == 1);
-    memset(signature_data, 0, signed_size);
-    // Get RS
-    const BIGNUM* r = nullptr;
-    const BIGNUM* s = nullptr;
-    ECDSA_SIG_get0(signature, &r, &s);
-    // R
-    uint32_t len = uint32_t(BN_num_bytes(r));
-    CFG_ASSERT(len <= m_key_info->size);
-    CFG_ASSERT(
-        uint32_t(BN_bn2bin(r, &signature_data[m_key_info->size - len])) == len);
-    // S
-    len = uint32_t(BN_num_bytes(s));
-    CFG_ASSERT(len <= m_key_info->size);
-    CFG_ASSERT(uint32_t(BN_bn2bin(
-                   s, &signature_data[2 * m_key_info->size - len])) == len);
-    // Free memory
-    ECDSA_SIG_free(signature);
-  } else {
-    CFG_ASSERT(signature_size >= (size_t)(m_key_info->size));
-    RSA* rsa_key = EVP_PKEY_get0_RSA(get_evp_pkey(m_evp_key));
-    CFG_ASSERT(RSA_sign(m_key_info->digest_nid, digest, digest_size,
-                        signature_data, (unsigned int*)(&signed_size),
-                        rsa_key) == 1);
-    CFG_ASSERT(signed_size == (size_t)(m_key_info->size));
-    CFG_ASSERT(RSA_verify(m_key_info->digest_nid, digest, digest_size,
-                          signature_data, signed_size, rsa_key) == 1);
+  uint8_t temp[1024] = {0};
+  size_t signed_size = sizeof(temp);
+  EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(get_evp_pkey(m_evp_key), nullptr);
+  CFG_ASSERT(ctx != nullptr);
+  CFG_ASSERT(EVP_PKEY_sign_init(ctx) == 1);
+  CFG_ASSERT(EVP_PKEY_sign(ctx, temp, &signed_size, digest, digest_size) == 1);
+#if ENABLE_DEBUG
+  printf("Generated Signature: %ld\n ", signed_size);
+  for (size_t i = 0; i < signed_size; i++) {
+    printf(" %02X", temp[i]);
+    if ((i % 16) == 15) {
+      printf("\n ");
+    }
   }
+  printf("\n");
+#endif
+  if (m_is_ec) {
+    CFG_ASSERT(signature_size >= size_t(m_key_info->size * 2));
+    // Need to interpret the DER
+    uint32_t der_total_len = 0;
+    size_t index = 0;
+    uint8_t der_type =
+        get_der_type_and_length(temp, signed_size, index, der_total_len);
+    // Every DER should start with 0x30 type and the length should match the
+    // total length
+    CFG_ASSERT(der_type == 0x30);
+    CFG_ASSERT(der_total_len);
+    CFG_ASSERT((index + size_t(der_total_len)) == signed_size);
+    // Loop twice for X and Y
+    memset(signature_data, 0, m_key_info->size * 2);
+    for (int i = 0; i < 2; i++) {
+      uint32_t xylen = 0;
+      der_type = get_der_type_and_length(temp, signed_size, index, xylen);
+      CFG_ASSERT(der_type == 0x02);
+      CFG_ASSERT(xylen);
+      if (i == 0) {
+        CFG_ASSERT((index + size_t(xylen)) < signed_size);
+      } else {
+        CFG_ASSERT((index + size_t(xylen)) == signed_size);
+      }
+      // Even the maximum MSB is signed number, we will only add one zero to
+      // make it unsigned
+      CFG_ASSERT(xylen <= (m_key_info->size + 1));
+      if (xylen == (m_key_info->size + 1)) {
+        CFG_ASSERT(temp[index++] == 0);
+        memcpy(&signature_data[i * m_key_info->size], &temp[index],
+               m_key_info->size);
+        index += (size_t)(m_key_info->size);
+      } else {
+        memcpy(&signature_data[((i + 1) * m_key_info->size) - xylen],
+               &temp[index], xylen);
+        index += (size_t)(xylen);
+      }
+    }
+    CFG_ASSERT(index == signed_size);
+    signed_size = (size_t)(get_signature_size());
+  } else {
+    CFG_ASSERT(signed_size == (size_t)(get_signature_size()));
+    CFG_ASSERT(signature_size >= signed_size);
+    memcpy(signature_data, temp, signed_size);
+  }
+  CFG_ASSERT(
+      verify_signature(digest, digest_size, signature_data, signed_size));
+  EVP_PKEY_CTX_free(ctx);
+  memset(temp, 0, sizeof(temp));
   return signed_size;
 }
 

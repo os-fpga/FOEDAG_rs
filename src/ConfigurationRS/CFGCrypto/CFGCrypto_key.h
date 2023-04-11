@@ -29,12 +29,12 @@ class CFGCrypto_KEY {
   void get_public_key();
   uint8_t get_der_type_and_length(const uint8_t* data, size_t data_size,
                                   size_t& index, uint32_t& len);
+  uint32_t get_der_compact_length(const uint8_t* data, uint32_t data_size);
   std::string m_filepath = "";
   const void* m_evp_key = nullptr;
   const CFGOpenSSL_KEY_INFO* m_key_info = nullptr;
   bool m_is_private = false;
   bool m_is_ec = false;
-  int m_nid = 0;
   // allocate for RSA4096 even we do not support now
   uint32_t m_public_key_size = 0;
   uint8_t m_public_key[1024];
