@@ -7,12 +7,12 @@
 
 #define ENABLE_DEBUG 0
 
-static EVP_PKEY* get_evp_pkey(const void* key) {
+EVP_PKEY* get_evp_pkey(const void* key) {
   return reinterpret_cast<EVP_PKEY*>(const_cast<void*>(key));
 }
 
-static uint8_t get_der_type_and_length(const uint8_t* data, size_t data_size,
-                                       size_t& index, uint32_t& len) {
+uint8_t get_der_type_and_length(const uint8_t* data, size_t data_size,
+                                size_t& index, uint32_t& len) {
   CFG_ASSERT(data != nullptr && data_size > 0);
   CFG_ASSERT(index < data_size);
   uint8_t type = data[index++];
@@ -34,8 +34,7 @@ static uint8_t get_der_type_and_length(const uint8_t* data, size_t data_size,
   return type;
 }
 
-static uint32_t get_der_compact_length(const uint8_t* data,
-                                       uint32_t data_size) {
+uint32_t get_der_compact_length(const uint8_t* data, uint32_t data_size) {
   CFG_ASSERT(data != nullptr && data_size > 0);
   uint32_t original_data_size = data_size;
   if (data[0] & 0x80) {
