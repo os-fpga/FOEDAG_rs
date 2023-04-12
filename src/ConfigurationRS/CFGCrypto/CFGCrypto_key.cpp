@@ -7,6 +7,10 @@
 
 #define ENABLE_DEBUG 0
 
+static EVP_PKEY* get_evp_pkey(const void* key) {
+  return reinterpret_cast<EVP_PKEY*>(const_cast<void*>(key));
+}
+
 #if CFGOpenSSL_SIMPLE_VERSION >= 30
 #include "CFGCrypto_key_ver3.cpp"
 #else

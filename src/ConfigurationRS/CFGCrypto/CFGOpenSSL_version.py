@@ -1,4 +1,5 @@
 import sys
+import os
 
 def main() :
 
@@ -6,11 +7,15 @@ def main() :
   print("*")
   print("* Auto generate CFG OpenSSL version")
   print("*")
-  assert len(sys.argv) == 3, "CFGOpenSSL_version.py need output auto.h and openssl-version arguments"
+  assert len(sys.argv) >= 3, "CFGOpenSSL_version.py need output auto.h and openssl-version arguments"
   print("*    Output H:        %s" % sys.argv[1])
   print("*    OpenSSL Version: %s" % sys.argv[2])
   print("*")
   print("****************************************")
+
+  if len(sys.argv) == 4 :
+    printf("Debug all openssl header")
+    os.system("ls %s/openssl/*" % sys.argv[3])
 
   # For now support three major version: 1.1.1, 3.0.x, 3.1.x
   version = sys.argv[2]

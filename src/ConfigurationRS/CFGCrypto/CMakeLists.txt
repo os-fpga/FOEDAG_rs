@@ -64,7 +64,7 @@ endif()
 ###################
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/CFGOpenSSL_version_auto.h
-  COMMAND python3 ${CFG_FOEDAGRS_PROJECT_ROOT_DIR}/CFGCrypto/CFGOpenSSL_version.py ${CMAKE_CURRENT_BINARY_DIR}/CFGOpenSSL_version_auto.h ${OPENSSL_VERSION}
+  COMMAND python3 ${CFG_FOEDAGRS_PROJECT_ROOT_DIR}/CFGCrypto/CFGOpenSSL_version.py ${CMAKE_CURRENT_BINARY_DIR}/CFGOpenSSL_version_auto.h ${OPENSSL_VERSION} ${OPENSSL_INCLUDE_DIR}
   DEPENDS ${CFG_FOEDAGRS_PROJECT_ROOT_DIR}/CFGCrypto/CFGOpenSSL_version.py
 )
 
