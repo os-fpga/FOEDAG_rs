@@ -1,3 +1,7 @@
+static EVP_PKEY* get_evp_pkey(const void* key) {
+  return reinterpret_cast<EVP_PKEY*>(const_cast<void*>(key));
+}
+
 CFGCrypto_KEY::CFGCrypto_KEY() {
   CFGOpenSSL::init_openssl();
   memset(m_public_key, 0, sizeof(m_public_key));
