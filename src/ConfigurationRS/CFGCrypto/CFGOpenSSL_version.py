@@ -14,7 +14,7 @@ def main() :
   print("****************************************")
 
   if len(sys.argv) == 4 :
-    printf("Debug all openssl header")
+    print("Debug all openssl header")
     os.system("ls %s/openssl/*" % sys.argv[3])
 
   # For now support three major version: 1.1.1, 3.0.x, 3.1.x
