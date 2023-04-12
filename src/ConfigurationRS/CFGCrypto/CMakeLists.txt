@@ -79,7 +79,7 @@ add_library(
   CFGCrypto_key.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/CFGOpenSSL_version_auto.h
 )
-target_link_libraries(${subsystem} PRIVATE OpenSSL::applink)
+target_link_libraries(${subsystem} PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 target_include_directories(${subsystem} PRIVATE ${OPENSSL_INCLUDE_DIR})
 
 ###################
