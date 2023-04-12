@@ -79,11 +79,8 @@ add_library(
   CFGCrypto_key.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/CFGOpenSSL_version_auto.h
 )
-if (MSVC)
-  target_link_libraries(${subsystem} PRIVATE crypto ssl)
-else()
-  target_link_libraries(${subsystem} PRIVATE crypto ssl)
-endif()
+target_link_libraries(${subsystem} PRIVATE crypto ssl)
+target_include_directories(${subsystem} ${OPENSSL_INCLUDE_DIR})
 
 ###################
 #
