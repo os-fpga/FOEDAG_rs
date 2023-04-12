@@ -16,8 +16,9 @@ def main() :
 
   if len(sys.argv) == 4 :
     print("Debug all openssl header")
-    for f in glob.glob("%s/*" % sys.argv[3]) :
-      print(f)
+    for f in glob.glob("%s/**" % sys.argv[3], recursive=True) :
+      if f.find("openssl") != -1 :
+        print(f)
 
   # For now support three major version: 1.1.1, 3.0.x, 3.1.x
   version = sys.argv[2]
