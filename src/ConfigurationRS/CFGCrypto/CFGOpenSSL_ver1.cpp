@@ -22,13 +22,7 @@
 #include "openssl/rand.h"
 #include "openssl/sha.h"
 
-#define MIN_PASSPHRASE_SIZE (13)
 static bool m_openssl_init = false;
-const std::vector<CFGOpenSSL_KEY_INFO> CFGOpenSSL_KEY_INFO_DATABASE = {
-    CFGOpenSSL_KEY_INFO(NID_X9_62_prime256v1, NID_X9_62_id_ecPublicKey,
-                        "prime256v1", 32, NID_sha256, 32, 1),
-    CFGOpenSSL_KEY_INFO(NID_rsa, NID_rsaEncryption, "rsa2048", 256, NID_sha256,
-                        32, 2)};
 
 static void memory_clean(std::string& passphrase, EVP_PKEY*& evp_key,
                          PKCS8_PRIV_KEY_INFO*& p8inf, X509_SIG*& p8) {
