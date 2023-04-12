@@ -750,6 +750,9 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "   ipgenerate ?clean?         : Generates all IP instances set by "
             "ip_configure"
          << std::endl;
+  (*out) << "   simulate_ip  <module name> : Simulate IP with module name "
+            "<module name>"
+         << std::endl;
   (*out) << "   message_severity <message_id> <ERROR/WARNING/INFO/IGNORE> : "
             "Upgrade/downgrade RTL compilation message severity"
          << std::endl;
