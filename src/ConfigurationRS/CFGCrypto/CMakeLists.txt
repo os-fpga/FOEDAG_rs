@@ -80,7 +80,7 @@ add_library(
   ${CMAKE_CURRENT_BINARY_DIR}/CFGOpenSSL_version_auto.h
 )
 target_link_libraries(${subsystem} PRIVATE crypto ssl)
-target_include_directories(${subsystem} ${OPENSSL_INCLUDE_DIR})
+target_include_directories(${subsystem} PRIVATE ${OPENSSL_INCLUDE_DIR})
 
 ###################
 #
