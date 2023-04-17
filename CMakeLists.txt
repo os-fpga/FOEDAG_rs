@@ -464,9 +464,13 @@ if (NOT RAPTOR)
         PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/bin/openocd${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
+if ((DEFINED ENV{MSYSTEM}) AND ("$ENV{MSYSTEM}" STREQUAL "MINGW64"))
+# permission problems in windows at this point.
+else()
 add_custom_target(raptor_gui_link_target ALL
     COMMAND ${CMAKE_COMMAND} -E create_symlink
       build/compile_commands.json ../compile_commands.json)
+endif()
 
 add_custom_command(TARGET raptor_gui-bin POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/etc/
