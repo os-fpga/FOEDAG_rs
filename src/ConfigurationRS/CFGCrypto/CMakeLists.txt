@@ -32,9 +32,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (MSVC)
   set(CRYPTO_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_crypto_1.1.1t.lib)
   set(SSL_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_ssl_1.1.1t.lib)
+  set(ADDITIONAL_LIB )
 else()
   set(CRYPTO_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_crypto_1.1.1t.a)
   set(SSL_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_ssl_1.1.1t.a)
+  list(APPEND ADDITIONAL_LIB dl pthread)
   set(CMAKE_CXX_FLAGS_DEBUG
   "${CMAKE_CXX_FLAGS_DEBUG} ${TCMALLOC_COMPILE_OPTIONS} -Werror -Wall -O0 -g ${MSYS_COMPILE_OPTIONS} ${MY_CXX_WARNING_FLAGS} ${MEM_SANITIZER_FLAGS}")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Werror")
@@ -61,7 +63,7 @@ add_library(
   CFGCrypto_key.cpp
 )
 add_dependencies(${subsystem} openssl_build)
-target_link_libraries(${subsystem} PRIVATE ${CRYPTO_LIB} ${SSL_LIB})
+target_link_libraries(${subsystem} PRIVATE ${CRYPTO_LIB} ${SSL_LIB} ${ADDITIONAL_LIB})
 target_include_directories(${subsystem} PRIVATE ${CFG_BUILD_ROOT_DIR}/FOEDAG/include)
 
 ###################
