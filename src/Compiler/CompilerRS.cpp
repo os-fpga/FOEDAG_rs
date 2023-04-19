@@ -750,6 +750,9 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "   ipgenerate ?clean?         : Generates all IP instances set by "
             "ip_configure"
          << std::endl;
+  (*out) << "   simulate_ip  <module name> : Simulate IP with module name "
+            "<module name>"
+         << std::endl;
   (*out) << "   message_severity <message_id> <ERROR/WARNING/INFO/IGNORE> : "
             "Upgrade/downgrade RTL compilation message severity"
          << std::endl;
@@ -907,8 +910,12 @@ void CompilerRS::Help(std::ostream *out) {
       << "                    <command> : Support two commands: send and reset"
       << std::endl;
   (*out) << "                         send : Send message" << std::endl;
-  (*out) << "                        reset : Reset context for ChatGPT"
+  (*out) << "                        reset : Reset history" << std::endl;
+  (*out) << "                    -c <path> : Specify ini file path with API "
+            "key. The key needs to be set only once for a session"
          << std::endl;
+  (*out) << "                                [OpenAI]" << std::endl;
+  (*out) << "                                API_KEY: <api key>" << std::endl;
   writeWaveHelp(out, 3, 30);  // 30 is the col count of the : in the line above
   (*out) << "-----------------------------------------------" << std::endl;
 }

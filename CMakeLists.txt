@@ -202,6 +202,9 @@ if (PRODUCTION_BUILD)
   target_link_libraries(raptor_gui-bin PUBLIC rs_licenseManager)
 endif()
 
+# Make sure openocd_cmake build is done before raptor_gui
+add_dependencies(raptor_gui rs_openocd_extract_config_and_openocd)
+
 if (MSVC)
   message("WINDOWS MODE")
   set(TCL_STUBB_LIB tclstub86.lib)
@@ -450,15 +453,24 @@ install(
 install(
     DIRECTORY etc/settings/ DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/raptor/etc/settings/)
 install(
-    DIRECTORY tests/Arch/ DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/raptor/Arch/)  
+    DIRECTORY tests/Arch/ DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/raptor/Arch/)
+
 if (NOT RAPTOR)
     install(
         DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin/gtkwave DESTINATION ${CMAKE_INSTALL_BINDIR} USE_SOURCE_PERMISSIONS)
+    install(
+        DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/configuration DESTINATION  ${CMAKE_INSTALL_DATAROOTDIR}/raptor)
+    install(
+        PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/bin/openocd${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
+if ((DEFINED ENV{MSYSTEM}) AND ("$ENV{MSYSTEM}" STREQUAL "MINGW64"))
+# permission problems in windows at this point.
+else()
 add_custom_target(raptor_gui_link_target ALL
     COMMAND ${CMAKE_COMMAND} -E create_symlink
       build/compile_commands.json ../compile_commands.json)
+endif()
 
 add_custom_command(TARGET raptor_gui-bin POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/etc/
