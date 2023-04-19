@@ -103,7 +103,7 @@ void BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
     std::string family = get_device_family(bitobj.device);
     if (family == "GEMINI") {
       BitGen_GEMINI gemini(&bitobj);
-      CFG_ASSERT(gemini.generate(data, key_ptr, aes_key));
+      CFG_ASSERT(gemini.generate(data, arg->compress, key_ptr, aes_key));
       CFG_write_binary_file(arg->m_args[1], &data[0], data.size());
     } else {
       CFG_INTERNAL_ERROR("Unsupported device %s family %s",

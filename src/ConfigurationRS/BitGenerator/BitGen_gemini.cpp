@@ -3,13 +3,13 @@
 #define BOP_HEADER_SIZE (0x40)
 
 const std::map<const std::string, const std::string> BOP_MAP = {
-    {"fsbl", "BOP1"},
-    {"uboot", "BOPU"},
-    {"fcb", "BOPF"},
-    {"icb", "BOPI"},
-    {"pcb", "BOPP"}};
+    {"fsbl", "FSBL"},
+    {"uboot", "UBOT"},
+    {"fcb", "FCB"},
+    {"icb", "ICB"},
+    {"pcb", "PCB"}};
 
-static const std::string& get_image_bop(const std::string& image) {
+static std::string get_image_bop(const std::string& image) {
   auto iter = BOP_MAP.find(image);
   CFG_ASSERT(iter != BOP_MAP.end());
   return iter->second;
@@ -30,7 +30,7 @@ BitGen_GEMINI_BOP_HEADER_IMPL::BitGen_GEMINI_BOP_HEADER_IMPL() {}
 
 bool BitGen_GEMINI_BOP_HEADER_IMPL::package(const std::string& image,
                                             std::vector<uint8_t>& data,
-                                            CFGCrypto_KEY*& key,
+                                            bool compress, CFGCrypto_KEY*& key,
                                             const size_t aes_key_size,
                                             const size_t header_size) {
   CFG_ASSERT(aes_key_size == 0 || aes_key_size == 16 || aes_key_size == 32);
@@ -42,7 +42,11 @@ bool BitGen_GEMINI_BOP_HEADER_IMPL::package(const std::string& image,
   std::vector<uint8_t> bop_data;
 
   // Setup all the info
-  const std::string& bop_id = get_image_bop(image);
+  std::string bop_id = get_image_bop(image);
+  CFG_ASSERT(bop_id.size() > 0 && bop_id.size() <= 4);
+  while (bop_id.size() < 4) {
+    bop_id.push_back(0);
+  }
   bop.set_src("id", (uint8_t*)(const_cast<char*>(bop_id.c_str())),
               bop_id.size());
   bop.set_src("header_version", 1);
@@ -80,11 +84,14 @@ bool BitGen_GEMINI_BOP_HEADER_IMPL::package(const std::string& image,
   bop.set_src("encryption_length", aes_key_size);
   // word 11 (FPGA binary does not support binary padding)
   bop.set_src("signature_length", signature_size);
+  bop.set_src("compression_algo", compress ? 2 : 0);
   // word 12
   bop.set_src("xcb_header_size", header_size);
   // Generate - never need to encrypt header
   std::vector<uint8_t> empty_aes_key;
-  uint64_t bop_data_size = bop.generate(bop_data, empty_aes_key, nullptr);
+  bool bitgen_compress = false;
+  uint64_t bop_data_size =
+      bop.generate(bop_data, bitgen_compress, empty_aes_key, nullptr);
   CFG_ASSERT(bop_data_size > 0 && (bop_data_size % 32) == 0);
   CFG_ASSERT(bop_data_size == (BOP_HEADER_SIZE * 8));
 
@@ -127,7 +134,9 @@ bool BitGen_GEMINI_BOP_FOOTER_IMPL::package(std::vector<uint8_t>& data,
 
     // Generate - never need to encrypt footer
     std::vector<uint8_t> empty_aes_key;
-    uint64_t bop_data_size = bop.generate(bop_data, empty_aes_key, nullptr);
+    bool bitgen_compress = false;
+    uint64_t bop_data_size =
+        bop.generate(bop_data, bitgen_compress, empty_aes_key, nullptr);
     CFG_ASSERT(bop_data_size > 0 && (bop_data_size % 32) == 0);
 
     // Package
@@ -162,7 +171,8 @@ BitGen_GEMINI::BitGen_GEMINI(const CFGObject_BITOBJ* bitobj)
   CFG_ASSERT(m_bitobj != nullptr);
 }
 
-bool BitGen_GEMINI::generate(std::vector<uint8_t>& data, CFGCrypto_KEY*& key,
+bool BitGen_GEMINI::generate(std::vector<uint8_t>& data, bool compress,
+                             CFGCrypto_KEY*& key,
                              std::vector<uint8_t>& aes_key) {
   bool status = true;
   uint8_t iv[16];
@@ -179,18 +189,22 @@ bool BitGen_GEMINI::generate(std::vector<uint8_t>& data, CFGCrypto_KEY*& key,
   fcb.set_src("parallel_chain_size", m_bitobj->fcb.width);
   fcb.set_src("bit_size_per_chain", m_bitobj->fcb.length);
   fcb.set_src("src_payload", m_bitobj->fcb.data);
-  uint64_t fcb_data_size = fcb.generate(fcb_data, aes_key, iv);
+  bool bitgen_compress = compress;
+  uint64_t fcb_data_size = fcb.generate(fcb_data, bitgen_compress, aes_key, iv);
   uint64_t fcb_header_size = fcb.get_header_size();
   CFG_ASSERT(fcb_data_size > 0 && (fcb_data_size % 32) == 0);
   CFG_ASSERT(fcb_header_size > 0 && (fcb_header_size % 32) == 0);
-  BitGen_GEMINI_BOP_HEADER_IMPL::package("fcb", fcb_data, key, aes_key.size(),
-                                         fcb_header_size / 8);
+  BitGen_GEMINI_BOP_HEADER_IMPL::package("fcb", fcb_data, bitgen_compress, key,
+                                         aes_key.size(), fcb_header_size / 8);
   BitGen_GEMINI_BOP_FOOTER_IMPL::package(fcb_data, key, aes_key.size(), iv);
   data.insert(data.end(), fcb_data.begin(), fcb_data.end());
 
   // ICB
+  uint8_t icb_iv[16];
   if (aes_key.size()) {
-    CFGOpenSSL::generate_iv(iv, true);
+    CFGOpenSSL::generate_iv(iv, false);
+    CFG_ASSERT(sizeof(icb_iv) == sizeof(iv));
+    memcpy(icb_iv, iv, sizeof(icb_iv));
   }
   const std::vector<std::vector<uint8_t>> icb_payloads = {
       {0, 1, 2, 3},
@@ -205,7 +219,9 @@ bool BitGen_GEMINI::generate(std::vector<uint8_t>& data, CFGCrypto_KEY*& key,
     std::vector<uint8_t> icb_packet_data;
     icb.set_src("src_payload", icb_payload);
     icb.set_src("is_data", index & 1);
-    uint64_t icb_data_size = icb.generate(icb_packet_data, aes_key, iv);
+    bitgen_compress = false;  // Do not support compression
+    uint64_t icb_data_size =
+        icb.generate(icb_packet_data, bitgen_compress, aes_key, iv);
     CFG_ASSERT(icb_data_size > 0 && (icb_data_size % 32) == 0);
     icb_data.insert(icb_data.end(), icb_packet_data.begin(),
                     icb_packet_data.end());
@@ -215,10 +231,9 @@ bool BitGen_GEMINI::generate(std::vector<uint8_t>& data, CFGCrypto_KEY*& key,
     iv_value++;
     memcpy((uint8_t*)(&iv_value), iv, sizeof(iv_value));
   }
-  memset(iv, 0, sizeof(uint32_t));
-  BitGen_GEMINI_BOP_HEADER_IMPL::package("icb", icb_data, key, aes_key.size(),
-                                         4);
-  BitGen_GEMINI_BOP_FOOTER_IMPL::package(icb_data, key, aes_key.size(), iv);
+  BitGen_GEMINI_BOP_HEADER_IMPL::package("icb", icb_data, bitgen_compress, key,
+                                         aes_key.size(), 4);
+  BitGen_GEMINI_BOP_FOOTER_IMPL::package(icb_data, key, aes_key.size(), icb_iv);
   data.insert(data.end(), icb_data.begin(), icb_data.end());
 
   // PCB
@@ -232,12 +247,13 @@ bool BitGen_GEMINI::generate(std::vector<uint8_t>& data, CFGCrypto_KEY*& key,
   BitGen_GEMINI_PCB_PACKET_IMPL pcb;
   std::vector<uint8_t> pcb_data;
   pcb.set_src("src_payload", pcb_payload);
-  uint64_t pcb_data_size = pcb.generate(pcb_data, aes_key, iv);
+  bitgen_compress = compress;
+  uint64_t pcb_data_size = pcb.generate(pcb_data, bitgen_compress, aes_key, iv);
   uint64_t pcb_header_size = fcb.get_header_size();
   CFG_ASSERT(pcb_data_size > 0 && (pcb_data_size % 32) == 0);
   CFG_ASSERT(pcb_header_size > 0 && (pcb_header_size % 32) == 0);
-  BitGen_GEMINI_BOP_HEADER_IMPL::package("pcb", pcb_data, key, aes_key.size(),
-                                         pcb_header_size / 8);
+  BitGen_GEMINI_BOP_HEADER_IMPL::package("pcb", pcb_data, bitgen_compress, key,
+                                         aes_key.size(), pcb_header_size / 8);
   BitGen_GEMINI_BOP_FOOTER_IMPL::package(pcb_data, key, aes_key.size(), iv);
   data.insert(data.end(), pcb_data.begin(), pcb_data.end());
 
@@ -259,10 +275,13 @@ void BitGen_GEMINI::parse(const std::string& input_filepath,
   while (bit_index < total_bits) {
     BitGen_GEMINI_BOP_HEADER_IMPL bop_header;
     uint64_t bop_header_size = bop_header.parse(
-        file, &input_data[0], total_bits, bit_index, "", detail);
+        file, &input_data[0], total_bits, bit_index, false, "", detail);
     file.flush();
     CFG_ASSERT(bop_header_size > 0 && (bop_header_size % 32) == 0);
-    std::vector<uint8_t>& id = bop_header.get_rule_data("id");
+    std::vector<uint8_t> id = bop_header.get_rule_data("id");
+    while (id.back() == 0) {
+      id.pop_back();
+    }
     const std::string image =
         get_bop_image(std::string((char*)(&id[0]), id.size()));
     uint64_t image_size = bop_header.get_rule_value("binary_length") +
@@ -270,6 +289,7 @@ void BitGen_GEMINI::parse(const std::string& input_filepath,
     uint64_t iv_length = bop_header.get_rule_value("iv_length");
     uint64_t public_key_length = bop_header.get_rule_value("public_key_length");
     uint64_t signature_length = bop_header.get_rule_value("signature_length");
+    uint64_t compress = bop_header.get_rule_value("compression_algo");
     file << "  ";
     for (uint8_t i = 0; i < 64; i++) {
       file << "*";
@@ -280,7 +300,8 @@ void BitGen_GEMINI::parse(const std::string& input_filepath,
       // FCB
       BitGen_GEMINI_FCB_IMPL fcb;
       uint64_t fcb_data_size =
-          fcb.parse(file, &input_data[0], total_bits, bit_index, space, detail);
+          fcb.parse(file, &input_data[0], total_bits, bit_index, compress != 0,
+                    space, detail);
       file.flush();
       CFG_ASSERT(fcb_data_size > 0 && (fcb_data_size % 32) == 0);
       CFG_ASSERT(fcb_data_size == (image_size * 8));
@@ -294,8 +315,9 @@ void BitGen_GEMINI::parse(const std::string& input_filepath,
       for (uint32_t i = 0; i < icb_packet_count; i++) {
         file << CFG_print("%s  #%d\n", space.c_str(), i).c_str();
         BitGen_GEMINI_ICB_PACKET_IMPL icb;
-        uint64_t icb_packet_size = icb.parse(file, &input_data[0], total_bits,
-                                             bit_index, space + "    ", detail);
+        uint64_t icb_packet_size =
+            icb.parse(file, &input_data[0], total_bits, bit_index,
+                      compress != 0, space + "    ", detail);
         file.flush();
         CFG_ASSERT(icb_packet_size > 0 && (icb_packet_size % 32) == 0);
         icb_data_size += icb_packet_size;
@@ -305,7 +327,8 @@ void BitGen_GEMINI::parse(const std::string& input_filepath,
       // PCB
       BitGen_GEMINI_PCB_PACKET_IMPL pcb;
       uint64_t pcb_data_size =
-          pcb.parse(file, &input_data[0], total_bits, bit_index, space, detail);
+          pcb.parse(file, &input_data[0], total_bits, bit_index, compress != 0,
+                    space, detail);
       file.flush();
       CFG_ASSERT(pcb_data_size > 0 && (pcb_data_size % 32) == 0);
       CFG_ASSERT(pcb_data_size == (image_size * 8));
@@ -337,7 +360,7 @@ void BitGen_GEMINI::parse(const std::string& input_filepath,
         bop_footer.set_rule_size("signature", signature_length * 8);
       }
       uint64_t bop_footer_size = bop_footer.parse(
-          file, &input_data[0], total_bits, bit_index, space, detail);
+          file, &input_data[0], total_bits, bit_index, false, space, detail);
       file << "  ";
       for (uint8_t i = 0; i < 64; i++) {
         file << "*";

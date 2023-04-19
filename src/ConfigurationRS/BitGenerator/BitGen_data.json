@@ -119,7 +119,8 @@
       {
         "name" : "payload_size32",
         "size" : 32,
-        "data" : "@size32(@align32(@get_src_value(parallel_chain_size)) * @get_src_value(bit_size_per_chain))"
+        "data" : "@size32(@align32(@get_src_value(parallel_chain_size)) * @get_src_value(bit_size_per_chain))",
+        "property" : 6
       },
       {
         "name" : "checksum", 
@@ -165,7 +166,8 @@
       {
         "name" : "payload_size8",
         "size" : 24,
-        "data" : "@get_src_data_size(src_payload),4"
+        "data" : "@get_src_data_size(src_payload),4",
+        "property" : 2
       },
       {
         "name" : "checksum_present",
@@ -216,7 +218,8 @@
       {
         "name" : "payload_size32",
         "size" : 32,
-        "data" : "@size32(@get_src_data_size(src_payload) * 8), 4096"
+        "data" : "@size32(@get_src_data_size(src_payload) * 8), 4096",
+        "property" : 6
       },
       {
         "name" : "ram_block_count",

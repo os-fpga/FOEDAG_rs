@@ -16,7 +16,7 @@ struct BitGen_DATA_RULE {
   ~BitGen_DATA_RULE() {
     if (data.size()) {
       memset(&data[0], 0, data.size());
-      data.resize(0);
+      data.clear();
     }
   }
   const std::string name = "";
@@ -24,8 +24,8 @@ struct BitGen_DATA_RULE {
   const uint64_t default_value = 0;
   const uint8_t size_type = 0;
   uint8_t info = 0;
-  std::vector<uint8_t> data = {};
   const uint32_t property = 0;
+  std::vector<uint8_t> data = {};
 };
 
 struct BitGEN_SRC_DATA {
@@ -41,7 +41,7 @@ struct BitGEN_SRC_DATA {
   ~BitGEN_SRC_DATA() {
     if (data.size()) {
       memset(&data[0], 0, data.size());
-      data.resize(0);
+      data.clear();
     }
   }
   std::vector<uint8_t> data = {};
@@ -51,25 +51,30 @@ class BitGen_DATA {
  public:
   BitGen_DATA(const std::string& n, const uint8_t s,
               std::vector<BitGen_DATA_RULE> r);
+  ~BitGen_DATA();
   void set_rule_size(const std::string& field, uint64_t size);
   void set_src(const std::string& name, uint64_t value);
   void set_src(const std::string& name, const std::vector<uint8_t>& data);
   void set_src(const std::string& name, const uint8_t* data, size_t data_size);
-  uint64_t generate(std::vector<uint8_t>& data, std::vector<uint8_t>& key,
-                    uint8_t* iv, std::vector<std::string> data_to_encrypt = {});
+  uint64_t generate(std::vector<uint8_t>& data, bool& compress,
+                    std::vector<uint8_t>& key, uint8_t* iv,
+                    std::vector<std::string> binary_datas = {});
   uint64_t parse(std::ofstream& file, const uint8_t* data,
                  uint64_t total_bit_size, uint64_t& bit_index,
-                 std::string space, const bool detail = false);
+                 const bool compress, std::string space,
+                 const bool detail = false);
   BitGen_DATA_RULE* get_rule(const std::string& field);
   uint64_t get_rule_size(const std::string& field);
   uint64_t get_rule_value(const std::string& field);
+  std::vector<uint8_t> get_rule_non_reference_data(const std::string& field);
   std::vector<uint8_t>& get_rule_data(const std::string& field);
   std::vector<uint8_t>* get_rule_data_ptr(const std::string& field);
   uint64_t get_header_size();
 
  protected:
   uint64_t validate();
-  uint64_t print(std::ofstream& file, std::string space, const bool detail);
+  uint64_t print(std::ofstream& file, const bool compress, std::string space,
+                 const bool detail);
   uint64_t convert_to(uint64_t value, uint64_t unit);
   uint64_t convert_to8(uint64_t value);
   uint64_t convert_to16(uint64_t value);
@@ -123,6 +128,7 @@ class BitGen_DATA {
   std::map<std::string, BitGEN_SRC_DATA> defineds = {};
 
  private:
+  bool ignore_set_size_property = false;
   const std::string name = "";
   const uint8_t size_alignment = 0;
   std::vector<BitGen_DATA_RULE> rules = {};

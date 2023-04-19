@@ -9,6 +9,12 @@ BitGen_DATA::BitGen_DATA(const std::string& n, const uint8_t s,
   CFG_ASSERT(rules.size());
 }
 
+BitGen_DATA::~BitGen_DATA() {
+  while (rules.size()) {
+    rules.pop_back();
+  }
+}
+
 void BitGen_DATA::set_src(const std::string& name, uint64_t value) {
   CFG_ASSERT(srcs.find(name) == srcs.end());
   srcs[name] = BitGEN_SRC_DATA(value);
@@ -30,9 +36,9 @@ void BitGen_DATA::set_src(const std::string& name, const uint8_t* data,
   set_src(name, temp);
 }
 
-uint64_t BitGen_DATA::generate(std::vector<uint8_t>& data,
+uint64_t BitGen_DATA::generate(std::vector<uint8_t>& data, bool& compress,
                                std::vector<uint8_t>& key, uint8_t* iv,
-                               std::vector<std::string> data_to_encrypt) {
+                               std::vector<std::string> binary_datas) {
   size_t retry = rules.size() * 2;
   bool complete = false;
   // set_data: outside world can overwrite anything -- highest priority
@@ -66,41 +72,44 @@ uint64_t BitGen_DATA::generate(std::vector<uint8_t>& data,
     retry--;
   }
   CFG_ASSERT(complete);
-  uint64_t total_bit_size = validate();
 
-  // encrypt data
-  if (key.size()) {
-    CFG_ASSERT(key.size() == 16 || key.size() == 32);
-    CFG_ASSERT(iv != nullptr);
+  // compress and/or encrypt data
+  if (compress || key.size() > 0) {
+    CFG_ASSERT(key.size() == 0 || key.size() == 16 || key.size() == 32);
+    CFG_ASSERT(key.size() == 0 || iv != nullptr);
     // Let's support only one continuous data
-    if (data_to_encrypt.size() == 0) {
+    if (binary_datas.size() == 0) {
       // caller does not explicitely tell which data to encrypt
       // so we get it from JSON
       for (auto& rule : rules) {
         if (rule.size != 0) {
           if (rule.property & 1) {
-            data_to_encrypt.push_back(rule.name);
+            binary_datas.push_back(rule.name);
           }
         }
       }
     }
-    if (data_to_encrypt.size()) {
+    if (binary_datas.size()) {
+      // Let's only support one field to compress (don't really care about
+      // compression) Otherwsie it is hard to determine the which field has what
+      // size
+      CFG_ASSERT(binary_datas.size() == 1);
       uint8_t tracking = 0;
-      uint64_t pre_encryption_size = 0;
-      uint64_t encryption_size = 0;
+      uint64_t pre_binary_size = 0;
+      uint64_t binary_size = 0;
       for (auto& rule : rules) {
         if (rule.size != 0) {
-          if (CFG_find_string_in_vector(data_to_encrypt, rule.name) >= 0) {
+          if (CFG_find_string_in_vector(binary_datas, rule.name) >= 0) {
             CFG_ASSERT(tracking == 0 || tracking == 1);
             if (tracking == 0) {
-              CFG_ASSERT((pre_encryption_size % 8) == 0);
+              CFG_ASSERT((pre_binary_size % 8) == 0);
               tracking++;
             }
-            encryption_size += rule.size;
+            binary_size += rule.size;
           } else {
-            // do not need to encrypt this
+            // this is not binary data
             if (tracking == 0) {
-              pre_encryption_size += rule.size;
+              pre_binary_size += rule.size;
             } else if (tracking == 1) {
               tracking++;
             }
@@ -108,46 +117,104 @@ uint64_t BitGen_DATA::generate(std::vector<uint8_t>& data,
         }
       }
       // No violation
-      CFG_ASSERT(encryption_size > 0 && (encryption_size % 8) == 0);
-      // Start to copy plaintext
-      std::vector<uint8_t> plaintext(encryption_size / 8);
-      std::vector<uint8_t> ciphertext(encryption_size / 8);
+      CFG_ASSERT(binary_size > 0 && (binary_size % 8) == 0);
+      // Start to copy original data
+      uint64_t binary_byte_size = (binary_size / 8);
+      std::vector<uint8_t> final_data(binary_byte_size);
+      std::vector<uint8_t> temp_data;
       uint64_t dest = 0;
       for (auto& rule : rules) {
         if (rule.size != 0) {
-          if (CFG_find_string_in_vector(data_to_encrypt, rule.name) >= 0) {
+          if (CFG_find_string_in_vector(binary_datas, rule.name) >= 0) {
             for (uint64_t i = 0; i < rule.size; i++, dest++) {
               if (rule.data[i >> 3] & (1 << (i & 7))) {
-                plaintext[dest >> 3] |= (1 << (dest & 7));
+                final_data[dest >> 3] |= (1 << (dest & 7));
               }
             }
           }
         }
       }
-      CFG_ASSERT(dest == encryption_size);
-      CFGOpenSSL::ctr_encrypt(&plaintext[0], &ciphertext[0], plaintext.size(),
-                              &key[0], key.size(), iv, 16);
-      dest = 0;
-      for (auto& rule : rules) {
-        if (rule.size != 0) {
-          if (CFG_find_string_in_vector(data_to_encrypt, rule.name) >= 0) {
+      CFG_ASSERT(dest == binary_size);
+      // Compress
+      if (compress) {
+        CFG_compress(&final_data[0], final_data.size(), temp_data);
+        CFG_ASSERT(temp_data.size());
+        if (size_alignment) {
+          CFG_ASSERT((size_alignment % 8) == 0);
+          size_t byte_alignment = size_t(size_alignment / 8);
+          // Padding
+          while (temp_data.size() % byte_alignment) {
+            if (key.size() > 0) {
+              temp_data.push_back((uint8_t)(CFGOpenSSL::generate_random_u32()));
+            } else {
+              temp_data.push_back(0);
+            }
+          }
+        }
+        if (temp_data.size() >= (size_t)(final_data.size() * 0.90)) {
+          compress = false;
+        } else {
+          memset(&final_data[0], 0, final_data.size());
+          final_data.resize(temp_data.size());
+          memcpy(&final_data[0], &temp_data[0], temp_data.size());
+        }
+        memset(&temp_data[0], 0, temp_data.size());
+        temp_data.clear();
+      }
+      // Encrypt
+      if (key.size() > 0) {
+        temp_data.resize(final_data.size());
+        CFGOpenSSL::ctr_encrypt(&final_data[0], &temp_data[0],
+                                final_data.size(), &key[0], key.size(), iv, 16);
+        memcpy(&final_data[0], &temp_data[0], temp_data.size());
+        memset(&temp_data[0], 0, temp_data.size());
+        temp_data.clear();
+      }
+      // Copy data back to the field
+      if (compress || key.size() > 0) {
+        dest = 0;
+        for (auto& rule : rules) {
+          if (rule.size != 0) {
+            if (CFG_find_string_in_vector(binary_datas, rule.name) >= 0) {
+              CFG_ASSERT(rule.data.size() >= final_data.size());
+              memset(&rule.data[0], 0, rule.data.size());
+              rule.size = final_data.size() * 8;
+              rule.data.resize(final_data.size());
+              for (uint64_t i = 0; i < rule.size; i++, dest++) {
+                if (final_data[dest >> 3] & (1 << (dest & 7))) {
+                  rule.data[i >> 3] |= (1 << (i & 7));
+                }
+              }
+            }
+          }
+        }
+      }
+      memset(&final_data[0], 0, final_data.size());
+      if (compress) {
+        // Update any field that related to the binary size change
+        for (auto& rule : rules) {
+          uint32_t property = (rule.property >> 1) & 0x7;
+          if (rule.size != 0 && property != 0) {
+            CFG_ASSERT(rule.size <= 64);
+            // 1 = size8 (1byte), 2 = size16 (2byte), 3 = size32 (4byte), 4 =
+            // size64 (8byte), ...
+            uint64_t divider = 1 << (property - 1);
+            CFG_ASSERT((final_data.size() % divider) == 0);
+            uint64_t new_data = final_data.size() / divider;
             memset(&rule.data[0], 0, rule.data.size());
-            for (uint64_t i = 0; i < rule.size; i++, dest++) {
-              if (ciphertext[dest >> 3] & (1 << (dest & 7))) {
+            for (uint64_t i = 0; i < rule.size; i++) {
+              if (new_data & (1 << i)) {
                 rule.data[i >> 3] |= (1 << (i & 7));
               }
             }
           }
         }
       }
-      CFG_ASSERT(dest == encryption_size);
-      memset(&plaintext[0], 0, plaintext.size());
-      memset(&ciphertext[0], 0, ciphertext.size());
-      plaintext.resize(0);
-      ciphertext.resize(0);
+      final_data.clear();
     }
   }
 
+  uint64_t total_bit_size = validate();
   // copy all data into one continuous piece
   uint64_t dest = 0;
   uint64_t total_size8 = convert_to8(total_bit_size);
@@ -181,12 +248,14 @@ uint64_t BitGen_DATA::get_header_size() {
 
 uint64_t BitGen_DATA::parse(std::ofstream& file, const uint8_t* data,
                             uint64_t total_bit_size, uint64_t& bit_index,
-                            std::string space, const bool detail) {
+                            const bool compress, std::string space,
+                            const bool detail) {
   CFG_ASSERT(data != nullptr);
   CFG_ASSERT(total_bit_size > 0);
   CFG_ASSERT(bit_index < total_bit_size);
   size_t retry = rules.size() * 2;
   bool complete = false;
+  ignore_set_size_property = compress;
   while (retry) {
     size_t incomplete = 0;
     uint64_t continuous_size = 0;
@@ -214,11 +283,12 @@ uint64_t BitGen_DATA::parse(std::ofstream& file, const uint8_t* data,
     retry--;
   }
   CFG_ASSERT(complete);
-  return print(file, space, detail);
+  ignore_set_size_property = false;
+  return print(file, compress, space, detail);
 }
 
-uint64_t BitGen_DATA::print(std::ofstream& file, std::string space,
-                            const bool detail) {
+uint64_t BitGen_DATA::print(std::ofstream& file, const bool compress,
+                            std::string space, const bool detail) {
   // print_info
   //    0:      - nature printing
   //    1-5:    - alignment printing
@@ -234,8 +304,11 @@ uint64_t BitGen_DATA::print(std::ofstream& file, std::string space,
     if (r.size > 0) {
       file << CFG_print("%s%s\n", space.c_str(), r.name.c_str()).c_str();
       uint64_t print_info = get_print_info(r.name);
-      if (print_info <= 5) {
-        if (print_info != 0 || r.size > 64) {
+      if (compress || print_info <= 5) {
+        if (compress && print_info > 5) {
+          print_info = 1;
+        }
+        if (compress || print_info != 0 || r.size > 64) {
           // 1 : 1
           // 2 : 2
           // 3 : 4
@@ -503,6 +576,13 @@ uint64_t BitGen_DATA::get_rule_value(const std::string& field) {
   return value;
 }
 
+std::vector<uint8_t> BitGen_DATA::get_rule_non_reference_data(
+    const std::string& field) {
+  BitGen_DATA_RULE* rule = get_rule(field);
+  CFG_ASSERT(rule != nullptr);
+  return rule->data;
+}
+
 std::vector<uint8_t>& BitGen_DATA::get_rule_data(const std::string& field) {
   BitGen_DATA_RULE* rule = get_rule(field);
   CFG_ASSERT(rule != nullptr);
@@ -549,7 +629,7 @@ void BitGen_DATA::set_rule_size(const std::string& field, uint64_t size) {
 
 void BitGen_DATA::set_size(BitGen_DATA_RULE* rule, uint64_t value,
                            const uint32_t property) {
-  if (property != 0) {
+  if (!ignore_set_size_property && property != 0) {
     CFG_ASSERT((value % property) == 0);
   }
   rule->size = value;

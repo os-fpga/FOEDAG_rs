@@ -18,6 +18,13 @@
             "help" : "File generation operation"
          },
          {
+            "name" : "compress",
+            "short" : "c",
+            "type" : "flag",
+            "optional" : true,
+            "help" : "Enable compression"
+         },
+         {
             "name" : "aes_key",
             "short" : "a",
             "type" : "str",

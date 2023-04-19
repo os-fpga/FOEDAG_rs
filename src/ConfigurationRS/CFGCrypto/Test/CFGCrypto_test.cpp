@@ -75,22 +75,33 @@ void test_signing() {
   uint8_t signature[1024];
   uint8_t public_key[1024];
   std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-  size_t signature_size = 256;
-  for (auto key : keys) {
-    std::vector<uint8_t> pubkey;
-    CFGOpenSSL::gen_private_pem(key, "private.pem", "", true);
-    CFGOpenSSL::gen_public_pem("private.pem", "public.pem", "");
-    CFGCrypto_KEY sign_key("private.pem", "", true);
-    sign_key.get_public_key(pubkey, 0);
-    CFG_ASSERT(signature_size ==
-               CFGOpenSSL::sign_message(&data[0], data.size(), signature,
-                                        sizeof(signature), &sign_key));
-    CFG_ASSERT(CFGOpenSSL::authenticate_message(
-        &data[0], data.size(), signature, signature_size, key, &pubkey[0],
-        (uint32_t)(pubkey.size())));
-    CFG_ASSERT(CFGOpenSSL::authenticate_message(
-        &data[0], data.size(), signature, signature_size, "public.pem", ""));
-    signature_size = 64;
+  for (int i = 0; i < 20; i++) {
+    size_t signature_size = 256;
+    for (auto key : keys) {
+      printf("  Testing %s\n", key.c_str());
+      std::string passphrase =
+          (((i % 10) != 0)
+               ? ""
+               : CFG_print("This is testing %s number #%d", key.c_str(), i));
+      std::vector<uint8_t> pubkey;
+      CFGOpenSSL::gen_private_pem(key, "private.pem", passphrase,
+                                  passphrase.empty());
+      CFGOpenSSL::gen_public_pem("private.pem", "public.pem", passphrase);
+      CFGCrypto_KEY sign_key("private.pem", passphrase, true);
+      sign_key.get_public_key(pubkey, 0);
+      CFG_ASSERT(signature_size ==
+                 CFGOpenSSL::sign_message(&data[0], data.size(), signature,
+                                          sizeof(signature), &sign_key));
+      CFG_ASSERT(CFGOpenSSL::authenticate_message(
+          &data[0], data.size(), signature, signature_size, key, &pubkey[0],
+          (uint32_t)(pubkey.size())));
+      CFG_ASSERT(CFGOpenSSL::authenticate_message(
+          &data[0], data.size(), signature, signature_size, "public.pem", ""));
+      CFG_ASSERT(CFGOpenSSL::authenticate_message(&data[0], data.size(),
+                                                  signature, signature_size,
+                                                  "private.pem", passphrase));
+      signature_size = 64;
+    }
   }
 }
 
