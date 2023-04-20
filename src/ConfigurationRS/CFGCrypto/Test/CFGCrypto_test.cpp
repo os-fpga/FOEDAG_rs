@@ -73,7 +73,6 @@ void test_signing() {
   CFG_POST_MSG("Signing Test");
   std::vector<std::string> keys = {"rsa2048", "prime256v1"};
   uint8_t signature[1024];
-  uint8_t public_key[1024];
   std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   for (int i = 0; i < 20; i++) {
     size_t signature_size = 256;
