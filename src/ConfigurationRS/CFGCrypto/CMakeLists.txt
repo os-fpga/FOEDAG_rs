@@ -30,9 +30,17 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (MSVC)
-  set(CRYPTO_LIB ${CFG_PROJECT_ROOT_DIR}/FOEDAG/third_party/openssl/libcrypto-1_1-x64.lib)
-  set(SSL_LIB ${CFG_PROJECT_ROOT_DIR}/FOEDAG/third_party/openssl/libssl-1_1-x64.lib)
-  set(OPENSSL_INC ${CFG_BUILD_ROOT_DIR}/FOEDAG/include)
+  find_package(OpenSSL)
+  if (OPENSSL_FOUND)
+    message (STATUS "OPENSSL found")
+    message (STATUS "OpenSSL Version: " ${OPENSSL_VERSION})
+    message (STATUS "OpenSSL Include directories: " ${OPENSSL_INCLUDE_DIR})
+  else() 
+    message (FATAL_ERROR "OpenSSL Not found.")
+  endif()
+  set(CRYPTO_LIB OpenSSL::Crypto)
+  set(SSL_LIB OpenSSL::SSL)
+  set(OPENSSL_INC ${OPENSSL_INCLUDE_DIR})
   set(ADDITIONAL_LIB "")
 else()
   set(CRYPTO_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_crypto_1.1.1t.a)
@@ -64,9 +72,11 @@ add_library(
   CFGOpenSSL.cpp
   CFGCrypto_key.cpp
 )
-add_dependencies(${subsystem} openssl_build)
+if (NOT MSVC)
+  add_dependencies(${subsystem} openssl_build)
+endif()
 target_link_libraries(${subsystem} PRIVATE ${CRYPTO_LIB} ${SSL_LIB} ${ADDITIONAL_LIB})
-target_include_directories(${subsystem} PUBLIC ${OPENSSL_INC})
+target_include_directories(${subsystem} PRIVATE ${OPENSSL_INC})
 
 ###################
 #
