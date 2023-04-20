@@ -32,7 +32,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (MSVC)
   set(CRYPTO_LIB ${CFG_PROJECT_ROOT_DIR}/FOEDAG/third_party/openssl/libcrypto-1_1-x64.lib)
   set(SSL_LIB ${CFG_PROJECT_ROOT_DIR}/FOEDAG/third_party/openssl/libssl-1_1-x64.lib)
-  set(OPENSSL_INC "${CFG_BUILD_ROOT_DIR}/FOEDAG/include")
+  set(OPENSSL_INC ${CFG_BUILD_ROOT_DIR}/FOEDAG/include)
   set(ADDITIONAL_LIB "")
 else()
   set(CRYPTO_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_crypto_1.1.1t.a)
@@ -66,7 +66,7 @@ add_library(
 )
 add_dependencies(${subsystem} openssl_build)
 target_link_libraries(${subsystem} PRIVATE ${CRYPTO_LIB} ${SSL_LIB} ${ADDITIONAL_LIB})
-target_include_directories(${subsystem} PRIVATE ${OPENSSL_INC})
+target_include_directories(${subsystem} PUBLIC ${OPENSSL_INC})
 
 ###################
 #
