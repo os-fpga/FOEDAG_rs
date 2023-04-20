@@ -91,7 +91,7 @@ uint64_t BitGen_DATA::generate(std::vector<uint8_t>& data, bool& compress,
     }
     if (binary_datas.size()) {
       // Let's only support one field to compress (don't really care about
-      // compression) Otherwsie it is hard to determine the which field has what
+      // encryption) Otherwsie it is hard to determine the which field has what
       // size
       CFG_ASSERT(binary_datas.size() == 1);
       uint8_t tracking = 0;
