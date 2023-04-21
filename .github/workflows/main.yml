@@ -178,6 +178,7 @@ jobs:
         workflow: main.yml
         repo: ${{ github.repository }}
         branch: main
+        name: buildqt5-centos7-gcc
 #       run_number: 1176
 
     - name: Install dependencies and build QT
