@@ -1,6 +1,7 @@
 #include "BitGenerator.h"
 #include "CFGCommonRS/CFGArgRS_auto.h"
 #include "CFGCommonRS/CFGCommonRS.h"
+#include "CFGCrypto/CFGOpenSSL.h"
 
 int main(int argc, const char** argv) {
   auto arg = std::make_shared<CFGArg_BITGEN>();
@@ -15,6 +16,29 @@ int main(int argc, const char** argv) {
       } else {
         CFG_POST_ERR("BITGEN: %s operation need input and output arguments",
                      arg->operation.c_str());
+        status = 1;
+      }
+    } else if (arg->operation == "gen_private_pem") {
+      if (arg->signing_key.size() > 0 &&
+          CFG_check_file_extensions(arg->m_args[0], {".pem"}) == 0) {
+        CFGOpenSSL::gen_private_pem(arg->signing_key, arg->m_args[0],
+                                    arg->passphrase, arg->no_passphrase);
+      } else {
+        CFG_POST_ERR(
+            "BITGEN: gen_private_pem operation option signing_key must be "
+            "specified and output should be in .pem extension");
+        status = 1;
+      }
+    } else if (arg->operation == "gen_public_pem") {
+      if (arg->m_args.size() == 2 &&
+          CFG_check_file_extensions(arg->m_args[0], {".pem"}) == 0 &&
+          CFG_check_file_extensions(arg->m_args[1], {".pem"}) == 0) {
+        CFGOpenSSL::gen_public_pem(arg->m_args[0], arg->m_args[1],
+                                   arg->passphrase);
+      } else {
+        CFG_POST_ERR(
+            "BITGEN: gen_public_pem operation needs input and output "
+            "arguments, both should be in .pem extension");
         status = 1;
       }
     } else {

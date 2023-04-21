@@ -3,7 +3,13 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-
+#if defined(_MSC_VER)
+#include <windows.h>
+#else
+#include <sys/time.h>
+#include <sys/utsname.h>
+#include <unistd.h>
+#endif
 #include "CFGCompress.h"
 
 const uint16_t CFGCommonRS_CRC_8408_TABLE[256] = {
@@ -384,4 +390,57 @@ void CFG_print_binary_line_by_line(std::ofstream& file, const uint8_t* data,
     }
   }
   file << "\n";
+}
+
+std::string CFG_get_machine_name() {
+#if defined(_MSC_VER)
+  char computer_name[1024];
+  uint32_t size = 1024;
+  GetComputerName(computer_name, (LPDWORD)(&size));
+  return std::string(computer_name, size);
+#else
+  static struct utsname u;
+  if (uname(&u) < 0) {
+    return "unknown";
+  }
+  return std::string(u.nodename);
+#endif
+}
+
+uint32_t CFG_get_volume_serial_number() {
+  uint32_t serial_number = 0;
+#if defined(_MSC_VER)
+  // Determine if this volume uses an NTFS file system.
+  GetVolumeInformation("c:\\", nullptr, 0, (LPDWORD)(&serial_number), nullptr,
+                       nullptr, nullptr, 0);
+#else
+  // linux does not have
+#endif
+  return serial_number;
+}
+
+uint64_t CFG_get_nano_time() {
+  uint64_t current_time = 0;
+#if defined(_MSC_VER)
+  FILETIME ft;
+  ::GetSystemTimeAsFileTime(&ft);
+  uint32_t* ptr = (uint32_t*)(&current_time);
+  ptr[0] = uint32_t(ft.dwLowDateTime);
+  ptr[1] = uint32_t(ft.dwHighDateTime);
+#else
+  struct timespec tp;
+  clock_gettime(CLOCK_REALTIME, &tp);
+  current_time = (tp.tv_sec * uint64_t(1000000000)) + tp.tv_nsec;
+#endif
+  return current_time;
+}
+
+uint64_t CFG_get_unique_nano_time() {
+  static uint64_t backup_time = CFG_get_nano_time();
+  uint64_t time = CFG_get_nano_time();
+  if (backup_time >= time) {
+    time = backup_time + 1;
+  }
+  backup_time = time;
+  return time;
 }

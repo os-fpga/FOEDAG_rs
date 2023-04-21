@@ -15,7 +15,7 @@ add_custom_target(pre-configurationRS
 
 # Define the subsystem here
 list(APPEND LEVEL1_SUBSYSTEMS CFGCommonRS)
-list(APPEND LEVEL2_SUBSYSTEMS CFGObject)
+list(APPEND LEVEL2_SUBSYSTEMS CFGCrypto CFGObject)
 list(APPEND LEVEL3_SUBSYSTEMS BitAssembler BitGenerator)
 list(APPEND EXE_SUBSYSTEMS BitGenerator)
 
@@ -28,6 +28,7 @@ list(APPEND SUBSYSTEMS ${PRE-SUBSYSTEMS} ${POST-SUBSYSTEMS})
 #	in each subdirectory avoid using using ".." relative path -- it is very hard to manage if we have multiple layer
 set(CFG_PROJECT_ROOT_DIR ${PROJECT_SOURCE_DIR}/../..)
 set(CFG_FOEDAG_PROJECT_ROOT_DIR ${CFG_PROJECT_ROOT_DIR}/FOEDAG/src/Configuration)
+set(CFG_FOEDAGRS_PROJECT_ROOT_DIR ${CFG_PROJECT_ROOT_DIR}/src/ConfigurationRS)
 set(CFG_BUILD_ROOT_DIR ${CMAKE_CURRENT_BINARY_DIR}/../..)
 message("ConfigurationRS source dirctory is ${PROJECT_SOURCE_DIR}")
 message("ConfigurationRS binary dirctory is ${CMAKE_CURRENT_BINARY_DIR}")
@@ -127,6 +128,7 @@ endforeach()
 # 	This is custom dependencies within configuration subsystem
 # Example BitAssembler use CFGObject library
 target_link_libraries(cfgcommonrs INTERFACE cfgcommon)
+target_link_libraries(bitgenerator INTERFACE cfgcrypto)
 target_link_libraries(bitassembler INTERFACE cfgobject)
 target_link_libraries(bitgenerator INTERFACE cfgobject)
 target_link_libraries(bitassembler INTERFACE bitgenerator)

@@ -31,7 +31,9 @@ void BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
   CFG_ASSERT(arg->m_args.size() == 2);
   CFG_POST_MSG("  Input: %s", arg->m_args[0].c_str());
   CFG_POST_MSG("  Output: %s", arg->m_args[1].c_str());
-
+  std::vector<uint8_t> aes_key;
+  CFGCrypto_KEY key;
+  CFGCrypto_KEY* key_ptr = nullptr;
   if (arg->operation == "parse") {
     if (CFG_check_file_extensions(arg->m_args[0], {".bitasm", ".cfgbit"}) < 0 ||
         CFG_check_file_extensions(arg->m_args[1], {".debug.txt"}) != 0) {
@@ -40,7 +42,7 @@ void BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
           "extension, and output should be in .debug.txt extension");
       return;
     }
-  } else {
+  } else if (arg->operation == "gen_bitstream") {
     // generate
     if (CFG_check_file_extensions(arg->m_args[0], {".bitasm"}) != 0 ||
         CFG_check_file_extensions(arg->m_args[1], {".cfgbit"}) != 0) {
@@ -49,6 +51,40 @@ void BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
           "extension, and output should be in .cfgbit extension");
       return;
     }
+    // Signing key
+    if (arg->aes_key.size()) {
+      CFG_read_binary_file(arg->aes_key, aes_key);
+      if (aes_key.size() == 16 || aes_key.size() == 32) {
+        // good
+      } else {
+        memset(&aes_key[0], 0, aes_key.size());
+        CFG_POST_ERR(
+            "BITGEN: AES key should be 16 or 32 Bytes. But found %ld Bytes in "
+            "%s",
+            aes_key.size(), arg->aes_key.c_str());
+      }
+    }
+    // Signing key
+    if (arg->signing_key.size()) {
+      key.initial(arg->signing_key, arg->passphrase, true);
+      key_ptr = &key;
+    }
+    // AES key
+    if (arg->aes_key.size()) {
+      CFG_read_binary_file(arg->aes_key, aes_key);
+      if (aes_key.size() == 16 || aes_key.size() == 32) {
+        // good
+      } else {
+        memset(&aes_key[0], 0, aes_key.size());
+        CFG_POST_ERR(
+            "BITGEN: AES key should be 16 or 32 Bytes. But found %ld Bytes in "
+            "%s",
+            aes_key.size(), arg->aes_key.c_str());
+      }
+    }
+  } else {
+    CFG_POST_ERR("BITGEN: Invalid operation %s", arg->operation.c_str());
+    return;
   }
 
   if (arg->operation == "parse") {
@@ -67,12 +103,15 @@ void BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
     std::string family = get_device_family(bitobj.device);
     if (family == "GEMINI") {
       BitGen_GEMINI gemini(&bitobj);
-      CFG_ASSERT(gemini.generate(data));
+      CFG_ASSERT(gemini.generate(data, arg->compress, key_ptr, aes_key));
       CFG_write_binary_file(arg->m_args[1], &data[0], data.size());
     } else {
       CFG_INTERNAL_ERROR("Unsupported device %s family %s",
                          bitobj.device.c_str(), family.c_str());
     }
+  }
+  if (aes_key.size()) {
+    memset(&aes_key[0], 0, aes_key.size());
   }
   CFG_POST_MSG("BITGEN elapsed time: %.3f seconds",
                CFG_time_elapse(time_begin));

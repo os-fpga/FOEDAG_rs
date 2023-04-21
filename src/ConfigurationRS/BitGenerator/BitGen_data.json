@@ -1,5 +1,5 @@
 {
-  "gemini_bop" : {
+  "gemini_bop_header" : {
     "size_alignment" : 32,
     "fields" : [
       {
@@ -64,7 +64,7 @@
         "size" : 16
       },
       {
-        "name" : "signing_length",
+        "name" : "signature_length",
         "size" : 16
       },
       {
@@ -95,6 +95,23 @@
       }
     ]
   },
+  "gemini_bop_footer" : {
+    "size_alignment" : 32,
+    "fields" : [
+      {
+        "name" : "iv",
+        "size" : null
+      },
+      {
+        "name" : "public_key",
+        "size" : null
+      },
+      {
+        "name" : "signature",
+        "size" : null
+      }
+    ]
+  },
   "gemini_fcb" : {
     "size_alignment" : 32,
     "defined" : { "bit_size_per_chain" : "(@get_rule_value(payload_size32) * 32)/(@align32(@get_rule_value(parallel_chain_size)))" }, 
@@ -102,7 +119,8 @@
       {
         "name" : "payload_size32",
         "size" : 32,
-        "data" : "@size32(@align32(@get_src_value(parallel_chain_size)) * @get_src_value(bit_size_per_chain))"
+        "data" : "@size32(@align32(@get_src_value(parallel_chain_size)) * @get_src_value(bit_size_per_chain))",
+        "property" : 6
       },
       {
         "name" : "checksum", 
@@ -137,7 +155,8 @@
         "data" : "@genbits_line_by_line(@get_src_data(src_payload), @get_src_value(parallel_chain_size), @get_src_value(bit_size_per_chain), 8, 32, @get_rule_value(bit_chain_connection) != 0, @get_rule_value(bit_twist_shift_reg) != 0)",
         "sdata_size" : "@get_defined_value(bit_size_per_chain)*(@size8(@get_rule_value(parallel_chain_size)))",
         "sdata" : "@genbits_line_by_line(data, @get_rule_value(parallel_chain_size), @get_defined_value(bit_size_per_chain), 8, 32, @get_rule_value(bit_chain_connection) != 0, @get_rule_value(bit_twist_shift_reg) != 0, @get_rule_data_ptr(payload))",
-        "print_info" : "(uint64_t(8) << 40 | uint64_t(1) << 36) | (uint64_t(1) << 32) | @get_rule_value(parallel_chain_size)"
+        "print_info" : "(uint64_t(8) << 40 | uint64_t(1) << 36) | (uint64_t(1) << 32) | @get_rule_value(parallel_chain_size)",
+        "property" : 1
       }
     ]
   },
@@ -147,7 +166,8 @@
       {
         "name" : "payload_size8",
         "size" : 24,
-        "data" : "@get_src_data_size(src_payload),4"
+        "data" : "@get_src_data_size(src_payload),4",
+        "property" : 2
       },
       {
         "name" : "checksum_present",
@@ -184,7 +204,8 @@
         "name" : "payload",
         "size" : "@get_rule_value(payload_size8) * 8",
         "data" : "@get_src_data(src_payload)",
-        "print_info" : "1"
+        "print_info" : "1",
+        "property" : 1
       }
     ]
   },
@@ -197,7 +218,8 @@
       {
         "name" : "payload_size32",
         "size" : 32,
-        "data" : "@size32(@get_src_data_size(src_payload) * 8), 4096"
+        "data" : "@size32(@get_src_data_size(src_payload) * 8), 4096",
+        "property" : 6
       },
       {
         "name" : "ram_block_count",
@@ -280,7 +302,8 @@
         "name" : "payload",
         "size" : "@get_rule_value(payload_size32) * 32, 4096 * 32",
         "data" : "@get_src_data(src_payload)",
-        "print_info" : "(uint64_t(4) << 40) | (uint64_t(2) << 32) | 4096 * 4"
+        "print_info" : "(uint64_t(4) << 40) | (uint64_t(2) << 32) | 4096 * 4",
+        "property" : 1
       }
     ]
   }
