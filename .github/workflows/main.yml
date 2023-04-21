@@ -171,12 +171,13 @@ jobs:
         echo ${{ github.run_number }}
         echo ${{ github.run_id }}
         
-#    - name: Download workflow artifact
+    - name: Download workflow artifact
 #      if: matrix.mode == 'test'
-#      uses: dawidd6/action-download-artifact@v2.24.0
-#      with:
-#        workflow: main.yml
-#        repo: ${{ github.repository }}
+      uses: dawidd6/action-download-artifact@v2.24.0
+      with:
+        workflow: main.yml
+        repo: ${{ github.repository }}
+        branch: main
 #       run_number: 1176
 
     - name: Install dependencies and build QT
