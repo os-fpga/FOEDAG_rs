@@ -880,7 +880,9 @@ void CompilerRS::Help(std::ostream *out) {
 #ifdef PRODUCTION_BUILD
   (*out) << "   bitstream ?clean?          : Bitstream generation" << std::endl;
 #else
-  (*out) << "   bitstream ?force? ?clean?  : Bitstream generation" << std::endl;
+  (*out) << "   bitstream ?force? ?clean? ?enable_simulation? ?write_xml? "
+            "?write_fabric_independent? ?pb_pin_fixup? : Bitstream generation"
+         << std::endl;
 #endif
   (*out) << "   set_top_testbench <module> : Sets the top-level testbench "
             "module/entity"
