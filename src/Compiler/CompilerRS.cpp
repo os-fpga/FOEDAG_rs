@@ -351,6 +351,7 @@ CompilerRS::CompilerRS() : CompilerOpenFPGA() {
   m_synthType = SynthesisType::RS;
   m_netlistType = NetlistType::Verilog;
   m_channel_width = 200;
+  m_name = "CompilerRS";
 }
 
 void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
