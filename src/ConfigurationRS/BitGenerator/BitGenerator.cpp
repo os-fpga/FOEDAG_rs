@@ -5,7 +5,8 @@
 #include "CFGCommonRS/CFGCommonRS.h"
 
 const std::map<std::string, std::vector<std::string>> FAMILY_DATABASE = {
-    {"GEMINI", {"1GE75"}}};
+    {"GEMINI", {"GEMINI", "GEMINI_COMPACT_10x8", "GEMINI_COMPACT_62x44", 
+                "GEMINI_COMPACT_82x68", "1GE3", "1GE3C", "1GE75", "1GE100"}}};
 
 static std::string get_device_family(const std::string& device) {
   std::string family = "";
