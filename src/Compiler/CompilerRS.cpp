@@ -1106,7 +1106,6 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
     }
   }
   compiler->SynthFast(fast);
-  GlobalSession->GetSettings()->syncWith(PACKING_SETTING_KEY);
 }
 
 std::string CompilerRS::BaseStaCommand() {
