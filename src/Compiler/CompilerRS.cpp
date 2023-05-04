@@ -870,10 +870,10 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "   place ?clean?              : Detailed placer" << std::endl;
   (*out) << "   route ?clean?              : Router" << std::endl;
 #ifdef PRODUCTION_BUILD
-  (*out) << "   sta ?clean?                : Statistical Timing Analysis"
+  (*out) << "   sta ?clean?                : Static Timing Analysis"
          << std::endl;
 #else
-  (*out) << "   sta ?clean? ?opensta?      : Statistical Timing Analysis with "
+  (*out) << "   sta ?clean? ?opensta?      : Static Timing Analysis with "
             "Tatum (Default) or OpenSTA"
          << std::endl;
 #endif
