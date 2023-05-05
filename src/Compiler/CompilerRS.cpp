@@ -920,6 +920,8 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "                                [OpenAI]" << std::endl;
   (*out) << "                                API_KEY: <api key>" << std::endl;
   writeWaveHelp(out, 3, 30);  // 30 is the col count of the : in the line above
+  writeProgramDeviceHelp(out, 3,
+                         77);  // 77 is the col count of the : in the line above
   (*out) << "-----------------------------------------------" << std::endl;
 }
 
