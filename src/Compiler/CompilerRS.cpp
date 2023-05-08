@@ -587,7 +587,7 @@ std::string CompilerRS::BaseVprCommand() {
   }
 
   std::string pnrOptions;
-  if (ClbPackingOption() == ClbPacking::Auto) {
+  if (ClbPackingOption() == ClbPacking::Timing_driven) {
     pnrOptions += " --allow_unrelated_clustering off";
   } else {
     pnrOptions += " --allow_unrelated_clustering on";
