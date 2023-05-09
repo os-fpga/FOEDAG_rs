@@ -28,6 +28,7 @@ All rights reserved
 #include "NewProject/ProjectManager/project_manager.h"
 #include "Utils/FileUtils.h"
 #include "Utils/LogUtils.h"
+#include "Utils/QtUtils.h"
 #include "Utils/StringUtils.h"
 
 #ifdef PRODUCTION_BUILD
@@ -646,15 +647,16 @@ void CompilerRS::Version(std::ostream *out) {
 void CompilerRS::Help(ToolContext *context, std::ostream *out) {
   auto dataPath = context->DataPath();
 #ifdef PRODUCTION_BUILD
-  dataPath = dataPath / "etc" / "help.txt";
+  std::vector<std::string> tags{"production"};
 #else
-  dataPath = dataPath / "etc" / "engineering_help.txt";
+  std::vector<std::string> tags{"engineering"};
 #endif
+  dataPath = dataPath / "etc" / "help.txt";
   std::ifstream stream(dataPath);
   if (stream.good()) {
     std::string helpContent((std::istreambuf_iterator<char>(stream)),
                             std::istreambuf_iterator<char>());
-    (*out) << helpContent;
+    (*out) << QtUtils::replaceTags(helpContent, tags);
   }
   stream.close();
 }
