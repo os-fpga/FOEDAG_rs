@@ -401,6 +401,14 @@ CompilerRS::~CompilerRS() {
 #endif
 }
 
+std::vector<std::string> CompilerRS::helpTags() const {
+#ifdef PRODUCTION_BUILD
+  return {"production"};
+#else
+  return {"engineering"};
+#endif
+}
+
 bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
   CompilerOpenFPGA::RegisterCommands(interp, batchMode);
 
@@ -642,23 +650,6 @@ void CompilerRS::Version(std::ostream *out) {
   (*out) << "Rapid Silicon Raptor Design Suite"
          << "\n";
   LogUtils::PrintVersion(out);
-}
-
-void CompilerRS::Help(ToolContext *context, std::ostream *out) {
-  auto dataPath = context->DataPath();
-#ifdef PRODUCTION_BUILD
-  std::vector<std::string> tags{"production"};
-#else
-  std::vector<std::string> tags{"engineering"};
-#endif
-  dataPath = dataPath / "etc" / "help.txt";
-  std::ifstream stream(dataPath);
-  if (stream.good()) {
-    std::string helpContent((std::istreambuf_iterator<char>(stream)),
-                            std::istreambuf_iterator<char>());
-    (*out) << QtUtils::replaceTags(helpContent, tags);
-  }
-  stream.close();
 }
 
 bool CompilerRS::LicenseDevice(const std::string &deviceName) {
