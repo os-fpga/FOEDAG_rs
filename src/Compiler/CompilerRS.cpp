@@ -597,6 +597,15 @@ std::string CompilerRS::BaseVprCommand() {
     pnrOptions += " --gen_post_synthesis_netlist on";
   }
   if (!PerDevicePnROptions().empty()) pnrOptions += " " + PerDevicePnROptions();
+  std::string vpr_skip_fixup;
+  if (m_pb_pin_fixup == "pb_pin_fixup") {
+    // Skip
+    vpr_skip_fixup = "on";
+  } else {
+    // Don't skip
+    vpr_skip_fixup = "off";
+  }
+
   std::string command =
       m_vprExecutablePath.string() + std::string(" ") +
       m_architectureFile.string() + std::string(" ") +
@@ -607,8 +616,10 @@ std::string CompilerRS::BaseVprCommand() {
           std::to_string(m_channel_width) +
           " --suppress_warnings check_rr_node_warnings.log,check_rr_node"
           " --clock_modeling ideal --timing_report_npaths 100 "
-          "--absorb_buffer_luts off --skip_sync_clustering_and_routing_results "
-          "on --constant_net_method route "
+          "--absorb_buffer_luts off "
+          "--skip_sync_clustering_and_routing_results " +
+          vpr_skip_fixup +
+          " --constant_net_method route "
           "--timing_report_detail detailed --post_place_timing_report " +
           m_projManager->projectName() + "_post_place_timing.rpt" +
           device_size + pnrOptions);
