@@ -53,6 +53,8 @@ class CompilerRS : public CompilerOpenFPGA {
   void SynthNoAdder(bool noAdder) { m_synthNoAdder = noAdder; }
   bool SynthFast() { return m_synthFast; }
   void SynthFast(bool fast) { m_synthFast = fast; }
+  bool SynthNoFlatten() { return m_synthNoFlatten; }
+  void SynthNoFlatten(bool no_flatten) { m_synthNoFlatten = no_flatten; }
   bool SynthCec() { return m_synthCec; }
   void SynthCec(bool cec) { m_synthCec = cec; }
   bool SynthNoSimplify() { return m_synthNoSimplify; }
@@ -82,6 +84,7 @@ class CompilerRS : public CompilerOpenFPGA {
   SynthesisClkeStrategy m_synthClke = SynthesisClkeStrategy::None;
   bool m_synthNoAdder = false;
   bool m_synthFast = false;
+  bool m_synthNoFlatten = false;
   bool m_synthCec = false;
   bool m_synthNoSimplify = false;
   int m_maxThreads = -1;
