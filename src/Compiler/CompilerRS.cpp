@@ -71,7 +71,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} ${ABC_SCRIPT} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${LIMITS} ${FSM_ENCODING} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} ${ABC_SCRIPT} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
@@ -233,6 +233,10 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   if (m_synthFast) {
     fast_mode = "-fast";
   }
+  std::string no_flatten_mode;
+  if (m_synthNoFlatten) {
+    no_flatten_mode = "-no_flatten";
+  }
   std::string max_threads = "-de_max_threads " + std::to_string(m_maxThreads);
   std::string no_simplify;
   if (m_synthNoSimplify) {
@@ -271,6 +275,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
     effort = "";
     fsm_encoding = "";
     fast_mode = "";
+    no_flatten_mode = "";
     carry_inference = "";
     if (m_synthNoAdder) {
       optimization += " -no_adder";
@@ -288,6 +293,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   result = ReplaceAll(result, "${FSM_ENCODING}", fsm_encoding);
   result = ReplaceAll(result, "${CARRY}", carry_inference);
   result = ReplaceAll(result, "${FAST}", fast_mode);
+  result = ReplaceAll(result, "${NO_FLATTEN}", no_flatten_mode);
   result = ReplaceAll(result, "${MAX_THREADS}", max_threads);
   result = ReplaceAll(result, "${NO_SIMPLIFY}", no_simplify);
   result = ReplaceAll(result, "${CLKE_STRATEGY}", clke_strategy);
@@ -464,6 +470,10 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
       }
       if (option == "-fast") {
         compiler->SynthFast(true);
+        continue;
+      }
+      if (option == "-no_flatten") {
+        compiler->SynthNoFlatten(true);
         continue;
       }
       if (option == "-no_simplify") {
@@ -809,6 +819,8 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "     -fast                    : Perform the fastest synthesis. "
             "Don't expect good QoR."
          << std::endl;
+  (*out) << "     -no_flatten              : Do not flatten design. "
+         << std::endl;
   (*out) << "     -no_simplify             : Do not run special "
             "simplification algorithms in synthesis. "
          << std::endl;
@@ -1012,6 +1024,7 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
   CompilerRS *compiler = (CompilerRS *)GlobalSession->GetCompiler();
 
   bool fast{false};
+  bool no_flatten{false};
   // Split into args by -
   std::vector<std::string> args;
   StringUtils::tokenize(argsStr, "-", args);
@@ -1115,8 +1128,13 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
       fast = true;
       continue;
     }
+    if (option == "-no_flatten") {
+      no_flatten = true;
+      continue;
+    }
   }
   compiler->SynthFast(fast);
+  compiler->SynthNoFlatten(no_flatten);
 }
 
 std::string CompilerRS::BaseStaCommand() {
