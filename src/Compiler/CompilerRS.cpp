@@ -275,7 +275,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
     effort = "";
     fsm_encoding = "";
     fast_mode = "";
-	no_flatten_mode = "";
+    no_flatten_mode = "";
     carry_inference = "";
     if (m_synthNoAdder) {
       optimization += " -no_adder";
