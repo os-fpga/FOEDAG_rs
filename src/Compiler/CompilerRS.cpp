@@ -26,6 +26,7 @@ All rights reserved
 #include "Main/Settings.h"
 #include "MainWindow/Session.h"
 #include "NewProject/ProjectManager/project_manager.h"
+#include "ProjNavigator/tcl_command_integration.h"
 #include "Utils/FileUtils.h"
 #include "Utils/LogUtils.h"
 #include "Utils/QtUtils.h"
@@ -508,6 +509,7 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
       compiler->ErrorMessage("Unknown option: " + option);
       return TCL_ERROR;
     }
+    if (compiler->GuiTclSync()) compiler->GuiTclSync()->saveSettings();
     return TCL_OK;
   };
   interp->registerCmd("synth_options", synth_options, this, 0);
