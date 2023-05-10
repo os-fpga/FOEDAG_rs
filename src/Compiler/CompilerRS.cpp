@@ -819,7 +819,8 @@ void CompilerRS::Help(std::ostream *out) {
   (*out) << "     -fast                    : Perform the fastest synthesis. "
             "Don't expect good QoR."
          << std::endl;
-  (*out) << "     -no_flatten              : Do not flatten design. " << std::endl;
+  (*out) << "     -no_flatten              : Do not flatten design. "
+         << std::endl;
   (*out) << "     -no_simplify             : Do not run special "
             "simplification algorithms in synthesis. "
          << std::endl;
