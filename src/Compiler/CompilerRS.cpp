@@ -265,12 +265,19 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
             std::to_string(MaxDeviceDSPCount()) + std::string(" ");
   limits += std::string("-max_device_bram ") +
             std::to_string(MaxDeviceBRAMCount()) + std::string(" ");
-  if (MaxUserDSPCount())
+  // TODO, uncomment when supported in Synthesis
+  //limits += std::string("-max_device_carry_length ") +
+  //          std::to_string(MaxDeviceCarryLength()) + std::string(" ");          
+  if (MaxUserDSPCount() >= 0)
     limits += std::string("-max_dsp ") + std::to_string(MaxUserDSPCount()) +
               std::string(" ");
-  if (MaxUserBRAMCount())
+  if (MaxUserBRAMCount() >= 0)
     limits += std::string("-max_bram ") + std::to_string(MaxUserBRAMCount()) +
               std::string(" ");
+  // TODO, uncomment when supported in Synthesis
+  //if (MaxUserCarryLength() >= 0)
+  //  limits += std::string("-max_carry_length ") + std::to_string(MaxUserCarryLength()) +
+  //            std::string(" ");
 
   if (m_synthType == SynthesisType::QL) {
     optimization = "";
