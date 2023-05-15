@@ -275,8 +275,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   // TODO, uncomment when supported in Synthesis
   if (MaxUserCarryLength() >= 0)
     limits += std::string("-max_carry_length ") +
-    std::to_string(MaxUserCarryLength()) +
-              std::string(" ");
+    std::to_string(MaxUserCarryLength()) + std::string(" ");
 
   if (m_synthType == SynthesisType::QL) {
     optimization = "";
