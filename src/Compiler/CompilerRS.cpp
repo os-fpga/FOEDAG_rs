@@ -23,13 +23,11 @@ All rights reserved
 #include "Compiler/Log.h"
 #include "Configuration/CFGCompiler/CFGCompiler.h"
 #include "ConfigurationRS/BitAssembler/BitAssembler.h"
-#include "Main/Settings.h"
 #include "MainWindow/Session.h"
 #include "NewProject/ProjectManager/project_manager.h"
 #include "ProjNavigator/tcl_command_integration.h"
 #include "Utils/FileUtils.h"
 #include "Utils/LogUtils.h"
-#include "Utils/QtUtils.h"
 #include "Utils/StringUtils.h"
 
 #ifdef PRODUCTION_BUILD
@@ -482,6 +480,12 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
         if (ok) compiler->MaxUserBRAMCount(value);
         continue;
       }
+      if (option == "-carry_chain_limit" && i + 1 < argc) {
+        std::string arg = argv[++i];
+        const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
+        if (ok) compiler->MaxUserCarryLength(value);
+        continue;
+      }
       if (option == "-no_adder") {
         compiler->SynthNoAdder(true);
         continue;
@@ -685,7 +689,8 @@ std::string FOEDAG::TclArgs_getRsSynthesisOptions() {
     // Use the script completer to generate an arg list w/ current values
     // Note we are only grabbing the values that matter for the settings ui
     tclOptions = compiler->FinishSynthesisScript(
-        "${OPTIMIZATION} ${EFFORT} ${FSM_ENCODING} ${CARRY} ${FAST}");
+        "${OPTIMIZATION} ${EFFORT} ${FSM_ENCODING} ${CARRY} ${FAST} "
+        "${NO_FLATTEN}");
 
     // The settings UI provides a single argument value pair for each field.
     // Optimization uses -de -goal so we convert that to the settings specific
@@ -730,6 +735,8 @@ std::string FOEDAG::TclArgs_getRsSynthesisOptions() {
     tclOptions += " -dsp_limit " + dsp;
     auto bram = StringUtils::to_string(compiler->MaxUserBRAMCount());
     tclOptions += " -bram_limit " + bram;
+    auto carry = StringUtils::to_string(compiler->MaxUserCarryLength());
+    tclOptions += " -carry_chain_limit " + carry;
   };
   return tclOptions;
 }
@@ -838,6 +845,12 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
       std::string arg = tokens[1];
       const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
       if (ok) compiler->MaxUserBRAMCount(value);
+      continue;
+    }
+    if (option == "-carry_chain_limit" && tokens.size() > 1) {
+      std::string arg = tokens[1];
+      const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
+      if (ok) compiler->MaxUserCarryLength(value);
       continue;
     }
     if (option == "-fast") {
