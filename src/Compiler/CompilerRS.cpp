@@ -173,11 +173,6 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   result = ReplaceAll(result, "${KEEP_NAMES}", keeps);
   std::string optimization;
   switch (m_synthOpt) {
-    case SynthesisOpt::None:
-      // None means none
-      // Aram: DE optimization and mapping is mandatory for July release.
-      optimization = "-de";
-      break;
     case SynthesisOpt::Area:
       optimization = "-de -goal area";
       break;
@@ -777,8 +772,6 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
         compiler->SynthOpt(Compiler::SynthesisOpt::Delay);
       } else if (arg == "mixed") {
         compiler->SynthOpt(Compiler::SynthesisOpt::Mixed);
-      } else if (arg == "none") {
-        compiler->SynthOpt(Compiler::SynthesisOpt::None);
       }
       continue;
     }
