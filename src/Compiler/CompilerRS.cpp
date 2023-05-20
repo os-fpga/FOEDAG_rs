@@ -623,6 +623,10 @@ std::string CompilerRS::BaseVprCommand() {
   if (pnrOptions.find("gen_post_synthesis_netlist") == std::string::npos) {
     pnrOptions += " --gen_post_synthesis_netlist on";
   }
+  if (pnrOptions.find("post_synth_netlist_unconn_inputs") ==
+      std::string::npos) {
+    pnrOptions += " --post_synth_netlist_unconn_inputs gnd";
+  }
   if (!PerDevicePnROptions().empty()) pnrOptions += " " + PerDevicePnROptions();
   std::string vpr_skip_fixup;
   if (m_pb_pin_fixup == "pb_pin_fixup") {
