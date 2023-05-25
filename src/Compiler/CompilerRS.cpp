@@ -61,7 +61,7 @@ write_blif -param ${OUTPUT_EBLIF}
 const std::string RapidSiliconYosysScript = R"( 
 # Yosys synthesis script for ${TOP_MODULE}
 # Read source files
-read -vlog2k ${PRIMITIVES_BLACKBOX}
+verific -sv2005 ${PRIMITIVES_BLACKBOX}
 ${READ_DESIGN_FILES}
 
 # Technology mapping
@@ -71,7 +71,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} ${ABC_SCRIPT} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
@@ -303,20 +303,6 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   result = ReplaceAll(result, "${PLUGIN_LIB}", YosysPluginLibName());
   result = ReplaceAll(result, "${PLUGIN_NAME}", YosysPluginName());
   result = ReplaceAll(result, "${MAP_TO_TECHNOLOGY}", YosysMapTechnology());
-
-  if ((m_mapToTechnology == "genesis2") && getenv("GENESIS2_LUT5")) {
-    // Hack for genesis2 untill we fix the LUT6 packing, this disables all
-    // optimizations.
-    result = ReplaceAll(result, "${LUT_SIZE}", std::to_string(5));
-    result = ReplaceAll(result, "${ABC_SCRIPT}", "-abc lut.scr");
-    std::filesystem::path scr =
-        std::filesystem::path(ProjManager()->projectPath()) / "lut.scr";
-    std::ofstream ofs(scr.string());
-    ofs << "if -K 5 -a\n";
-    ofs.close();
-  } else {
-    result = ReplaceAll(result, "${ABC_SCRIPT}", "");
-  }
 
   result = ReplaceAll(result, "${LUT_SIZE}", std::to_string(m_lut_size));
   switch (GetNetlistType()) {
