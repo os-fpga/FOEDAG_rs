@@ -610,6 +610,7 @@ std::string CompilerRS::BaseVprCommand() {
     pnrOptions += " --allow_unrelated_clustering on";
   }
   if (!PnROpt().empty()) pnrOptions += " " + PnROpt();
+  if (!PerDevicePnROptions().empty()) pnrOptions += " " + PerDevicePnROptions();
   if (pnrOptions.find("gen_post_synthesis_netlist") == std::string::npos) {
     pnrOptions += " --gen_post_synthesis_netlist on";
   }
@@ -617,7 +618,12 @@ std::string CompilerRS::BaseVprCommand() {
       std::string::npos) {
     pnrOptions += " --post_synth_netlist_unconn_inputs gnd";
   }
-  if (!PerDevicePnROptions().empty()) pnrOptions += " " + PerDevicePnROptions();
+  if (pnrOptions.find("inner_loop_recompute_divider") == std::string::npos) {
+    pnrOptions += " --inner_loop_recompute_divider 1";
+  }
+  if (pnrOptions.find("max_router_iterations") == std::string::npos) {
+    pnrOptions += " --max_router_iterations 500";
+  }
   std::string vpr_skip_fixup;
   if (m_pb_pin_fixup == "pb_pin_fixup") {
     // Skip
@@ -637,8 +643,7 @@ std::string CompilerRS::BaseVprCommand() {
           std::to_string(m_channel_width) +
           " --suppress_warnings check_rr_node_warnings.log,check_rr_node"
           " --clock_modeling ideal --timing_report_npaths 100 "
-          "--absorb_buffer_luts off --inner_loop_recompute_divider 1 "
-          "--max_router_iterations 500"
+          "--absorb_buffer_luts off "
           "--skip_sync_clustering_and_routing_results " +
           vpr_skip_fixup +
           " --constant_net_method route "
