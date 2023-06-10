@@ -637,7 +637,8 @@ std::string CompilerRS::BaseVprCommand() {
           std::to_string(m_channel_width) +
           " --suppress_warnings check_rr_node_warnings.log,check_rr_node"
           " --clock_modeling ideal --timing_report_npaths 100 "
-          "--absorb_buffer_luts off "
+          "--absorb_buffer_luts off --inner_loop_recompute_divider 1 "
+          "--max_router_iterations 500"
           "--skip_sync_clustering_and_routing_results " +
           vpr_skip_fixup +
           " --constant_net_method route "
