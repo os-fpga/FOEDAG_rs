@@ -653,7 +653,8 @@ std::string CompilerRS::BaseVprCommand() {
           vpr_skip_fixup +
           " --constant_net_method route --post_place_timing_report " +
           m_projManager->projectName() + "_post_place_timing.rpt" +
-          device_size + pnrOptions);
+          device_size + pnrOptions) +
+      " --top " + ProjManager()->DesignTopModule();
 
   return command;
 }
