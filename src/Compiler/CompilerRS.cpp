@@ -622,7 +622,13 @@ std::string CompilerRS::BaseVprCommand() {
     pnrOptions += " --inner_loop_recompute_divider 1";
   }
   if (pnrOptions.find("max_router_iterations") == std::string::npos) {
-    pnrOptions += " --max_router_iterations 500";
+    pnrOptions += " --max_router_iterations 1500";
+  }
+  if (pnrOptions.find("timing_report_detail") == std::string::npos) {
+    pnrOptions += " --timing_report_detail detailed";
+  }
+  if (pnrOptions.find("timing_report_npaths") == std::string::npos) {
+    pnrOptions += " --timing_report_npaths 100";
   }
   std::string vpr_skip_fixup;
   if (m_pb_pin_fixup == "pb_pin_fixup") {
@@ -642,12 +648,10 @@ std::string CompilerRS::BaseVprCommand() {
           std::string(" --route_chan_width ") +
           std::to_string(m_channel_width) +
           " --suppress_warnings check_rr_node_warnings.log,check_rr_node"
-          " --clock_modeling ideal --timing_report_npaths 100 "
-          "--absorb_buffer_luts off "
+          " --clock_modeling ideal --absorb_buffer_luts off "
           "--skip_sync_clustering_and_routing_results " +
           vpr_skip_fixup +
-          " --constant_net_method route "
-          "--timing_report_detail detailed --post_place_timing_report " +
+          " --constant_net_method route --post_place_timing_report " +
           m_projManager->projectName() + "_post_place_timing.rpt" +
           device_size + pnrOptions);
 
