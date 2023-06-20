@@ -584,6 +584,7 @@ std::string CompilerRS::BaseVprCommand() {
       netlistFile = ProjManager()->projectName() + "_post_synth.eblif";
       break;
   }
+  netlistFile = FilePath(Action::Synthesis, netlistFile).string();
   for (const auto &lang_file : m_projManager->DesignFiles()) {
     switch (lang_file.first.language) {
       case Design::Language::VERILOG_NETLIST:
@@ -657,6 +658,14 @@ std::string CompilerRS::BaseVprCommand() {
   if (!ProjManager()->DesignTopModule().empty())
     command += " --top " + ProjManager()->DesignTopModule();
 
+  fs::path netlistFileName{netlistFile};
+  netlistFileName = netlistFileName.filename();
+  auto name = netlistFileName.stem().string();
+  command += " --net_file " + FilePath(Action::Pack, name + ".net").string();
+  command +=
+      " --place_file " + FilePath(Action::Detailed, name + ".place").string();
+  command +=
+      " --route_file " + FilePath(Action::Routing, name + ".route").string();
   return command;
 }
 
@@ -883,13 +892,8 @@ std::string CompilerRS::BaseStaScript(std::string libFileName,
       std::string("read_sdc ") + sdcFileName + std::string("\n") +
       std::string("report_checks\n") + std::string("report_wns\n") +
       std::string("report_tns\n") + std::string("exit\n");
-  const std::string openStaFile =
-      (std::filesystem::path(ProjManager()->projectPath()) /
-       std::string(ProjManager()->projectName() + "_opensta.tcl"))
-          .string();
-  std::ofstream ofssta(openStaFile);
-  ofssta << script << "\n";
-  ofssta.close();
+  const std::string openStaFile = ProjManager()->projectName() + "_opensta.tcl";
+  FileUtils::WriteToFile(openStaFile, script);
   return openStaFile;
 }
 
@@ -918,10 +922,12 @@ bool CompilerRS::TimingAnalysis() {
     return false;
   }
 
+  auto workingDir = FilePath(Action::STA).string();
   if (TimingAnalysisOpt() == STAOpt::View) {
     TimingAnalysisOpt(STAOpt::None);
     const std::string command = BaseVprCommand() + " --analysis --disp on";
-    const int status = ExecuteAndMonitorSystemCommand(command);
+    const int status =
+        ExecuteAndMonitorSystemCommand(command, {}, false, workingDir);
     if (status) {
       ErrorMessage("Design " + ProjManager()->projectName() +
                    " place and route view failed!");
@@ -931,18 +937,17 @@ bool CompilerRS::TimingAnalysis() {
   }
 
   if (FileUtils::IsUptoDate(
-          (std::filesystem::path(ProjManager()->projectPath()) /
-           std::string(ProjManager()->projectName() + "_post_synth.route"))
+          FilePath(Action::Routing,
+                   ProjManager()->projectName() + "_post_synth.route")
               .string(),
-          (std::filesystem::path(ProjManager()->projectPath()) /
-           std::string("timing_analysis.rpt"))
-              .string())) {
+          FilePath(Action::STA, "timing_analysis.rpt").string())) {
     Message("Design " + ProjManager()->projectName() + " timing didn't change");
     return true;
   }
   int status = 0;
   std::string taCommand;
   // use OpenSTA to do the job
+  auto file = ProjManager()->projectName() + "_sta.cmd";
   if (TimingAnalysisEngineOpt() == STAEngineOpt::Opensta) {
     // allows SDF to be generated for OpenSTA
 
@@ -960,12 +965,8 @@ bool CompilerRS::TimingAnalysis() {
       ErrorMessage("Cannot find executable: " + m_starsExecutablePath.string());
       return false;
     }
-    std::ofstream ofs((std::filesystem::path(ProjManager()->projectPath()) /
-                       std::string(ProjManager()->projectName() + "_sta.cmd"))
-                          .string());
-    ofs << command << std::endl;
-    ofs.close();
-    int status = ExecuteAndMonitorSystemCommand(command);
+    FileUtils::WriteToFile(file, command);
+    int status = ExecuteAndMonitorSystemCommand(command, {}, false, workingDir);
     if (status) {
       ErrorMessage("Design " + ProjManager()->projectName() +
                    " timing analysis failed!");
@@ -973,26 +974,14 @@ bool CompilerRS::TimingAnalysis() {
     }
     // find files
     std::string libFileName =
-        (std::filesystem::path(ProjManager()->projectPath()) /
-         std::string(ProjManager()->getDesignTopModule().toStdString() +
-                     "_stars.lib"))
-            .string();
+        ProjManager()->getDesignTopModule().toStdString() + "_stars.lib";
     std::string netlistFileName =
-        (std::filesystem::path(ProjManager()->projectPath()) /
-         std::string(ProjManager()->getDesignTopModule().toStdString() +
-                     "_stars.v"))
-            .string();
+        ProjManager()->getDesignTopModule().toStdString() + "_stars.v";
     std::string sdfFileName =
-        (std::filesystem::path(ProjManager()->projectPath()) /
-         std::string(ProjManager()->getDesignTopModule().toStdString() +
-                     "_stars.sdf"))
-            .string();
+        ProjManager()->getDesignTopModule().toStdString() + "_stars.sdf";
     // std::string sdcFile = ProjManager()->getConstrFiles();
     std::string sdcFileName =
-        (std::filesystem::path(ProjManager()->projectPath()) /
-         std::string(ProjManager()->getDesignTopModule().toStdString() +
-                     "_stars.sdc"))
-            .string();
+        ProjManager()->getDesignTopModule().toStdString() + "_stars.sdc";
     if (std::filesystem::is_regular_file(libFileName) &&
         std::filesystem::is_regular_file(netlistFileName) &&
         std::filesystem::is_regular_file(sdfFileName) &&
@@ -1000,11 +989,7 @@ bool CompilerRS::TimingAnalysis() {
       taCommand =
           BaseStaCommand() + " " +
           BaseStaScript(libFileName, netlistFileName, sdfFileName, sdcFileName);
-      std::ofstream ofs((std::filesystem::path(ProjManager()->projectPath()) /
-                         std::string(ProjManager()->projectName() + "_sta.cmd"))
-                            .string());
-      ofs << taCommand << std::endl;
-      ofs.close();
+      FileUtils::WriteToFile(file, taCommand);
     } else {
       ErrorMessage(
           "No required design info generated for user design, required "
@@ -1013,14 +998,11 @@ bool CompilerRS::TimingAnalysis() {
     }
   } else {  // use vpr/tatum engine
     taCommand = BaseVprCommand() + " --analysis";
-    std::ofstream ofs((std::filesystem::path(ProjManager()->projectPath()) /
-                       std::string(ProjManager()->projectName() + "_sta.cmd"))
-                          .string());
-    ofs << taCommand << " --disp on" << std::endl;
-    ofs.close();
+    FileUtils::WriteToFile(file, taCommand + " --disp on");
   }
 
-  status = ExecuteAndMonitorSystemCommand(taCommand, TIMING_ANALYSIS_LOG);
+  status = ExecuteAndMonitorSystemCommand(taCommand, TIMING_ANALYSIS_LOG, false,
+                                          workingDir);
   if (status) {
     ErrorMessage("Design " + ProjManager()->projectName() +
                  " timing analysis failed!");
@@ -1030,18 +1012,4 @@ bool CompilerRS::TimingAnalysis() {
   Message("Design " + ProjManager()->projectName() + " is timing analysed!");
 
   return true;
-}
-
-std::vector<std::string> CompilerRS::GetCleanFiles(
-    Action action, const std::string &projectName,
-    const std::string &topModule) const {
-  auto files = CompilerOpenFPGA::GetCleanFiles(action, projectName, topModule);
-  if (action == Action::STA) {
-    files.push_back(std::string{topModule + "_stars.lib"});
-    files.push_back(std::string{topModule + "_stars.v"});
-    files.push_back(std::string{topModule + "_stars.sdf"});
-    files.push_back(std::string{topModule + "_stars.sdc"});
-    files.push_back(std::string{projectName + "_opensta.tcl"});
-  }
-  return files;
 }
