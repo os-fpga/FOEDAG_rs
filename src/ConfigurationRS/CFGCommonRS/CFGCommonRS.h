@@ -90,12 +90,10 @@ void CFG_UNTRACK_MEM(void* ptr, const char* filename, size_t line);
     ptr;                                        \
   })
 
-#define CFG_MEM_DELETE(ptr)                         \
-  ({                                                \
-    if (ptr != nullptr) {                           \
-      CFG_UNTRACK_MEM(ptr, __FILENAME__, __LINE__); \
-      delete ptr;                                   \
-    }                                               \
-  })
+#define CFG_MEM_DELETE(ptr)                       \
+  if (ptr != nullptr) {                           \
+    CFG_UNTRACK_MEM(ptr, __FILENAME__, __LINE__); \
+    delete ptr;                                   \
+  }
 
 #endif

@@ -80,8 +80,7 @@ void BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
     if (CFG_check_file_extensions(arg->m_args[0], {".bitasm"}) == 0) {
       CFGObject::parse(arg->m_args[0], arg->m_args[1], arg->detail);
     } else {
-      BitGen_ANALYZER::parse_debug(arg->m_args[0], arg->m_args[1], aes_key,
-                                   arg->detail);
+      BitGen_ANALYZER::parse_debug(arg->m_args[0], arg->m_args[1], aes_key);
     }
   } else {
     std::vector<uint8_t> data;

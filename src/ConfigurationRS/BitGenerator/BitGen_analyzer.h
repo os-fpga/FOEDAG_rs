@@ -108,7 +108,7 @@ class BitGen_ANALYZER {
                                    std::string& error_msg, bool print_msg);
   static void parse_debug(const std::string& input_filepath,
                           const std::string& output_filepath,
-                          std::vector<uint8_t>& aes_key, bool detail);
+                          std::vector<uint8_t>& aes_key);
 
  protected:
   static std::string get_null_terminate_string(const uint8_t* data,
@@ -120,7 +120,7 @@ class BitGen_ANALYZER {
 
  protected:
   BitGen_ANALYZER(const std::string& filepath, std::ofstream* file,
-                  std::vector<uint8_t>* aes_key, bool detail);
+                  std::vector<uint8_t>* aes_key);
   ~BitGen_ANALYZER();
   void update_iv(uint8_t* iv);
   std::string print_repeat_word_line(std::string word, uint32_t repeat);
@@ -150,7 +150,6 @@ class BitGen_ANALYZER {
   std::string m_filepath = "";
   std::ofstream* m_file = nullptr;
   std::vector<uint8_t>* m_aes_key = nullptr;
-  bool m_detail = false;
   const uint8_t* m_current_bop_data = nullptr;
   size_t m_current_bop_data_index = 0;
   size_t m_current_bop_size = 0;

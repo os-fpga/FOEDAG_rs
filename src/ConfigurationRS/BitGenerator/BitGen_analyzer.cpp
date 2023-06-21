@@ -4,8 +4,8 @@
 
 BitGen_ANALYZER::BitGen_ANALYZER(const std::string& filepath,
                                  std::ofstream* file,
-                                 std::vector<uint8_t>* aes_key, bool detail)
-    : m_filepath(filepath), m_file(file), m_aes_key(aes_key), m_detail(detail) {
+                                 std::vector<uint8_t>* aes_key)
+    : m_filepath(filepath), m_file(file), m_aes_key(aes_key) {
   CFG_ASSERT(m_file != nullptr);
   CFG_ASSERT(m_file->is_open());
   CFG_ASSERT(m_file->good());
@@ -1063,6 +1063,23 @@ std::vector<size_t> BitGen_ANALYZER::parse(const std::vector<uint8_t>& data,
           sizes.clear();
           break;
         }
+        if (is_last_block) {
+          if ((index + size) != data.size()) {
+            error_msg = CFG_print(
+                "Last BOP block bit had been set, but BOP size does not "
+                "indicate this is last block");
+            sizes.clear();
+            break;
+          }
+        } else {
+          if ((index + size) == data.size()) {
+            error_msg = CFG_print(
+                "Last BOP block bit had been not set, but BOP size indicates "
+                "this is last block");
+            sizes.clear();
+            break;
+          }
+        }
       }
       index += size;
       sizes.push_back(size);
@@ -1078,7 +1095,7 @@ std::vector<size_t> BitGen_ANALYZER::parse(const std::vector<uint8_t>& data,
 
 void BitGen_ANALYZER::parse_debug(const std::string& input_filepath,
                                   const std::string& output_filepath,
-                                  std::vector<uint8_t>& aes_key, bool detail) {
+                                  std::vector<uint8_t>& aes_key) {
   std::vector<uint8_t> data;
   CFG_read_binary_file(input_filepath, data);
   std::string error_msg = "";
@@ -1091,7 +1108,7 @@ void BitGen_ANALYZER::parse_debug(const std::string& input_filepath,
     file << "File input: " << input_filepath.c_str() << "\n";
     file << "  BOP count: " << sizes.size() << "\n";
     BitGen_ANALYZER analyzer(output_filepath, &file,
-                             aes_key.size() == 0 ? nullptr : &aes_key, detail);
+                             aes_key.size() == 0 ? nullptr : &aes_key);
     size_t start_index = 0;
     uint32_t bop_index = 0;
     for (auto& size : sizes) {
