@@ -936,10 +936,10 @@ bool CompilerRS::TimingAnalysis() {
     return true;
   }
 
+  fs::path netlistPath = GetNetlistPath();
+  auto netlistFileName = netlistPath.filename().stem().string();
   if (FileUtils::IsUptoDate(
-          FilePath(Action::Routing,
-                   ProjManager()->projectName() + "_post_synth.route")
-              .string(),
+          FilePath(Action::Routing, netlistFileName + ".route").string(),
           FilePath(Action::STA, "timing_analysis.rpt").string())) {
     Message("Design " + ProjManager()->projectName() + " timing didn't change");
     return true;
