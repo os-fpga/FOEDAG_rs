@@ -18,6 +18,14 @@ void CFG_read_binary_file(const std::string& filepath,
 void CFG_write_binary_file(const std::string& filepath, const uint8_t* data,
                            const size_t data_size);
 
+std::vector<uint8_t> CFG_convert_hex_string_to_bytes(std::string string,
+                                                     bool no_empty = false,
+                                                     bool* status = NULL);
+
+std::string CFG_convert_bytes_to_hex_string(uint8_t* data, size_t size,
+                                            std::string delimiter = "",
+                                            bool hex_prefix = false);
+
 void CFG_compress(const uint8_t* input, const size_t input_size,
                   std::vector<uint8_t>& output, size_t* header_size = nullptr,
                   const bool debug = false, const bool retry = true);
@@ -33,6 +41,11 @@ uint16_t CFG_crc16(const uint8_t* addr, size_t size,
 uint16_t CFG_bop_A001_crc16(const uint8_t* addr, size_t size,
                             uint16_t lfsr_init = 0, bool final_xor = false,
                             const uint16_t* custom_table = nullptr);
+
+uint32_t CFG_crc32(const uint8_t* addr, size_t size,
+                   uint32_t lfsr_init = static_cast<uint32_t>(-1),
+                   bool final_xor = true,
+                   const uint32_t* custom_table = nullptr);
 
 void CFG_append_u8(std::vector<uint8_t>& data, uint8_t value);
 
@@ -65,5 +78,24 @@ uint32_t CFG_get_volume_serial_number();
 uint64_t CFG_get_nano_time();
 
 uint64_t CFG_get_unique_nano_time();
+
+void CFG_TRACK_MEM(void* ptr, const char* filename, size_t line);
+void CFG_UNTRACK_MEM(void* ptr, const char* filename, size_t line);
+
+#define CFG_MEM_NEW(CLASS, ...)                 \
+  ({                                            \
+    CLASS* ptr = new CLASS(__VA_ARGS__);        \
+    CFG_ASSERT(ptr != nullptr);                 \
+    CFG_TRACK_MEM(ptr, __FILENAME__, __LINE__); \
+    ptr;                                        \
+  })
+
+#define CFG_MEM_DELETE(ptr)                         \
+  ({                                                \
+    if (ptr != nullptr) {                           \
+      CFG_UNTRACK_MEM(ptr, __FILENAME__, __LINE__); \
+      delete ptr;                                   \
+    }                                               \
+  })
 
 #endif

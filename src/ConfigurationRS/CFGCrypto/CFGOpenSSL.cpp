@@ -26,9 +26,9 @@
 #define MIN_PASSPHRASE_SIZE (13)
 const std::vector<CFGOpenSSL_KEY_INFO> CFGOpenSSL_KEY_INFO_DATABASE = {
     CFGOpenSSL_KEY_INFO(NID_X9_62_prime256v1, NID_X9_62_id_ecPublicKey,
-                        "prime256v1", 32, NID_sha256, 32, 1),
+                        "prime256v1", 32, NID_sha256, 32, 0x10),
     CFGOpenSSL_KEY_INFO(NID_rsa, NID_rsaEncryption, "rsa2048", 256, NID_sha256,
-                        32, 2)};
+                        32, 0x20)};
 
 static bool m_openssl_init = false;
 
@@ -178,9 +178,22 @@ void CFGOpenSSL::sha_512(const uint8_t* data, size_t data_size, uint8_t* sha) {
   SHA512(data, data_size, sha);
 }
 
+void CFGOpenSSL::sha(uint8_t hash_size, const uint8_t* data, size_t data_size,
+                     uint8_t* sha) {
+  CFG_ASSERT(hash_size == 32 || hash_size == 48 || hash_size == 64);
+  if (hash_size == 32) {
+    sha_256(data, data_size, sha);
+  } else if (hash_size == 48) {
+    sha_384(data, data_size, sha);
+  } else {
+    sha_512(data, data_size, sha);
+  }
+}
+
 void CFGOpenSSL::ctr_encrypt(const uint8_t* plain_data, uint8_t* cipher_data,
                              size_t data_size, uint8_t* key, size_t key_size,
-                             uint8_t* iv, size_t iv_size) {
+                             const uint8_t* iv, size_t iv_size,
+                             uint8_t* returned_iv) {
   CFG_ASSERT(plain_data != nullptr);
   CFG_ASSERT(cipher_data != nullptr);
   CFG_ASSERT(data_size > 0);
@@ -201,6 +214,9 @@ void CFGOpenSSL::ctr_encrypt(const uint8_t* plain_data, uint8_t* cipher_data,
   CRYPTO_ctr128_encrypt(plain_data, cipher_data, data_size, &aes_key,
                         internal_iv, ecount_buf, &aes_num,
                         (block128_f)AES_encrypt);
+  if (returned_iv != nullptr) {
+    memcpy(returned_iv, internal_iv, iv_size);
+  }
   memset(internal_iv, 0, sizeof(internal_iv));
 }
 
@@ -313,8 +329,10 @@ void CFGOpenSSL::gen_public_pem(const std::string& private_filepath,
 
 void CFGOpenSSL::ctr_decrypt(const uint8_t* cipher_data, uint8_t* plain_data,
                              size_t data_size, uint8_t* key, size_t key_size,
-                             uint8_t* iv, size_t iv_size) {
-  ctr_encrypt(cipher_data, plain_data, data_size, key, key_size, iv, iv_size);
+                             const uint8_t* iv, size_t iv_size,
+                             uint8_t* returned_iv) {
+  ctr_encrypt(cipher_data, plain_data, data_size, key, key_size, iv, iv_size,
+              returned_iv);
 }
 
 const CFGOpenSSL_KEY_INFO* CFGOpenSSL::get_key_info(int nid, int size) {

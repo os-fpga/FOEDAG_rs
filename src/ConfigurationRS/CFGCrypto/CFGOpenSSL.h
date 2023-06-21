@@ -5,7 +5,7 @@
 
 struct CFGOpenSSL_KEY_INFO {
   CFGOpenSSL_KEY_INFO(int ni, int e, const std::string& n, uint32_t s, int d,
-                      size_t ds, uint32_t b)
+                      size_t ds, uint8_t b)
       : nid(ni),
         evp_pkey_id(e),
         name(n),
@@ -19,7 +19,7 @@ struct CFGOpenSSL_KEY_INFO {
   const uint32_t size;
   const int digest_nid;
   const size_t digest_size;
-  const uint32_t bitstream_algo;
+  const uint8_t bitstream_algo;
 };
 
 class CFGCrypto_KEY;
@@ -30,12 +30,16 @@ class CFGOpenSSL {
   static void sha_256(const uint8_t* data, size_t data_size, uint8_t* sha);
   static void sha_384(const uint8_t* data, size_t data_size, uint8_t* sha);
   static void sha_512(const uint8_t* data, size_t data_size, uint8_t* sha);
+  static void sha(uint8_t hash_size, const uint8_t* data, size_t data_size,
+                  uint8_t* sha);
   static void ctr_encrypt(const uint8_t* plain_data, uint8_t* cipher_data,
                           size_t data_size, uint8_t* key, size_t key_size,
-                          uint8_t* iv, size_t iv_size);
+                          const uint8_t* iv, size_t iv_size,
+                          uint8_t* returned_iv = nullptr);
   static void ctr_decrypt(const uint8_t* cipher_data, uint8_t* plain_data,
                           size_t data_size, uint8_t* key, size_t key_size,
-                          uint8_t* iv, size_t iv_size);
+                          const uint8_t* iv, size_t iv_size,
+                          uint8_t* returned_iv = nullptr);
   static void gen_private_pem(const std::string& key_type,
                               const std::string& filepath,
                               const std::string& passphrase,

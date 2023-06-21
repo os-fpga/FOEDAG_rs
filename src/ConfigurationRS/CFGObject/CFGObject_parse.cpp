@@ -188,7 +188,7 @@ void CFGObject::parse(const std::string& input_filepath,
 
   // Output file
   std::ofstream file;
-  file.open(output_filepath);
+  file.open(output_filepath.c_str());
   CFG_ASSERT(file.is_open());
 
   size_t index = 0;
