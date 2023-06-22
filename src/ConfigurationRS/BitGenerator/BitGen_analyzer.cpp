@@ -613,117 +613,129 @@ void BitGen_ANALYZER::print_header(std::string space,
                            m_current_bop_offset + i, i, u32,
                            unobscured_data_string.c_str())
                      .c_str();
-    switch (i) {
-      case 0:
-        (*m_file) << " Identifer: " << m_header.identifier.c_str();
-        break;
-      case 4:
-        (*m_file) << " Version: "
-                  << CFG_print("0x%08X", m_header.version).c_str();
-        break;
-      case 8:
-        (*m_file)
-            << " Size: "
-            << CFG_print("0x%016X (%ld)", m_header.size, m_header.size).c_str();
-        break;
-      case 0x10:
-        (*m_file) << " Tool: " << m_header.tool.c_str();
-        break;
-      case 0x30:
-        (*m_file) << " OPN: " << m_header.opn.c_str();
-        break;
-      case 0x40:
-        (*m_file) << " JTAG ID: "
-                  << CFG_print("0x%08X", m_header.jtag_id).c_str();
-        break;
-      case 0x44:
-        (*m_file) << " JTAG Mask: "
-                  << CFG_print("0x%08X", m_header.jtag_mask).c_str();
-        break;
-      case 0x48:
-        (*m_file) << " Reserved";
-        break;
-      case 0x50:
-        (*m_file) << " Obscured data: "
-                  << CFG_print("(ChipID: %s)", m_header.chipid.c_str()).c_str();
-        break;
-      case 0x60:
-        (*m_file) << " Non-Security Features: "
-                  << CFG_print("(Checksum: %s; Compression: %s; Integrity: %s)",
-                               m_header.checksum.c_str(),
-                               m_header.compression.c_str(),
-                               m_header.integrity.c_str())
-                         .c_str();
-        break;
-      case 0x80:
-        (*m_file) << " Security Features: "
-                  << CFG_print("(Encryption: %s; Authentication: %s)",
-                               m_header.encryption.c_str(),
-                               m_header.authentication.c_str())
-                         .c_str();
-        break;
-      case 0xA0:
-        (*m_file) << " Reserved";
-        break;
-      case 0xC0:
-        (*m_file) << " Action Version: "
-                  << CFG_print("0x%08X", m_header.action_version).c_str();
-        break;
-      case 0xC4:
-        (*m_file) << " Action Count: " << m_header.action_count;
-        break;
-      case 0xC8 ... 0x1FF:
-        if (action_msgs.size()) {
-          (*m_file) << action_msgs.front().c_str();
-          action_msgs.erase(action_msgs.begin());
-        }
-        break;
-      case 0x200:
-        (*m_file) << " Hash";
-        if (m_header.size > BitGen_BITSTREAM_BLOCK_SIZE) {
+    if (i >= 0xC8 && i < 0x200) {
+      // Stupid MSVC does not support switch case range 0xC8 ... 0x1FF
+      if (action_msgs.size()) {
+        (*m_file) << action_msgs.front().c_str();
+        action_msgs.erase(action_msgs.begin());
+      }
+    } else {
+      switch (i) {
+        case 0:
+          (*m_file) << " Identifer: " << m_header.identifier.c_str();
+          break;
+        case 4:
+          (*m_file) << " Version: "
+                    << CFG_print("0x%08X", m_header.version).c_str();
+          break;
+        case 8:
+          (*m_file) << " Size: "
+                    << CFG_print("0x%016X (%ld)", m_header.size, m_header.size)
+                           .c_str();
+          break;
+        case 0x10:
+          (*m_file) << " Tool: " << m_header.tool.c_str();
+          break;
+        case 0x30:
+          (*m_file) << " OPN: " << m_header.opn.c_str();
+          break;
+        case 0x40:
+          (*m_file) << " JTAG ID: "
+                    << CFG_print("0x%08X", m_header.jtag_id).c_str();
+          break;
+        case 0x44:
+          (*m_file) << " JTAG Mask: "
+                    << CFG_print("0x%08X", m_header.jtag_mask).c_str();
+          break;
+        case 0x48:
+          (*m_file) << " Reserved";
+          break;
+        case 0x50:
           (*m_file)
-              << CFG_print(
-                     " (Used to verify block at addresss of Offset 0x%08X "
-                     "(Absoulte 0x%08X))",
-                     BitGen_BITSTREAM_BLOCK_SIZE,
-                     m_current_bop_offset + BitGen_BITSTREAM_BLOCK_SIZE)
-                     .c_str();
-        }
-        break;
-      case 0x240:
-        (*m_file) << " Challenge Data";
-        break;
-      case 0x280:
-        (*m_file) << " IV";
-        break;
-      case 0x290:
-        (*m_file) << " Reserved";
-        break;
-      case 0x570:
-        (*m_file) << " Public Key";
-        break;
-      case 0x680:
-        (*m_file) << " Authentication Signature";
-        break;
-      case 0x780:
-        (*m_file)
-            << " Flags: "
-            << CFG_print("Last BOP: %d", m_header.is_last_bop_block).c_str();
-        break;
-      case 0x788:
-        (*m_file) << " End Size: "
-                  << CFG_print("0x%016X (%ld)", m_header.end_size,
-                               m_header.end_size)
-                         .c_str();
-        break;
-      case 0x790:
-        (*m_file) << " Reserved";
-        break;
-      case 0x7FC:
-        (*m_file) << " CRC: " << CFG_print("0x%08X", m_header.crc32).c_str();
-        break;
-      default:
-        break;
+              << " Obscured data: "
+              << CFG_print("(ChipID: %s)", m_header.chipid.c_str()).c_str();
+          break;
+        case 0x60:
+          (*m_file) << " Non-Security Features: "
+                    << CFG_print(
+                           "(Checksum: %s; Compression: %s; Integrity: %s)",
+                           m_header.checksum.c_str(),
+                           m_header.compression.c_str(),
+                           m_header.integrity.c_str())
+                           .c_str();
+          break;
+        case 0x80:
+          (*m_file) << " Security Features: "
+                    << CFG_print("(Encryption: %s; Authentication: %s)",
+                                 m_header.encryption.c_str(),
+                                 m_header.authentication.c_str())
+                           .c_str();
+          break;
+        case 0xA0:
+          (*m_file) << " Reserved";
+          break;
+        case 0xC0:
+          (*m_file) << " Action Version: "
+                    << CFG_print("0x%08X", m_header.action_version).c_str();
+          break;
+        case 0xC4:
+          (*m_file) << " Action Count: " << m_header.action_count;
+          break;
+        /*
+        case 0xC8 ... 0x1FF:
+          if (action_msgs.size()) {
+            (*m_file) << action_msgs.front().c_str();
+            action_msgs.erase(action_msgs.begin());
+          }
+          break;
+        */
+        case 0x200:
+          (*m_file) << " Hash";
+          if (m_header.size > BitGen_BITSTREAM_BLOCK_SIZE) {
+            (*m_file)
+                << CFG_print(
+                       " (Used to verify block at addresss of Offset 0x%08X "
+                       "(Absoulte 0x%08X))",
+                       BitGen_BITSTREAM_BLOCK_SIZE,
+                       m_current_bop_offset + BitGen_BITSTREAM_BLOCK_SIZE)
+                       .c_str();
+          }
+          break;
+        case 0x240:
+          (*m_file) << " Challenge Data";
+          break;
+        case 0x280:
+          (*m_file) << " IV";
+          break;
+        case 0x290:
+          (*m_file) << " Reserved";
+          break;
+        case 0x570:
+          (*m_file) << " Public Key";
+          break;
+        case 0x680:
+          (*m_file) << " Authentication Signature";
+          break;
+        case 0x780:
+          (*m_file)
+              << " Flags: "
+              << CFG_print("Last BOP: %d", m_header.is_last_bop_block).c_str();
+          break;
+        case 0x788:
+          (*m_file) << " End Size: "
+                    << CFG_print("0x%016X (%ld)", m_header.end_size,
+                                 m_header.end_size)
+                           .c_str();
+          break;
+        case 0x790:
+          (*m_file) << " Reserved";
+          break;
+        case 0x7FC:
+          (*m_file) << " CRC: " << CFG_print("0x%08X", m_header.crc32).c_str();
+          break;
+        default:
+          break;
+      }
     }
     (*m_file) << "\n";
   }
