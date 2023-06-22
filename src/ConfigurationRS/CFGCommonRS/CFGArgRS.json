@@ -68,7 +68,7 @@
          "2. Signing private PEM\n",
          "    --operation=gen_private_pem --{no_passphrase}",
          "    --passphase={passphase or text file}",
-         "    --key=<prime256v1|rsa2048> <output .pem>\n",
+         "    --signing_key=<prime256v1|rsa2048> <output .pem>\n",
          "3. Signing public PEM\n",
          "    --operation=gen_public_pem --passphase={passphase or text file}",
          "    <input .pem> <output .pem>"

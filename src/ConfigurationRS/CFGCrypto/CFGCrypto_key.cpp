@@ -391,7 +391,7 @@ size_t CFGCrypto_KEY::sign(const uint8_t* digest, const size_t digest_size,
   return signed_size;
 }
 
-uint32_t CFGCrypto_KEY::get_bitstream_signing_algo() {
+uint8_t CFGCrypto_KEY::get_bitstream_signing_algo() {
   CFG_ASSERT(m_key_info != nullptr);
   return m_key_info->bitstream_algo;
 }

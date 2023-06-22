@@ -20,7 +20,7 @@ class CFGCrypto_KEY {
                         const uint8_t* signature, const size_t signature_size);
   size_t sign(const uint8_t* digest, const size_t digest_size,
               uint8_t* signature_data, const size_t signature_size);
-  uint32_t get_bitstream_signing_algo();
+  uint8_t get_bitstream_signing_algo();
   uint32_t get_public_key_size(uint32_t alignment);
   uint32_t get_signature_size();
   void get_public_key(std::vector<uint8_t>& pubkey, uint32_t alignment);

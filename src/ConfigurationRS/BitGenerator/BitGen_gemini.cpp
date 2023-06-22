@@ -266,7 +266,7 @@ void BitGen_GEMINI::parse(const std::string& input_filepath,
   std::vector<uint8_t> input_data;
   CFG_read_binary_file(input_filepath, input_data);
   std::ofstream file;
-  file.open(output_filepath);
+  file.open(output_filepath.c_str());
   CFG_ASSERT(file.is_open());
   CFG_ASSERT(input_data.size());
 

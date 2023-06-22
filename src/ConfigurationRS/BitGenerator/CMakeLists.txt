@@ -70,6 +70,10 @@ add_custom_command(
 add_library(
   ${subsystem} ${CFG_LIB_TYPE}
   BitGenerator.cpp
+  BitGen_packer.cpp
+  BitGen_decompress_engine.cpp
+  BitGen_analyzer.cpp
+  BitGen_json.cpp
   BitGen_data.cpp
   BitGen_gemini.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/BitGen_data_auto.h

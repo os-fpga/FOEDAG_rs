@@ -7,6 +7,7 @@
 #define CFG_CMP_MIN_REPEAT_LENGTH_SEARCH (3)
 #define CFG_CMP_MAX_REPEAT_LENGTH_SEARCH (50)
 #define CFG_CMP_MAX_REPEAT_SAME_PATTERN (100)
+#define CFG_CMP_MAX_NONE_LENGTH_FOR_REPEAT_PATTERN (2048)
 #define CFG_CMP_NONE (0)
 #define CFG_CMP_ZERO (1)
 #define CFG_CMP_ZERO_VAR (2)
@@ -182,23 +183,40 @@ void CFG_COMPRESS::compress_repeat_chunk(const uint8_t* input,
   CFG_ASSERT(index < input_size);
   CFG_ASSERT((index + length) < input_size);
   uint64_t flag = 0;
-  if (pattern == CFG_CMP_NONE) {
-    flag = ((uint64_t)(length) << 4) | 0x08 | (uint64_t)(pattern);
-  } else {
-    flag = ((uint64_t)(length - 1) << 4) | 0x08 | (uint64_t)(pattern);
-  }
-  CFG_write_variable_u64(output, flag);
-  if (pattern == CFG_CMP_VAR_ZERO || pattern == CFG_CMP_VAR_HIGH) {
-    output.push_back(input[index]);
-  } else if (pattern == CFG_CMP_ZERO_VAR || pattern == CFG_CMP_HIGH_VAR) {
-    output.push_back(input[index + length - 1]);
-  } else {
-    CFG_ASSERT(pattern == CFG_CMP_NONE);
-    for (size_t i = 0; i < length; i++, index++) {
+  if (pattern == CFG_CMP_NONE &&
+      length > CFG_CMP_MAX_NONE_LENGTH_FOR_REPEAT_PATTERN) {
+    // Special case where firmware only has limited size to store
+    // compress-none-data. But repeated compress-none-data of size 2048 is so
+    // rare that it might not happen. Make it a single compress-none-data
+    size_t new_length = (repeat + 1) * length;
+    CFG_ASSERT((index + new_length) <= input_size);
+    CFG_POST_WARNING(
+        "Force %ld repeated CMP_NONE of %ld Bytes to single CMP_NONE %ld Bytes",
+        repeat, length, (repeat + 1) * new_length);
+    flag = ((uint64_t)(new_length) << 4) | 0x08 | (uint64_t)(pattern);
+    CFG_write_variable_u64(output, flag);
+    for (size_t i = 0; i < new_length; i++, index++) {
       output.push_back(input[index]);
     }
+  } else {
+    if (pattern == CFG_CMP_NONE) {
+      flag = ((uint64_t)(length) << 4) | 0x08 | (uint64_t)(pattern);
+    } else {
+      flag = ((uint64_t)(length - 1) << 4) | 0x08 | (uint64_t)(pattern);
+    }
+    CFG_write_variable_u64(output, flag);
+    if (pattern == CFG_CMP_VAR_ZERO || pattern == CFG_CMP_VAR_HIGH) {
+      output.push_back(input[index]);
+    } else if (pattern == CFG_CMP_ZERO_VAR || pattern == CFG_CMP_HIGH_VAR) {
+      output.push_back(input[index + length - 1]);
+    } else {
+      CFG_ASSERT(pattern == CFG_CMP_NONE);
+      for (size_t i = 0; i < length; i++, index++) {
+        output.push_back(input[index]);
+      }
+    }
+    CFG_write_variable_u64(output, (uint64_t)(repeat));
   }
-  CFG_write_variable_u64(output, (uint64_t)(repeat));
 }
 
 void CFG_COMPRESS::pack_data(const uint8_t* input, const size_t input_size,
