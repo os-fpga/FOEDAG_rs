@@ -33,13 +33,17 @@ static bool BitGen_JSON_to_boolean(const nlohmann::json& json) {
   return (bool)(json);
 }
 
-static uint32_t BitGen_JSON_to_u32(const nlohmann::json& json) {
+static uint64_t BitGen_JSON_to_u64(const nlohmann::json& json) {
   CFG_ASSERT(json.is_number_unsigned() || json.is_string());
   if (json.is_number_unsigned()) {
-    return (uint32_t)(json);
+    return (uint64_t)(json);
   } else {
-    return (uint32_t)(CFG_convert_string_to_u64(json));
+    return CFG_convert_string_to_u64(json);
   }
+}
+
+static uint32_t BitGen_JSON_to_u32(const nlohmann::json& json) {
+  return (uint32_t)(BitGen_JSON_to_u64(json));
 }
 
 static void BitGen_JSON_get_u32s_into_u8s(const nlohmann::json& json,
@@ -230,6 +234,174 @@ static void BitGen_JSON_parse_bitstream_bop_generic_action(
   actions.push_back(action);
 }
 
+typedef std::map<const std::string, const std::pair<uint32_t, uint32_t>>
+    BitGen_JSON_ACTION_FIELD;
+const std::map<const std::string, const BitGen_JSON_ACTION_FIELD>
+    BitGen_JSON_ACTION_DATABASE = {
+        {"firmware_loading",
+         {{"load_address", std::make_pair(0, 32)},
+          {"entry_address", std::make_pair(32, 32)}}},
+        {"fcb_config",
+         {{"cfg_cmd", std::make_pair(0, 2)},
+          {"bit_twist_shift_reg", std::make_pair(2, 1)},
+          {"bit_chain_connection", std::make_pair(3, 1)},
+          {"parallel_chains_count", std::make_pair(32, 32)}}},
+        {"icb_config",
+         {{"cfg_cmd", std::make_pair(0, 2)},
+          {"bit_twist", std::make_pair(2, 1)},
+          {"byte_twist", std::make_pair(3, 1)},
+          {"is_data_or_not_cmd", std::make_pair(4, 1)},
+          {"update", std::make_pair(5, 1)},
+          {"capture", std::make_pair(6, 1)}}},
+        {"pcb_config",
+         {{"ram_block_count", std::make_pair(0, 32)},
+          {"pl_ctl_skew", std::make_pair(32, 2)},
+          {"pl_ctl_parity", std::make_pair(34, 1)},
+          {"pl_ctl_even", std::make_pair(35, 1)},
+          {"pl_ctl_split", std::make_pair(36, 2)},
+          {"pl_row_offset", std::make_pair(64, 10)},
+          {"pl_row_stride", std::make_pair(80, 10)},
+          {"pl_col_offset", std::make_pair(96, 10)},
+          {"pl_col_stride", std::make_pair(112, 10)},
+          {"pl_extra_w32", std::make_pair(128, 1)},
+          {"pl_extra_w33", std::make_pair(129, 1)},
+          {"pl_extra_w34", std::make_pair(130, 1)},
+          {"pl_extra_w35", std::make_pair(131, 1)}}}};
+
+static const BitGen_JSON_ACTION_FIELD* BitGen_JSON_get_action_database(
+    const std::string& action) {
+  const BitGen_JSON_ACTION_FIELD* database = nullptr;
+  for (auto& iter : BitGen_JSON_ACTION_DATABASE) {
+    if (iter.first == action) {
+      database = &iter.second;
+      break;
+    }
+  }
+  CFG_ASSERT(database != nullptr);
+  return database;
+}
+
+static void BitGen_JSON_validate_action(const std::string& info,
+                                        const nlohmann::json& json,
+                                        const BitGen_JSON_ACTION_FIELD* fields,
+                                        bool has_payload) {
+  CFG_ASSERT(fields != nullptr);
+  std::vector<std::string> keys;
+  keys.push_back("action");
+  for (auto& iter : *fields) {
+    keys.push_back(iter.first);
+  }
+  if (has_payload) {
+    keys.push_back("payload");
+  }
+  BitGen_JSON_validate_dict_key(info, json, keys);
+  BitGen_JSON_ensure_dict_key_exists(info, json, keys);
+}
+
+static std::vector<uint8_t> BitGen_JSON_gen_action_field(
+    const nlohmann::json& json, const BitGen_JSON_ACTION_FIELD* fields) {
+  CFG_ASSERT(fields != nullptr);
+  CFG_ASSERT(json.is_object());
+  std::vector<uint8_t> data;
+  std::vector<uint8_t> mask;
+  uint64_t u64 = 0;
+  uint32_t start_index = 0;
+  uint32_t size = 0;
+  uint32_t need_byte_size = 0;
+  for (auto& iter : *fields) {
+    CFG_ASSERT(json.contains(iter.first));
+    u64 = BitGen_JSON_to_u64(json[iter.first]);
+    start_index = iter.second.first;
+    size = iter.second.second;
+    CFG_ASSERT(size);
+    CFG_ASSERT(size <= 64);
+    for (uint32_t i = 0; i < size; i++, start_index++) {
+      need_byte_size = (start_index / 8) + 1;
+      CFG_ASSERT(need_byte_size);
+      // limit the field -- if too much, does not make sense
+      CFG_ASSERT(need_byte_size <= 128);
+      while (data.size() < need_byte_size) {
+        data.push_back(0);
+        mask.push_back(0);
+      }
+      // Make sure no collision
+      CFG_ASSERT((mask[start_index >> 3] & (1 << (start_index & 7))) == 0);
+      mask[start_index >> 3] |= (1 << (start_index & 7));
+      // Set bit
+      if (u64 & (1 << i)) {
+        data[start_index >> 3] |= (1 << (start_index & 7));
+      }
+    }
+  }
+  CFG_ASSERT(data.size() <= 128);
+  while (data.size() % 4) {
+    data.push_back(0);
+  }
+  return data;
+}
+
+static void BitGen_JSON_gen_bitstream_bop_action(
+    const nlohmann::json& json, std::vector<BitGen_BITSTREAM_ACTION*>& actions,
+    uint16_t cmd, bool has_checksum, const BitGen_JSON_ACTION_FIELD* fields) {
+  CFG_ASSERT(fields != nullptr);
+  BitGen_BITSTREAM_ACTION* action = CFG_MEM_NEW(BitGen_BITSTREAM_ACTION, cmd);
+  action->has_checksum = has_checksum;
+  action->field = BitGen_JSON_gen_action_field(json, fields);
+  CFG_ASSERT((action->field.size() % 4) == 0);
+  CFG_read_binary_file(BitGen_JSON_to_string(json["payload"]), action->payload);
+  CFG_ASSERT(action->payload.size());
+  CFG_ASSERT((action->payload.size() % 4) == 0);
+  actions.push_back(action);
+}
+
+static void BitGen_JSON_parse_bitstream_bop_firmware_loading_action(
+    const nlohmann::json& json,
+    std::vector<BitGen_BITSTREAM_ACTION*>& actions) {
+  std::string temp = BitGen_JSON_to_string(json["action"]);
+  CFG_ASSERT(temp == "firmware_loading");
+  const BitGen_JSON_ACTION_FIELD* fields =
+      BitGen_JSON_get_action_database(temp);
+  BitGen_JSON_validate_action("Bitstream Firmware Loading Action", json, fields,
+                              true);
+  BitGen_JSON_gen_bitstream_bop_action(json, actions, 0x001, true, fields);
+}
+
+static void BitGen_JSON_parse_bitstream_bop_fcb_config_action(
+    const nlohmann::json& json,
+    std::vector<BitGen_BITSTREAM_ACTION*>& actions) {
+  std::string temp = BitGen_JSON_to_string(json["action"]);
+  CFG_ASSERT(temp == "fcb_config");
+  const BitGen_JSON_ACTION_FIELD* fields =
+      BitGen_JSON_get_action_database(temp);
+  BitGen_JSON_validate_action("Bitstream FCB Config Action", json, fields,
+                              true);
+  BitGen_JSON_gen_bitstream_bop_action(json, actions, 0x002, true, fields);
+}
+
+static void BitGen_JSON_parse_bitstream_bop_icb_config_action(
+    const nlohmann::json& json,
+    std::vector<BitGen_BITSTREAM_ACTION*>& actions) {
+  std::string temp = BitGen_JSON_to_string(json["action"]);
+  CFG_ASSERT(temp == "icb_config");
+  const BitGen_JSON_ACTION_FIELD* fields =
+      BitGen_JSON_get_action_database(temp);
+  BitGen_JSON_validate_action("Bitstream ICB Config Action", json, fields,
+                              true);
+  BitGen_JSON_gen_bitstream_bop_action(json, actions, 0x003, true, fields);
+}
+
+static void BitGen_JSON_parse_bitstream_bop_pcb_config_action(
+    const nlohmann::json& json,
+    std::vector<BitGen_BITSTREAM_ACTION*>& actions) {
+  std::string temp = BitGen_JSON_to_string(json["action"]);
+  CFG_ASSERT(temp == "pcb_config");
+  const BitGen_JSON_ACTION_FIELD* fields =
+      BitGen_JSON_get_action_database(temp);
+  BitGen_JSON_validate_action("Bitstream PCB Config Action", json, fields,
+                              true);
+  BitGen_JSON_gen_bitstream_bop_action(json, actions, 0x004, false, fields);
+}
+
 static void BitGen_JSON_parse_bitstream_bop_action(
     const nlohmann::json& json,
     std::vector<BitGen_BITSTREAM_ACTION*>& actions) {
@@ -239,6 +411,14 @@ static void BitGen_JSON_parse_bitstream_bop_action(
   std::string action = BitGen_JSON_to_string(json["action"]);
   if (action == "generic") {
     BitGen_JSON_parse_bitstream_bop_generic_action(json, actions);
+  } else if (action == "firmware_loading") {
+    BitGen_JSON_parse_bitstream_bop_firmware_loading_action(json, actions);
+  } else if (action == "fcb_config") {
+    BitGen_JSON_parse_bitstream_bop_fcb_config_action(json, actions);
+  } else if (action == "icb_config") {
+    BitGen_JSON_parse_bitstream_bop_icb_config_action(json, actions);
+  } else if (action == "pcb_config") {
+    BitGen_JSON_parse_bitstream_bop_pcb_config_action(json, actions);
   } else {
     CFG_INTERNAL_ERROR("Action %s is not supported", action.c_str());
   }
