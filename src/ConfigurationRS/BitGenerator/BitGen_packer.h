@@ -64,6 +64,7 @@ class BitGen_PACKER {
   static void update_bitstream_ending_size(uint8_t* const data,
                                            uint64_t ending_size,
                                            bool is_last_bop);
+  static uint8_t get_feature_u8_enum(const std::string& feature);
   static std::string get_feature_enum_string(uint8_t feature_enum,
                                              std::vector<std::string> features,
                                              bool& status,

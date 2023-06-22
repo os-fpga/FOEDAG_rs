@@ -193,11 +193,13 @@ bool BitGen_ANALYZER::parse_bop(const uint8_t* data, size_t size,
               } else if (actions.front()->checksum) {
                 (*m_file) << space.c_str() << "Info: Verify checksum of "
                           << binfilepath.c_str() << "\n";
+                uint8_t checksum_enum =
+                    BitGen_PACKER::get_feature_u8_enum(m_header.checksum);
                 uint32_t checksum_size = 0;
-                uint32_t payload_checksum =
-                    (uint32_t)(BitGen_PACKER::calc_checksum(bindata, 0x10,
-                                                            checksum_size));
+                uint64_t u64 = BitGen_PACKER::calc_checksum(
+                    bindata, checksum_enum, checksum_size);
                 CFG_ASSERT(checksum_size == 4);
+                uint32_t payload_checksum = (uint32_t)(u64);
                 if (actions.front()->checksum_value == payload_checksum) {
                   (*m_file) << space.c_str()
                             << "Info: Successfully verify checksum for "

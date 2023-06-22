@@ -81,13 +81,6 @@ static void BitGen_PACKER_set_u8_enum(uint8_t* data,
   (*data) = iter->second;
 }
 
-#define BitGen_PACKER_get_u8_enum(str)     \
-  ({                                       \
-    uint8_t temp = 0;                      \
-    BitGen_PACKER_set_u8_enum(&temp, str); \
-    temp;                                  \
-  })
-
 static void BitGen_PACKER_gen_bop_header_basic_field(
     BitGen_BITSTREAM_BOP_FIELD& field, BitGen_BITSTREAM_BLOCK*& header,
     bool compress) {
@@ -516,6 +509,12 @@ void BitGen_PACKER::generate_bitstream(std::vector<BitGen_BITSTREAM_BOP*>& bops,
   }
 }
 
+uint8_t BitGen_PACKER::get_feature_u8_enum(const std::string& feature) {
+  uint8_t temp = 0;
+  BitGen_PACKER_set_u8_enum(&temp, feature);
+  return temp;
+}
+
 std::string BitGen_PACKER::get_feature_enum_string(
     uint8_t feature_enum, std::vector<std::string> features, bool& status,
     bool allow_none) {
@@ -526,7 +525,7 @@ std::string BitGen_PACKER::get_feature_enum_string(
     std::string feature_string = "unknown";
     for (auto feature : features) {
       CFG_ASSERT(feature != "unknown");
-      if (feature_enum == BitGen_PACKER_get_u8_enum(feature)) {
+      if (feature_enum == get_feature_u8_enum(feature)) {
         feature_string = feature;
         break;
       }

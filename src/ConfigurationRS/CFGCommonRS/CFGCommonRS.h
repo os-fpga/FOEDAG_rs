@@ -82,6 +82,16 @@ uint64_t CFG_get_unique_nano_time();
 void CFG_TRACK_MEM(void* ptr, const char* filename, size_t line);
 void CFG_UNTRACK_MEM(void* ptr, const char* filename, size_t line);
 
+#if 1
+template <typename T>
+inline T* CFG_mem_new_function(T* ptr) {
+  CFG_ASSERT(ptr != nullptr);
+  CFG_TRACK_MEM(ptr, __FILENAME__, __LINE__);
+  return ptr;
+}
+#define CFG_MEM_NEW(T, ...) CFG_mem_new_function<T>(new T(__VA_ARGS__));
+#else
+// This easier way work for GCC but not MSVC
 #define CFG_MEM_NEW(CLASS, ...)                 \
   ({                                            \
     CLASS* ptr = new CLASS(__VA_ARGS__);        \
@@ -89,6 +99,7 @@ void CFG_UNTRACK_MEM(void* ptr, const char* filename, size_t line);
     CFG_TRACK_MEM(ptr, __FILENAME__, __LINE__); \
     ptr;                                        \
   })
+#endif
 
 #define CFG_MEM_DELETE(ptr)                       \
   if (ptr != nullptr) {                           \
