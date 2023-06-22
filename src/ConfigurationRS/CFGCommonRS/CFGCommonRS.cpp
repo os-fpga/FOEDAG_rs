@@ -193,7 +193,8 @@ void CFG_read_binary_file(const std::string& filepath,
                           std::vector<uint8_t>& data) {
   // File size to prepare memory
   std::ifstream file(filepath.c_str(), std::ios::binary | std::ios::ate);
-  CFG_ASSERT_MSG(file.is_open(), "Fail to open binary file %s", filepath.c_str());
+  CFG_ASSERT_MSG(file.is_open(), "Fail to open binary file %s",
+                 filepath.c_str());
   size_t filesize = file.tellg();
   file.close();
 
