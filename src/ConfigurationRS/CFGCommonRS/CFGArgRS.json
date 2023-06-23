@@ -63,8 +63,8 @@
       "help" : [
          "Configuration file generation tool. To generate:\n",
          "1. Configuration bitstream (default operation)\n",
-         "    --aes_key={AES key binary file} --signing_key={input .pem}",
-         "    <input .bitasm> <output .cfgbit>\n",
+         "    --{compress} --aes_key={input AES key binary file}",
+         "    --signing_key={input .pem} <input .bitasm> <output .cfgbit>\n",
          "2. Signing private PEM\n",
          "    --operation=gen_private_pem --{no_passphrase}",
          "    --passphase={passphase or text file}",

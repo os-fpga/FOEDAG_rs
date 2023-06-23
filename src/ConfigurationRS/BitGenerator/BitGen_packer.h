@@ -7,7 +7,7 @@
 #define BitGen_BITSTREAM_BLOCK_SIZE (2048)
 
 const std::vector<std::string> BitGen_BITSTREAM_SUPPORTED_BOP_IDENTIFIER = {
-    "FSBL", "FCB", "ICB", "PCB"};
+    "FSBL", "FPGA", "ACPU", "UBT", "LNX", "ZPHR"};
 
 struct BitGen_BITSTREAM_BOP_FIELD {
   ~BitGen_BITSTREAM_BOP_FIELD();

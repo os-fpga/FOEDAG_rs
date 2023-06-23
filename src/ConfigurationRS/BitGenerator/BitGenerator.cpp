@@ -1,5 +1,7 @@
 #include "BitGenerator.h"
 
+#include <map>
+
 #include "BitGen_analyzer.h"
 #include "BitGen_gemini.h"
 #include "BitGen_json.h"
@@ -83,39 +85,37 @@ void BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
       BitGen_ANALYZER::parse_debug(arg->m_args[0], arg->m_args[1], aes_key);
     }
   } else {
-    std::vector<uint8_t> data;
+    std::vector<BitGen_BITSTREAM_BOP*> bops;
     if (CFG_check_file_extensions(arg->m_args[0], {".bitasm"}) == 0) {
       // Read the BitObj file
       CFGObject_BITOBJ bitobj;
       CFG_ASSERT(bitobj.read(arg->m_args[0]));
-
       // Get the family
       std::string family = get_device_family(bitobj.device);
       if (family == "GEMINI") {
         BitGen_GEMINI gemini(&bitobj);
-        CFG_ASSERT(gemini.generate(data, arg->compress, key_ptr, aes_key));
-        CFG_write_binary_file(arg->m_args[1], &data[0], data.size());
+        gemini.generate(bops);
       } else {
         CFG_INTERNAL_ERROR("Unsupported device %s family %s",
                            bitobj.device.c_str(), family.c_str());
       }
     } else {
-      std::string bitstream_error_msg = "";
-      std::vector<BitGen_BITSTREAM_BOP*> bops;
       BitGen_JSON::parse_bitstream(arg->m_args[0], bops);
       CFG_ASSERT(bops.size())
-      BitGen_PACKER::generate_bitstream(bops, data, arg->compress, aes_key,
-                                        key_ptr);
-      BitGen_ANALYZER::parse(data, true, true, bitstream_error_msg, false);
-      CFG_ASSERT_MSG(bitstream_error_msg.empty(), bitstream_error_msg.c_str());
-      CFG_write_binary_file(arg->m_args[1], &data[0], data.size());
-      while (bops.size()) {
-        CFG_MEM_DELETE(bops.back());
-        bops.pop_back();
-      }
     }
+    std::vector<uint8_t> data;
+    std::string bitstream_error_msg = "";
+    BitGen_PACKER::generate_bitstream(bops, data, arg->compress, aes_key,
+                                      key_ptr);
+    BitGen_ANALYZER::parse(data, true, true, bitstream_error_msg, false);
+    CFG_ASSERT_MSG(bitstream_error_msg.empty(), bitstream_error_msg.c_str());
+    CFG_write_binary_file(arg->m_args[1], &data[0], data.size());
     memset(&data[0], 0, data.size());
     data.clear();
+    while (bops.size()) {
+      CFG_MEM_DELETE(bops.back());
+      bops.pop_back();
+    }
   }
   if (aes_key.size()) {
     memset(&aes_key[0], 0, aes_key.size());
