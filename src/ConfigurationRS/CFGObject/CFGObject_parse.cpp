@@ -142,6 +142,13 @@ std::string CFGObject::get_string(const uint8_t* data, size_t data_size,
                                   size_t& index, int max_size, int min_size,
                                   int null_check) {
   CFG_ASSERT(data != nullptr && data_size > 0);
+  CFG_ASSERT(index < data_size);
+  size_t available_size = data_size - index;
+  if (max_size == -1) {
+    max_size = int(available_size);
+  } else {
+    CFG_ASSERT(max_size <= available_size);
+  }
   std::string string = "";
   int current_index = 0;
   while (1) {
@@ -154,7 +161,7 @@ std::string CFGObject::get_string(const uint8_t* data, size_t data_size,
       index++;
       break;
     }
-    if (max_size != -1 && current_index == max_size) {
+    if (current_index == max_size) {
       break;
     }
   }
