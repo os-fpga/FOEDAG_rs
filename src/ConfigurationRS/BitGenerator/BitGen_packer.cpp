@@ -137,6 +137,10 @@ static void BitGen_PACKER_gen_bop_header_encryption_field(
     crc = CFG_crc32(&challenge[0], challenge.size() - sizeof(uint32_t));
     memcpy(&challenge[challenge.size() - sizeof(uint32_t)], (void*)(&crc),
            sizeof(crc));
+    // If it is not set, then generate random IV
+    if (CFG_check_all_zeros(field.iv, sizeof(field.iv))) {
+      CFGOpenSSL::generate_iv(field.iv, false);
+    }
     // Encrypt
     CFGOpenSSL::ctr_encrypt(&challenge[0], &encrypted_challenge[0],
                             challenge.size(), &aes_key[0], aes_key.size(),

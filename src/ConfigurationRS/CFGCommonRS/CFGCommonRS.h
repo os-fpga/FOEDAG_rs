@@ -61,6 +61,8 @@ uint64_t CFG_extract_bits(const uint8_t* data, const uint64_t total_bit_size,
 int CFG_check_file_extensions(const std::string& filepath,
                               const std::vector<std::string> extensions);
 
+bool CFG_check_all_zeros(const uint8_t* data, size_t size);
+
 void CFG_print_hex(std::ofstream& file, const uint8_t* data,
                    const uint64_t data_size, const uint8_t unit_size,
                    const std::string space, bool detail);
