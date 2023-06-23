@@ -66,9 +66,6 @@ class CompilerRS : public CompilerOpenFPGA {
     m_starsExecutablePath = path;
   }
   bool TimingAnalysis();
-  virtual std::vector<std::string> GetCleanFiles(
-      Action action, const std::string& projectName,
-      const std::string& topModule) const;
 
  protected:
   void CustomSimulatorSetup(Simulator::SimulationType action);
