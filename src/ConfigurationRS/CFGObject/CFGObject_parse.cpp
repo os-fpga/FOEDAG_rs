@@ -147,7 +147,8 @@ std::string CFGObject::get_string(const uint8_t* data, size_t data_size,
   if (max_size == -1) {
     max_size = int(available_size);
   } else {
-    CFG_ASSERT(max_size <= available_size);
+    CFG_ASSERT(max_size > 0);
+    CFG_ASSERT(max_size <= (int)(available_size));
   }
   std::string string = "";
   int current_index = 0;
