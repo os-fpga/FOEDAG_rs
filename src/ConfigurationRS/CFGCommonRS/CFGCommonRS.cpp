@@ -412,6 +412,19 @@ int CFG_check_file_extensions(const std::string& filepath,
   return -2;
 }
 
+bool CFG_check_all_zeros(const uint8_t* data, size_t size) {
+  CFG_ASSERT(data != nullptr);
+  CFG_ASSERT(size);
+  bool zero = true;
+  for (size_t i = 0; i < size; i++) {
+    if (data[i]) {
+      zero = false;
+      break;
+    }
+  }
+  return zero;
+}
+
 void CFG_print_hex(std::ofstream& file, const uint8_t* data,
                    const uint64_t data_size, const uint8_t unit_size,
                    const std::string space, bool detail) {

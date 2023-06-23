@@ -3,7 +3,6 @@
 #include <fstream>
 
 #include "CFGCrypto/CFGOpenSSL.h"
-#include "nlohmann_json/json.hpp"
 
 static std::string BitGen_JSON_to_string(const nlohmann::json& json) {
   CFG_ASSERT(json.is_string());
@@ -34,8 +33,9 @@ static bool BitGen_JSON_to_boolean(const nlohmann::json& json) {
 }
 
 static uint64_t BitGen_JSON_to_u64(const nlohmann::json& json) {
-  CFG_ASSERT(json.is_number_unsigned() || json.is_string());
-  if (json.is_number_unsigned()) {
+  CFG_ASSERT(json.is_number_integer() || json.is_number_unsigned() ||
+             json.is_string());
+  if (json.is_number_integer() || json.is_number_unsigned()) {
     return (uint64_t)(json);
   } else {
     return CFG_convert_string_to_u64(json);
@@ -52,6 +52,15 @@ static void BitGen_JSON_get_u32s_into_u8s(const nlohmann::json& json,
   CFG_ASSERT(json.size());
   for (auto& j : json) {
     CFG_append_u32(data, BitGen_JSON_to_u32(j));
+  }
+}
+
+static void BitGen_JSON_get_u8s_into_u8s(const nlohmann::json& json,
+                                         std::vector<uint8_t>& data) {
+  CFG_ASSERT(json.is_array());
+  CFG_ASSERT(json.size());
+  for (auto& j : json) {
+    CFG_append_u8(data, BitGen_JSON_to_u8(j));
   }
 }
 
@@ -254,11 +263,14 @@ const std::map<const std::string, const BitGen_JSON_ACTION_FIELD>
           {"update", std::make_pair(5, 1)},
           {"capture", std::make_pair(6, 1)}}},
         {"pcb_config",
-         {{"ram_block_count", std::make_pair(0, 32)},
-          {"pl_ctl_skew", std::make_pair(32, 2)},
-          {"pl_ctl_parity", std::make_pair(34, 1)},
-          {"pl_ctl_even", std::make_pair(35, 1)},
-          {"pl_ctl_split", std::make_pair(36, 2)},
+         {{"ram_block_count", std::make_pair(0, 16)},
+          {"pl_ctl_skew", std::make_pair(16, 2)},
+          {"pl_ctl_parity", std::make_pair(18, 1)},
+          {"pl_ctl_even", std::make_pair(19, 1)},
+          {"pl_ctl_split", std::make_pair(20, 2)},
+          {"pl_select_offset", std::make_pair(32, 12)},
+          {"pl_select_row", std::make_pair(44, 10)},
+          {"pl_select_col", std::make_pair(54, 10)},
           {"pl_row_offset", std::make_pair(64, 10)},
           {"pl_row_stride", std::make_pair(80, 10)},
           {"pl_col_offset", std::make_pair(96, 10)},
@@ -340,66 +352,34 @@ static std::vector<uint8_t> BitGen_JSON_gen_action_field(
   return data;
 }
 
-static void BitGen_JSON_gen_bitstream_bop_action(
-    const nlohmann::json& json, std::vector<BitGen_BITSTREAM_ACTION*>& actions,
-    uint16_t cmd, bool has_checksum, const BitGen_JSON_ACTION_FIELD* fields) {
+static void BitGen_JSON_gen_bitstream_bop_payload(
+    const nlohmann::json& json, std::vector<uint8_t>& payload) {
+  if (json.is_array()) {
+    if (payload.size()) {
+      memset(&payload[0], 0, payload.size());
+    }
+    payload.clear();
+    BitGen_JSON_get_u8s_into_u8s(json, payload);
+  } else {
+    CFG_read_binary_file(BitGen_JSON_to_string(json), payload);
+  }
+}
+
+static BitGen_BITSTREAM_ACTION* BitGen_JSON_gen_bitstream_bop_action(
+    const nlohmann::json& json, uint16_t cmd, bool has_checksum,
+    bool has_payload, const BitGen_JSON_ACTION_FIELD* fields) {
   CFG_ASSERT(fields != nullptr);
+  CFG_ASSERT(has_payload || !has_checksum);
   BitGen_BITSTREAM_ACTION* action = CFG_MEM_NEW(BitGen_BITSTREAM_ACTION, cmd);
   action->has_checksum = has_checksum;
   action->field = BitGen_JSON_gen_action_field(json, fields);
   CFG_ASSERT((action->field.size() % 4) == 0);
-  CFG_read_binary_file(BitGen_JSON_to_string(json["payload"]), action->payload);
+  if (has_payload) {
+    BitGen_JSON_gen_bitstream_bop_payload(json["payload"], action->payload);
+  }
   CFG_ASSERT(action->payload.size());
   CFG_ASSERT((action->payload.size() % 4) == 0);
-  actions.push_back(action);
-}
-
-static void BitGen_JSON_parse_bitstream_bop_firmware_loading_action(
-    const nlohmann::json& json,
-    std::vector<BitGen_BITSTREAM_ACTION*>& actions) {
-  std::string temp = BitGen_JSON_to_string(json["action"]);
-  CFG_ASSERT(temp == "firmware_loading");
-  const BitGen_JSON_ACTION_FIELD* fields =
-      BitGen_JSON_get_action_database(temp);
-  BitGen_JSON_validate_action("Bitstream Firmware Loading Action", json, fields,
-                              true);
-  BitGen_JSON_gen_bitstream_bop_action(json, actions, 0x001, true, fields);
-}
-
-static void BitGen_JSON_parse_bitstream_bop_fcb_config_action(
-    const nlohmann::json& json,
-    std::vector<BitGen_BITSTREAM_ACTION*>& actions) {
-  std::string temp = BitGen_JSON_to_string(json["action"]);
-  CFG_ASSERT(temp == "fcb_config");
-  const BitGen_JSON_ACTION_FIELD* fields =
-      BitGen_JSON_get_action_database(temp);
-  BitGen_JSON_validate_action("Bitstream FCB Config Action", json, fields,
-                              true);
-  BitGen_JSON_gen_bitstream_bop_action(json, actions, 0x002, true, fields);
-}
-
-static void BitGen_JSON_parse_bitstream_bop_icb_config_action(
-    const nlohmann::json& json,
-    std::vector<BitGen_BITSTREAM_ACTION*>& actions) {
-  std::string temp = BitGen_JSON_to_string(json["action"]);
-  CFG_ASSERT(temp == "icb_config");
-  const BitGen_JSON_ACTION_FIELD* fields =
-      BitGen_JSON_get_action_database(temp);
-  BitGen_JSON_validate_action("Bitstream ICB Config Action", json, fields,
-                              true);
-  BitGen_JSON_gen_bitstream_bop_action(json, actions, 0x003, true, fields);
-}
-
-static void BitGen_JSON_parse_bitstream_bop_pcb_config_action(
-    const nlohmann::json& json,
-    std::vector<BitGen_BITSTREAM_ACTION*>& actions) {
-  std::string temp = BitGen_JSON_to_string(json["action"]);
-  CFG_ASSERT(temp == "pcb_config");
-  const BitGen_JSON_ACTION_FIELD* fields =
-      BitGen_JSON_get_action_database(temp);
-  BitGen_JSON_validate_action("Bitstream PCB Config Action", json, fields,
-                              true);
-  BitGen_JSON_gen_bitstream_bop_action(json, actions, 0x004, false, fields);
+  return action;
 }
 
 static void BitGen_JSON_parse_bitstream_bop_action(
@@ -412,13 +392,13 @@ static void BitGen_JSON_parse_bitstream_bop_action(
   if (action == "generic") {
     BitGen_JSON_parse_bitstream_bop_generic_action(json, actions);
   } else if (action == "firmware_loading") {
-    BitGen_JSON_parse_bitstream_bop_firmware_loading_action(json, actions);
+    actions.push_back(BitGen_JSON::gen_firmware_loading_action(json));
   } else if (action == "fcb_config") {
-    BitGen_JSON_parse_bitstream_bop_fcb_config_action(json, actions);
+    actions.push_back(BitGen_JSON::gen_fcb_config_action(json));
   } else if (action == "icb_config") {
-    BitGen_JSON_parse_bitstream_bop_icb_config_action(json, actions);
+    actions.push_back(BitGen_JSON::gen_icb_config_action(json));
   } else if (action == "pcb_config") {
-    BitGen_JSON_parse_bitstream_bop_pcb_config_action(json, actions);
+    actions.push_back(BitGen_JSON::gen_pcb_config_action(json));
   } else {
     CFG_INTERNAL_ERROR("Action %s is not supported", action.c_str());
   }
@@ -447,6 +427,14 @@ static BitGen_BITSTREAM_BOP* BitGen_JSON_parse_bitstream_bop(
   return bop;
 }
 
+void BitGen_JSON::zeroize_array_numbers(nlohmann::json& json) {
+  CFG_ASSERT(json.is_array());
+  CFG_ASSERT(json.size());
+  for (auto& j : json) {
+    j = 0;
+  }
+}
+
 void BitGen_JSON::parse_bitstream(const std::string& filepath,
                                   std::vector<BitGen_BITSTREAM_BOP*>& bops) {
   std::ifstream file(filepath.c_str());
@@ -458,4 +446,43 @@ void BitGen_JSON::parse_bitstream(const std::string& filepath,
   for (auto& bop : bitstream) {
     bops.push_back(BitGen_JSON_parse_bitstream_bop(bop));
   }
+}
+
+BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_standard_action(
+    const nlohmann::json& json, const std::string& info, const std::string name,
+    uint16_t cmd, bool has_checksum, bool has_payload) {
+  CFG_ASSERT(json.is_object());
+  CFG_ASSERT(json.contains("action"));
+  std::string action_name = BitGen_JSON_to_string(json["action"]);
+  CFG_ASSERT(action_name == name);
+  const BitGen_JSON_ACTION_FIELD* fields =
+      BitGen_JSON_get_action_database(action_name);
+  CFG_ASSERT(fields != nullptr);
+  BitGen_JSON_validate_action(info, json, fields, has_payload);
+  return BitGen_JSON_gen_bitstream_bop_action(json, cmd, has_checksum,
+                                              has_payload, fields);
+}
+
+BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_firmware_loading_action(
+    const nlohmann::json& json) {
+  return gen_standard_action(json, "Bitstream Firmware Loading Action",
+                             "firmware_loading", 0x001, true, true);
+}
+
+BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_fcb_config_action(
+    const nlohmann::json& json) {
+  return gen_standard_action(json, "Bitstream FCB Config Action", "fcb_config",
+                             0x002, true, true);
+}
+
+BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_icb_config_action(
+    const nlohmann::json& json) {
+  return gen_standard_action(json, "Bitstream ICB Config Action", "icb_config",
+                             0x003, true, true);
+}
+
+BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_pcb_config_action(
+    const nlohmann::json& json) {
+  return gen_standard_action(json, "Bitstream PCB Config Action", "pcb_config",
+                             0x004, false, true);
 }
