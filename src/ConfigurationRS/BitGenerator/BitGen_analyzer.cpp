@@ -479,6 +479,8 @@ void BitGen_ANALYZER::parse_action(
         if (data[i] != 0) {
           push_error(msgs, "Impossible to have more action");
           m_status.action_status = false;
+        } else {
+          msgs.push_back("");
         }
         break;
       default:
@@ -1021,7 +1023,7 @@ void BitGen_ANALYZER::push_error(std::vector<std::string>& msgs,
                                  const std::string new_line) {
   CFG_ASSERT(m_file != nullptr);
   msgs.push_back(
-      CFG_print("%s%s%s", space.c_str(), msg.c_str(), new_line.c_str()));
+      CFG_print("%sError: %s%s", space.c_str(), msg.c_str(), new_line.c_str()));
   CFG_POST_ERR(msg.c_str());
 }
 
