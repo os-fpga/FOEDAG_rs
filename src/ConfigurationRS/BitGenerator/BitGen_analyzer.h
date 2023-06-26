@@ -145,6 +145,13 @@ class BitGen_ANALYZER {
                      bool action_force_turn_off_compression, bool action_iv,
                      uint8_t* iv, bool is_last_payload_block,
                      std::ofstream& binfile);
+  void post_warning(const std::string& space, const std::string& msg,
+                    bool new_line = true);
+  void post_error(const std::string& space, const std::string& msg,
+                  bool new_line = true);
+  void push_error(std::vector<std::string>& msgs, const std::string& msg,
+                  const std::string space = " ",
+                  const std::string new_line = "");
 
  private:
   std::string m_filepath = "";

@@ -84,14 +84,14 @@ bool BitGen_ANALYZER::parse_bop(const uint8_t* data, size_t size,
   std::vector<std::string> action_msgs;
   std::vector<BitGen_ANALYZER_ACTION*> actions;
   if (m_header.action_count == 0) {
-    (*m_file) << space.c_str() << "Error: Invalid action count\n";
+    post_error(space, "Invalid action count");
     m_status.status = false;
     m_status.action_status = false;
   } else if (m_status.compression_status && m_status.encryption_status) {
     parse_action((const uint32_t*)(&m_current_bop_data[0xC8]), 78, action_index,
                  action_msgs, actions);
     if (!m_status.action_status) {
-      (*m_file) << space.c_str() << "Error: Error in parsing action\n";
+      post_error(space, "Fail to parse action");
     }
   }
   // Authentication
@@ -120,7 +120,7 @@ bool BitGen_ANALYZER::parse_bop(const uint8_t* data, size_t size,
                        BitGen_BITSTREAM_BLOCK_SIZE / 4, action_index,
                        action_msgs, actions);
           if (!m_status.action_status) {
-            (*m_file) << space.c_str() << "Error: Error in parsing action\n";
+            post_error(space, "Fail to parse action");
           }
           print_action_block(space + "  ", &m_current_bop_data[action_addr],
                              action_addr, action_msgs);
@@ -184,12 +184,14 @@ bool BitGen_ANALYZER::parse_bop(const uint8_t* data, size_t size,
             if (m_header.encryption == "none" || m_aes_key != nullptr) {
               CFG_read_binary_file(binfilepath, bindata);
               if (bindata.size() == 0) {
-                (*m_file) << space.c_str() << "Warning: Impossible "
-                          << binfilepath.c_str() << " is empty\n";
+                post_warning(space, CFG_print("Impossible %s is content empty",
+                                              binfilepath.c_str()));
               } else if (bindata.size() % 4) {
-                (*m_file) << space.c_str() << "Warning: Impossible "
-                          << binfilepath.c_str()
-                          << " file size not multiple of 4 Byte(s)\n";
+                post_warning(
+                    space,
+                    CFG_print(
+                        "Impossible %s file size is not multiple of 4 Bytes",
+                        binfilepath.c_str()));
               } else if (actions.front()->checksum) {
                 (*m_file) << space.c_str() << "Info: Verify checksum of "
                           << binfilepath.c_str() << "\n";
@@ -205,15 +207,13 @@ bool BitGen_ANALYZER::parse_bop(const uint8_t* data, size_t size,
                             << "Info: Successfully verify checksum for "
                             << binfilepath.c_str() << "\n";
                 } else {
-                  (*m_file)
-                      << space.c_str() << "Error: Fail to verify checksum for "
-                      << binfilepath.c_str() << "\n";
+                  post_error(space, CFG_print("Fail to veriy checksum for %s",
+                                              binfilepath.c_str()));
                   m_status.status = false;
                   m_status.checksum_status = false;
                 }
               } else {
-                (*m_file) << space.c_str()
-                          << "Info: Do not check to checksum for "
+                (*m_file) << space.c_str() << "Info: Do not check checksum for "
                           << binfilepath.c_str() << " \n";
               }
             }
@@ -256,40 +256,40 @@ void BitGen_ANALYZER::parse_bop_header(std::string space,
   if (unobscured_expected_crc32 == unobscured_crc32) {
     m_header.chipid = CFG_print("0x%02X", unobscured_data[0]);
   } else {
-    (*m_file) << space.c_str() << "Error: Obscured data CRC fail\n";
+    post_error(space, "Obscured data CRC fail");
     m_status.status = false;
   }
   m_header.checksum = BitGen_PACKER::get_feature_enum_string(
       m_current_bop_data[0x60], {"flecther32"}, m_status.checksum_status);
   if (m_header.checksum == "unknown") {
-    (*m_file) << space.c_str() << "Error: Unknown checksum\n";
+    post_error(space, "Unknown checksum");
     m_status.status = false;
   }
   m_header.compression = BitGen_PACKER::get_feature_enum_string(
       m_current_bop_data[0x61], {"dcmp0"}, m_status.compression_status, true);
   if (m_header.compression == "unknown") {
-    (*m_file) << space.c_str() << "Error: Unknown compression\n";
+    post_error(space, "Unknown compression");
     m_status.status = false;
   }
   m_header.integrity = BitGen_PACKER::get_feature_enum_string(
       m_current_bop_data[0x62], {"sha256", "sha384", "sha512"},
       m_status.integrity_status);
   if (m_header.integrity == "unknown") {
-    (*m_file) << space.c_str() << "Error: Unknown integrity\n";
+    post_error(space, "Unknown integrity");
     m_status.status = false;
   }
   m_header.encryption = BitGen_PACKER::get_feature_enum_string(
       m_current_bop_data[0x80], {"ctr128", "ctr256"},
       m_status.encryption_status, true);
   if (m_header.encryption == "unknown") {
-    (*m_file) << space.c_str() << "Error: Unknown encryption\n";
+    post_error(space, "Unknown encryption");
     m_status.status = false;
   }
   m_header.authentication = BitGen_PACKER::get_feature_enum_string(
       m_current_bop_data[0x81], {"ecdsa256", "rsa2048"},
       m_status.authentication_status, true);
   if (m_header.authentication == "unknown") {
-    (*m_file) << space.c_str() << "Error: Unknown authentication\n";
+    post_error(space, "Unknown authentication");
     m_status.status = false;
   }
   m_header.action_version = get_u32(&m_current_bop_data[0xC0]);
@@ -311,11 +311,8 @@ void BitGen_ANALYZER::parse_bop_header(std::string space,
   m_header.crc32 = get_u32(&m_current_bop_data[0x7FC]);
   uint32_t crc32 = CFG_crc32(m_current_bop_data, 0x7FC);
   if (crc32 != m_header.crc32) {
-    (*m_file) << space.c_str()
-              << CFG_print(
-                     "Error: Invalid CRC - expect 0x%08X but found 0x%08X",
-                     crc32, m_header.crc32)
-                     .c_str();
+    post_error(space, CFG_print("Invalid CRC - expect 0x%08X but found 0x%08X",
+                                crc32, m_header.crc32));
     m_status.status = false;
   }
 }
@@ -342,30 +339,29 @@ void BitGen_ANALYZER::parse_action(
               msgs.push_back(" No more Action");
             }
           } else {
-            msgs.push_back(" Error: Invalid action termination");
+            push_error(msgs, "Invalid action termination");
             m_status.action_status = false;
           }
         } else if (action_index == m_header.action_count) {
-          msgs.push_back(
-              CFG_print(" Error: Exceeding maximum action count (%d)",
-                        m_header.action_count));
+          push_error(msgs, CFG_print("Exceeding maximum action count (%d)",
+                                     m_header.action_count));
           m_status.action_status = false;
         } else {
           action_size = (size_t)(data[i] >> 16);
           if (action_size == 0) {
-            msgs.push_back(" Error: Invalid ZERO size action");
+            push_error(msgs, "Invalid ZERO size action");
             m_status.action_status = false;
           } else if (action_size % 4) {
-            msgs.push_back(" Error: Invalid none-4Byte-aligned size action");
+            push_error(msgs, "Invalid none-4Byte-aligned size action");
             m_status.action_status = false;
           } else if (action_size < 8) {
-            msgs.push_back(" Error: Invalid none-minimum-8Byte size action");
+            push_error(msgs, "Invalid none-minimum-8Byte size action");
             m_status.action_status = false;
           } else if ((i + (action_size / 4)) > size) {
-            msgs.push_back(" Error: Invalid overflow size action");
+            push_error(msgs, "Invalid overflow size action");
             m_status.action_status = false;
           } else if (data[i] & 0x8000) {
-            msgs.push_back(" Error: Invalid Bit15 set in command");
+            push_error(msgs, "Invalid Bit15 set in command");
             m_status.action_status = false;
           } else {
             BitGen_ANALYZER_ACTION* action =
@@ -376,19 +372,18 @@ void BitGen_ANALYZER::parse_action(
             action->has_iv = (data[i] & 0x4000) != 0;
             action->size = (uint16_t)(action_size);
             if (data[i + 1] == 0 && action->checksum) {
-              msgs.push_back(
-                  " Error: Invalid Bit12 set in command but there is no "
-                  "payload");
+              push_error(
+                  msgs, "Invalid Bit12 set in command but there is no payload");
               m_status.action_status = false;
             } else if (m_header.compression == "none" && action->compression) {
-              msgs.push_back(
-                  " Error: Invalid Bit13 set in command but compression "
-                  "feature is OFF");
+              push_error(msgs,
+                         "Invalid Bit13 set in command but compression feature "
+                         "is OFF");
               m_status.action_status = false;
             } else if (m_header.encryption == "none" && action->has_iv) {
-              msgs.push_back(
-                  " Error: Invalid Bit14 set in command but encryption "
-                  "feature is OFF");
+              push_error(
+                  msgs,
+                  "Invalid Bit14 set in command but encryption feature is OFF");
               m_status.action_status = false;
             } else {
               // Last step size must match up
@@ -401,10 +396,9 @@ void BitGen_ANALYZER::parse_action(
                 minimum_size += 16;
               }
               if (minimum_size > action->size) {
-                msgs.push_back(
-                    CFG_print(" Error: Invalid action size. Expected mimumum "
-                              "size is 0x%04X or %d Bytes",
-                              minimum_size, minimum_size));
+                push_error(msgs, CFG_print("Invalid action size. Expected "
+                                           "mimumum size is 0x%04X (%d) Bytes",
+                                           minimum_size, minimum_size));
                 m_status.action_status = false;
               } else {
                 action->field_size = action->size - minimum_size;
@@ -430,10 +424,12 @@ void BitGen_ANALYZER::parse_action(
         actions.back()->payload_size = data[i];
         if ((m_header.compression == "none" || actions.back()->compression) &&
             ((actions.back()->payload_size % 4) != 0)) {
-          msgs.push_back(CFG_print(
-              " Error: Compression is effectively turned off but payload size "
-              "is not multiple of 4 Byte(s) - 0x%08X (%d)",
-              actions.back()->payload_size, actions.back()->payload_size));
+          push_error(
+              msgs,
+              CFG_print("Compression is effectively turned off but payload "
+                        "size is not multiple of 4 Byte(s) - 0x%08X (%d)",
+                        actions.back()->payload_size,
+                        actions.back()->payload_size));
         } else {
           msgs.push_back(CFG_print("   Payload Size: 0x%08X (%d)",
                                    actions.back()->payload_size,
@@ -481,7 +477,7 @@ void BitGen_ANALYZER::parse_action(
         break;
       case 0xFF:
         if (data[i] != 0) {
-          msgs.push_back(" Error: Impossible to have more action");
+          push_error(msgs, "Impossible to have more action");
           m_status.action_status = false;
         }
         break;
@@ -531,7 +527,7 @@ void BitGen_ANALYZER::authenticate(std::string space) {
     if (m_status.authentication_status) {
       (*m_file) << space.c_str() << "Info: Successfully authenticate data\n";
     } else {
-      (*m_file) << space.c_str() << "Error: Fail to authenticate data\n";
+      post_error(space, "Fail to authenticate data");
     }
     m_status.status &= m_status.authentication_status;
   }
@@ -561,24 +557,22 @@ void BitGen_ANALYZER::challenge(std::string space,
             msgs.push_back(CFG_print("%08X", get_u32(&plain_data[i])));
           }
         } else {
-          (*m_file)
-              << space.c_str()
-              << "Warning: Fail to challenge data. All encryption debugging "
-                 "will be turned OFF\n";
+          post_error(space,
+                     "Fail to challenge data. All encryption debugging will be "
+                     "turned OFF");
           m_status.encryption_status = false;
         }
         memset(plain_data, 0, sizeof(plain_data));
       } else {
-        (*m_file) << space.c_str()
-                  << "Warning: Provided AES Key does not match with encryption "
-                     "feature\n";
-        m_status.encryption_status = false;
+        post_warning(space,
+                     "Provided AES Key size does not match with encryption "
+                     "feature. All encryption debugging will be turned OFF");
+        m_aes_key = nullptr;
       }
       m_status.status &= m_status.encryption_status;
     } else {
-      (*m_file)
-          << space.c_str()
-          << "Warning: AES key is not provided to challenge and decrypt data\n";
+      post_warning(space,
+                   "AES key is not provided to challenge and decrypt data");
     }
   } else {
     m_aes_key = nullptr;
@@ -747,8 +741,7 @@ size_t BitGen_ANALYZER::get_next_block(std::string space,
   CFG_ASSERT(m_current_bop_data_index <= m_current_bop_size);
   size_t index = 0;
   if (m_current_bop_data_index == m_current_bop_size) {
-    (*m_file) << space.c_str()
-              << "  Error: Do not have enough memory to get next block\n";
+    post_error(space + "  ", "Do not have enough memory to get next block");
   } else {
     CFG_ASSERT((m_current_bop_data_index % BitGen_BITSTREAM_BLOCK_SIZE) == 0);
     CFG_ASSERT((m_current_bop_size % BitGen_BITSTREAM_BLOCK_SIZE) == 0);
@@ -778,7 +771,7 @@ size_t BitGen_ANALYZER::get_next_block(std::string space,
         m_integrity.addr += m_integrity.size;
         m_integrity.remaining_size -= m_integrity.size;
       } else {
-        (*m_file) << space.c_str() << "  Error: Fail verify hash\n";
+        post_error(space + "  ", "Fail to verify hash");
         m_status.integrity_status = false;
       }
     } else {
@@ -808,7 +801,7 @@ size_t BitGen_ANALYZER::get_next_block(std::string space,
         CFG_ASSERT(m_integrity.remaining_size >= (2 * m_integrity.size));
         index = get_next_block(space, block_name);
       } else {
-        (*m_file) << space.c_str() << "  Error: Fail verify hash\n";
+        post_error(space + "  ", "Fail to verify hash");
         m_status.integrity_status = false;
       }
     }
@@ -976,31 +969,60 @@ void BitGen_ANALYZER::parse_payload(std::string space, const uint8_t* data,
   memset(plain_data, 0, sizeof(plain_data));
   if (m_status.decompression_status == BitGen_DECOMPRESS_ENGINE_DONE_STATUS &&
       !is_last_payload_block) {
-    (*m_file) << space.c_str()
-              << "Error: Decompress Engine status is DONE but this is not last "
-                 "payload block";
+    post_error(
+        space,
+        "Decompress Engine status is DONE but this is not last payload block");
     m_status.status = false;
     m_status.decompression_status = BitGen_DECOMPRESS_ENGINE_ERROR_STATUS;
   }
   if (is_last_payload_block && proceed_dcmp &&
       m_status.decompression_status != BitGen_DECOMPRESS_ENGINE_DONE_STATUS &&
       m_status.decompression_status != BitGen_DECOMPRESS_ENGINE_ERROR_STATUS) {
-    (*m_file) << space.c_str()
-              << "Error: This is already last block of payload but Decompress "
-                 "Engine is still not DONE";
+    post_error(space,
+               "This is already last block of payload but Decompress Engine is "
+               "still not DONE");
     m_status.status = false;
     m_status.decompression_status = BitGen_DECOMPRESS_ENGINE_ERROR_STATUS;
   }
   if (is_last_payload_block && proceed_dcmp &&
       m_status.decompression_status == BitGen_DECOMPRESS_ENGINE_DONE_STATUS &&
       m_decompressed_data_offset != 0) {
-    (*m_file)
-        << space.c_str()
-        << "Error: This is the end of decompression, but there is remaining "
-        << m_decompressed_data_offset << "Byte(s) left";
+    post_error(space, CFG_print("This is the end of decompression, but there "
+                                "is remaining %d Byte(s) left",
+                                m_decompressed_data_offset));
     m_status.status = false;
     m_status.decompression_status = BitGen_DECOMPRESS_ENGINE_ERROR_STATUS;
   }
+}
+
+void BitGen_ANALYZER::post_warning(const std::string& space,
+                                   const std::string& msg, bool new_line) {
+  CFG_ASSERT(m_file != nullptr);
+  (*m_file) << space << "Warning: " << msg.c_str();
+  if (new_line) {
+    (*m_file) << "\n";
+  }
+  CFG_POST_WARNING(msg.c_str());
+}
+
+void BitGen_ANALYZER::post_error(const std::string& space,
+                                 const std::string& msg, bool new_line) {
+  CFG_ASSERT(m_file != nullptr);
+  (*m_file) << space << "Error: " << msg.c_str();
+  if (new_line) {
+    (*m_file) << "\n";
+  }
+  CFG_POST_ERR(msg.c_str());
+}
+
+void BitGen_ANALYZER::push_error(std::vector<std::string>& msgs,
+                                 const std::string& msg,
+                                 const std::string space,
+                                 const std::string new_line) {
+  CFG_ASSERT(m_file != nullptr);
+  msgs.push_back(
+      CFG_print("%s%s%s", space.c_str(), msg.c_str(), new_line.c_str()));
+  CFG_POST_ERR(msg.c_str());
 }
 
 void BitGen_ANALYZER::update_bitstream_end_size(std::vector<uint8_t>& data,
