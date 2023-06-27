@@ -39,28 +39,15 @@ endif()
 
 #################################################################################################################
 #
-# Four elements will be built
+# Three elements will be built
 #
-# 1. auto generate all the file
+# 1. subsystem library (in this case bitgenerator) - it contains all the core code to generate bitstream. It will be called by other elements
 #
-# 2. subsystem library (in this case bitgenerator) - it contains all the core code to generate bitstream. It will be called by other elements
+# 2. raptor_bin executable (in this case raptor_bitgenerator exe) - it is external command line entry which eventually call subsystem library (item 1)
 #
-# 3. raptor_bin executable (in this case raptor_bitgenerator exe) - it is external command line entry which eventually call subsystem library (item 1)
-#
-# 4. test_bin executable (in this case bitgenerator_test exe) - it is external command line entry which eventually call subsystem library (item 1) for unit testing
+# 3. test_bin executable (in this case bitgenerator_test exe) - it is external command line entry which eventually call subsystem library (item 1) for unit testing
 #
 #################################################################################################################
-
-###################
-#
-# auto generate argument file
-#
-###################
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/BitGen_data_auto.h ${CMAKE_CURRENT_BINARY_DIR}/BitGen_data_auto.cpp
-  COMMAND python3 ${PROJECT_SOURCE_DIR}/BitGen_data.py ${PROJECT_SOURCE_DIR}/BitGen_data.json ${CMAKE_CURRENT_BINARY_DIR}/BitGen_data_auto.h ${CMAKE_CURRENT_BINARY_DIR}/BitGen_data_auto.cpp
-  DEPENDS ${PROJECT_SOURCE_DIR}/BitGen_data.py ${PROJECT_SOURCE_DIR}/BitGen_data.json
-)
 
 ###################
 #
@@ -74,9 +61,7 @@ add_library(
   BitGen_decompress_engine.cpp
   BitGen_analyzer.cpp
   BitGen_json.cpp
-  BitGen_data.cpp
   BitGen_gemini.cpp
-  ${CMAKE_CURRENT_BINARY_DIR}/BitGen_data_auto.h
 )
 
 ###################
