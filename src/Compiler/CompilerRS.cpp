@@ -424,8 +424,9 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
                                                "IO" / "IO_MODELS" / "GBX" /
                                                "gbox_bslip.sv");
-        ProjManager()->addLibraryPath(tech_datapath / "RS_PRIMITIVES" / "IO" /
-                                      "IO_MODELS" / "GBX");
+        ProjManager()->addLibraryPath(
+            (tech_datapath / "RS_PRIMITIVES" / "IO" / "IO_MODELS" / "GBX")
+                .string());
         ProjManager()->addLibraryExtension(".sv");
 #endif
 
@@ -1044,27 +1045,42 @@ bool CompilerRS::TimingAnalysis() {
       return false;
     }
     // find files
-    std::string libFileName =
-        ProjManager()->getDesignTopModule().toStdString() + "_stars.lib";
-    std::string netlistFileName =
-        ProjManager()->getDesignTopModule().toStdString() + "_stars.v";
-    std::string sdfFileName =
-        ProjManager()->getDesignTopModule().toStdString() + "_stars.sdf";
-    // std::string sdcFile = ProjManager()->getConstrFiles();
-    std::string sdcFileName =
-        ProjManager()->getDesignTopModule().toStdString() + "_stars.sdc";
+    auto topModule = ProjManager()->getDesignTopModule().toStdString();
+    if (topModule.empty()) {
+      auto topModules = TopModules(FilePath(Action::Analyze, "port_info.json"));
+      for (const std::string &top : topModules) {
+        if (FileUtils::FileExists(FilePath(Action::STA, top + "_stars.lib"))) {
+          topModule = top;
+          break;
+        }
+      }
+    }
+    if (topModule.empty()) {
+      ErrorMessage(
+          "Can't find top module or file *_stars.lib is not generated");
+      return false;
+    }
+    auto libFileName = FilePath(Action::STA, topModule + "_stars.lib");
+    auto netlistFileName = FilePath(Action::STA, topModule + "_stars.v");
+    auto sdfFileName = FilePath(Action::STA, topModule + "_stars.sdf");
+    auto sdcFileName = FilePath(Action::STA, topModule + "_stars.sdc");
     if (std::filesystem::is_regular_file(libFileName) &&
         std::filesystem::is_regular_file(netlistFileName) &&
         std::filesystem::is_regular_file(sdfFileName) &&
         std::filesystem::is_regular_file(sdcFileName)) {
-      taCommand =
-          BaseStaCommand() + " " +
-          BaseStaScript(libFileName, netlistFileName, sdfFileName, sdcFileName);
+      taCommand = BaseStaCommand() + " " +
+                  BaseStaScript(libFileName.string(), netlistFileName.string(),
+                                sdfFileName.string(), sdcFileName.string());
       FileUtils::WriteToFile(file, taCommand);
     } else {
+      auto fileList =
+          StringUtils::join({libFileName.string(), netlistFileName.string(),
+                             sdfFileName.string(), sdcFileName.string()},
+                            "\n");
       ErrorMessage(
-          "No required design info generated for user design, required "
-          "for timing analysis");
+          "No required design info generated for user design, required for "
+          "timing analysis:\n" +
+          fileList);
       return false;
     }
   } else {  // use vpr/tatum engine
