@@ -24,6 +24,7 @@ class CompilerRS : public CompilerOpenFPGA {
  public:
   enum class SynthesisEffort { None, High, Low, Medium };
   enum class SynthesisCarryInference { None, NoCarry, All, Auto };
+  enum class SynthesisIOInference { None, Auto };
   enum class SynthesisFsmEncoding { None, Binary, Onehot };
   enum class SynthesisClkeStrategy { None, Early, Late };
 
@@ -43,6 +44,8 @@ class CompilerRS : public CompilerOpenFPGA {
   void SynthEffort(SynthesisEffort effort) { m_synthEffort = effort; }
   SynthesisCarryInference SynthCarry() { return m_synthCarry; }
   void SynthCarry(SynthesisCarryInference carry) { m_synthCarry = carry; }
+  SynthesisIOInference SynthIO() { return m_synthIO; }
+  void SynthIO(SynthesisIOInference io) { m_synthIO = io; }
   SynthesisFsmEncoding SynthFsm() { return m_synthFsm; }
   void SynthFsm(SynthesisFsmEncoding fsmEnc) { m_synthFsm = fsmEnc; }
   SynthesisClkeStrategy SynthClke() { return m_synthClke; }
@@ -79,6 +82,7 @@ class CompilerRS : public CompilerOpenFPGA {
   SynthesisCarryInference m_synthCarry = SynthesisCarryInference::None;
   SynthesisFsmEncoding m_synthFsm = SynthesisFsmEncoding::None;
   SynthesisClkeStrategy m_synthClke = SynthesisClkeStrategy::None;
+  SynthesisIOInference m_synthIO = SynthesisIOInference::None;
   bool m_synthNoAdder = false;
   bool m_synthFast = false;
   bool m_synthNoFlatten = false;
