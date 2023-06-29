@@ -1073,9 +1073,11 @@ bool CompilerRS::TimingAnalysis() {
       FileUtils::WriteToFile(file, taCommand);
     } else {
       auto fileList = StringUtils::join(
-          {libFileName, netlistFileName, sdfFileName, sdcFileName}, ", ");
-      ErrorMessage("No required design info (" + fileList +
-                   ") generated for user design, required for timing analysis");
+          {libFileName, netlistFileName, sdfFileName, sdcFileName}, "\n");
+      ErrorMessage(
+          "No required design info generated for user design, required for "
+          "timing analysis:\n" +
+          fileList);
       return false;
     }
   } else {  // use vpr/tatum engine
