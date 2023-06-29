@@ -71,7 +71,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
@@ -185,6 +185,14 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
     case SynthesisOpt::Clean:
       break;
   }
+  std::string io_inference;
+  switch (m_synthIO) {
+    case SynthesisIOInference::Auto:
+      io_inference = "";
+      break;
+    case SynthesisIOInference::None:
+      io_inference = "-no_iobuf";
+  }
   std::string effort;
   switch (m_synthEffort) {
     case SynthesisEffort::None:
@@ -279,6 +287,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
     fast_mode = "";
     no_flatten_mode = "";
     carry_inference = "";
+    io_inference = "";
     if (m_synthNoAdder) {
       optimization += " -no_adder";
     }
@@ -294,6 +303,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   result = ReplaceAll(result, "${EFFORT}", effort);
   result = ReplaceAll(result, "${FSM_ENCODING}", fsm_encoding);
   result = ReplaceAll(result, "${CARRY}", carry_inference);
+  result = ReplaceAll(result, "${IO}", io_inference);
   result = ReplaceAll(result, "${FAST}", fast_mode);
   result = ReplaceAll(result, "${NO_FLATTEN}", no_flatten_mode);
   result = ReplaceAll(result, "${MAX_THREADS}", max_threads);
@@ -365,6 +375,60 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
         GetSimulator()->AddGateSimulationModel(tech_datapath / "TDP18K_FIFO.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "ufifo_ctl.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "sram1024x18.v");
+
+        // TODO, model is invalid:
+        // GetSimulator()->AddGateSimulationModel(tech_datapath /
+        // "RS_PRIMITIVES" / "CARRY_CHAIN" / "CARRY_CHAIN.v");
+
+        // TODO, only one version of BRAM, DSP FIFO need to stay
+
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "DSP38" / "DSP38.v");
+
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "TDP_RAM36K" / "TDP_RAM36K.v");
+
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "FIFO" / "FIFO18K.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "FIFO" / "FIFO36K.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "FIFO" / "FIFO.v");
+
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "LUT" / "LUT.v");
+
+        // TODO: model is not valid for IVerilog/Verilator
+        // GetSimulator()->AddGateSimulationModel(tech_datapath /
+        // "RS_PRIMITIVES" / "IO" / "IO_MODELS" / "PLL" / "PLL_ADVANCE.sv");
+
+#ifdef PRODUCTION_BUILD
+        // TODO: We cannot ship the GB models, need abstract models
+#else
+        GetSimulator()->AddGateSimulationModel(
+            tech_datapath / "RS_PRIMITIVES" / "IO" / "IO_MODELS" /
+            "GBX_CONFIG" / "GEARBOX_CONFIG_PKG.sv");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "IO" / "io_cells_primitives.sv");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "IO" / "io_cells_sims.sv");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "IO" / "IO_MODELS" / "GBX" /
+                                               "gbox_top.sv");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "IO" / "IO_MODELS" / "GBX" /
+                                               "delay_line_tap64.sv");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "IO" / "IO_MODELS" / "GBX" /
+                                               "phase_sel.sv");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "IO" / "IO_MODELS" / "GBX" /
+                                               "gbox_bslip.sv");
+        ProjManager()->addLibraryPath(tech_datapath / "RS_PRIMITIVES" / "IO" /
+                                      "IO_MODELS" / "GBX");
+        ProjManager()->addLibraryExtension(".sv");
+#endif
+
         if (FileUtils::FileExists(tech_datapath / "llatches_sim.v")) {
           GetSimulator()->AddGateSimulationModel(tech_datapath /
                                                  "llatches_sim.v");
@@ -436,6 +500,13 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
           compiler->ErrorMessage("Unknown effort option: " + arg);
           return TCL_ERROR;
         }
+        continue;
+      }
+      if (option == "-inferred_io") {
+        compiler->SynthIO(SynthesisIOInference::Auto);
+        continue;
+      } else if (option == "-no_inferred_io") {
+        compiler->SynthIO(SynthesisIOInference::None);
         continue;
       }
       if (option == "-carry" && i + 1 < argc) {
