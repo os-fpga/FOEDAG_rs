@@ -1044,15 +1044,25 @@ bool CompilerRS::TimingAnalysis() {
       return false;
     }
     // find files
-    std::string libFileName =
-        ProjManager()->getDesignTopModule().toStdString() + "_stars.lib";
-    std::string netlistFileName =
-        ProjManager()->getDesignTopModule().toStdString() + "_stars.v";
-    std::string sdfFileName =
-        ProjManager()->getDesignTopModule().toStdString() + "_stars.sdf";
-    // std::string sdcFile = ProjManager()->getConstrFiles();
-    std::string sdcFileName =
-        ProjManager()->getDesignTopModule().toStdString() + "_stars.sdc";
+    auto topModule = ProjManager()->getDesignTopModule().toStdString();
+    if (topModule.empty()) {
+      auto topModules = TopModules(FilePath(Action::Analyze, "port_info.json"));
+      for (const std::string &top : topModules) {
+        if (FileUtils::FileExists(FilePath(Action::STA, top + "_stars.lib"))) {
+          topModule = top;
+          break;
+        }
+      }
+    }
+    if (topModule.empty()) {
+      ErrorMessage(
+          "Can't find top module or file *_stars.lib is not generated");
+      return false;
+    }
+    std::string libFileName = FilePath(Action::STA, topModule + "_stars.lib");
+    std::string netlistFileName = FilePath(Action::STA, topModule + "_stars.v");
+    std::string sdfFileName = FilePath(Action::STA, topModule + "_stars.sdf");
+    std::string sdcFileName = FilePath(Action::STA, topModule + "_stars.sdc");
     if (std::filesystem::is_regular_file(libFileName) &&
         std::filesystem::is_regular_file(netlistFileName) &&
         std::filesystem::is_regular_file(sdfFileName) &&
@@ -1062,9 +1072,10 @@ bool CompilerRS::TimingAnalysis() {
           BaseStaScript(libFileName, netlistFileName, sdfFileName, sdcFileName);
       FileUtils::WriteToFile(file, taCommand);
     } else {
-      ErrorMessage(
-          "No required design info generated for user design, required "
-          "for timing analysis");
+      auto fileList = StringUtils::join(
+          {libFileName, netlistFileName, sdfFileName, sdcFileName}, ", ");
+      ErrorMessage("No required design info (" + fileList +
+                   ") generated for user design, required for timing analysis");
       return false;
     }
   } else {  // use vpr/tatum engine
