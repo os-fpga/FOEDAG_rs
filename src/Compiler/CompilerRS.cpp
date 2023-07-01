@@ -712,12 +712,14 @@ std::string CompilerRS::BaseVprCommand() {
     vpr_skip_fixup = "off";
   }
 
+  auto sdcFile =
+      FilePath(Action::Pack, ProjManager()->projectName() + "_openfpga.sdc")
+          .string();
   std::string command =
       m_vprExecutablePath.string() + std::string(" ") +
       m_architectureFile.string() + std::string(" ") +
       std::string(
-          netlistFile + std::string(" --sdc_file ") +
-          std::string(m_projManager->projectName() + "_openfpga.sdc") +
+          netlistFile + std::string(" --sdc_file ") + sdcFile +
           std::string(" --route_chan_width ") +
           std::to_string(m_channel_width) +
           " --suppress_warnings check_rr_node_warnings.log,check_rr_node"
