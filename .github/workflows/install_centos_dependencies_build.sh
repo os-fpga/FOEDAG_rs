@@ -62,3 +62,4 @@ else
   make install
   cd ..
 fi
+rm -rf qt-everywhere-src-5.15.4.tar.xz qt-everywhere-src-5.15.4
