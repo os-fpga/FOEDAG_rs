@@ -235,8 +235,8 @@ void CFG_ddb_gen_database_00(const std::string& device,
       index += 8;
       end_index = line.find("\"", index);
       CFG_ASSERT(end_index != std::string::npos);
-      id = (uint32_t)(CFG_convert_string_to_u64(
-          line.substr(index, end_index - index)));
+      id = (uint32_t)(
+          CFG_convert_string_to_u64(line.substr(index, end_index - index)));
       index = line.find("path=\"", end_index);
       CFG_ASSERT(index != std::string::npos);
       index += 6;
