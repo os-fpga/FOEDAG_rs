@@ -39,13 +39,13 @@ endif()
 
 #################################################################################################################
 #
-# Two elements will be built 
+# Three elements will be built
 #
-# 1. subsystem library (in this case ${subsystem}) - it contains all the core code to generate bitstream. It will be called by other elements
+# 1. subsystem library (in this case bitassembler) - it contains all the core code to generate bitstream. It will be called by other elements
 #
 # 2. raptor_bin executable (in this case raptor_bitassembler exe) - it is external command line entry which eventually call subsystem library (item 1)
 #
-# 3. test_bin executable (in this case ${subsystem}_test exe) - it is external command line entry which eventually call subsystem library (item 1) for unit testing
+# 3. test_bin executable (in this case bitassembler_test exe) - it is external command line entry which eventually call subsystem library (item 1) for unit testing
 #
 #################################################################################################################
 
