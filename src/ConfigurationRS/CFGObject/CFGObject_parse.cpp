@@ -66,7 +66,7 @@ static void CFGObject_parse_object(std::ofstream& file, const uint8_t* data,
   index++;
   CFG_ASSERT(index < data_size);
   std::string object_name =
-      CFGObject::get_string(data, data_size, index, 16, 2);
+      CFG_get_string_from_bytes(data, data_size, index, 16, 2);
   file << space.c_str() << object_name.c_str()
        << " (type: " << object_type.c_str() << ")";
   file.flush();
@@ -124,7 +124,7 @@ static void CFGObject_parse_object(std::ofstream& file, const uint8_t* data,
                         CFGObject::read_raw_datas(data, data_size, index, i64),
                         space + "  ", detail);
   } else if (object_type == "str") {
-    std::string string = CFGObject::get_string(data, data_size, index);
+    std::string string = CFG_get_string_from_bytes(data, data_size, index);
     file << " " << string.c_str() << "\n";
   } else if (object_type == "class") {
     file << "\n";
@@ -136,47 +136,6 @@ static void CFGObject_parse_object(std::ofstream& file, const uint8_t* data,
                                 space + "  ", detail);
   }
   object_count++;
-}
-
-std::string CFGObject::get_string(const uint8_t* data, size_t data_size,
-                                  size_t& index, int max_size, int min_size,
-                                  int null_check) {
-  CFG_ASSERT(data != nullptr && data_size > 0);
-  CFG_ASSERT(index < data_size);
-  size_t available_size = data_size - index;
-  if (max_size == -1) {
-    max_size = int(available_size);
-  } else {
-    CFG_ASSERT(max_size > 0);
-    CFG_ASSERT(max_size <= (int)(available_size));
-  }
-  std::string string = "";
-  int current_index = 0;
-  while (1) {
-    CFG_ASSERT(index < data_size);
-    current_index++;
-    if (data[index]) {
-      string.push_back(char(data[index]));
-      index++;
-    } else {
-      index++;
-      break;
-    }
-    if (current_index == max_size) {
-      break;
-    }
-  }
-  CFG_ASSERT(min_size == -1 || int(string.size()) >= min_size);
-  if (null_check != -1) {
-    CFG_ASSERT(current_index <= null_check);
-    while (current_index < null_check) {
-      CFG_ASSERT(index < data_size);
-      CFG_ASSERT(data[index] == 0);
-      index++;
-      current_index++;
-    }
-  }
-  return string;
 }
 
 void CFGObject::parse(const std::string& input_filepath,
@@ -200,8 +159,8 @@ void CFGObject::parse(const std::string& input_filepath,
   CFG_ASSERT(file.is_open());
 
   size_t index = 0;
-  std::string object_name =
-      get_string(&input_data[0], input_data.size(), index, 8, 2, 8);
+  std::string object_name = CFG_get_string_from_bytes(
+      &input_data[0], input_data.size(), index, 8, 2, 8);
   file << "CFGObject: " << object_name.c_str() << "\n";
 
   uint64_t object_count =

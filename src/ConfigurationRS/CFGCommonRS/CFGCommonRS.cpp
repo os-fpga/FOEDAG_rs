@@ -268,6 +268,20 @@ std::string CFG_convert_bytes_to_hex_string(uint8_t* data, size_t size,
   return hex_string;
 }
 
+std::string CFG_print_strings_to_string(const std::vector<std::string>& strings,
+                                        const std::string& seperator) {
+  std::string string = "";
+  for (auto& iter : strings) {
+    if (string.size()) {
+      string =
+          CFG_print("%s%s%s", string.c_str(), seperator.c_str(), iter.c_str());
+    } else {
+      string = iter;
+    }
+  }
+  return string;
+}
+
 void CFG_compress(const uint8_t* input, const size_t input_size,
                   std::vector<uint8_t>& output, size_t* header_size,
                   const bool debug, const bool retry) {
@@ -545,6 +559,47 @@ void CFG_print_binary_line_by_line(std::ofstream& file, const uint8_t* data,
     }
   }
   file << "\n";
+}
+
+std::string CFG_get_string_from_bytes(const uint8_t* data, size_t data_size,
+                                      size_t& index, int max_size, int min_size,
+                                      int null_check) {
+  CFG_ASSERT(data != nullptr && data_size > 0);
+  CFG_ASSERT(index < data_size);
+  size_t available_size = data_size - index;
+  if (max_size == -1) {
+    max_size = int(available_size);
+  } else {
+    CFG_ASSERT(max_size > 0);
+    CFG_ASSERT(max_size <= (int)(available_size));
+  }
+  std::string string = "";
+  int current_index = 0;
+  while (1) {
+    CFG_ASSERT(index < data_size);
+    current_index++;
+    if (data[index]) {
+      string.push_back(char(data[index]));
+      index++;
+    } else {
+      index++;
+      break;
+    }
+    if (current_index == max_size) {
+      break;
+    }
+  }
+  CFG_ASSERT(min_size == -1 || int(string.size()) >= min_size);
+  if (null_check != -1) {
+    CFG_ASSERT(current_index <= null_check);
+    while (current_index < null_check) {
+      CFG_ASSERT(index < data_size);
+      CFG_ASSERT(data[index] == 0);
+      index++;
+      current_index++;
+    }
+  }
+  return string;
 }
 
 std::string CFG_get_machine_name() {

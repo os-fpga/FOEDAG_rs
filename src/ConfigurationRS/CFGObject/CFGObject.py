@@ -17,6 +17,7 @@ SUPPORTED_TYPES = {
                     "i32s"   : ["std::vector<int32_t>", "{}"],
                     "i64s"   : ["std::vector<int64_t>", "{}"],
                     "str"    : ["std::string", "\"\""],
+                    "strs"   : ["std::vector<std::string>", "{}"],
                     None :  ["class", ""]
                 }
 

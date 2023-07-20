@@ -28,6 +28,7 @@ struct BitGen_BITSTREAM_ACTION {
   BitGen_BITSTREAM_ACTION(const std::string& a);
   ~BitGen_BITSTREAM_ACTION();
   uint16_t action = 0;
+  bool has_original_payload_size = false;
   bool has_checksum = false;
   std::vector<uint8_t> field = {};
   std::vector<uint8_t> iv = {};

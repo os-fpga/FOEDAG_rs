@@ -22,8 +22,8 @@ class BitGen_JSON {
  protected:
   static BitGen_BITSTREAM_ACTION* gen_standard_action(
       const nlohmann::json& json, const std::string& info,
-      const std::string name, uint16_t cmd, bool has_checksum,
-      bool has_payload);
+      const std::string name, uint16_t cmd, bool has_payload,
+      bool has_original_payload_size, bool has_checksum);
 };
 
 #endif

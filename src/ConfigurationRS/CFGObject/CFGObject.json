@@ -30,6 +30,40 @@
 								]
 					} 
 			],
+    "DDB_00" : [
+                    {
+                        "name" : "device",
+                        "type" : "str"
+                    },
+                    {
+                        "name" : "types",
+                        "type" : "strs"
+                    },
+                    {
+                        "name" : "bits",
+                        "type" : "u32s",
+                        "cmp"  : true
+                    },
+                    {
+                        "name" : "paths",
+                        "type" : "strs"
+                    },
+                    {
+                        "name" : "ips",
+                        "type" : "u32s",
+                        "cmp"  : true
+                    },
+                    {
+                        "name" : "bls",
+                        "type" : "u32s",
+                        "cmp"  : true
+                    },
+                    {
+                        "name" : "wls",
+                        "type" : "u32s",
+                        "cmp"  : true
+                    }
+                ],
 	"UTST" : [
                 { 	"name"  : "boolean",
                     "type"  : "bool"
@@ -54,6 +88,9 @@
                 },
                 { 	"name"  : "str",
                     "type"  : "str"
+                },
+                {   "name"  : "strs",
+                    "type"  : "strs"
                 },
                 { 	"name"  : "list0",
                     "type"  : [

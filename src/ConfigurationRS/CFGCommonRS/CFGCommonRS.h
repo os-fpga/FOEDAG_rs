@@ -26,6 +26,9 @@ std::string CFG_convert_bytes_to_hex_string(uint8_t* data, size_t size,
                                             std::string delimiter = "",
                                             bool hex_prefix = false);
 
+std::string CFG_print_strings_to_string(const std::vector<std::string>& strings,
+                                        const std::string& seperator);
+
 void CFG_compress(const uint8_t* input, const size_t input_size,
                   std::vector<uint8_t>& output, size_t* header_size = nullptr,
                   const bool debug = false, const bool retry = true);
@@ -73,6 +76,10 @@ void CFG_print_binary_line_by_line(std::ofstream& file, const uint8_t* data,
                                    const uint64_t data_alignment,
                                    const std::string space, bool detail);
 
+std::string CFG_get_string_from_bytes(const uint8_t* data, size_t data_size,
+                                      size_t& index, int max_size = -1,
+                                      int min_size = -1, int null_check = -1);
+
 std::string CFG_get_machine_name();
 
 uint32_t CFG_get_volume_serial_number();
@@ -86,12 +93,13 @@ void CFG_UNTRACK_MEM(void* ptr, const char* filename, size_t line);
 
 #if 1
 template <typename T>
-inline T* CFG_mem_new_function(T* ptr) {
+inline T* CFG_mem_new_function(const char* filename, uint32_t lineno, T* ptr) {
   CFG_ASSERT(ptr != nullptr);
-  CFG_TRACK_MEM(ptr, __FILENAME__, __LINE__);
+  CFG_TRACK_MEM(ptr, filename, lineno);
   return ptr;
 }
-#define CFG_MEM_NEW(T, ...) CFG_mem_new_function<T>(new T(__VA_ARGS__));
+#define CFG_MEM_NEW(T, ...) \
+  CFG_mem_new_function<T>(__FILENAME__, __LINE__, new T(__VA_ARGS__));
 #else
 // This easier way work for GCC but not MSVC
 #define CFG_MEM_NEW(CLASS, ...)                 \
@@ -107,6 +115,7 @@ inline T* CFG_mem_new_function(T* ptr) {
   if (ptr != nullptr) {                           \
     CFG_UNTRACK_MEM(ptr, __FILENAME__, __LINE__); \
     delete ptr;                                   \
+    ptr = nullptr;                                \
   }
 
 #endif

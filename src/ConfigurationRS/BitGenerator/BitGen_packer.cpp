@@ -277,6 +277,10 @@ static void BitGen_PACKER_gen_action(
   if (action->payload.size()) {
     CFG_ASSERT(payload.size());
     CFG_append_u32(action_header, (uint32_t)(payload.size()));
+    // Original payload size if applicable
+    if (action->has_original_payload_size) {
+      CFG_append_u32(action_header, (uint32_t)(action->payload.size()));
+    }
     // Checksum if applicable
     if (action->has_checksum) {
       uint32_t checksum_size = 0;
@@ -290,6 +294,8 @@ static void BitGen_PACKER_gen_action(
     }
   } else {
     CFG_ASSERT(payload.empty());
+    CFG_ASSERT(!action->has_original_payload_size);
+    CFG_ASSERT(!action->has_checksum);
     CFG_append_u32(action_header, 0);
   }
   // Other field
@@ -308,6 +314,9 @@ static void BitGen_PACKER_gen_action(
   // not legal if you cannot fit action in one 2k block
   CFG_ASSERT(action_header.size() <= BitGen_BITSTREAM_BLOCK_SIZE);
   // Update command and size last
+  if (action->payload.size() != 0 && action->has_original_payload_size) {
+    action_header[1] |= 0x80;
+  }
   if (action->payload.size() != 0 && action->has_checksum) {
     action_header[1] |= 0x10;
   }

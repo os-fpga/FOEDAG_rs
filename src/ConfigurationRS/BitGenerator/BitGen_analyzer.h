@@ -74,14 +74,16 @@ struct BitGen_ANALYZER_STATUS {
 struct BitGen_ANALYZER_ACTION {
   ~BitGen_ANALYZER_ACTION() { memset(iv, 0, sizeof(iv)); }
   uint16_t cmd = 0;
-  bool checksum = false;
+  bool has_checksum = false;
   bool compression = false;
   bool has_iv = false;
+  bool has_original_payload_size = false;
   uint16_t size = 0;
   uint16_t field_size = 0;
   uint16_t iv_size = 0;
   uint8_t iv[16] = {0};
   uint32_t payload_size = 0;
+  uint32_t original_payload_size = 0;
   uint32_t checksum_value = 0;
   // tracker
   uint16_t field_tracker = 0;

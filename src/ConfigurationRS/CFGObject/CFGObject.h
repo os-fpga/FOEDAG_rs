@@ -10,8 +10,8 @@
 // Never change the ordering of the supported types
 // Otherwise you will mess up the enum in the out-going file
 const std::vector<std::string> SUPPORTED_TYPES = {
-    "bool", "u8",   "u16",  "u32",  "u64",  "i32", "i64",   "u8s",
-    "u16s", "u32s", "u64s", "i32s", "i64s", "str", "class", "list"};
+    "bool", "u8",   "u16",  "u32",  "u64", "i32",  "i64",   "u8s", "u16s",
+    "u32s", "u64s", "i32s", "i64s", "str", "strs", "class", "list"};
 
 struct CFGObject_RULE {
   CFGObject_RULE(std::string n, bool e, bool c, void* p, const std::string& t)
@@ -42,6 +42,8 @@ class CFGObject {
   CFGObject(const std::string& n, const std::vector<CFGObject_RULE>& r)
       : name(n), rules(r) {}
 
+  // Let caller doubel confirm the name of CFGObject
+  std::string get_name() const;
   // Write individual member
   void write_bool(const std::string& name, bool value) const;
   void write_u8(const std::string& name, uint8_t value) const;
@@ -57,6 +59,8 @@ class CFGObject {
   void write_i32s(const std::string& name, std::vector<int32_t> value) const;
   void write_i64s(const std::string& name, std::vector<int64_t> value) const;
   void write_str(const std::string& name, const std::string& value) const;
+  void write_strs(const std::string& name,
+                  std::vector<std::string> value) const;
   void append_u8s(const std::string& name, std::vector<uint8_t> value) const;
   void append_u16s(const std::string& name, std::vector<uint16_t> value) const;
   void append_u32s(const std::string& name, std::vector<uint32_t> value) const;
@@ -64,6 +68,8 @@ class CFGObject {
   void append_i32s(const std::string& name, std::vector<int32_t> value) const;
   void append_i64s(const std::string& name, std::vector<int64_t> value) const;
   void append_str(const std::string& name, const std::string& value) const;
+  void append_strs(const std::string& name,
+                   std::vector<std::string> value) const;
   void append_u8(const std::string& name, uint8_t value) const;
   void append_u16(const std::string& name, uint16_t value) const;
   void append_u32(const std::string& name, uint32_t value) const;
@@ -75,9 +81,10 @@ class CFGObject {
   // File IO
   bool write(const std::string& filepath,
              std::vector<std::string>* errors = nullptr);
+  bool read(std::vector<uint8_t>& data,
+            std::vector<std::string>* errors = nullptr);
   bool read(const std::string& filepath,
             std::vector<std::string>* errors = nullptr);
-
   // Generic, Helper (Public)
   void set_parent_ptr(const CFGObject* pp) const;
   uint64_t get_object_count() const;
@@ -85,9 +92,6 @@ class CFGObject {
   // Static
   static void parse(const std::string& input_filepath,
                     const std::string& output_filepath, bool detail);
-  static std::string get_string(const uint8_t* data, size_t data_size,
-                                size_t& index, int max_size = -1,
-                                int min_size = -1, int null_check = -1);
   template <typename T>
   static void deserialize_data(const uint8_t* data, size_t data_size,
                                size_t& index, T& value);

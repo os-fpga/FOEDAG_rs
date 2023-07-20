@@ -1,7 +1,5 @@
 #include "BitGen_analyzer.h"
 
-#include "CFGObject/CFGObject.h"
-
 BitGen_ANALYZER::BitGen_ANALYZER(const std::string& filepath,
                                  std::ofstream* file,
                                  std::vector<uint8_t>* aes_key)
@@ -20,7 +18,7 @@ BitGen_ANALYZER::~BitGen_ANALYZER() {
 std::string BitGen_ANALYZER::get_null_terminate_string(const uint8_t* data,
                                                        size_t max_size) {
   size_t index = 0;
-  return CFGObject::get_string(data, max_size, index, -1, -1, max_size);
+  return CFG_get_string_from_bytes(data, max_size, index, -1, -1, max_size);
 }
 
 template <typename T>
@@ -192,29 +190,52 @@ bool BitGen_ANALYZER::parse_bop(const uint8_t* data, size_t size,
                     CFG_print(
                         "Impossible %s file size is not multiple of 4 Bytes",
                         binfilepath.c_str()));
-              } else if (actions.front()->checksum) {
-                (*m_file) << space.c_str() << "Info: Verify checksum of "
-                          << binfilepath.c_str() << "\n";
-                uint8_t checksum_enum =
-                    BitGen_PACKER::get_feature_u8_enum(m_header.checksum);
-                uint32_t checksum_size = 0;
-                uint64_t u64 = BitGen_PACKER::calc_checksum(
-                    bindata, checksum_enum, checksum_size);
-                CFG_ASSERT(checksum_size == 4);
-                uint32_t payload_checksum = (uint32_t)(u64);
-                if (actions.front()->checksum_value == payload_checksum) {
-                  (*m_file) << space.c_str()
-                            << "Info: Successfully verify checksum for "
-                            << binfilepath.c_str() << "\n";
-                } else {
-                  post_error(space, CFG_print("Fail to veriy checksum for %s",
-                                              binfilepath.c_str()));
-                  m_status.status = false;
-                  m_status.checksum_status = false;
-                }
               } else {
-                (*m_file) << space.c_str() << "Info: Do not check checksum for "
-                          << binfilepath.c_str() << " \n";
+                if (actions.front()->has_original_payload_size) {
+                  if (actions.front()->original_payload_size ==
+                      (uint32_t)(bindata.size())) {
+                    (*m_file) << space.c_str()
+                              << "Info: Successfully verify original payload "
+                                 "size for "
+                              << binfilepath.c_str() << "\n";
+                  } else {
+                    post_error(
+                        space,
+                        CFG_print("Fail to verify original payload size for %s",
+                                  binfilepath.c_str()));
+                    m_status.status = false;
+                    m_status.checksum_status = false;
+                  }
+                } else {
+                  (*m_file) << space.c_str()
+                            << "Info: Do not check original payload size for "
+                            << binfilepath.c_str() << " \n";
+                }
+                if (actions.front()->has_checksum) {
+                  (*m_file) << space.c_str() << "Info: Verify checksum of "
+                            << binfilepath.c_str() << "\n";
+                  uint8_t checksum_enum =
+                      BitGen_PACKER::get_feature_u8_enum(m_header.checksum);
+                  uint32_t checksum_size = 0;
+                  uint64_t u64 = BitGen_PACKER::calc_checksum(
+                      bindata, checksum_enum, checksum_size);
+                  CFG_ASSERT(checksum_size == 4);
+                  uint32_t payload_checksum = (uint32_t)(u64);
+                  if (actions.front()->checksum_value == payload_checksum) {
+                    (*m_file) << space.c_str()
+                              << "Info: Successfully verify checksum for "
+                              << binfilepath.c_str() << "\n";
+                  } else {
+                    post_error(space, CFG_print("Fail to veriy checksum for %s",
+                                                binfilepath.c_str()));
+                    m_status.status = false;
+                    m_status.checksum_status = false;
+                  }
+                } else {
+                  (*m_file)
+                      << space.c_str() << "Info: Do not check checksum for "
+                      << binfilepath.c_str() << " \n";
+                }
               }
             }
           }
@@ -360,18 +381,16 @@ void BitGen_ANALYZER::parse_action(
           } else if ((i + (action_size / 4)) > size) {
             push_error(msgs, "Invalid overflow size action");
             m_status.action_status = false;
-          } else if (data[i] & 0x8000) {
-            push_error(msgs, "Invalid Bit15 set in command");
-            m_status.action_status = false;
           } else {
             BitGen_ANALYZER_ACTION* action =
                 CFG_MEM_NEW(BitGen_ANALYZER_ACTION);
             action->cmd = data[i] & 0xFFF;
-            action->checksum = (data[i] & 0x1000) != 0;
+            action->has_checksum = (data[i] & 0x1000) != 0;
             action->compression = (data[i] & 0x2000) != 0;
             action->has_iv = (data[i] & 0x4000) != 0;
+            action->has_original_payload_size = (data[i] & 0x8000) != 0;
             action->size = (uint16_t)(action_size);
-            if (data[i + 1] == 0 && action->checksum) {
+            if (data[i + 1] == 0 && action->has_checksum) {
               push_error(
                   msgs, "Invalid Bit12 set in command but there is no payload");
               m_status.action_status = false;
@@ -385,15 +404,22 @@ void BitGen_ANALYZER::parse_action(
                   msgs,
                   "Invalid Bit14 set in command but encryption feature is OFF");
               m_status.action_status = false;
+            } else if (data[i + 1] == 0 && action->has_original_payload_size) {
+              push_error(
+                  msgs, "Invalid Bit15 set in command but there is no payload");
+              m_status.action_status = false;
             } else {
               // Last step size must match up
               uint16_t minimum_size = 8;
-              if (action->checksum) {
+              if (action->has_checksum) {
                 minimum_size += 4;
               }
               if (action->has_iv) {
                 action->iv_size = 16;
                 minimum_size += 16;
+              }
+              if (action->has_original_payload_size) {
+                minimum_size += 4;
               }
               if (minimum_size > action->size) {
                 push_error(msgs, CFG_print("Invalid action size. Expected "
@@ -404,9 +430,11 @@ void BitGen_ANALYZER::parse_action(
                 action->field_size = action->size - minimum_size;
                 msgs.push_back(CFG_print(
                     " Action: 0x%03X (Checksum: %d, Force Disable "
-                    "Compression: %d, IV: %d); Size: 0x%04X (%d)",
-                    action->cmd, action->checksum, action->compression,
-                    action->has_iv, action->size, action->size));
+                    "Compression: %d, IV: %d, Original Payload Size: %d}); "
+                    "Size: 0x%04X (%d)",
+                    action->cmd, action->has_checksum, action->compression,
+                    action->has_iv, action->has_original_payload_size,
+                    action->size, action->size));
                 actions.push_back(action);
                 tracker = 1;
                 action_index++;
@@ -419,6 +447,7 @@ void BitGen_ANALYZER::parse_action(
         }
         break;
       case 1:
+        // Retrieve payload size
         CFG_ASSERT(actions.size());
         CFG_ASSERT(actions.back() != nullptr);
         actions.back()->payload_size = data[i];
@@ -438,25 +467,44 @@ void BitGen_ANALYZER::parse_action(
         if (actions.back()->size == 8) {
           tracker = 0;
         } else {
-          if (actions.back()->checksum) {
+          if (actions.back()->has_original_payload_size) {
             tracker = 2;
-          } else {
+          } else if (actions.back()->has_checksum) {
             tracker = 3;
+          } else {
+            tracker = 4;
           }
         }
         break;
       case 2:
+        // Retrieve original payload size
+        CFG_ASSERT(actions.size());
+        CFG_ASSERT(actions.back() != nullptr);
+        actions.back()->original_payload_size = data[i];
+        msgs.push_back(CFG_print("   Original Payload Size: 0x%08X", data[i]));
+        if (actions.back()->size == 12) {
+          tracker = 0;
+        } else if (actions.back()->has_checksum) {
+          tracker = 3;
+        } else {
+          tracker = 4;
+        }
+        break;
+      case 3:
         CFG_ASSERT(actions.size());
         CFG_ASSERT(actions.back() != nullptr);
         actions.back()->checksum_value = data[i];
         msgs.push_back(CFG_print("   Checksum: 0x%08X", data[i]));
-        if (actions.back()->size == 12) {
+        if ((actions.back()->has_original_payload_size &&
+             actions.back()->size == 16) ||
+            (!actions.back()->has_original_payload_size &&
+             actions.back()->size == 12)) {
           tracker = 0;
         } else {
-          tracker = 3;
+          tracker = 4;
         }
         break;
-      case 3:
+      case 4:
         CFG_ASSERT(actions.size());
         CFG_ASSERT(actions.back() != nullptr);
         if (actions.back()->field_tracker < actions.back()->field_size) {
