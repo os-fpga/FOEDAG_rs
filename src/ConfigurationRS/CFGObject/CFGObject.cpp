@@ -3,6 +3,8 @@
 #define OPTIMIZE_DATA_LENGTH
 
 // Public functions
+std::string CFGObject::get_name() const { return name; }
+
 void CFGObject::write_bool(const std::string& name, bool value) const {
   write_data(name, "bool", value);
 }
@@ -66,6 +68,11 @@ void CFGObject::write_str(const std::string& name,
   write_data(name, "str", value);
 }
 
+void CFGObject::write_strs(const std::string& name,
+                           std::vector<std::string> value) const {
+  write_data(name, "strs", value);
+}
+
 void CFGObject::append_u8s(const std::string& name,
                            std::vector<uint8_t> value) const {
   append_datas(name, "u8s", value);
@@ -99,6 +106,11 @@ void CFGObject::append_i64s(const std::string& name,
 void CFGObject::append_str(const std::string& name,
                            const std::string& value) const {
   append_datas(name, "str", value);
+}
+
+void CFGObject::append_strs(const std::string& name,
+                            std::vector<std::string> value) const {
+  append_datas(name, "strs", value);
 }
 
 void CFGObject::append_u8(const std::string& name, uint8_t value) const {
@@ -170,7 +182,7 @@ bool CFGObject::write(const std::string& filepath,
   return status;
 }
 
-bool CFGObject::read(const std::string& filepath,
+bool CFGObject::read(std::vector<uint8_t>& data,
                      std::vector<std::string>* errors) {
   // Only allow reading data at top level
   CFG_ASSERT(parent_ptr == nullptr);
@@ -180,8 +192,6 @@ bool CFGObject::read(const std::string& filepath,
   uint64_t object_count = get_object_count();
   CFG_ASSERT(object_count == 0);
 
-  std::vector<uint8_t> data;
-  CFG_read_binary_file(filepath, data);
   // at least 8 bytes name, 1 byte total object, 1 byte object (smallest bool or
   // uint8_t), 1 byte value, 2 bytes CRC
   CFG_ASSERT(data.size() >= 13);
@@ -195,7 +205,8 @@ bool CFGObject::read(const std::string& filepath,
 
   // Make sure filename is good
   size_t index = 0;
-  std::string filename = get_string(&data[0], data.size(), index, 8, 2, 8);
+  std::string filename =
+      CFG_get_string_from_bytes(&data[0], data.size(), index, 8, 2, 8);
   CFG_ASSERT(filename == name);
 
   // Get the object count
@@ -212,6 +223,21 @@ bool CFGObject::read(const std::string& filepath,
 
   // Check rule
   return check_rule(errors);
+}
+
+bool CFGObject::read(const std::string& filepath,
+                     std::vector<std::string>* errors) {
+  // Only allow reading data at top level
+  CFG_ASSERT(parent_ptr == nullptr);
+  CFG_ASSERT(name.size() >= 2 && name.size() <= 8);
+
+  // The class should be started from a blank one
+  uint64_t object_count = get_object_count();
+  CFG_ASSERT(object_count == 0);
+
+  std::vector<uint8_t> data;
+  CFG_read_binary_file(filepath, data);
+  return read(data, errors);
 }
 
 // Generic, Helper
@@ -431,6 +457,16 @@ void CFGObject::serialize_value(std::vector<uint8_t>& data,
       data.push_back((uint8_t)(c));
     }
     data.push_back(0);
+  } else if (rule->type == "strs") {
+    std::vector<std::string>* strings =
+        reinterpret_cast<std::vector<std::string>*>(ptr);
+    CFG_write_variable_u64(data, (uint64_t)(strings->size()));
+    for (auto string : *strings) {
+      for (auto c : string) {
+        data.push_back((uint8_t)(c));
+      }
+      data.push_back(0);
+    }
   } else {
     CFG_INTERNAL_ERROR("serialize_value(): Unsupported type %s",
                        rule->type.c_str());
@@ -446,7 +482,8 @@ void CFGObject::parse_object(const uint8_t* data, size_t data_size,
   std::string object_type = SUPPORTED_TYPES[data[index]];
   index++;
   CFG_ASSERT(index < data_size);
-  std::string object_name = get_string(data, data_size, index, 16, 2);
+  std::string object_name =
+      CFG_get_string_from_bytes(data, data_size, index, 16, 2);
   const CFGObject_RULE* rule = get_rule(object_name);
   CFG_ASSERT(rule->type == object_type);
   if (object_type == "bool") {
@@ -476,7 +513,14 @@ void CFGObject::parse_object(const uint8_t* data, size_t data_size,
   } else if (object_type == "i64s") {
     read_datas(data, data_size, index, rule, int64_t(0));
   } else if (object_type == "str") {
-    write_data(rule, get_string(data, data_size, index));
+    write_data(rule, CFG_get_string_from_bytes(data, data_size, index));
+  } else if (object_type == "strs") {
+    uint64_t list_count = CFG_read_variable_u64(data, data_size, index, 10);
+    std::vector<std::string> strs;
+    for (uint64_t i = 0; i < list_count; i++) {
+      strs.push_back(CFG_get_string_from_bytes(data, data_size, index));
+    }
+    write_data(rule, strs);
   } else if (object_type == "class") {
     const CFGObject* ptr = reinterpret_cast<const CFGObject*>(rule->ptr);
     ptr->parse_class_object(data, data_size, index, object_count);
@@ -556,14 +600,11 @@ std::vector<T> CFGObject::read_raw_datas(const uint8_t* data, size_t data_size,
     size_t compression_total_size = temp_index - index + compress_size;
     CFG_decompress(&data[index], compression_total_size, temp_data);
     CFG_ASSERT(original_size == temp_data.size());
-    const uint8_t* temp_data_ptr = &temp_data[0];
-    size_t temp_data_size = temp_data.size();
-    temp_index = 0;
-    for (uint64_t i = 0; i < list_count; i++) {
-      deserialize_data(temp_data_ptr, temp_data_size, temp_index, value);
-      values.push_back(value);
-    }
-    CFG_ASSERT(temp_index == (size_t)(original_size));
+    // When compression happen, data is raw
+    // We cannot use deserialisze method to read the data since deserialisze
+    // might use dynamic way (depends on compression flag)
+    values.resize(list_count);
+    memcpy(&values[0], &temp_data[0], original_size);
     index += compression_total_size;
   } else {
     for (uint64_t i = 0; i < list_count; i++) {
@@ -643,7 +684,7 @@ void CFGObject::deserialize_data(const uint8_t* data, size_t data_size,
 #else
   value = 0;
   for (size_t i = 0; i < sizeof(T); i++) {
-    value |= (((uint64_t)(data[index]) & 0xFF) << (i * 8));
+    value |= (((uint64_t)(data[index++]) & 0xFF) << (i * 8));
   }
 #endif
 }
@@ -651,22 +692,28 @@ void CFGObject::deserialize_data(const uint8_t* data, size_t data_size,
 template <typename T>
 void CFGObject::serialize_datas(std::vector<uint8_t>& data,
                                 std::vector<T>& value, bool compress) const {
+  std::vector<uint8_t> temp;
+  for (auto v : value) {
+    serialize_data(temp, v);
+  }
   if (compress) {
     uint8_t* original_data = reinterpret_cast<uint8_t*>(&value[0]);
     size_t original_size = (value.size() * sizeof(T));
     std::vector<uint8_t> compress_data;
     CFG_compress(original_data, original_size, compress_data, nullptr, false);
-    if (original_size > compress_data.size()) {
+    if (temp.size() > compress_data.size()) {
       CFG_write_variable_u64(data, (uint64_t)(value.size()) << 1 | 1);
       data.insert(data.end(), compress_data.begin(), compress_data.end());
     } else {
       compress = false;
     }
+    memset(&compress_data[0], 0, compress_data.size());
+    compress_data.clear();
   }
   if (!compress) {
     CFG_write_variable_u64(data, (uint64_t)(value.size()) << 1);
-    for (auto v : value) {
-      serialize_data(data, v);
-    }
+    data.insert(data.end(), temp.begin(), temp.end());
   }
+  memset(&temp[0], 0, temp.size());
+  temp.clear();
 }

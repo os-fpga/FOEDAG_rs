@@ -62,17 +62,63 @@
       ],
       "help" : [
          "Configuration file generation tool. To generate:\n",
-         "1. Configuration bitstream (default operation)\n",
-         "    --{compress} --aes_key={input AES key binary file}",
-         "    --signing_key={input .pem} <input .bitasm> <output .cfgbit>\n",
-         "2. Signing private PEM\n",
-         "    --operation=gen_private_pem --{no_passphrase}",
-         "    --passphase={passphase or text file}",
-         "    --signing_key=<prime256v1|rsa2048> <output .pem>\n",
-         "3. Signing public PEM\n",
-         "    --operation=gen_public_pem --passphase={passphase or text file}",
-         "    <input .pem> <output .pem>"
+         "  1. Configuration bitstream (default operation)\n",
+         "      --{compress} --aes_key={input AES key binary file}",
+         "      --signing_key={input .pem} <input .bitasm> <output .cfgbit>\n",
+         "  2. Signing private PEM\n",
+         "      --operation=gen_private_pem --{no_passphrase}",
+         "      --passphase={passphase or text file}",
+         "      --signing_key=<prime256v1|rsa2048> <output .pem>\n",
+         "  3. Signing public PEM\n",
+         "      --operation=gen_public_pem --passphase={passphase or text file}",
+         "      <input .pem> <output .pem>"
       ],
       "arg" : [1, 2]
+   },
+   "bitasm": {
+      "option" : [
+         {  
+            "name" : "operation",
+            "short" : "o",
+            "type" : "gen_device_database|gen_bitstream_bit|gen_fabric_bitstream_xml",
+            "help" : "File generation operation"
+         },
+         {
+            "name" : "device",
+            "short" : "d",
+            "type" : "str",
+            "optional" : true,
+            "help" : "Device name or device database file (.ddb)"
+         },
+         {
+            "name" : "protocol",
+            "short" : "p",
+            "type" : "ccff|latch",
+            "optional" : true,
+            "help" : ["Configuration protocol. Must be specified in fabric bitstream",
+                      "XML generation"]
+         },
+         {
+            "name" : "reverse",
+            "short" : "r",
+            "type" : "flag",
+            "optional" : true,
+            "help" : "Write configuration bits in reversed order in XML"
+         }
+      ],
+      "help" : [
+         "Internal configuration related file generation tool. To generate:\n",
+         "  1. Device database file from JSON\n",
+         "      --operation=gen_device_database --device=<device name>",
+         "      <input fabric bitstream .xml> <output .ddb>\n",
+         "  2. Fabric bitstream (in LATCH format)\n",
+         "      --operation=gen_bitstream_bit --device=<device name or .ddb>",
+         "      <input .bit in CCFF format> <output .bit in LATCH format>\n",
+         "  3. Fabric bitstream XML\n",
+         "      --operation=gen_fabric_bitstream_xml --device=<device name or .ddb>",
+         "      --protocol=<ccff|latch> --{reserve} <input .bit in CCFF format>",
+         "      <output .xml in CCFF format>\n"
+      ],
+      "arg" : [2, 2]
    }
 }

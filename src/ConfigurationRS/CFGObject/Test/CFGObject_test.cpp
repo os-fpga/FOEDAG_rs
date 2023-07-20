@@ -1,13 +1,15 @@
 #include "CFGCommonRS/CFGCommonRS.h"
 #include "CFGObject_auto.h"
+#include "nlohmann_json/json.hpp"
 
 const std::vector<std::string> EMPTY_OBJECT_ERRORS = {
-    "boolean does not exist", "u8 does not exist",
-    "u16 does not exist",     "u32 does not exist",
-    "i64 does not exist",     "u8s does not exist",
-    "i64s does not exist",    "str does not exist",
-    "list0 does not exist",   "object does not exist",
-    "cmp does not exist",     "data_after_cmp does not exist"};
+    "boolean does not exist",       "u8 does not exist",
+    "u16 does not exist",           "u32 does not exist",
+    "i64 does not exist",           "u8s does not exist",
+    "i64s does not exist",          "str does not exist",
+    "strs does not exist",          "list0 does not exist",
+    "object does not exist",        "cmp does not exist",
+    "data_after_cmp does not exist"};
 
 const std::vector<std::string> FIRST_TEST_OBJECT_ERRORS = {
     "u8 does not exist",    "u32 does not exist",  "i64s does not exist",
@@ -72,6 +74,9 @@ int main(int argc, const char** argv) {
   CFG_ASSERT(utst.list0.back()->u16s.size() == 1);
   CFG_ASSERT(utst.list0.back()->u16s[0] == 1000);
 
+  utst.write_strs("strs", {"abc", "def"});
+  utst.append_strs("strs", {"ghi", "", "jkl"});
+
   // Check the error msg again
   CFG_ASSERT(!utst.write("utst.bin", &errors));
   CFG_ASSERT(errors.size() == FIRST_TEST_OBJECT_ERRORS.size());
@@ -123,6 +128,12 @@ int main(int argc, const char** argv) {
   for (size_t i = 0; i < cmp_test_data.size(); i++) {
     CFG_ASSERT(rdback.cmp[i] == cmp_test_data[i]);
   }
+  CFG_ASSERT(rdback.strs.size() == 5);
+  CFG_ASSERT(rdback.strs[0] == "abc");
+  CFG_ASSERT(rdback.strs[1] == "def");
+  CFG_ASSERT(rdback.strs[2] == "ghi");
+  CFG_ASSERT(rdback.strs[3] == "");
+  CFG_ASSERT(rdback.strs[4] == "jkl");
   CFG_ASSERT(rdback.data_after_cmp == 0x1234567890ABCDEF);
   return 0;
 }

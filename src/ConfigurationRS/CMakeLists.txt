@@ -17,7 +17,7 @@ add_custom_target(pre-configurationRS
 list(APPEND LEVEL1_SUBSYSTEMS CFGCommonRS)
 list(APPEND LEVEL2_SUBSYSTEMS CFGCrypto CFGObject)
 list(APPEND LEVEL3_SUBSYSTEMS BitAssembler BitGenerator)
-list(APPEND EXE_SUBSYSTEMS BitGenerator)
+list(APPEND EXE_SUBSYSTEMS BitAssembler BitGenerator)
 
 # Only change this if you know what it does
 list(APPEND PRE-SUBSYSTEMS ${LEVEL1_SUBSYSTEMS} ${LEVEL2_SUBSYSTEMS})
@@ -133,4 +133,5 @@ target_link_libraries(bitassembler INTERFACE cfgobject)
 target_link_libraries(bitgenerator INTERFACE cfgobject)
 target_link_libraries(bitassembler INTERFACE bitgenerator)
 
+add_dependencies(bitassembler nlohmann_json)
 add_dependencies(bitgenerator nlohmann_json)

@@ -14,6 +14,22 @@ class BitAssembler_MGR {
   void get_fcb(const CFGObject_BITOBJ_FCB* fcb);
   std::vector<std::string> m_warnings;
 
+  // public static
+ public:
+  static void ddb_gen_database(const std::string& device,
+                               const std::string& input_xml,
+                               const std::string& output_ddb);
+  static void ddb_gen_bitstream(const std::string& device,
+                                const std::string& input_bit,
+                                const std::string& output_bit, bool reverse);
+  static void ddb_gen_fabric_bitstream_xml(const std::string& device,
+                                           const std::string& protocol,
+                                           const std::string& input_bit,
+                                           const std::string& output_xml,
+                                           bool reverse);
+  static void get_one_region_ccff_fcb(const std::string& filepath,
+                                      std::vector<uint8_t>& data);
+
  private:
   template <typename T>
   uint32_t get_bitline_into_bytes(T start, T end, std::vector<uint8_t>& bytes);
