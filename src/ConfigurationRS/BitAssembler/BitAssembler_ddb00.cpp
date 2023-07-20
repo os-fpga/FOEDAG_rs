@@ -41,7 +41,7 @@ struct BitAssembler_DDB_IP_00 {
     std::vector<std::string> words = CFG_split_string(alias, "__");
     CFG_ASSERT(words.size() == 2);
     size_t index = words[0].rfind("_");
-    CFG_ASSERT(index != -1);
+    CFG_ASSERT(index != std::string::npos);
     type = words[0].substr(0, index);
     logical_col =
         (uint32_t)(CFG_convert_string_to_u64(words[0].substr(index + 1)));
