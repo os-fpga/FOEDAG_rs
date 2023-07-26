@@ -29,6 +29,7 @@ All rights reserved
 #include "Utils/FileUtils.h"
 #include "Utils/LogUtils.h"
 #include "Utils/StringUtils.h"
+#include "scope_guard/scope_guard.hpp"
 
 #ifdef PRODUCTION_BUILD
 #include "License_manager.hpp"
@@ -972,6 +973,9 @@ std::string CompilerRS::BaseStaScript(std::string libFileName,
 }
 
 bool CompilerRS::TimingAnalysis() {
+  auto guard = sg::make_scope_guard([this] {
+      RenamePostSynthesisFiles(Action::STA);
+  });
   if (!ProjManager()->HasDesign()) {
     ErrorMessage("No design specified");
     return false;
