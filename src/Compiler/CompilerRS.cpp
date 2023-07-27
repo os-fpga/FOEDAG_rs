@@ -973,9 +973,8 @@ std::string CompilerRS::BaseStaScript(std::string libFileName,
 }
 
 bool CompilerRS::TimingAnalysis() {
-  auto guard = sg::make_scope_guard([this] {
-      RenamePostSynthesisFiles(Action::STA);
-  });
+  auto guard =
+      sg::make_scope_guard([this] { RenamePostSynthesisFiles(Action::STA); });
   if (!ProjManager()->HasDesign()) {
     ErrorMessage("No design specified");
     return false;
