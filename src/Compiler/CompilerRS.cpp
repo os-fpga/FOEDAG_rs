@@ -29,7 +29,7 @@ All rights reserved
 #include "Utils/FileUtils.h"
 #include "Utils/LogUtils.h"
 #include "Utils/StringUtils.h"
-#include "scope_guard/scope_guard.hpp"
+//#include "scope_guard/scope_guard.hpp"
 
 #ifdef PRODUCTION_BUILD
 #include "License_manager.hpp"
@@ -973,8 +973,9 @@ std::string CompilerRS::BaseStaScript(std::string libFileName,
 }
 
 bool CompilerRS::TimingAnalysis() {
-  auto guard =
-      sg::make_scope_guard([this] { RenamePostSynthesisFiles(Action::STA); });
+  // auto guard =
+  //     sg::make_scope_guard([this] { RenamePostSynthesisFiles(Action::STA);
+  //     });
   if (!ProjManager()->HasDesign()) {
     ErrorMessage("No design specified");
     return false;
@@ -1095,6 +1096,7 @@ bool CompilerRS::TimingAnalysis() {
 
   status = ExecuteAndMonitorSystemCommand(taCommand, TIMING_ANALYSIS_LOG, false,
                                           workingDir);
+  RenamePostSynthesisFiles(Action::STA);
   if (status) {
     ErrorMessage("Design " + ProjManager()->projectName() +
                  " timing analysis failed!");
@@ -1103,5 +1105,113 @@ bool CompilerRS::TimingAnalysis() {
 
   Message("Design " + ProjManager()->projectName() + " is timing analysed!");
 
+  return true;
+}
+
+bool CompilerRS::PowerAnalysis() {
+  if (!ProjManager()->HasDesign()) {
+    ErrorMessage("No design specified");
+    return false;
+  }
+  if (!HasTargetDevice()) return false;
+
+  if (PowerAnalysisOpt() == PowerOpt::Clean) {
+    Message("Cleaning PowerAnalysis results for " +
+            ProjManager()->projectName());
+    PowerAnalysisOpt(PowerOpt::None);
+    m_state = State::Routed;
+    CleanFiles(Action::Power);
+    return true;
+  }
+
+  PERF_LOG("PowerAnalysis has started");
+  Message("##################################################");
+  Message("Power Analysis for design: " + ProjManager()->projectName());
+  Message("##################################################");
+
+  std::string netlistFile;
+  switch (GetNetlistType()) {
+    case NetlistType::Verilog:
+      netlistFile = ProjManager()->projectName() + "_post_synth.v";
+      break;
+    case NetlistType::VHDL:
+      // Until we have a VHDL netlist reader in VPR
+      netlistFile = ProjManager()->projectName() + "_post_synth.v";
+      break;
+    case NetlistType::Edif:
+      netlistFile = ProjManager()->projectName() + "_post_synth.edif";
+      break;
+    case NetlistType::Blif:
+      netlistFile = ProjManager()->projectName() + "_post_synth.blif";
+      break;
+    case NetlistType::EBlif:
+      netlistFile = ProjManager()->projectName() + "_post_synth.eblif";
+      break;
+  }
+  netlistFile = FilePath(Action::Synthesis, netlistFile).string();
+
+  for (const auto &lang_file : ProjManager()->DesignFiles()) {
+    switch (lang_file.first.language) {
+      case Design::Language::VERILOG_NETLIST:
+      case Design::Language::BLIF:
+      case Design::Language::EBLIF: {
+        netlistFile = lang_file.second;
+        std::filesystem::path the_path = netlistFile;
+        if (!the_path.is_absolute()) {
+          netlistFile =
+              std::filesystem::path(std::filesystem::path("..") / netlistFile)
+                  .string();
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  if (FileUtils::IsUptoDate(netlistFile,
+                            FilePath(Action::Power, "power.csv").string())) {
+    Message("Design " + ProjManager()->projectName() +
+            " power didn't change, skipping power analysis.");
+    return true;
+  }
+
+  std::string sdcFile;
+  const auto &constrFiles = ProjManager()->getConstrFiles();
+  for (const auto &file : constrFiles) {
+    if (file.find(".sdc") != std::string::npos) {
+      sdcFile = file;
+      break;
+    }
+  }
+
+  std::filesystem::path binpath = GetSession()->Context()->BinaryPath();
+  /*
+    !!! Keep as an example for how to use tclsh as a sub executable !!!
+    std::filesystem::path tclLibraryPath = binpath / ".." / "lib" / "tcl8.6";
+    std::filesystem::path tclLibPath = binpath / ".." / "lib";
+    SetEnvironmentVariable("TCLLIBPATH", tclLibPath.string());
+    SetEnvironmentVariable("TCL_LIBRARY", tclLibraryPath.string());
+    std::string command = m_tclExecutablePath.string() + " " ;
+    command += m_powerExecutablePath.string() + " " ;
+    command += "--netlist=" + netlistFile + " ";
+    command += "--sdc=" + sdcFile + " ";
+  */
+  // Use the following sub job to run the power tcl script: raptor --cmd "cmd"
+  // --script <script>
+  std::string command = m_raptorExecutablePath.string() + " ";
+  command += "--cmd \"set netlist_file " + netlistFile + "; set sdc " +
+             sdcFile + ";\" ";
+  command += "--batch ";
+  command += "--script " + m_powerExecutablePath.string() + " ";
+  int status = ExecuteAndMonitorSystemCommand(command, {}, false,
+                                              FilePath(Action::Power).string());
+  if (status) {
+    ErrorMessage("Design " + ProjManager()->projectName() +
+                 " power analysis failed");
+    return false;
+  }
+
+  Message("Design " + ProjManager()->projectName() + " is power analysed");
   return true;
 }
