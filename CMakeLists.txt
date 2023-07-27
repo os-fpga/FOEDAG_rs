@@ -175,6 +175,7 @@ target_link_libraries(raptor_gui PUBLIC rs_licenseManager)
 endif()
 
 add_dependencies(raptor_gui nlohmann_json)
+add_dependencies(raptor_gui scope_guard)
 #set_target_properties(raptor_gui PROPERTIES PUBLIC_HEADER )
 target_include_directories(raptor_gui PRIVATE
   FOEDAG/third_party/tcl8.6.12/generic/
