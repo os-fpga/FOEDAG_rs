@@ -1118,7 +1118,7 @@ bool CompilerRS::PowerAnalysis() {
     Message("Cleaning PowerAnalysis results for " +
             ProjManager()->projectName());
     PowerAnalysisOpt(PowerOpt::None);
-    m_state = State::Routed;
+    // m_state = State::PowerAnalyzed;
     CleanFiles(Action::Power);
     return true;
   }
@@ -1184,9 +1184,9 @@ bool CompilerRS::PowerAnalysis() {
     }
   }
 
-  std::filesystem::path binpath = GetSession()->Context()->BinaryPath();
   /*
     !!! Keep as an example for how to use tclsh as a sub executable !!!
+    std::filesystem::path binpath = GetSession()->Context()->BinaryPath();
     std::filesystem::path tclLibraryPath = binpath / ".." / "lib" / "tcl8.6";
     std::filesystem::path tclLibPath = binpath / ".." / "lib";
     SetEnvironmentVariable("TCLLIBPATH", tclLibPath.string());
@@ -1199,8 +1199,12 @@ bool CompilerRS::PowerAnalysis() {
   // Use the following sub job to run the power tcl script: raptor --cmd "cmd"
   // --script <script>
   std::string command = m_raptorExecutablePath.string() + " ";
-  command += "--cmd \"set netlist_file " + netlistFile + "; set sdc " +
-             sdcFile + ";\" ";
+  command += "--cmd \"";
+  command += "set netlist_file " + netlistFile + ";";
+  if (!sdcFile.empty()) {
+    command += "set sdc " + sdcFile + ";";
+  }
+  command += "\" ";
   command += "--batch ";
   command += "--script " + m_powerExecutablePath.string() + " ";
   int status = ExecuteAndMonitorSystemCommand(command, {}, false,
