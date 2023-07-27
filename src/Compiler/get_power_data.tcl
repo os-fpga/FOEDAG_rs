@@ -270,7 +270,7 @@ while {[gets $parse_file line] >= 0} {
     if {($clock != "") && ($dsp_type == "inreg")} {
       incr dsp_inreg($clock,$a,$b)
     } else {
-      puts "Error: Unknonwn DSP type: $dsp_module"
+      puts "Error: Unknown DSP type: $dsp_module"
     }
   }
 
@@ -499,23 +499,6 @@ foreach test_clk $clocks {
   #puts "[llength $clk_source($test_clk)]: clk_source($test_clk): $clk_source($test_clk)"
 }  
 
-
-#if { $sdc != ""} {
-#  set parse_file [open $sdc r]
-#  while {[gets $parse_file line] >= 0} {
-#    if {[regexp {^create_clock.+} $line]} {
-#      set sdc_clk [lindex $line end]
-#      for {set i 1} {$i<[llength $line]} {incr i} {
-#        if {[lindex $line $i]=="-period"} {
-#	  incr i
-#          set sdc_freq($sdc_clk) [format %3.3f [expr 1000/[lindex $line $i]]]
-#        }
-#      }
-#    }
-#  }
-#  close $parse_file
-#}
-
 proc get_ports { args } {
     set args [decode $args]
     return $args
@@ -545,7 +528,6 @@ proc create_clock { args } {
             set sdc_freq($sdc_clk) [format %3.3f [expr 1000/$arg]]
         } 
     }
-    puts "$sdc_clk : $sdc_freq($sdc_clk)"
 }
 
 proc decode { args } {
