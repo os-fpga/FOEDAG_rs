@@ -229,20 +229,22 @@ void CFG_ddb_gen_database_00(const std::string& device,
   std::vector<std::string> paths;
   std::map<std::string, uint32_t> distribution_ips;
   std::vector<std::string> words;
+  std::string temp = "";
   while (getline(file, line)) {
     index = line.find("bit id=\"");
     if (index != std::string::npos) {
       index += 8;
       end_index = line.find("\"", index);
       CFG_ASSERT(end_index != std::string::npos);
-      id = (uint32_t)(
-          CFG_convert_string_to_u64(line.substr(index, end_index - index)));
+      temp = line.substr(index, end_index - index);
+      id = (uint32_t)(CFG_convert_string_to_u64(temp));
       index = line.find("path=\"", end_index);
       CFG_ASSERT(index != std::string::npos);
       index += 6;
       end_index = line.find("\"", index);
       CFG_ASSERT(end_index != std::string::npos);
-      words = CFG_split_string(line.substr(index, end_index - index), ".", 2);
+      temp = line.substr(index, end_index - index);
+      words = CFG_split_string(temp, ".", 2);
       CFG_ASSERT(words.size() == 3);
       CFG_ASSERT(words[0] == "fpga_top");
       // ip bits
