@@ -138,7 +138,7 @@ while {[gets $parse_file line] >= 0} {
   set line [string trim $line]
 
   # Look for FF clocks
-  if {[regexp {^dffre[ ].+} $line]} {
+  if {[regexp {^dffre[ ].+} $line] || [regexp {^dffnre[ ].+} $line] || [regexp {^DFFRE[ ].+} $line] || [regexp {^DFFNRE[ ].+} $line]} {
     set clock_not_found 1
     set clock ""
     set driver ""
@@ -602,8 +602,8 @@ set parse_file [open $netlist_file r]
 while {[gets $parse_file line] >= 0} {
   set line [string trim $line]
 
-  # Look for LUTs
-  if {[regexp {^.[$]lut[ ].+} $line]} {
+    # Look for LUTs
+  if {[regexp {^.[$]lut[ ].+} $line] || [regexp {^LUT[0-9][ ].+} $line]}  {
     incr luts
     set clk_not_found 1
     set glitch "Unknown"
@@ -631,7 +631,7 @@ while {[gets $parse_file line] >= 0} {
 	        set i 0
               }
             }
-	    set temp1 [string range $temp1 0 [expr $j-1]]
+            set temp1 [string range $temp1 0 [expr $j-1]]
           }
 	  set temp1 [string trim $temp1]
           foreach test_clk $clocks {

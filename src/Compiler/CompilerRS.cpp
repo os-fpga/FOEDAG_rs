@@ -1184,20 +1184,19 @@ bool CompilerRS::PowerAnalysis() {
     }
   }
 
-  /*
-    !!! Keep as an example for how to use tclsh as a sub executable !!!
-    std::filesystem::path binpath = GetSession()->Context()->BinaryPath();
-    std::filesystem::path tclLibraryPath = binpath / ".." / "lib" / "tcl8.6";
-    std::filesystem::path tclLibPath = binpath / ".." / "lib";
-    SetEnvironmentVariable("TCLLIBPATH", tclLibPath.string());
-    SetEnvironmentVariable("TCL_LIBRARY", tclLibraryPath.string());
-    std::string command = m_tclExecutablePath.string() + " " ;
-    command += m_powerExecutablePath.string() + " " ;
-    command += "--netlist=" + netlistFile + " ";
-    command += "--sdc=" + sdcFile + " ";
-  */
+  std::filesystem::path binpath = GetSession()->Context()->BinaryPath();
+  std::filesystem::path tclLibPath = binpath / ".." / "lib";
+  std::filesystem::path tclLibraryPath = binpath / ".." / "lib" / "tcl8.6";
+  SetEnvironmentVariable("TCLLIBPATH", tclLibPath.string());
+  SetEnvironmentVariable("TCL_LIBRARY", tclLibraryPath.string());
+  std::string command = m_tclExecutablePath.string() + " ";
+  command += m_powerExecutablePath.string() + " ";
+  command += "--netlist=" + netlistFile + " ";
+  if (!sdcFile.empty()) command += "--sdc=" + sdcFile + " ";
+
   // Use the following sub job to run the power tcl script: raptor --cmd "cmd"
   // --script <script>
+  /* This code fails in CI on CentOS so we use the tclsh approach above:
   std::string command = m_raptorExecutablePath.string() + " ";
   command += "--cmd \"";
   command += "set netlist_file " + netlistFile + ";";
@@ -1207,6 +1206,8 @@ bool CompilerRS::PowerAnalysis() {
   command += "\" ";
   command += "--batch ";
   command += "--script " + m_powerExecutablePath.string() + " ";
+  */
+
   int status = ExecuteAndMonitorSystemCommand(command, {}, false,
                                               FilePath(Action::Power).string());
   if (status) {
