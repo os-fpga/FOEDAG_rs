@@ -11,8 +11,8 @@
 # get_power_data.tcl --netlist=<file.v> --sdc=<file.sdc> 
 
 
-regexp {\-\-netlist=([a-zA-Z0-9_/\.]+)} $argv tmp netlist_file
-regexp {\-\-sdc=([a-zA-Z0-9_/\.]+)} $argv tmp sdc
+regexp {\-\-netlist=([a-zA-Z0-9_/\-\.]+)} $argv tmp netlist_file
+regexp {\-\-sdc=([a-zA-Z0-9_/\-\.]+)} $argv tmp sdc
 
 
 proc hex_count_1s {length hex} {
