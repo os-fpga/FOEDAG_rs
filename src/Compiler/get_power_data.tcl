@@ -43,14 +43,14 @@ proc hex_count_1s {length hex} {
   #puts "\nLength: $length"
   #puts "Hex: $hex"
   #puts "Ones: $ones"
-
-  if {($ones > [expr $length*.45]) && ($ones < [expr $length*.55]) && ($length>16)} {
-    return Very_High
-  } elseif {($ones > [expr $length*.35]) && ($ones < [expr $length*.75])&& ($length>16)} {
-    return High
-  } else {
-    return Typical
+  if {$length != ""} {
+      if {($ones > [expr $length * .45]) && ($ones < [expr $length * .55]) && ($length>16)} {
+          return Very_High
+      } elseif {($ones > [expr $length * .35]) && ($ones < [expr $length * .75]) && ($length>16)} {
+          return High
+      }
   }
+  return Typical
 }
 
 proc find_bus_width {line} {
