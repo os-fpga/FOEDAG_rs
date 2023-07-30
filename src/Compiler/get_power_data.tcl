@@ -499,9 +499,43 @@ foreach test_clk $clocks {
   #puts "[llength $clk_source($test_clk)]: clk_source($test_clk): $clk_source($test_clk)"
 }  
 
-proc get_ports { args } {
-    set args [decode $args]
-    return $args
+
+set unimplemented [list "current_instance" "set_hierarchy_separator" "check_path_divider" \
+    "set_units" "check_unit" "unit_prefix_scale" "check_unit_scale" \
+    "set_cmd_units" "set_unit_values" "all_clocks" "all_inputs" \
+    "all_outputs" "all_ports_for_direction" "port_members" "all_registers" \
+    "current_design" "get_cells" "filter_insts1" \
+    "get_lib_cells" "get_lib_pins" "check_nocase_flag" "get_libs" \
+    "find_liberty_libraries_matching" \
+    "filter_pins1" "filter_ports1" \
+    "create_generated_clock" "group_path" "check_exception_pins" \
+    "set_clock_gating_check" "set_clock_gating_check1" \
+    "set_clock_latency" "set_sense" "set_clock_sense" "set_clock_sense_cmd1" \
+    "set_clock_transition" "set_clock_uncertainty" "set_data_check" \
+    "set_disable_timing" "set_disable_timing_instance" \
+    "parse_disable_inst_ports" "set_disable_timing_cell" \
+    "parse_disable_cell_ports" "set_false_path" "set_ideal_latency" \
+    "set_ideal_network" "set_ideal_transition" "set_input_delay" \
+    "set_port_delay" "set_max_delay" "set_path_delay" "set_max_time_borrow" \
+    "set_min_delay" "set_min_pulse_width" "set_multicycle_path" \
+    "set_output_delay" "set_propagated_clock" "set_case_analysis" \
+    "set_drive" "set_driving_cell" "set_fanout_load" "set_input_transition" \
+    "set_load" "set_logic_dc" "set_logic_value" "set_logic_one" \
+    "set_logic_zero" "set_max_area" "set_max_capacitance" "set_capacitance_limit" "set_max_fanout" "set_fanout_limit" \
+    "set_max_transition" "set_port_fanout_number" "set_resistance" \
+    "set_timing_derate" "parse_from_arg" "parse_thrus_arg" "parse_to_arg" \
+    "parse_to_arg1" "delete_from_thrus_to" "parse_comment_key" \
+    "set_min_capacitance" "set_operating_conditions" "parse_op_cond" \
+    "parse_op_cond_analysis_type" "set_wire_load_min_block_size" \
+    "set_wire_load_mode" "set_wire_load_model" \
+    "set_wire_load_selection_group" "create_voltage_area" \
+    "set_level_shifter_strategy" "set_level_shifter_threshold" \
+    "set_max_dynamic_power" "set_max_leakage_power" "define_corners" "set_pvt" "set_pvt_min_max" "default_operating_conditions" "cell_regexp" \
+    "cell_regexp_hsc" "port_regexp" "port_regexp_hsc"]
+
+foreach fname $unimplemented {
+    set def "proc $fname { args } { }"
+    eval $def
 }
 
 proc create_clock { args } {
@@ -541,6 +575,23 @@ proc get_clocks { args } {
     set args [decode $args]
     return $args
 }
+
+proc get_nets { args } {
+    set args [decode $args]
+    return $args
+}
+
+proc get_pins { args } {
+    set args [decode $args]
+    return $args
+}
+
+
+proc get_ports { args } {
+    set args [decode $args]
+    return $args
+}
+
 
 proc set_clock_groups { args } {
 }
@@ -765,7 +816,9 @@ for {set k 0} {$k<$iterations} {incr k} {
 	#puts "glitch_line $glitch_line"
         #set length [string range $glitch_line [expr [string first "(" $glitch_line]+1] [expr [string first "'" $glitch_line]-1]]
         #set hex [string range $glitch_line [expr [string first "h" $glitch_line]+1] [expr [string first ")" $glitch_line]-1]]
-	#puts "length=$length, hex=$hex"
+        #puts "length=$length, hex=$hex"
+        set length ""
+        set hex ""
         set glitch [hex_count_1s $length $hex]
 
         incr lut_clk(Unknown,Typical)
