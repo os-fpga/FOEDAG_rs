@@ -628,8 +628,9 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
     };
     interp->registerCmd("assembler", assembler, this, 0);
   }
-  cfgcompiler->RegisterCallbackFunction("assembler", BitAssembler_entry);
-  return true;
+  bool status =
+      cfgcompiler->RegisterCallbackFunction("assembler", BitAssembler_entry);
+  return status;
 }
 
 std::string CompilerRS::BaseVprCommand() {
