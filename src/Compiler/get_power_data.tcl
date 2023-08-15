@@ -298,7 +298,7 @@ while {[gets $parse_file line] >= 0} {
     if {($clock != "") && ($dsp_type == "inreg")} {
       incr dsp_inreg($clock,$a,$b)
     } else {
-      puts "Error: Unknonwn DSP type: $dsp_module"
+      puts "Error: Unknown DSP type: $dsp_module"
     }
   }
 
