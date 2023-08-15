@@ -90,34 +90,46 @@ proc find_bus_width {line} {
 }
 
 if {![info exists netlist_file]} {
+  set netlist_file ""
   if {[llength [glob -nocomplain *_post_synth.v]] == 1} {
     set netlist_file [glob *_post_synth.v]
+  } elseif {[llength [glob -nocomplain run_1/synth_1_1/synthesis/*_post_synth.v]] == 1} {
+    set netlist_file [glob run_1/synth_1_1/synthesis/*_post_synth.v]
+  } elseif {[llength [glob -nocomplain synth_1_1/synthesis/*_post_synth.v]] == 1} {
+    set netlist_file [glob synth_1_1/synthesis/*_post_synth.v]
   } elseif {[llength [glob -nocomplain synth_1/synthesis/*_post_synth.v]] == 1} {
     set netlist_file [glob synth_1/synthesis/*_post_synth.v]
   } elseif {[llength [glob -nocomplain *.runs/run_1/synth_1/synthesis/*_post_synth.v]] == 1} {
     set netlist_file [glob *.runs/run_1/synth_1/synthesis/*_post_synth.v]
   } else {
-    puts "Error: Could not locate post-synth netlist file"
-    return
+    foreach find_prj [glob -nocomplain *] {
+      if {[glob -nocomplain $find_prj/run_1/synth_1_1/synthesis/*_post_synth.v] != ""} {
+      set netlist_file [glob $find_prj/run_1/synth_1_1/synthesis/*_post_synth.v]
+      }
+    }
+    if {$netlist_file == ""} {
+      puts "Error: Could not locate post-synth netlist file"
+      exit 1
+    }
   }
 }
 
 if {![info exists sdc]} {
-  if {[llength [glob -nocomplain *_openfpga.sdc]] == 1} {
+  if {[llength [glob -nocomplain [file dirname [file dirname $netlist_file]]/impl_1_1/packing/*_openfpga.sdc]] == 1} {
+    set sdc [glob [file dirname [file dirname $netlist_file]]/impl_1_1/packing/*_openfpga.sdc]
+  } elseif {[llength [glob -nocomplain *_openfpga.sdc]] == 1} {
     set sdc [glob *_openfpga.sdc]
+  } elseif {[llength [glob -nocomplain run_1/synth_1_1/impl_1_1/packing/*_openfpga.sdc]] == 1} {
+    set sdc [glob run_1/synth_1_1/impl_1_1/packing/*_openfpga.sdc]
   } elseif {[llength [glob -nocomplain impl_1/packing/*_openfpga.sdc]] == 1} {
     set sdc [glob impl_1/packing/*_openfpga.sdc]
   } elseif {[llength [glob -nocomplain *.runs/run_1/impl_1/packing/*_openfpga.sdc]] == 1} {
     set sdc [glob *.runs/run_1/impl_1/packing/*_openfpga.sdc]
   } else {
     set sdc ""
-    puts "Warning: Could not locate SDC file, timing will not be processed"
+    puts "Warning: Could not locate SDC file, clock frequency cannot be calculated"
   }
 }
-
-puts "INFO: PWR: Netlist:    $netlist_file"
-puts "INFO: PWR: Constraint: $sdc"
-
 set csv_file power.csv
 
 set clocks {}
@@ -137,6 +149,12 @@ while {[gets $parse_file line] >= 0} {
 
   set line [string trim $line]
 
+  # Get module name
+  if {[regexp {^module[ ].+} $line]} {
+    set design_name [string trim [string trim [string range $line [expr [string first "module" $line]+7] [expr [string first "(" $line]-1]] "\\"]]
+  }
+
+
   # Look for FF clocks
   if {[regexp {^dffre[ ].+} $line] || [regexp {^dffnre[ ].+} $line] || [regexp {^DFFRE[ ].+} $line] || [regexp {^DFFNRE[ ].+} $line]} {
     set clock_not_found 1
@@ -151,7 +169,7 @@ while {[gets $parse_file line] >= 0} {
       set line [string trim $line]
       if {[regexp {^[.]C[(].+} $line]} {
         set clock_not_found 0
-        set clock [string range $line [expr [string first "(" $line]+1] [expr [string first ")" $line]-1]]
+        set clock [string trim [string trim [string range $line [expr [string first "(" $line]+1] [expr [string first ")" $line]-1]] "\\"]]
         #puts "\nClock: $clock"
         incr clock_ffs($clock)
 	      lappend clocks $clock
@@ -172,6 +190,16 @@ while {[gets $parse_file line] >= 0} {
         }
       } elseif {[regexp {^[.][DER][(].+} $line]} {
         set src_temp [string trim [string range $line [expr [string first "(" $line]+1] [expr [string first ")" $line]-1]]]
+
+	      if {[regexp {^[.]E[(].+} $line]} {
+          if {$src_temp == "1'h1"} {
+            lappend ce_ffs($clock) 1
+	      } elseif {$src_temp == "1'h0"} {
+            lappend ce_ffs($clock) 0
+        } else {
+            lappend ce_ffs($clock) 0.5
+        }
+	    }
 
         if {[string index $src_temp 0] == "\\"} {
           set src_temp [string range $src_temp 1 end]
@@ -220,7 +248,7 @@ while {[gets $parse_file line] >= 0} {
       set line [string trim $line]
       if {[regexp {^[.]clk[(].+} $line]} {
         set clock_not_found 0
-        set clock [string range $line [expr [string first "(" $line]+1] [expr [string first ")" $line]-1]]
+        set clock [string trim [string trim [string range $line [expr [string first "(" $line]+1] [expr [string first ")" $line]-1]] "\\"]]
       } elseif {[regexp {^[.]z[(].+} $line]} {
         foreach temp [split [string trim [string trim [string trim [string range $line [expr [string first \( $line]+1] [expr [string first \) $line]-1]] \{] \}]] , ] {
           set temp1 [string trim $temp]
@@ -270,7 +298,7 @@ while {[gets $parse_file line] >= 0} {
     if {($clock != "") && ($dsp_type == "inreg")} {
       incr dsp_inreg($clock,$a,$b)
     } else {
-      puts "Error: Unknown DSP type: $dsp_module"
+      puts "Error: Unknonwn DSP type: $dsp_module"
     }
   }
 
@@ -292,7 +320,7 @@ while {[gets $parse_file line] >= 0} {
     while {![regexp {.+[;]$} $line] && ([gets $parse_file line]>=0)} {
       set line [string trim $line]
       if {[regexp {^[.]CLK_A1[(].+} $line]} {
-        set clka_temp [string range $line [expr [string first "(" $line]+1] [expr [string first ")" $line]-1]]
+        set clka_temp [string trim [string trim [string range $line [expr [string first "(" $line]+1] [expr [string first ")" $line]-1]] "\\"]]
 	if {$clka_temp == "1'h0"} {
           set clka ""
         } else {
@@ -300,7 +328,7 @@ while {[gets $parse_file line] >= 0} {
         }
         set clocka_not_found 0
       } elseif {[regexp {^[.]CLK_B1[(].+} $line]} {
-        set clkb_temp [string range $line [expr [string first "(" $line]+1] [expr [string first ")" $line]-1]]
+        set clkb_temp [string trim [string trim [string range $line [expr [string first "(" $line]+1] [expr [string first ")" $line]-1]] "\\"]]
 	if {$clkb_temp == "1'h0"} {
           set clkb ""
         } else {
@@ -462,7 +490,7 @@ while {[gets $parse_file line] >= 0} {
       }
     }
     if {!($clocka_not_found || $clockb_not_found)} {
-      puts "a_wwidth=$a_wwidth a_rwidth=$a_rwidth b_wwidth=$b_wwidth b_rwidth=$b_rwidth"
+      #puts "a_wwidth=$a_wwidth a_rwidth=$a_rwidth b_wwidth=$b_wwidth b_rwidth=$b_rwidth"
       if {$a_wwidth > $a_rwidth} {
         set a_width $a_wwidth
       } else {
@@ -653,8 +681,8 @@ set parse_file [open $netlist_file r]
 while {[gets $parse_file line] >= 0} {
   set line [string trim $line]
 
-    # Look for LUTs
-  if {[regexp {^.[$]lut[ ].+} $line] || [regexp {^LUT[0-9][ ].+} $line]}  {
+  # Look for LUTs
+  if {[regexp {^.[$]lut[ ].+} $line] || [regexp {^LUT[1-6][ ].+} $line]} {
     incr luts
     set clk_not_found 1
     set glitch "Unknown"
@@ -663,7 +691,7 @@ while {[gets $parse_file line] >= 0} {
 
     while {![regexp {.+[;]$} $line] && ([gets $parse_file line]>=0)}  {
       set line [string trim $line]
-      if {[regexp {^[.]LUT[(].+} $line]} {
+      if {[regexp {^[.]LUT[(].+} $line] || [regexp {^[.]INIT_VALUE[(].+} $line]} {
         set length [string range $line [expr [string first "(" $line]+1] [expr [string first "'" $line]-1]]
         set hex [string range $line [expr [string first "h" $line]+1] [expr [string first ")" $line]-1]]
         set glitch [hex_count_1s $length $hex]
@@ -682,7 +710,7 @@ while {[gets $parse_file line] >= 0} {
 	        set i 0
               }
             }
-            set temp1 [string range $temp1 0 [expr $j-1]]
+	    set temp1 [string range $temp1 0 [expr $j-1]]
           }
 	  set temp1 [string trim $temp1]
           foreach test_clk $clocks {
@@ -757,7 +785,7 @@ if {[llength $lut_clk_not_found] > 0} {
   set iterations 0
 }
 for {set k 0} {$k<$iterations} {incr k} {
-  puts "\n**** LUT iteration $k : [llength $lut_clk_not_found] LUTs without clock ****"
+  #puts "\n**** LUT iteration $k : [llength $lut_clk_not_found] LUTs without clock ****"
   set lut_clk_not_found_temp $lut_clk_not_found
   set lut_clk_not_found ""
   foreach clock $clocks {
@@ -793,6 +821,9 @@ for {set k 0} {$k<$iterations} {incr k} {
             foreach test_clk $clocks {
               foreach test_sig $sync_lut_sigs_temp($test_clk) {
                 if {($temp1 == $test_sig) && $clk_not_found} {
+                  if {[regexp {^[.]INIT_VALUE[(].+} $glitch_line_temp]} {
+                    set glitch_line $glitch_line_temp
+                  }
                   set length [string range $glitch_line [expr [string first "(" $glitch_line]+1] [expr [string first "'" $glitch_line]-1]]
                   set hex [string range $glitch_line [expr [string first "h" $glitch_line]+1] [expr [string first ")" $glitch_line]-1]]
                   set glitch [hex_count_1s $length $hex]
@@ -808,15 +839,8 @@ for {set k 0} {$k<$iterations} {incr k} {
         }
       }
       if {$clk_not_found && ($k<[expr $iterations-1])} {
-        #puts "Clock not found for instance, [lindex $lut_clk_not_found_temp $lut_index]"
-        #puts -nonewline "[llength $lut_clk_not_found] "
-        #puts -nonewline "x"
         lappend lut_clk_not_found [lindex $lut_clk_not_found_temp $lut_index]
       } elseif {$clk_not_found} {
-	#puts "glitch_line $glitch_line"
-        #set length [string range $glitch_line [expr [string first "(" $glitch_line]+1] [expr [string first "'" $glitch_line]-1]]
-        #set hex [string range $glitch_line [expr [string first "h" $glitch_line]+1] [expr [string first ")" $glitch_line]-1]]
-        #puts "length=$length, hex=$hex"
         set length ""
         set hex ""
         set glitch [hex_count_1s $length $hex]
@@ -824,7 +848,6 @@ for {set k 0} {$k<$iterations} {incr k} {
         incr lut_clk(Unknown,Typical)
 
       } else {
-        #puts -nonewline "."
         set sync_lut_sigs($lut_clk_temp) "$sync_lut_sigs($lut_clk_temp) $lut_clk_sigs"
         set clk_source($lut_clk_temp) "$clk_source($lut_clk_temp) $lut_clk_sigs"
       }
@@ -1103,6 +1126,9 @@ while {[gets $parse_file line] >= 0} {
 
 # Reporting
 
+puts "\nTop-level Name:"
+puts "\t$design_name"
+
 puts "\nClocks: [llength $clocks]"
 foreach clock $clocks {
   puts "\t$clock $sdc_freq($clock)"
@@ -1176,18 +1202,23 @@ if {$brams > 0} {
 
 set csv [open $csv_file w]
 
-puts $csv "Clocks"
+puts $csv "Summary"
+puts $csv "Top-level Name:,$design_name"
 
+
+puts $csv "\nClocks"
 foreach clock $clocks {
   puts $csv "Enabled,,I/O,$clock,$sdc_freq($clock)"
 }
 
 puts $csv "\nFabric Logic Element"
 foreach lut_type [array names lut_clk] {
-  puts $csv "Enabled,,$lut_clk($lut_type),,[lindex [split $lut_type ","] 0],,[split [lindex [split $lut_type ","] 1] "_"]"
+  puts $csv "Enabled,,$lut_clk($lut_type),,[lindex [split $lut_type ","] 0],0.125,[split [lindex [split $lut_type ","] 1] "_"]"
 }
 foreach clock [array names clock_ffs] {
-  puts $csv "Enabled,,,$clock_ffs($clock),$clock"
+  #puts "[llength $ce_ffs($clock)]"
+  #puts "$ce_ffs($clock)"
+  puts $csv "Enabled,,,$clock_ffs($clock),$clock,0.125,Typical,[format %.3f [expr ([join $ce_ffs($clock) +]) / [llength $ce_ffs($clock)]]]"
 }  
 
 puts $csv "\nBRAM"
@@ -1201,9 +1232,9 @@ foreach clock [array names clock_bram] {
   if {$clkb == ""} {
     puts $csv "Enabled,,36k SP,$clock_bram($clock),$clka,36,$wea,$ena"
   } elseif {($enb==0 && $web!=0) && ($ena!=0 && $wea==0)} {
-    puts $csv "Enabled,,36k SDP,$clock_bram($clock),$clkb,36,,$web,,,,,$clka,36,,$ena"
+    puts $csv "Enabled,,36k SDP,$clock_bram($clock),$clkb,36,1.0,$web,,,,,$clka,36,0,$ena"
   } elseif {($ena==0 && $wea!=0) && ($enb!=0 && $web==0)} {
-    puts $csv "Enabled,,36k SDP,$clock_bram($clock),$clka,36,,$wea,,,,,$clkb,36,,$enb"
+    puts $csv "Enabled,,36k SDP,$clock_bram($clock),$clka,36,1.0,$wea,,,,,$clkb,36,0,$enb"
   } else {
     puts $csv "Enabled,,36k TDP,$clock_bram($clock),$clka,36,$wea,$ena,,,,,$clkb,36,$web,$enb"
   }
