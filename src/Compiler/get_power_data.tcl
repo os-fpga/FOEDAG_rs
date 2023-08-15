@@ -4,11 +4,11 @@
 # Raptor Design Suite Power extraction utility
 # !!! Temporary script invoked by Raptor !!!
 # !!! Do not use directly has it is going to be replaced !!!
-# !!! by a more permanent solution !!! 
+# !!! by a more permanent solution !!!
 #
 # ------------------------------------------
 
-# get_power_data.tcl --netlist=<file.v> --sdc=<file.sdc> 
+# get_power_data.tcl --netlist=<file.v> --sdc=<file.sdc>
 
 
 regexp {\-\-netlist=([a-zA-Z0-9_/\-\.]+)} $argv tmp netlist_file
@@ -16,9 +16,9 @@ regexp {\-\-sdc=([a-zA-Z0-9_/\-\.]+)} $argv tmp sdc
 
 
 proc hex_count_1s {length hex} {
-
+  
   set ones 0
-
+  
   for {set i 0} {$i<[string length $hex]} {incr i} {
     switch [string index $hex $i] {
       0 {}
@@ -39,16 +39,16 @@ proc hex_count_1s {length hex} {
       f {incr ones 4}
     }
   }
-
+  
   #puts "\nLength: $length"
   #puts "Hex: $hex"
   #puts "Ones: $ones"
   if {$length != ""} {
-      if {($ones > [expr $length * .45]) && ($ones < [expr $length * .55]) && ($length>16)} {
-          return Very_High
-      } elseif {($ones > [expr $length * .35]) && ($ones < [expr $length * .75]) && ($length>16)} {
-          return High
-      }
+    if {($ones > [expr $length * .45]) && ($ones < [expr $length * .55]) && ($length>16)} {
+      return Very_High
+    } elseif {($ones > [expr $length * .35]) && ($ones < [expr $length * .75]) && ($length>16)} {
+      return High
+    }
   }
   return Typical
 }
@@ -64,10 +64,10 @@ proc find_bus_width {line} {
     if {[string first \: $temp]>0} {
       # Remove square brackets
       while {[string first \[ $temp]>=0} {
-        set temp "[string range $temp 0 [expr [string first \[ $temp]-1]] [string range $temp [expr [string first \[ $temp]+1] end]" 
+        set temp "[string range $temp 0 [expr [string first \[ $temp]-1]] [string range $temp [expr [string first \[ $temp]+1] end]"
       }
       while {[string first \] $temp]>=0} {
-        set temp "[string range $temp 0 [expr [string first \] $temp]-1]] [string range $temp [expr [string first \] $temp]+1] end]" 
+        set temp "[string range $temp 0 [expr [string first \] $temp]-1]] [string range $temp [expr [string first \] $temp]+1] end]"
       }
       set colon [string first \: $temp]
       set start $colon
@@ -76,7 +76,7 @@ proc find_bus_width {line} {
       }
       incr start
       set endpoint $colon
-          while {[string index $temp $endpoint] != " "} {
+      while {[string index $temp $endpoint] != " "} {
         incr endpoint
       }
       incr endpoint -1
@@ -104,7 +104,7 @@ if {![info exists netlist_file]} {
   } else {
     foreach find_prj [glob -nocomplain *] {
       if {[glob -nocomplain $find_prj/run_1/synth_1_1/synthesis/*_post_synth.v] != ""} {
-      set netlist_file [glob $find_prj/run_1/synth_1_1/synthesis/*_post_synth.v]
+        set netlist_file [glob $find_prj/run_1/synth_1_1/synthesis/*_post_synth.v]
       }
     }
     if {$netlist_file == ""} {
@@ -143,18 +143,18 @@ set lut_clk_not_found ""
 
 set parse_file [open $netlist_file r]
 while {[gets $parse_file line] >= 0} {
-
+  
   # puts -nonewline "."
   # puts "Debug: $line"
-
+  
   set line [string trim $line]
-
+  
   # Get module name
   if {[regexp {^module[ ].+} $line]} {
     set design_name [string trim [string trim [string range $line [expr [string first "module" $line]+7] [expr [string first "(" $line]-1]] "\\"]]
   }
-
-
+  
+  
   # Look for FF clocks
   if {[regexp {^dffre[ ].+} $line] || [regexp {^dffnre[ ].+} $line] || [regexp {^DFFRE[ ].+} $line] || [regexp {^DFFNRE[ ].+} $line]} {
     set clock_not_found 1
@@ -172,10 +172,10 @@ while {[gets $parse_file line] >= 0} {
         set clock [string trim [string trim [string range $line [expr [string first "(" $line]+1] [expr [string first ")" $line]-1]] "\\"]]
         #puts "\nClock: $clock"
         incr clock_ffs($clock)
-	      lappend clocks $clock
+        lappend clocks $clock
       } elseif {[regexp {^[.]Q[(].+} $line]} {
         set driver [string trim [string range $line [expr [string first "(" $line]+1] [expr [string first ")" $line]-1]]]
-	        
+        
         if {[string index $driver 0] == "\\"} {
           set driver [string range $driver 1 end]
         }
@@ -190,17 +190,17 @@ while {[gets $parse_file line] >= 0} {
         }
       } elseif {[regexp {^[.][DER][(].+} $line]} {
         set src_temp [string trim [string range $line [expr [string first "(" $line]+1] [expr [string first ")" $line]-1]]]
-
-	      if {[regexp {^[.]E[(].+} $line]} {
+        
+        if {[regexp {^[.]E[(].+} $line]} {
           if {$src_temp == "1'h1"} {
             lappend ce_ffs($clock) 1
-	      } elseif {$src_temp == "1'h0"} {
+          } elseif {$src_temp == "1'h0"} {
             lappend ce_ffs($clock) 0
-        } else {
+          } else {
             lappend ce_ffs($clock) 0.5
+          }
         }
-	    }
-
+        
         if {[string index $src_temp 0] == "\\"} {
           set src_temp [string range $src_temp 1 end]
         }
@@ -213,13 +213,13 @@ while {[gets $parse_file line] >= 0} {
           }
           set src_temp [string trim [string range $src_temp 0 [expr $j-1]]]
         }
-	#puts "source - [string trim $src_temp] : $line"
-	if {![regexp {.+['].+} $src_temp]} {
-	  lappend source [string trim $src_temp]
+        #puts "source - [string trim $src_temp] : $line"
+        if {![regexp {.+['].+} $src_temp]} {
+          lappend source [string trim $src_temp]
         }
       }
     }
-
+    
     if {$clock_not_found} {
       puts"\nError: Clock not found for dffre instance $instance"
     } elseif {$clock != ""} {
@@ -230,8 +230,8 @@ while {[gets $parse_file line] >= 0} {
       }
     }
   }
-
-
+  
+  
   # Look for DSP clocks
   if {[regexp {^RS_DSP_MULT_REGIN[ ].+} $line]} {
     set a 20
@@ -255,7 +255,7 @@ while {[gets $parse_file line] >= 0} {
           if {[string index $temp1 0] == "\\"} {
             set temp1 [string range $temp1 1 end]
           }
-
+          
           if {[string index $temp1 end] == "\]"} {
             for {set i [expr [string length $temp1]]} {$i>0} {incr i -1} {
               if {[string index $temp1 $i] == "\["} {
@@ -265,7 +265,7 @@ while {[gets $parse_file line] >= 0} {
             }
             set temp1 [string range $temp1 0 [expr $j-1]]
           }
-	  lappend clk_driver($clock) [string trim $temp1]
+          lappend clk_driver($clock) [string trim $temp1]
         }
       } elseif {[regexp {^[.][ab][(].+} $line]} {
         if {[regexp {^[.]a[(].+} $line]} {
@@ -278,7 +278,7 @@ while {[gets $parse_file line] >= 0} {
           if {[string index $temp1 0] == "\\"} {
             set temp1 [string range $temp1 1 end]
           }
-
+          
           if {[string index $temp1 end] == "\]"} {
             for {set i [expr [string length $temp1]]} {$i>0} {incr i -1} {
               if {[string index $temp1 $i] == "\["} {
@@ -288,20 +288,20 @@ while {[gets $parse_file line] >= 0} {
             }
             set temp1 [string range $temp1 0 [expr $j-1]]
           }
-	  if {![regexp {.+['].+} $temp1]} {
-	    lappend clk_source($clock) [string trim $temp1]
+          if {![regexp {.+['].+} $temp1]} {
+            lappend clk_source($clock) [string trim $temp1]
           }
         }
       }
     }
-
+    
     if {($clock != "") && ($dsp_type == "inreg")} {
       incr dsp_inreg($clock,$a,$b)
     } else {
       puts "Error: Unknown DSP type: $dsp_module"
     }
   }
-
+  
   # Look for BRAM clocks
   if {[regexp {^RS_TDP36K[ ].+} $line]} {
     incr brams
@@ -321,18 +321,18 @@ while {[gets $parse_file line] >= 0} {
       set line [string trim $line]
       if {[regexp {^[.]CLK_A1[(].+} $line]} {
         set clka_temp [string trim [string trim [string range $line [expr [string first "(" $line]+1] [expr [string first ")" $line]-1]] "\\"]]
-	if {$clka_temp == "1'h0"} {
+        if {$clka_temp == "1'h0"} {
           set clka ""
         } else {
-	  set clka $clka_temp
+          set clka $clka_temp
         }
         set clocka_not_found 0
       } elseif {[regexp {^[.]CLK_B1[(].+} $line]} {
         set clkb_temp [string trim [string trim [string range $line [expr [string first "(" $line]+1] [expr [string first ")" $line]-1]] "\\"]]
-	if {$clkb_temp == "1'h0"} {
+        if {$clkb_temp == "1'h0"} {
           set clkb ""
         } else {
-	  set clkb $clkb_temp
+          set clkb $clkb_temp
         }
         set clockb_not_found 0
       } elseif {[regexp {^[.]RDATA_A.[(].+} $line]} {
@@ -342,7 +342,7 @@ while {[gets $parse_file line] >= 0} {
           if {[string index $temp1 0] == "\\"} {
             set temp1 [string range $temp1 1 end]
           }
-
+          
           if {[string index $temp1 end] == "\]"} {
             for {set i [expr [string length $temp1]]} {$i>0} {incr i -1} {
               if {[string index $temp1 $i] == "\["} {
@@ -352,7 +352,7 @@ while {[gets $parse_file line] >= 0} {
             }
             set temp1 [string range $temp1 0 [expr $j-1]]
           }
-	  lappend clk_driver($clka) [string trim $temp1]
+          lappend clk_driver($clka) [string trim $temp1]
         }
       } elseif {[regexp {^[.]RDATA_B.[(].+} $line]} {
         incr b_rwidth [find_bus_width $line]
@@ -371,7 +371,7 @@ while {[gets $parse_file line] >= 0} {
             }
             set temp1 [string range $temp1 0 [expr $j-1]]
           }
-	  lappend clk_driver($clkb) [string trim $temp1]
+          lappend clk_driver($clkb) [string trim $temp1]
         }
       } elseif {[regexp {^[.]WDATA_A.[(].+} $line]} {
         incr a_wwidth [find_bus_width $line]
@@ -380,7 +380,7 @@ while {[gets $parse_file line] >= 0} {
           if {[string index $temp1 0] == "\\"} {
             set temp1 [string range $temp1 1 end]
           }
-
+          
           if {[string index $temp1 end] == "\]"} {
             for {set i [expr [string length $temp1]]} {$i>0} {incr i -1} {
               if {[string index $temp1 $i] == "\["} {
@@ -401,7 +401,7 @@ while {[gets $parse_file line] >= 0} {
           if {[string index $temp1 0] == "\\"} {
             set temp1 [string range $temp1 1 end]
           }
-
+          
           if {[string index $temp1 end] == "\]"} {
             for {set i [expr [string length $temp1]]} {$i>0} {incr i -1} {
               if {[string index $temp1 $i] == "\["} {
@@ -431,11 +431,11 @@ while {[gets $parse_file line] >= 0} {
               set wena 0
             }
           } else {
-
+            
             if {[string index $temp1 0] == "\\"} {
               set temp1 [string range $temp1 1 end]
             }
-  
+            
             if {[string index $temp1 end] == "\]"} {
               for {set i [expr [string length $temp1]]} {$i>0} {incr i -1} {
                 if {[string index $temp1 $i] == "\["} {
@@ -453,24 +453,24 @@ while {[gets $parse_file line] >= 0} {
       } elseif {[regexp {^[.]ADDR_B.[(].+} $line] || [regexp {^[.]BE_B.[(].+} $line] || [regexp {^[.][RW]EN_B.[(].+} $line]} {
         foreach temp [split [string trim [string trim [string trim [string range $line [expr [string first \( $line]+1] [expr [string first \) $line]-1]] \{] \}]] , ] {
           set temp1 [string trim $temp]
-	  if {$temp1 == "1'h1"} {
+          if {$temp1 == "1'h1"} {
             if {[regexp {^[.]REN_B.[(].+} $line]} {
               set enb 1
-	    } elseif {[regexp {^[.]WEN_B.[(].+} $line]} {
+            } elseif {[regexp {^[.]WEN_B.[(].+} $line]} {
               set wenb 1
-	    }
-	  } elseif {$temp1 == "1'h0"} {
+            }
+          } elseif {$temp1 == "1'h0"} {
             if {[regexp {^[.]REN_B.[(].+} $line]} {
               set enb 0
-	    } elseif {[regexp {^[.]WEN_B.[(].+} $line]} {
+            } elseif {[regexp {^[.]WEN_B.[(].+} $line]} {
               set wenb 0
-	    }
-	  } else {
-
+            }
+          } else {
+            
             if {[string index $temp1 0] == "\\"} {
               set temp1 [string range $temp1 1 end]
             }
-
+            
             if {[string index $temp1 end] == "\]"} {
               for {set i [expr [string length $temp1]]} {$i>0} {incr i -1} {
                 if {[string index $temp1 $i] == "\["} {
@@ -482,8 +482,8 @@ while {[gets $parse_file line] >= 0} {
                 set temp1 [string range $temp1 0 [expr $j-1]]
               }
             }
-	    if {![regexp {.+['].+} $temp1]} {
-	      lappend bram_clkb [string trim $temp1]
+            if {![regexp {.+['].+} $temp1]} {
+              lappend bram_clkb [string trim $temp1]
             }
           }
         }
@@ -525,7 +525,7 @@ foreach test_clk $clocks {
   set clk_source($test_clk) [lsort -unique $clk_source($test_clk)]
   #puts "[llength $clk_driver($test_clk)]: clk_driver($test_clk): $clk_driver($test_clk)"
   #puts "[llength $clk_source($test_clk)]: clk_source($test_clk): $clk_source($test_clk)"
-}  
+}
 
 
 set unimplemented [list "current_instance" "set_hierarchy_separator" "check_path_divider" \
@@ -562,62 +562,62 @@ set unimplemented [list "current_instance" "set_hierarchy_separator" "check_path
     "cell_regexp_hsc" "port_regexp" "port_regexp_hsc"]
 
 foreach fname $unimplemented {
-    set def "proc $fname { args } { }"
-    eval $def
+  set def "proc $fname { args } { }"
+  eval $def
 }
 
 proc create_clock { args } {
-    global sdc_freq
-    # Get the clock name 
-    for {set i 0} {$i < [llength $args]} {incr i} {
-        set arg [lindex $args $i]
-        if {$arg == "-name"} {
-            incr i
-            set arg [lindex $args $i]
-            set sdc_clk [decode $arg]
-        } elseif {$arg == "-period"} {
-            incr i
-        } else {
-            set sdc_clk  [decode $arg]
-        }
+  global sdc_freq
+  # Get the clock name
+  for {set i 0} {$i < [llength $args]} {incr i} {
+    set arg [lindex $args $i]
+    if {$arg == "-name"} {
+      incr i
+      set arg [lindex $args $i]
+      set sdc_clk [decode $arg]
+    } elseif {$arg == "-period"} {
+      incr i
+    } else {
+      set sdc_clk  [decode $arg]
     }
-    # get the period
-    for {set i 0} {$i < [llength $args]} {incr i} {
-        set arg [lindex $args $i]
-        if {$arg == "-period"} {
-            incr i
-            set arg [lindex $args $i]
-            set sdc_freq($sdc_clk) [format %3.3f [expr 1000/$arg]]
-        } 
+  }
+  # get the period
+  for {set i 0} {$i < [llength $args]} {incr i} {
+    set arg [lindex $args $i]
+    if {$arg == "-period"} {
+      incr i
+      set arg [lindex $args $i]
+      set sdc_freq($sdc_clk) [format %3.3f [expr 1000/$arg]]
     }
+  }
 }
 
 proc decode { args } {
-    regsub -all {@\*@} $args "{*}" args
-    regsub -all {@} $args "\[" args
-    regsub -all {%} $args "\]" args
-    return $args
+  regsub -all {@\*@} $args "{*}" args
+  regsub -all {@} $args "\[" args
+  regsub -all {%} $args "\]" args
+  return $args
 }
 
 proc get_clocks { args } {
-    set args [decode $args]
-    return $args
+  set args [decode $args]
+  return $args
 }
 
 proc get_nets { args } {
-    set args [decode $args]
-    return $args
+  set args [decode $args]
+  return $args
 }
 
 proc get_pins { args } {
-    set args [decode $args]
-    return $args
+  set args [decode $args]
+  return $args
 }
 
 
 proc get_ports { args } {
-    set args [decode $args]
-    return $args
+  set args [decode $args]
+  return $args
 }
 
 
@@ -628,45 +628,45 @@ proc set_false_path { args } {
 }
 
 proc sdc_tcl_friendly { file } {
-    set fid [open $file "r"]
-    set orig [read $fid]
-    regsub -all {\[\*\]} $orig "@*@" orig
-    regsub -all {\{\*\}} $orig "@*@" orig
-    close $fid
-    set text ""
-    set c [string index $orig 0]
-    for {set i 1} {$i < [string length $orig]} {incr i} {
-        append text $c
-        set c [string index $orig $i]
-        if {$c == "\["} {
-            incr i
-            set c [string index $orig $i]
-            if [string is digit $c] {
-                append text "@"
-                while {$c != "\]"} {
-                    append text $c
-                    incr i
-                    set c [string index $orig $i]
-                }
-            incr i
-            set c [string index $orig $i]
-            append text "%"
-        } else {
-          append text "\["
+  set fid [open $file "r"]
+  set orig [read $fid]
+  regsub -all {\[\*\]} $orig "@*@" orig
+  regsub -all {\{\*\}} $orig "@*@" orig
+  close $fid
+  set text ""
+  set c [string index $orig 0]
+  for {set i 1} {$i < [string length $orig]} {incr i} {
+    append text $c
+    set c [string index $orig $i]
+    if {$c == "\["} {
+      incr i
+      set c [string index $orig $i]
+      if [string is digit $c] {
+        append text "@"
+        while {$c != "\]"} {
+          append text $c
+          incr i
+          set c [string index $orig $i]
         }
+        incr i
+        set c [string index $orig $i]
+        append text "%"
+      } else {
+        append text "\["
       }
     }
-   return $text
+  }
+  return $text
 }
 
 
 if { $sdc != ""} {
-    set translated [sdc_tcl_friendly $sdc]    
-    set sdc_source_result ""
-    catch {eval $translated} sdc_source_result
-    if {$sdc_source_result != ""} {
-        puts "WARNING: Some of SDC content could not be processed:\n$sdc_source_result" 
-    }
+  set translated [sdc_tcl_friendly $sdc]
+  set sdc_source_result ""
+  catch {eval $translated} sdc_source_result
+  if {$sdc_source_result != ""} {
+    puts "WARNING: Some of SDC content could not be processed:\n$sdc_source_result"
+  }
 }
 
 
@@ -680,7 +680,7 @@ foreach test_clk $clocks {
 set parse_file [open $netlist_file r]
 while {[gets $parse_file line] >= 0} {
   set line [string trim $line]
-
+  
   # Look for LUTs
   if {[regexp {^.[$]lut[ ].+} $line] || [regexp {^LUT[1-6][ ].+} $line]} {
     incr luts
@@ -688,7 +688,7 @@ while {[gets $parse_file line] >= 0} {
     set glitch "Unknown"
     set instance "Unknown"
     set lut_clk_sigs ""
-
+    
     while {![regexp {.+[;]$} $line] && ([gets $parse_file line]>=0)}  {
       set line [string trim $line]
       if {[regexp {^[.]LUT[(].+} $line] || [regexp {^[.]INIT_VALUE[(].+} $line]} {
@@ -703,45 +703,45 @@ while {[gets $parse_file line] >= 0} {
           if {[string index $temp1 0] == "\\"} {
             set temp1 [string range $temp1 1 end]
           }
-	  if {[string index $temp1 end] == "\]"} {
+          if {[string index $temp1 end] == "\]"} {
             for {set i [expr [string length $temp1]]} {$i>0} {incr i -1} {
               if {[string index $temp1 $i] == "\["} {
                 set j $i
-	        set i 0
+                set i 0
               }
             }
-	    set temp1 [string range $temp1 0 [expr $j-1]]
+            set temp1 [string range $temp1 0 [expr $j-1]]
           }
-	  set temp1 [string trim $temp1]
+          set temp1 [string trim $temp1]
           foreach test_clk $clocks {
-      
+            
             foreach test_sig $clk_driver($test_clk) {
               if {($temp1 == $test_sig) && $clk_not_found} {
                 incr lut_clk($test_clk,$glitch)
                 set clk_not_found 0
-		set lut_clk_temp $test_clk
+                set lut_clk_temp $test_clk
               }
             }
           }
-	  if {$clk_not_found} {
+          if {$clk_not_found} {
             foreach test_clk $clocks {
               foreach test_sig $clk_source($test_clk) {
                 if {($temp1 == $test_sig) && $clk_not_found} {
                   incr lut_clk($test_clk,$glitch)
                   set clk_not_found 0
-		set lut_clk_temp $test_clk
+                  set lut_clk_temp $test_clk
                 }
               }
             }
           }
-	  lappend lut_clk_sigs $temp1
+          lappend lut_clk_sigs $temp1
         }
       } elseif {[regexp {^[.]Y[(].+} $line]} {
         set temp1 [string trim [string trim [string trim [string range $line [expr [string first \( $line]+1] [expr [string first \) $line]-1]] \{] \}]]
         if {[string index $temp1 0] == "\\"} {
           set temp1 [string range $temp1 1 end]
         }
-
+        
         if {[string index $temp1 end] == "\]"} {
           for {set i [expr [string length $temp1]]} {$i>0} {incr i -1} {
             if {[string index $temp1 $i] == "\["} {
@@ -751,19 +751,19 @@ while {[gets $parse_file line] >= 0} {
           }
           set temp1 [string range $temp1 0 [expr $j-1]]
         }
-	set temp1 [string trim $temp1]
+        set temp1 [string trim $temp1]
         if {$clk_not_found} {
           foreach test_clk $clocks {
             foreach test_sig $clk_source($test_clk) {
               if {($temp1 == $test_sig) && $clk_not_found} {
                 incr lut_clk($test_clk,$glitch)
                 set clk_not_found 0
-		set lut_clk_temp $test_clk
+                set lut_clk_temp $test_clk
               }
             }
           }
         }
-	lappend lut_clk_sigs $temp1
+        lappend lut_clk_sigs $temp1
       }
     }
     if {$clk_not_found} {
@@ -812,7 +812,7 @@ for {set k 0} {$k<$iterations} {incr k} {
               for {set i [expr [string length $temp1]]} {$i>0} {incr i -1} {
                 if {[string index $temp1 $i] == "\["} {
                   set j $i
-	          set i 0
+                  set i 0
                 }
               }
               set temp1 [string range $temp1 0 [expr $j-1]]
@@ -827,7 +827,7 @@ for {set k 0} {$k<$iterations} {incr k} {
                   set length [string range $glitch_line [expr [string first "(" $glitch_line]+1] [expr [string first "'" $glitch_line]-1]]
                   set hex [string range $glitch_line [expr [string first "h" $glitch_line]+1] [expr [string first ")" $glitch_line]-1]]
                   set glitch [hex_count_1s $length $hex]
-
+                  
                   incr lut_clk($test_clk,$glitch)
                   set clk_not_found 0
                   set lut_clk_temp $test_clk
@@ -844,9 +844,9 @@ for {set k 0} {$k<$iterations} {incr k} {
         set length ""
         set hex ""
         set glitch [hex_count_1s $length $hex]
-
+        
         incr lut_clk(Unknown,Typical)
-
+        
       } else {
         set sync_lut_sigs($lut_clk_temp) "$sync_lut_sigs($lut_clk_temp) $lut_clk_sigs"
         set clk_source($lut_clk_temp) "$clk_source($lut_clk_temp) $lut_clk_sigs"
@@ -876,7 +876,7 @@ foreach test_clk $clocks {
   #puts "[llength $clk_source($test_clk)]: clk_source($test_clk): $clk_source($test_clk)"
 }
 
-  # Look for DSP clocks
+# Look for DSP clocks
 set parse_file [open $netlist_file r]
 while {[gets $parse_file line] >= 0} {
   set line [string trim $line]
@@ -904,7 +904,7 @@ while {[gets $parse_file line] >= 0} {
           if {[string index $temp1 0] == "\\"} {
             set temp1 [string range $temp1 1 end]
           }
-
+          
           if {[string index $temp1 end] == "\]"} {
             for {set i [expr [string length $temp1]]} {$i>0} {incr i -1} {
               if {[string index $temp1 $i] == "\["} {
@@ -915,7 +915,7 @@ while {[gets $parse_file line] >= 0} {
             set temp1 [string trim [string range $temp1 0 [expr $j-1]]]
           }
           if {$clk_not_found && ![regexp {.+['].+} $temp1]} {
-	    foreach test_clk $clocks {
+            foreach test_clk $clocks {
               foreach test_sig $clk_driver($test_clk) {
                 if {($temp1 == $test_sig) && $clk_not_found} {
                   set clk $test_clk
@@ -941,7 +941,7 @@ while {[gets $parse_file line] >= 0} {
           if {[string index $temp1 0] == "\\"} {
             set temp1 [string range $temp1 1 end]
           }
-
+          
           if {[string index $temp1 end] == "\]"} {
             for {set i [expr [string length $temp1]]} {$i>0} {incr i -1} {
               if {[string index $temp1 $i] == "\["} {
@@ -975,7 +975,7 @@ set io_clk_not_found ""
 set parse_file [open $netlist_file r]
 while {[gets $parse_file line] >= 0} {
   set line [string trim $line]
-
+  
   # Look for Inputs
   if {[regexp {^input[ ].+} $line]} {
     set clk "Unknown"
@@ -1001,7 +1001,7 @@ while {[gets $parse_file line] >= 0} {
       lappend io_clk_not_found $io_sig
     }
   }
-
+  
   # Look for Outputs
   if {[regexp {^output[ ].+} $line]} {
     set clk "Unknown"
@@ -1032,7 +1032,7 @@ while {[gets $parse_file line] >= 0} {
       lappend ios "[find_bus_width $line] $io_sig Output SDR $clk"
     }
   }
-
+  
   # Look for Bidirs
   if {[regexp {^inout[ ].+} $line]} {
     set clk "Unknown"
@@ -1041,7 +1041,7 @@ while {[gets $parse_file line] >= 0} {
     foreach test_clk $clocks {
       foreach test_sig $clk_driver($test_clk) {
         if {($io_sig == $test_sig) && $clk_not_found} {
-          set clk $test_clk 
+          set clk $test_clk
           set clk_not_found 0
         }
       }
@@ -1050,7 +1050,7 @@ while {[gets $parse_file line] >= 0} {
       foreach test_clk $clocks {
         foreach test_sig $clk_source($test_clk) {
           if {($io_sig == $test_sig) && $clk_not_found} {
-            set clk $test_clk 
+            set clk $test_clk
             set clk_not_found 0
           }
         }
@@ -1072,7 +1072,7 @@ while {[gets $parse_file line] >= 0} {
         if {[string index $assign_name $i] == "\["} {
           set j $i
           set i 0
-          }
+        }
       }
       set assign_name [string range $assign_name 0 [expr $j-1]]
     }
@@ -1083,7 +1083,7 @@ while {[gets $parse_file line] >= 0} {
         set clk_not_found 1
         set clock "Unknown"
         set line [string trim [string range $line [expr [string first "=" $line]+1] [expr [string length $line]-1]]]
-	if {[string index $line 0] == "\{"} {
+        if {[string index $line 0] == "\{"} {
           set line [string trim [string range $line 1 [expr [string length $line]-3]]]
         }
         foreach temp1 [split $line ,] {
@@ -1105,7 +1105,7 @@ while {[gets $parse_file line] >= 0} {
             foreach test_sig $clk_driver($test_clk) {
               if {($temp1 == $test_sig) && $clk_not_found} {
                 set clk_not_found 0
-		set clock $test_clk
+                set clock $test_clk
               }
             }
           }
@@ -1118,7 +1118,7 @@ while {[gets $parse_file line] >= 0} {
             }
           }
         }
-        lappend ios "[lrange $tempx 0 3] $clock" 
+        lappend ios "[lrange $tempx 0 3] $clock"
       }
     }
   }
@@ -1140,8 +1140,8 @@ foreach io $ios {
 }
 
 #if {[llength $io_clk_not_found] >0} {
-  #puts "\n*** There are [llength $io_clk_not_found] Unknown clocked I/Os ***"
-  #puts "$io_clk_not_found"
+#puts "\n*** There are [llength $io_clk_not_found] Unknown clocked I/Os ***"
+#puts "$io_clk_not_found"
 #}
 
 
@@ -1219,7 +1219,7 @@ foreach clock [array names clock_ffs] {
   #puts "[llength $ce_ffs($clock)]"
   #puts "$ce_ffs($clock)"
   puts $csv "Enabled,,,$clock_ffs($clock),$clock,0.125,Typical,[format %.3f [expr ([join $ce_ffs($clock) +]) / [llength $ce_ffs($clock)]]]"
-}  
+}
 
 puts $csv "\nBRAM"
 foreach clock [array names clock_bram] {
@@ -1261,3 +1261,6 @@ foreach io $ios {
 close $csv
 
 puts "\nINFO: PWR: Created [pwd]/power.csv\n"
+
+
+
