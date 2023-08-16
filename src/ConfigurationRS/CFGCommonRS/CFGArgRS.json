@@ -1,124 +1,277 @@
 {
-   "bitgen": {
-      "option" : [
-         {  
+  "bitgen": [
+    {
+      "gen_bitstream": {
+        "option": [
+          {
+            "name": "compress",
+            "short": "c",
+            "type": "flag",
+            "optional": true,
+            "help": "Enable compression"
+          },
+          {
+            "name": "aes_key",
+            "short": "a",
+            "type": "str",
+            "optional": true,
+            "help": ["Binary file that contains 16 or 32 Bytes AES key.",
+                     "Bitstream is encrypted if it is specified"]
+          },
+          {
+            "name": "signing_key",
+            "short": "s",
+            "type": "str",
+            "optional": true,
+            "help": ["Private PEM file. Bitstream is signed if it is specified"]
+          },
+          {  
+            "name": "passphrase",
+            "short": "p",
+            "type": "str", 
+            "optional": true,
+            "help": ["Passphrase or text file where the first line is treated as",
+                     "passphrase to the private PEM. Specify this if private key is",
+                     "protected, or passphrase will be prompted"]
+          }
+        ],
+        "desc": "Generate configuration bitstream file",
+        "help": [
+          "To generate configuration file:",
+          "  --{compress} --aes_key={input AES key binary file}",
+          "  --signing_key={input .pem} --passphase={passphrase input}",
+          "  <input .bitasm> <output .cfgbit>"
+        ],
+        "arg": [2, 2]
+      }
+    },
+    {
+      "gen_private_pem": {
+        "option": [
+          {
+            "name": "signing_key",
+            "short": "s",
+            "type": "prime256v1|rsa2048",
+            "help": ["Signing key type. Supported types are prime256v1|rsa2048"]
+          },
+          {  
+            "name": "no_passphrase",
+            "short": "n",
+            "type": "flag", 
+            "optional": true,
+            "help": "Do not protect private PEM file with passphrase during generation"
+          },
+          {  
+            "name": "passphrase",
+            "short": "p",
+            "type": "str", 
+            "optional": true,
+            "help": ["Passphrase or text file where the first line is treated as",
+                     "passphrase to the private PEM. Specify this if private key needs",
+                     "to be protected, or passphrase will be prompted"]
+          }
+        ],
+        "desc": "Generate signing private PEM",
+        "help": [
+          "To generate signing private PEM:",
+          "  --{no_passphrase} --passphase={passphase or text file}",
+          "  --signing_key=<prime256v1|rsa2048> <output .pem>"
+        ],
+        "arg": [1, 1]
+      }
+    },
+    {
+      "gen_public_pem": {
+        "option": [
+          {  
+            "name": "passphrase",
+            "short": "p",
+            "type": "str", 
+            "optional": true,
+            "help": ["Passphrase or text file where the first line is treated as",
+                     "passphrase to the private PEM. Specify this if private key is",
+                     "protected, or passphrase will be prompted"]
+          }
+        ],
+        "desc": "Generate signing public PEM",
+        "help": [
+          "To generate signing public PEM:",
+          "  --passphase={passphase or text file} <input .pem> <output .pem>"
+        ],
+        "arg": [2, 2]
+      }
+    },
+    {
+      "parse": {
+        "option": [
+          {  
             "name" : "detail",
             "short" : "d",
             "type" : "flag", 
             "optional" : true,
             "hide" : true,
-            "help" : "Show information in detail"
-         },
-         {  
-            "name" : "operation",
-            "short" : "o",
-            "type" : "str", 
-            "optional" : true,
-            "default" : "gen_bitstream",
-            "help" : "File generation operation"
-         },
-         {
-            "name" : "compress",
-            "short" : "c",
-            "type" : "flag",
-            "optional" : true,
-            "help" : "Enable compression"
-         },
-         {
-            "name" : "aes_key",
-            "short" : "a",
-            "type" : "str",
-            "optional" : true,
-            "help" : ["Binary file that contains 16 or 32 Bytes AES key.",
-                      "Bitstream is encrypted if it is specified in bitstream",
-                      "generation operation"]
-         },
-         {
-            "name" : "signing_key",
-            "short" : "s",
-            "type" : "str",
-            "optional" : true,
-            "help" : ["Depends on operation:",
-                      "a. Bitstream generation: It is private PEM file. Bitstream",
-                      "   is signed if it is specified",
-                      "b. Private PEM generation: It is signing key type. Supported",
-                      "   types are prime256v1|rsa2048"]
-         },
-         {  
-            "name" : "no_passphrase",
-            "short" : "n",
-            "type" : "flag", 
-            "optional" : true,
-            "help" : "Do not protect private PEM file with passphrase during generation"
-         },
-         {  
-            "name" : "passphrase",
-            "short" : "p",
-            "type" : "str", 
-            "optional" : true,
-            "help" : ["Passphrase or text file where the first line is treated as",
-                      "passphrase to the private PEM"]
-         }
-      ],
-      "help" : [
-         "Configuration file generation tool. To generate:\n",
-         "  1. Configuration bitstream (default operation)\n",
-         "      --{compress} --aes_key={input AES key binary file}",
-         "      --signing_key={input .pem} <input .bitasm> <output .cfgbit>\n",
-         "  2. Signing private PEM\n",
-         "      --operation=gen_private_pem --{no_passphrase}",
-         "      --passphase={passphase or text file}",
-         "      --signing_key=<prime256v1|rsa2048> <output .pem>\n",
-         "  3. Signing public PEM\n",
-         "      --operation=gen_public_pem --passphase={passphase or text file}",
-         "      <input .pem> <output .pem>"
-      ],
-      "arg" : [1, 2]
-   },
-   "bitasm": {
-      "option" : [
-         {  
-            "name" : "operation",
-            "short" : "o",
-            "type" : "gen_device_database|gen_bitstream_bit|gen_fabric_bitstream_xml",
-            "help" : "File generation operation"
-         },
-         {
-            "name" : "device",
-            "short" : "d",
-            "type" : "str",
-            "optional" : true,
-            "help" : "Device name or device database file (.ddb)"
-         },
-         {
-            "name" : "protocol",
-            "short" : "p",
-            "type" : "ccff|latch",
-            "optional" : true,
-            "help" : ["Configuration protocol. Must be specified in fabric bitstream",
-                      "XML generation"]
-         },
-         {
-            "name" : "reverse",
-            "short" : "r",
-            "type" : "flag",
-            "optional" : true,
-            "help" : "Write configuration bits in reversed order in XML"
-         }
-      ],
-      "help" : [
-         "Internal configuration related file generation tool. To generate:\n",
-         "  1. Device database file from JSON\n",
-         "      --operation=gen_device_database --device=<device name>",
-         "      <input fabric bitstream .xml> <output .ddb>\n",
-         "  2. Fabric bitstream (in LATCH format)\n",
-         "      --operation=gen_bitstream_bit --device=<device name or .ddb>",
-         "      <input .bit in CCFF format> <output .bit in LATCH format>\n",
-         "  3. Fabric bitstream XML\n",
-         "      --operation=gen_fabric_bitstream_xml --device=<device name or .ddb>",
-         "      --protocol=<ccff|latch> --{reserve} <input .bit in CCFF format>",
-         "      <output .xml in CCFF format>\n"
-      ],
-      "arg" : [2, 2]
-   }
+            "help" : "Show debug information in detail"
+          },
+          {
+            "name": "aes_key",
+            "short": "a",
+            "type": "str",
+            "optional": true,
+            "help": ["Binary file that contains 16 or 32 Bytes AES key.",
+                     "It is used to decompress bitstream if bitstream is",
+                     "encrypted"]
+          }
+        ],
+        "hidden": true,
+        "desc": "Parse configuration bitstream file",
+        "help": [
+          "To parse configuration file:",
+          "  --aes_key={input AES key binary file} <input .cfgbit>",
+          "  <output .debug.txt>"
+        ],
+        "arg": [2, 2]
+      }
+    },
+    {
+      "combine_bop": {
+        "hidden": true,
+        "desc": "Combine two BOP base configuration bitstream file",
+        "help": [
+          "To combile two BOP base .cfgbit files",
+          "  <Input 1 .cfgbit> <Input 2 .cfgbit> <output .cfgbit>"
+        ],
+        "arg": [3, 3]
+      }
+    },
+    {
+      "gen_ubi": {
+        "option": [
+          {
+            "name": "header_version",
+            "short": "v",
+            "type": "int",
+            "help": ["Header version"]
+          },
+          {
+            "name": "product_id",
+            "short": "p",
+            "type": "int",
+            "help": ["Product ID"]
+          },
+          {
+            "name": "customer_id",
+            "short": "c",
+            "type": "int",
+            "help": ["Customer ID"]
+          },
+          {
+            "name": "image_version",
+            "short": "i",
+            "type": "int",
+            "help": ["Image version"]
+          },
+          {
+            "name": "type",
+            "short": "t",
+            "type": "S|B|K|R",
+            "help": ["UBI image type"]
+          }
+        ],
+        "hidden": true,
+        "desc": "Generate UBI package by combination BOP input(s)",
+        "help": [
+          "To generate UBI file:",
+          "  <BOP input>s <output .cfgbit>\n",
+          "BOP input can be single or two files. Both old and new",
+          "  formats are supported"
+        ],
+        "arg": [2, 3]
+      }
+    },
+    {
+      "help": "Configuration File Generation Tool"
+    }
+  ],
+  "bitasm": [
+    {
+      "gen_device_database": {
+        "option": [
+          {
+            "name": "device",
+            "short": "d",
+            "type": "str",
+            "help": "Device name"
+          }
+        ],
+        "desc": "Generate device database from fabric bitstream XML",
+        "help": [
+          "To generate device database:",
+          "  --device=<device name> <input fabric bitstream .xml> <output .ddb>"
+        ],
+        "arg": [2, 2]
+      }
+    },
+    {
+      "gen_bitstream_bit": {
+        "option": [
+          {
+            "name": "device",
+            "short": "d",
+            "type": "str",
+            "help": "Device name or device database file (.ddb)"
+          },
+          {
+            "name": "reverse",
+            "short": "r",
+            "type": "flag",
+            "optional": true,
+            "help": "Write configuration bits in reversed WL order"
+          }
+        ],
+        "desc": "Generate fabric bitstream",
+        "help": [
+          "To generate fabric bitstream (in LATCH format):",
+          "  --device=<device name or .ddb> --{reserse}",
+          "  <input .bit in CCFF format> <output .bit in LATCH format>"
+        ],
+        "arg": [2, 2]
+      }
+    },
+    {
+      "gen_bitstream_xml": {
+        "option": [
+          {
+            "name": "device",
+            "short": "d",
+            "type": "str",
+            "optional": true,
+            "help": "Device name or device database file (.ddb)"
+          },
+          {
+            "name": "protocol",
+            "short": "p",
+            "type": "ccff|latch",
+            "help": "Configuration protocol"
+          },
+          {
+            "name": "reverse",
+            "short": "r",
+            "type": "flag",
+            "optional": true,
+            "help": "Write configuration bits in reversed WL order"
+          }
+        ],
+        "desc": "Generate fabric bitstream XML",
+        "help": [
+          "To generate fabric bitstream XML:",
+          "  --device=<device name or .ddb> --protocol=<ccff|latch>",
+          "  --{reserve} <input .bit in CCFF format> <output .xml>"
+        ],
+        "arg": [2, 2]
+      }
+    },
+    {
+      "help": "Configuration File Generation Internal Tool"
+    }
+  ]
 }

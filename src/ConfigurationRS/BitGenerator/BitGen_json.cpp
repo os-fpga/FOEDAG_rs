@@ -141,8 +141,7 @@ static void BitGen_JSON_parse_bitstream_bop_field(
                                      {"identifier"});
   int index = 0;
   std::string temp = BitGen_JSON_to_string(json["identifier"]);
-  CFG_ASSERT_MSG(CFG_find_string_in_vector(
-                     BitGen_BITSTREAM_SUPPORTED_BOP_IDENTIFIER, temp) != -1,
+  CFG_ASSERT_MSG(BitGen_PACKER::find_supported_bop_identifier(temp) != -1,
                  "Bitstream BOP identifier %s is not supported", temp.c_str());
   field.identifier = temp;
   if (json.contains("version")) {
@@ -255,6 +254,9 @@ const std::map<const std::string, const BitGen_JSON_ACTION_FIELD>
          {{"load_address", std::make_pair(0, 32)},
           {"entry_address", std::make_pair(32, 32)}}},
         {"fcb_config",
+         {{"bitline_byte_size", std::make_pair(0, 16)},
+          {"readback", std::make_pair(16, 1)}}},
+        {"old_fcb_config",
          {{"cfg_cmd", std::make_pair(0, 2)},
           {"bit_twist_shift_reg", std::make_pair(2, 1)},
           {"bit_chain_connection", std::make_pair(3, 1)},
@@ -320,17 +322,27 @@ static std::vector<uint8_t> BitGen_JSON_gen_action_field(
   CFG_ASSERT(json.is_object());
   std::vector<uint8_t> data;
   std::vector<uint8_t> mask;
-  uint64_t u64 = 0;
   uint32_t start_index = 0;
   uint32_t size = 0;
   uint32_t need_byte_size = 0;
   for (auto& iter : *fields) {
-    CFG_ASSERT(json.contains(iter.first));
-    u64 = BitGen_JSON_to_u64(json[iter.first]);
+    CFG_ASSERT_MSG(json.contains(iter.first),
+                   "Expect key \"%s\" in the object but it is not found",
+                   iter.first.c_str());
+    std::vector<uint8_t> u8s;
+    if (json[iter.first].is_array()) {
+      BitGen_JSON_get_u8s_into_u8s(json[iter.first], u8s);
+    } else {
+      uint64_t u64 = BitGen_JSON_to_u64(json[iter.first]);
+      CFG_append_u64(u8s, u64);
+    }
     start_index = iter.second.first;
     size = iter.second.second;
     CFG_ASSERT(size);
-    CFG_ASSERT(size <= 64);
+    if (!json[iter.first].is_array()) {
+      CFG_ASSERT(size <= 64);
+    }
+    CFG_ASSERT(size <= (uint32_t)(u8s.size() * 8));
     for (uint32_t i = 0; i < size; i++, start_index++) {
       need_byte_size = (start_index / 8) + 1;
       CFG_ASSERT(need_byte_size);
@@ -344,7 +356,7 @@ static std::vector<uint8_t> BitGen_JSON_gen_action_field(
       CFG_ASSERT((mask[start_index >> 3] & (1 << (start_index & 7))) == 0);
       mask[start_index >> 3] |= (1 << (start_index & 7));
       // Set bit
-      if (u64 & (1 << i)) {
+      if (u8s[i >> 3] & (1 << (i & 7))) {
         data[start_index >> 3] |= (1 << (start_index & 7));
       }
     }
@@ -381,9 +393,12 @@ static BitGen_BITSTREAM_ACTION* BitGen_JSON_gen_bitstream_bop_action(
   action->field = BitGen_JSON_gen_action_field(json, fields);
   CFG_ASSERT((action->field.size() % 4) == 0);
   if (has_payload) {
+    printf("BitGen_JSON_gen_bitstream_bop_payload\n");
     BitGen_JSON_gen_bitstream_bop_payload(json["payload"], action->payload);
+    CFG_ASSERT(action->payload.size());
+  } else {
+    CFG_ASSERT(action->payload.size() == 0);
   }
-  CFG_ASSERT(action->payload.size());
   CFG_ASSERT((action->payload.size() % 4) == 0);
   return action;
 }
@@ -401,10 +416,18 @@ static void BitGen_JSON_parse_bitstream_bop_action(
     actions.push_back(BitGen_JSON::gen_firmware_loading_action(json));
   } else if (action == "fcb_config") {
     actions.push_back(BitGen_JSON::gen_fcb_config_action(json));
+  } else if (action == "old_fcb_config") {
+    actions.push_back(BitGen_JSON::gen_old_fcb_config_action(json));
   } else if (action == "icb_config") {
     actions.push_back(BitGen_JSON::gen_icb_config_action(json));
   } else if (action == "pcb_config") {
     actions.push_back(BitGen_JSON::gen_pcb_config_action(json));
+  } else if (action == "authentication_key_otp_programming") {
+    actions.push_back(BitGen_JSON::gen_auth_key_otp_programming_action(json));
+  } else if (action == "aes_key_otp_programming") {
+    actions.push_back(BitGen_JSON::gen_aes_key_otp_programming_action(json));
+  } else if (action == "otp_programming") {
+    actions.push_back(BitGen_JSON::gen_otp_programming_action(json));
   } else {
     CFG_INTERNAL_ERROR("Action %s is not supported", action.c_str());
   }
@@ -461,7 +484,8 @@ BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_standard_action(
   CFG_ASSERT(json.is_object());
   CFG_ASSERT(json.contains("action"));
   std::string action_name = BitGen_JSON_to_string(json["action"]);
-  CFG_ASSERT(action_name == name);
+  CFG_ASSERT_MSG(action_name == name, "%s == %s", action_name.c_str(),
+                 name.c_str());
   const BitGen_JSON_ACTION_FIELD* fields =
       BitGen_JSON_get_action_database(action_name);
   CFG_ASSERT(fields != nullptr);
@@ -482,6 +506,12 @@ BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_fcb_config_action(
                              0x002, true, false, true);
 }
 
+BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_old_fcb_config_action(
+    const nlohmann::json& json) {
+  return gen_standard_action(json, "Bitstream OLD FCB Config Action",
+                             "old_fcb_config", 0x802, true, false, true);
+}
+
 BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_icb_config_action(
     const nlohmann::json& json) {
   return gen_standard_action(json, "Bitstream ICB Config Action", "icb_config",
@@ -492,4 +522,137 @@ BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_pcb_config_action(
     const nlohmann::json& json) {
   return gen_standard_action(json, "Bitstream PCB Config Action", "pcb_config",
                              0x004, true, false, false);
+}
+
+BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_auth_key_otp_programming_action(
+    const nlohmann::json& json) {
+  std::string info = "Authentication Key OTP Programming";
+  BitGen_JSON_ACTION_FIELD field = {{"type", std::make_pair(0, 1)},
+                                    {"hash", std::make_pair(1, 1)},
+                                    {"key_file", std::make_pair(2, 1)}};
+  BitGen_JSON_validate_action(info, json, &field, false);
+  std::string type_str = BitGen_JSON_to_string(json["type"]);
+  CFG_ASSERT_MSG(type_str == "FSBL" || type_str == "ACPU" || type_str == "FPGA",
+                 "Authentication Key OTP Programming action support type "
+                 "FSBL|ACPU|FPGA, %s is not supported",
+                 type_str.c_str());
+  uint32_t hash_size = BitGen_JSON_to_u32(json["hash"]);
+  CFG_ASSERT_MSG(hash_size == 256 || hash_size == 384 || hash_size == 512,
+                 "Authentication Key OTP Programming action support hash "
+                 "256|384|512, %d is not supported",
+                 hash_size);
+  CFGCrypto_KEY authen_key(BitGen_JSON_to_string(json["key_file"]), "", false);
+  std::vector<uint8_t> public_key;
+  authen_key.get_public_key(public_key, 4);
+  CFG_ASSERT(public_key.size());
+  CFG_ASSERT(public_key.size() <= 272);
+  std::vector<uint8_t> hash;
+  hash.resize(hash_size / 8);
+  CFGOpenSSL::sha(hash_size / 8, &public_key[0], public_key.size(), &hash[0]);
+  // Convert it to basic json
+  nlohmann::json action_json;
+  action_json["action"] = json["action"];
+  action_json["type"] = type_str == "FSBL" ? 1 : (type_str == "ACPU" ? 2 : 3);
+  action_json["key_type"] =
+      authen_key.get_bitstream_signing_algo() & 0xF0 | ((hash_size / 128) - 1);
+  action_json["key"] = nlohmann::json(hash_size / 8, 0);
+  for (uint32_t i = 0; i < (hash_size / 8); i++) {
+    action_json["key"][i] = hash[i];
+  }
+  BitGen_JSON_ACTION_FIELD action_field = {
+      {"type", std::make_pair(0, 8)},
+      {"key_type", std::make_pair(8, 8)},
+      {"key", std::make_pair(32, hash_size)}};
+  BitGen_JSON_validate_action(info, action_json, &action_field, false);
+  return BitGen_JSON_gen_bitstream_bop_action(action_json, 0x101, false, false,
+                                              false, &action_field);
+}
+
+BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_aes_key_otp_programming_action(
+    const nlohmann::json& json) {
+  std::string info = "AES Key OTP Programming";
+  BitGen_JSON_ACTION_FIELD field = {{"type", std::make_pair(0, 1)},
+                                    {"key_file", std::make_pair(1, 1)}};
+  BitGen_JSON_validate_action(info, json, &field, false);
+  std::string type_str = BitGen_JSON_to_string(json["type"]);
+  CFG_ASSERT_MSG(
+      type_str == "FSBL" || type_str == "ACPU" || type_str == "FPGA",
+      "AES Key OTP Programming action support type FSBL|ACPU|FPGA, %s "
+      "is not supported",
+      type_str.c_str());
+  std::string aes_key_file = BitGen_JSON_to_string(json["key_file"]);
+  std::vector<uint8_t> aes_key;
+  CFG_read_binary_file(aes_key_file, aes_key);
+  CFG_ASSERT_MSG(
+      aes_key.size() == 16 || aes_key.size() == 24 || aes_key.size() == 32,
+      "AES Key should be 16, 24 or 32 Bytes. But found %ld Bytes in %s",
+      aes_key.size(), aes_key_file.c_str());
+  // Convert it to basic json
+  nlohmann::json action_json;
+  action_json["action"] = json["action"];
+  action_json["type"] = type_str == "FSBL" ? 1 : (type_str == "ACPU" ? 2 : 3);
+  action_json["key_type"] = 0x80 | ((aes_key.size() / 8) - 1);
+  action_json["key"] = nlohmann::json(aes_key.size(), 0);
+  for (uint32_t i = 0; i < (uint32_t)(aes_key.size()); i++) {
+    action_json["key"][i] = aes_key[i];
+  }
+  BitGen_JSON_ACTION_FIELD action_field = {
+      {"type", std::make_pair(0, 8)},
+      {"key_type", std::make_pair(8, 8)},
+      {"key", std::make_pair(32, (uint32_t)(aes_key.size() * 8))}};
+  BitGen_JSON_validate_action(info, action_json, &action_field, false);
+  return BitGen_JSON_gen_bitstream_bop_action(action_json, 0x101, false, false,
+                                              false, &action_field);
+}
+
+BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_otp_programming_action(
+    const nlohmann::json& json) {
+  std::string info = "OTP Programming";
+  BitGen_JSON_ACTION_FIELD field = {{"type", std::make_pair(0, 1)},
+                                    {"byte_size", std::make_pair(1, 1)},
+                                    {"data", std::make_pair(2, 1)}};
+  BitGen_JSON_validate_action(info, json, &field, false);
+  std::string type_str = BitGen_JSON_to_string(json["type"]);
+  CFG_ASSERT_MSG(
+      type_str == "Lifecycle Bits" || type_str == "Chip ID",
+      "Key OTP Programming action support type \"Lifecycle Bits|Chip ID\", %s "
+      "is not supported",
+      type_str.c_str());
+  uint32_t byte_size = BitGen_JSON_to_u32(json["byte_size"]);
+  CFG_ASSERT(byte_size);
+  CFG_ASSERT((byte_size % 4) == 0);
+  CFG_ASSERT(byte_size <= 16);
+  std::vector<uint8_t> otp;
+  if (json["data"].is_number_integer() || json["data"].is_number_unsigned() ||
+      json["data"].is_string()) {
+    CFG_ASSERT(byte_size <= 8);
+    uint64_t u64 = BitGen_JSON_to_u64(json["data"]);
+    if (byte_size == 4) {
+      CFG_append_u32(otp, (uint32_t)(u64 & 0xFFFFFFFF));
+    } else {
+      CFG_append_u64(otp, u64);
+    }
+  } else {
+    CFG_ASSERT(json["data"].is_array());
+    BitGen_JSON_get_u32s_into_u8s(json["data"], otp);
+    if (otp.size() < byte_size) {
+      otp.push_back(0);
+    }
+  }
+  // Convert it to basic json
+  nlohmann::json action_json;
+  action_json["action"] = json["action"];
+  action_json["type"] = type_str == "Lifecycle Bits" ? 1 : 2;
+  action_json["byte_size"] = byte_size;
+  action_json["otp"] = nlohmann::json(byte_size, 0);
+  for (uint32_t i = 0; i < byte_size; i++) {
+    action_json["otp"][i] = otp[i];
+  }
+  BitGen_JSON_ACTION_FIELD action_field = {
+      {"type", std::make_pair(0, 8)},
+      {"byte_size", std::make_pair(16, 16)},
+      {"otp", std::make_pair(32, byte_size * 8)}};
+  BitGen_JSON_validate_action(info, action_json, &action_field, false);
+  return BitGen_JSON_gen_bitstream_bop_action(action_json, 0x102, false, false,
+                                              false, &action_field);
 }

@@ -3,14 +3,19 @@ cmake_minimum_required(VERSION 3.15)
 set(cfg_path ${CMAKE_CURRENT_SOURCE_DIR})
 project(configurationRS)
 
+add_custom_target(pre-configurationRS
+	COMMAND
+		echo "This is top level build for Pre-ConfigurationRS subsystem. It does not really build any target but it defines all subsystem or subdirectory that need to be built in configuration first"
+	)
+
 add_custom_target(configurationRS
 	COMMAND
 		echo "This is top level build for ConfigurationRS subsystem. It does not really build any target but it defines all subsystem or subdirectory and their dependencies"
 	)
 
-add_custom_target(pre-configurationRS
+add_custom_target(post-configurationRS
 	COMMAND
-		echo "This is top level build for Pre-ConfigurationRS subsystem. It does not really build any target but it defines all subsystem or subdirectory that need to be built in configuration first"
+		echo "This is top level build for Post-ConfigurationRS subsystem. It does not really build any target but it defines all subsystem that need to run after regular build for example unit test"
 	)
 
 # Define the subsystem here
@@ -111,10 +116,29 @@ endforeach()
 # default dependencies on configuraiton (with outside world)
 # 	at top-level CMakeLists.txt, we can define configurationRS dependencies
 #   this default dependencis make sure all the subsystem inherit configurationRS dependencies
-foreach(SUBSYSTEM ${SUBSYSTEMS})
-	string(TOLOWER ${SUBSYSTEM} SUBSYSTEM)
-	add_dependencies(configurationRS ${SUBSYSTEM})
-endforeach()
+set(RUN_CONFIG_UNIT_TEST 0)
+if (DEFINED ENV{UNIT_TEST})
+  if ($ENV{UNIT_TEST} STREQUAL "1")
+    set(RUN_CONFIG_UNIT_TEST 1)
+  endif()
+endif()
+if (${RUN_CONFIG_UNIT_TEST} EQUAL 1)
+  foreach(SUBSYSTEM ${SUBSYSTEMS})
+    string(TOLOWER ${SUBSYSTEM} SUBSYSTEM)
+    add_custom_target(post-${SUBSYSTEM} ALL
+      COMMAND echo "Run unit test for subsystem ${SUBSYSTEM}"
+      COMMAND ${CFG_BUILD_ROOT_DIR}/bin/${SUBSYSTEM}_test
+    )
+    add_dependencies(post-${SUBSYSTEM} ${SUBSYSTEM})
+    add_dependencies(post-configurationRS post-${SUBSYSTEM})
+  endforeach()
+else()
+  foreach(SUBSYSTEM ${SUBSYSTEMS})
+    string(TOLOWER ${SUBSYSTEM} SUBSYSTEM)
+    add_dependencies(post-configurationRS ${SUBSYSTEM})
+  endforeach()
+endif()
+add_dependencies(configurationRS post-configurationRS) 
 
 # default dependencies on configuraiton (within configurationRS)
 foreach(SUBSYSTEM ${SUBSYSTEMS})

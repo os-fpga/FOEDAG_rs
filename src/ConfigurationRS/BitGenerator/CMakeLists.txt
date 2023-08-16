@@ -62,6 +62,7 @@ add_library(
   BitGen_analyzer.cpp
   BitGen_json.cpp
   BitGen_gemini.cpp
+  BitGen_ubi.cpp
 )
 
 ###################

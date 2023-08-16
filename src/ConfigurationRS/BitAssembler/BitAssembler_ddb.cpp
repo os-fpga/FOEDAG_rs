@@ -8,6 +8,32 @@
 #include "BitAssembler_mgr.h"
 #include "CFGCommonRS/CFGCommonRS.h"
 #include "CFGObject/CFGObject_auto.h"
+#include "nlohmann_json/json.hpp"
+
+void CFG_ddb_search_device(const std::string& filepath,
+                           const std::string& device_name,
+                           BitAssembler_DEVICE& device) {
+  CFGObject_DEV_DDB dev_ddb;
+  dev_ddb.read(filepath);
+  bool found = false;
+  for (CFGObject_DEV_DDB_DEVICE*& dev : dev_ddb.device) {
+    if (dev->name == device_name) {
+      CFG_ASSERT(dev->data.size() == 4);
+      device.device = device_name;
+      CFG_ASSERT(dev->data[0] < dev_ddb.family.size());
+      CFG_ASSERT(dev->data[1] < dev_ddb.series.size());
+      CFG_ASSERT(dev->data[2] < dev_ddb.protocol.size());
+      CFG_ASSERT(dev->data[3] < dev_ddb.blwl.size());
+      device.family = dev_ddb.family[dev->data[0]];
+      device.series = dev_ddb.series[dev->data[1]];
+      device.protocol = dev_ddb.protocol[dev->data[2]];
+      device.blwl = dev_ddb.blwl[dev->data[3]];
+      found = true;
+      break;
+    }
+  }
+  CFG_ASSERT(found);
+}
 
 const std::map<std::string, std::vector<std::string>> DDB_TYPES_DATABASE = {
     {"DDB_00", {"1ge100-es1", "gemini_compact_10x8"}}};

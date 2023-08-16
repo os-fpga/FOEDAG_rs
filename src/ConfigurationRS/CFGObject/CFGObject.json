@@ -1,152 +1,244 @@
 {
-	"BITOBJ" : [
-					{ 	"name"  : "version",
-						"type"  : "str"
-					},
-                    { 	"name"  : "project", 
-						"type"  : "str"
-					},
-					{ 	"name"  : "device",
-						"type"  : "str"
-					},
-					{ 	"name"  : "time", 
-						"type"  : "str"
-					},
-					{ 	"name"  : "fcb",
-						"type"  : [
-									{
-										"name"  : "length",
-										"type"  : "u32"
-								 	},
-								 	{
-										"name"  : "width",
-										"type"  : "u32"
-								 	},
-								 	{
-										"name"  : "data",
-										"type"  : "u8s",
-										"cmp"   : true
-								 	}
-								]
-					} 
-			],
-    "DDB_00" : [
-                    {
-                        "name" : "device",
-                        "type" : "str"
-                    },
-                    {
-                        "name" : "types",
-                        "type" : "strs"
-                    },
-                    {
-                        "name" : "bits",
-                        "type" : "u32s",
-                        "cmp"  : true
-                    },
-                    {
-                        "name" : "paths",
-                        "type" : "strs"
-                    },
-                    {
-                        "name" : "ips",
-                        "type" : "u32s",
-                        "cmp"  : true
-                    },
-                    {
-                        "name" : "bls",
-                        "type" : "u32s",
-                        "cmp"  : true
-                    },
-                    {
-                        "name" : "wls",
-                        "type" : "u32s",
-                        "cmp"  : true
-                    }
-                ],
-	"UTST" : [
-                { 	"name"  : "boolean",
-                    "type"  : "bool"
-                }, 
-                { 	"name"  : "u8",
-                    "type"  : "u8"
-                },
-                { 	"name"  : "u16", 
-                    "type"  : "u16"
-                },
-                { 	"name"  : "u32",
-                    "type"  : "u32"
-                },
-                { 	"name"  : "i64", 
-                    "type"  : "i64"
-                },
-                { 	"name"  : "u8s",
-                    "type"  : "u8s"
-                },
-                { 	"name"  : "i64s", 
-                    "type"  : "i64s"
-                },
-                { 	"name"  : "str",
-                    "type"  : "str"
-                },
-                {   "name"  : "strs",
-                    "type"  : "strs"
-                },
-                { 	"name"  : "list0",
-                    "type"  : [
-                                {
-                                    "name"  : "u64",
-                                    "type"  : "u64"
-                                },
-                                {
-                                    "name"  : "u16s",
-                                    "type"  : "u16s"
-                                },
-                                {
-                                    "name"  : "u32s",
-                                    "type"  : "u32s",
-                                    "exist" : false
-                                },
-                                {
-                                    "name"  : "i32s",
-                                    "type"  : "i32s"
-                                },
-                                {
-                                    "name"	: "list01",
-                                    "type"  : [
-                                                {
-                                                    "name"  : "i32",
-                                                    "type"  : "i32",
-                                                    "exist" : false
-                                                },
-                                                {
-                                                    "name"  : "u64s",
-                                                    "type"  : "u64s"
-                                                }
-                                            ],
-                                    "list"  : true
-                                }
-                            ],
-                    "list"  : true
-                },
-                { 	"name"  : "object",
-                    "type"  : [
-                                {
-                                    "name"  : "u8s0",
-                                    "type"  : "u8s"
-                                },
-                                {
-                                    "name"  : "str0",
-                                    "type"  : "str"
-                                }
-                            ]
-                },
-                {   "name"  : "cmp",
-                    "type"  : "u8s",
-                    "cmp"   : true
-                },
-                {   "name"  : "data_after_cmp",
-                    "type"  : "u64"
-                }
-        ]
+  "BITOBJ" : [
+    {
+      "name" : "version",
+      "type" : "str"
+    },
+    {
+      "name" : "project", 
+      "type" : "str"
+    },
+    {
+      "name" : "device",
+      "type" : "str"
+    },
+    {
+      "name" : "configuration",
+      "type" : [
+        {
+          "name" : "family",
+          "type" : "str"
+        },
+        {
+          "name" : "series",
+          "type" : "str"
+        },
+        {
+          "name" : "protocol",
+          "type" : "str"
+        },
+        {
+          "name" : "blwl",
+          "type" : "str"
+        }
+      ]
+    },
+    {
+      "name" : "time", 
+      "type" : "str"
+    },
+    {
+      "name" : "scan_chain_fcb",
+      "type" : [
+        {
+          "name" : "length",
+          "type" : "u32"
+        },
+        {
+          "name" : "width",
+          "type" : "u32"
+        },
+        {
+          "name" : "data",
+          "type" : "u8s",
+          "cmp"  : true
+        }
+      ],
+      "exist" : false
+    },
+    {
+      "name" : "ql_membank_fcb",
+      "type" : [
+        {
+          "name" : "bl",
+          "type" : "u32"
+        },
+        {
+          "name" : "wl",
+          "type" : "u32"
+        },
+        {
+          "name" : "data",
+          "type" : "u8s",
+          "cmp"  : true
+        }
+      ],
+      "exist" : false
+    } 
+  ],
+  "DDB_00" : [
+    {
+        "name" : "device",
+        "type" : "str"
+    },
+    {
+        "name" : "types",
+        "type" : "strs"
+    },
+    {
+        "name" : "bits",
+        "type" : "u32s",
+        "cmp" : true
+    },
+    {
+        "name" : "paths",
+        "type" : "strs"
+    },
+    {
+        "name" : "ips",
+        "type" : "u32s",
+        "cmp" : true
+    },
+    {
+        "name" : "bls",
+        "type" : "u32s",
+        "cmp" : true
+    },
+    {
+        "name" : "wls",
+        "type" : "u32s",
+        "cmp" : true
+    }
+  ],
+  "DEV_DDB" : [
+    {
+      "name" : "family",
+      "type" : "strs"
+    },
+    {
+      "name" : "series",
+      "type" : "strs"
+    },
+    {
+      "name" : "protocol",
+      "type" : "strs"
+    },
+    {
+      "name" : "blwl",
+      "type" : "strs"
+    },
+    {
+      "name" : "device",
+      "type" : [
+        {
+          "name" : "name",
+          "type" : "str"
+        },
+        {
+          "name" : "data",
+          "type" : "u32s",
+          "cmp"  : true
+        }
+      ],
+      "list" : true
+    }
+  ],
+  "UTST" : [
+    {
+      "name" : "boolean",
+      "type" : "bool"
+    }, 
+    {
+      "name" : "u8",
+      "type" : "u8"
+    },
+    {
+      "name" : "u16", 
+      "type" : "u16"
+    },
+    {
+      "name" : "u32",
+      "type" : "u32"
+    },
+    {
+      "name" : "i64", 
+      "type" : "i64"
+    },
+    {
+      "name" : "u8s",
+      "type" : "u8s"
+    },
+    {
+      "name" : "i64s", 
+      "type" : "i64s"
+    },
+    {
+      "name" : "str",
+      "type" : "str"
+    },
+    {
+      "name" : "strs",
+      "type" : "strs"
+    },
+    {
+      "name" : "list0",
+      "type" : [
+        {
+          "name" : "u64",
+          "type" : "u64"
+        },
+        {
+          "name" : "u16s",
+          "type" : "u16s"
+        },
+        {
+          "name" : "u32s",
+          "type" : "u32s",
+          "exist" : false
+        },
+        {
+          "name" : "i32s",
+          "type" : "i32s"
+        },
+        {
+          "name" : "list01",
+          "type" : [
+            {
+              "name" : "i32",
+              "type" : "i32",
+              "exist" : false
+            },
+            {
+              "name" : "u64s",
+              "type" : "u64s"
+            }
+          ],
+          "list" : true
+        }
+      ],
+      "list" : true
+    },
+    {
+      "name" : "object",
+      "type" : [
+        {
+          "name" : "u8s0",
+          "type" : "u8s"
+        },
+        {
+          "name" : "str0",
+          "type" : "str"
+        }
+      ]
+    },
+    {
+      "name" : "cmp",
+      "type" : "u8s",
+      "cmp"  : true
+    },
+    {
+      "name" : "data_after_cmp",
+      "type" : "u64"
+    }
+  ]
 }

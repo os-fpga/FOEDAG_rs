@@ -5,6 +5,18 @@
 
 #include "CFGObject/CFGObject_auto.h"
 
+// Device Database
+struct BitAssembler_DEVICE {
+  std::string device = "";
+  std::string family = "";
+  std::string series = "";
+  std::string protocol = "";
+  std::string blwl = "";
+};
+void CFG_ddb_search_device(const std::string& filepath,
+                           const std::string& device_name,
+                           BitAssembler_DEVICE& device);
+
 // DDB_00
 void CFG_ddb_gen_database_00(const std::string& device,
                              const std::string& input_xml,

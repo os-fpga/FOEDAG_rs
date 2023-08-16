@@ -11,7 +11,8 @@ class BitAssembler_MGR {
   BitAssembler_MGR();
 
   BitAssembler_MGR(const std::string& project_path, const std::string& device);
-  void get_fcb(const CFGObject_BITOBJ_FCB* fcb);
+  void get_scan_chain_fcb(const CFGObject_BITOBJ_SCAN_CHAIN_FCB* fcb);
+  void get_ql_membank_fcb(const CFGObject_BITOBJ_QL_MEMBANK_FCB* fcb);
   std::vector<std::string> m_warnings;
 
   // public static
@@ -32,12 +33,18 @@ class BitAssembler_MGR {
 
  private:
   template <typename T>
-  uint32_t get_bitline_into_bytes(T start, T end, std::vector<uint8_t>& bytes);
+  uint32_t get_bitline_into_bytes(T& start, T& end, std::vector<uint8_t>& bytes,
+                                  uint32_t size = 0);
   uint32_t get_bitline_into_bytes(const std::string& line,
                                   std::vector<uint8_t>& bytes,
                                   const uint32_t expected_bit = 0,
                                   const bool lsb = true);
-
+  uint32_t get_wl_bitline_into_bytes(const std::string& line,
+                                     std::vector<uint8_t>& bytes,
+                                     const uint32_t expected_bl_bit,
+                                     const uint32_t expected_wl_bit,
+                                     const uint32_t expected_wl,
+                                     const bool lsb = true);
   const std::string m_project_path;
   const std::string m_device;
 };

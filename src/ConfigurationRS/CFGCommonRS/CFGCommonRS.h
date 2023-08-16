@@ -80,6 +80,8 @@ std::string CFG_get_string_from_bytes(const uint8_t* data, size_t data_size,
                                       size_t& index, int max_size = -1,
                                       int min_size = -1, int null_check = -1);
 
+std::string CFG_get_null_terminate_string(const uint8_t* data, size_t max_size);
+
 std::string CFG_get_machine_name();
 
 uint32_t CFG_get_volume_serial_number();

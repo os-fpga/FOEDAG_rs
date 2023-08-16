@@ -14,9 +14,17 @@ class BitGen_JSON {
       const nlohmann::json& json);
   static BitGen_BITSTREAM_ACTION* gen_fcb_config_action(
       const nlohmann::json& json);
+  static BitGen_BITSTREAM_ACTION* gen_old_fcb_config_action(
+      const nlohmann::json& json);
   static BitGen_BITSTREAM_ACTION* gen_icb_config_action(
       const nlohmann::json& json);
   static BitGen_BITSTREAM_ACTION* gen_pcb_config_action(
+      const nlohmann::json& json);
+  static BitGen_BITSTREAM_ACTION* gen_auth_key_otp_programming_action(
+      const nlohmann::json& json);
+  static BitGen_BITSTREAM_ACTION* gen_aes_key_otp_programming_action(
+      const nlohmann::json& json);
+  static BitGen_BITSTREAM_ACTION* gen_otp_programming_action(
       const nlohmann::json& json);
 
  protected:

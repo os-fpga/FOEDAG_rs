@@ -3,6 +3,6 @@
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 
-void BitGenerator_entry(const CFGCommon_ARG* cmdarg);
+bool BitGenerator_entry(const CFGCommon_ARG* cmdarg);
 
 #endif
