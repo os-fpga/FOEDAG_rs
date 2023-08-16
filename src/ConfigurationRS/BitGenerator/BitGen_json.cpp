@@ -553,8 +553,8 @@ BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_auth_key_otp_programming_action(
   nlohmann::json action_json;
   action_json["action"] = json["action"];
   action_json["type"] = type_str == "FSBL" ? 1 : (type_str == "ACPU" ? 2 : 3);
-  action_json["key_type"] =
-      authen_key.get_bitstream_signing_algo() & 0xF0 | ((hash_size / 128) - 1);
+  action_json["key_type"] = (authen_key.get_bitstream_signing_algo() & 0xF0) |
+                            ((hash_size / 128) - 1);
   action_json["key"] = nlohmann::json(hash_size / 8, 0);
   for (uint32_t i = 0; i < (hash_size / 8); i++) {
     action_json["key"][i] = hash[i];
