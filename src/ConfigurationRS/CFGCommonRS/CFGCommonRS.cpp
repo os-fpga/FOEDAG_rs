@@ -571,7 +571,6 @@ std::string CFG_get_string_from_bytes(const uint8_t* data, size_t data_size,
     max_size = int(available_size);
   } else {
     CFG_ASSERT(max_size > 0);
-    CFG_ASSERT(max_size <= (int)(available_size));
   }
   std::string string = "";
   int current_index = 0;
@@ -600,6 +599,12 @@ std::string CFG_get_string_from_bytes(const uint8_t* data, size_t data_size,
     }
   }
   return string;
+}
+
+std::string CFG_get_null_terminate_string(const uint8_t* data,
+                                          size_t max_size) {
+  size_t index = 0;
+  return CFG_get_string_from_bytes(data, max_size, index, -1, -1, max_size);
 }
 
 std::string CFG_get_machine_name() {

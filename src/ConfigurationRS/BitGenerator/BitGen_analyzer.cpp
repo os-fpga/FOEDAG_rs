@@ -15,12 +15,6 @@ BitGen_ANALYZER::~BitGen_ANALYZER() {
   memset(m_decompressed_data, 0, sizeof(m_decompressed_data));
 }
 
-std::string BitGen_ANALYZER::get_null_terminate_string(const uint8_t* data,
-                                                       size_t max_size) {
-  size_t index = 0;
-  return CFG_get_string_from_bytes(data, max_size, index, -1, -1, max_size);
-}
-
 template <typename T>
 void BitGen_ANALYZER::get_data(const uint8_t* data, T& value) {
   value = 0;
@@ -261,12 +255,12 @@ bool BitGen_ANALYZER::parse_bop(const uint8_t* data, size_t size,
 
 void BitGen_ANALYZER::parse_bop_header(std::string space,
                                        uint8_t (&unobscured_data)[16]) {
-  m_header.identifier = get_null_terminate_string(m_current_bop_data, 4);
+  m_header.identifier = CFG_get_null_terminate_string(m_current_bop_data, 4);
   m_header.version = get_u32(&m_current_bop_data[0x4]);
   m_header.size = (size_t)(get_u64(&m_current_bop_data[0x8]));
   CFG_ASSERT(m_header.size == m_current_bop_size);
-  m_header.tool = get_null_terminate_string(&m_current_bop_data[0x10], 32);
-  m_header.opn = get_null_terminate_string(&m_current_bop_data[0x30], 16);
+  m_header.tool = CFG_get_null_terminate_string(&m_current_bop_data[0x10], 32);
+  m_header.opn = CFG_get_null_terminate_string(&m_current_bop_data[0x30], 16);
   m_header.jtag_id = get_u32(&m_current_bop_data[0x40]);
   m_header.jtag_mask = get_u32(&m_current_bop_data[0x44]);
   memcpy(unobscured_data, &m_current_bop_data[0x50], sizeof(unobscured_data));
@@ -1075,6 +1069,60 @@ void BitGen_ANALYZER::push_error(std::vector<std::string>& msgs,
   CFG_POST_ERR(msg.c_str());
 }
 
+void BitGen_ANALYZER::combine_bitstreams(const std::string& input1_filepath,
+                                         const std::string& input2_filepath,
+                                         const std::string& output_filepath) {
+  std::vector<uint8_t> output_data;
+  CFG_read_binary_file(input1_filepath, output_data);
+  CFG_ASSERT(output_data.size());
+  std::vector<uint8_t> input_data;
+  CFG_read_binary_file(input2_filepath, input_data);
+  CFG_ASSERT(input_data.size());
+  bool status = combine_bitstreams(input_data, output_data);
+  if (status) {
+    CFG_write_binary_file(output_filepath, &output_data[0], output_data.size());
+  }
+  if (input_data.size()) {
+    memset(&input_data[0], 0, input_data.size());
+    input_data.clear();
+  }
+  if (output_data.size()) {
+    memset(&output_data[0], 0, output_data.size());
+    output_data.clear();
+  }
+}
+
+bool BitGen_ANALYZER::combine_bitstreams(std::vector<uint8_t>& input_data,
+                                         std::vector<uint8_t>& output_data,
+                                         bool print_msg,
+                                         bool clear_input_if_success) {
+  bool status = false;
+  std::string error_msg = "";
+  std::vector<size_t> sizes =
+      parse(output_data, true, true, error_msg, print_msg);
+  if (error_msg.empty()) {
+    CFG_ASSERT(sizes.size());
+    sizes = parse(input_data, true, true, error_msg, print_msg);
+    if (error_msg.empty()) {
+      CFG_ASSERT(sizes.size());
+      output_data.insert(output_data.end(), input_data.begin(),
+                         input_data.end());
+      if (clear_input_if_success) {
+        memset(&input_data[0], 0, input_data.size());
+        input_data.clear();
+      }
+      update_bitstream_end_size(output_data, error_msg);
+      CFG_ASSERT_MSG(error_msg.empty(), error_msg.c_str());
+      status = true;
+    } else {
+      CFG_POST_ERR(error_msg.c_str());
+    }
+  } else {
+    CFG_POST_ERR(error_msg.c_str());
+  }
+  return status;
+}
+
 void BitGen_ANALYZER::update_bitstream_end_size(std::vector<uint8_t>& data,
                                                 std::string& error_msg) {
   std::vector<size_t> sizes = parse(data, false, true, error_msg, false);
@@ -1083,8 +1131,8 @@ void BitGen_ANALYZER::update_bitstream_end_size(std::vector<uint8_t>& data,
     size_t start_index = 0;
     size_t total_size = data.size();
     for (size_t i = 0, j = sizes.size() - 1; i < sizes.size(); i++, j--) {
-      BitGen_PACKER::update_bitstream_ending_size(&data[start_index],
-                                                  total_size, j == 0);
+      BitGen_PACKER::update_bitstream_end_size(&data[start_index], total_size,
+                                               j == 0);
       start_index += sizes[i];
       total_size -= sizes[i];
     }
@@ -1109,9 +1157,9 @@ std::vector<size_t> BitGen_ANALYZER::parse(const std::vector<uint8_t>& data,
     error_msg = "";
     size_t index = 0;
     while (index < data.size()) {
-      std::string identifier = get_null_terminate_string(&data[index], 4);
-      int identifier_index = CFG_find_string_in_vector(
-          BitGen_BITSTREAM_SUPPORTED_BOP_IDENTIFIER, identifier);
+      std::string identifier = CFG_get_null_terminate_string(&data[index], 4);
+      int identifier_index =
+          BitGen_PACKER::find_supported_bop_identifier(identifier);
       if (identifier_index == -1) {
         error_msg =
             CFG_print("BOP Identifier %s is not supported", identifier.c_str());

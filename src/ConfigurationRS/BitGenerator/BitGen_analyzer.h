@@ -103,6 +103,13 @@ struct BitGen_ANALYZER_INTEGRITY {
 
 class BitGen_ANALYZER {
  public:
+  static void combine_bitstreams(const std::string& input1_filepath,
+                                 const std::string& input2_filepath,
+                                 const std::string& output_filepath);
+  static bool combine_bitstreams(std::vector<uint8_t>& input_data,
+                                 std::vector<uint8_t>& output_data,
+                                 bool print_msg = true,
+                                 bool clear_input_if_success = true);
   static void update_bitstream_end_size(std::vector<uint8_t>& data,
                                         std::string& error_msg);
   static std::vector<size_t> parse(const std::vector<uint8_t>& data,
@@ -113,8 +120,6 @@ class BitGen_ANALYZER {
                           std::vector<uint8_t>& aes_key);
 
  protected:
-  static std::string get_null_terminate_string(const uint8_t* data,
-                                               size_t max_size);
   template <typename T>
   static void get_data(const uint8_t* data, T& value);
   static uint32_t get_u32(const uint8_t* data);

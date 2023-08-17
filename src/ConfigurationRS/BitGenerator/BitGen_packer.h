@@ -6,9 +6,6 @@
 
 #define BitGen_BITSTREAM_BLOCK_SIZE (2048)
 
-const std::vector<std::string> BitGen_BITSTREAM_SUPPORTED_BOP_IDENTIFIER = {
-    "FSBL", "FPGA", "ACPU", "UBT", "LNX", "ZPHR"};
-
 struct BitGen_BITSTREAM_BOP_FIELD {
   ~BitGen_BITSTREAM_BOP_FIELD();
   std::string identifier = "";
@@ -58,13 +55,13 @@ struct BitGen_BITSTREAM_BLOCK {
 
 class BitGen_PACKER {
  public:
+  static int find_supported_bop_identifier(const std::string& identifier);
   static void generate_bitstream(std::vector<BitGen_BITSTREAM_BOP*>& bops,
                                  std::vector<uint8_t>& data, bool compress,
                                  std::vector<uint8_t>& aes_key,
                                  CFGCrypto_KEY*& key);
-  static void update_bitstream_ending_size(uint8_t* const data,
-                                           uint64_t ending_size,
-                                           bool is_last_bop);
+  static void update_bitstream_end_size(uint8_t* const data,
+                                        uint64_t ending_size, bool is_last_bop);
   static uint8_t get_feature_u8_enum(const std::string& feature);
   static std::string get_feature_enum_string(uint8_t feature_enum,
                                              std::vector<std::string> features,

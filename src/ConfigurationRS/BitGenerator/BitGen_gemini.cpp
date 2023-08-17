@@ -45,22 +45,60 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
   bop->field.checksum = 0x10;
   bop->field.integrity = 0x10;
   // FCB data
-  nlohmann::json fcb;
-  fcb["action"] = "fcb_config";
-  fcb["cfg_cmd"] = 1;
-  fcb["bit_chain_connection"] = 0;
-  fcb["bit_twist_shift_reg"] = 0;
-  fcb["parallel_chains_count"] = m_bitobj->fcb.width;
-  std::vector<uint8_t> payload = genbits_line_by_line(
-      m_bitobj->fcb.data, m_bitobj->fcb.width, m_bitobj->fcb.length, 8, 32,
-      fcb["bit_chain_connection"] != 0, fcb["bit_twist_shift_reg"] != 0);
-  fcb["payload"] = nlohmann::json(payload);
-  bop->actions.push_back(BitGen_JSON::gen_fcb_config_action(fcb));
-  BitGen_JSON::zeroize_array_numbers(fcb["payload"]);
-  memset(&payload[0], 0, payload.size());
+  if (m_bitobj->configuration.protocol == "scan_chain") {
+    CFG_ASSERT(m_bitobj->configuration.blwl.empty());
+    CFG_ASSERT(m_bitobj->check_exist("scan_chain_fcb"));
+    CFG_ASSERT(!m_bitobj->check_exist("ql_membank_fcb"));
+    nlohmann::json fcb;
+    fcb["action"] = "old_fcb_config";
+    fcb["cfg_cmd"] = 1;
+    fcb["bit_chain_connection"] = 0;
+    fcb["bit_twist_shift_reg"] = 0;
+    fcb["parallel_chains_count"] = m_bitobj->scan_chain_fcb.width;
+    std::vector<uint8_t> payload = genbits_line_by_line(
+        m_bitobj->scan_chain_fcb.data, m_bitobj->scan_chain_fcb.width,
+        m_bitobj->scan_chain_fcb.length, 8, 32,
+        fcb["bit_chain_connection"] != 0, fcb["bit_twist_shift_reg"] != 0);
+    fcb["payload"] = nlohmann::json(payload);
+    bop->actions.push_back(BitGen_JSON::gen_old_fcb_config_action(fcb));
+    BitGen_JSON::zeroize_array_numbers(fcb["payload"]);
+    memset(&payload[0], 0, payload.size());
+    data.push_back(bop);
+  } else {
+    CFG_ASSERT(m_bitobj->configuration.protocol == "ql_memory_bank");
+    CFG_ASSERT(m_bitobj->configuration.blwl == "flatten");
+    CFG_ASSERT(!m_bitobj->check_exist("scan_chain_fcb"));
+    CFG_ASSERT(m_bitobj->check_exist("ql_membank_fcb"));
+    CFG_ASSERT(m_bitobj->ql_membank_fcb.bl);
+    CFG_ASSERT(m_bitobj->ql_membank_fcb.wl);
+    nlohmann::json fcb;
+    fcb["action"] = "fcb_config";
+    fcb["bitline_byte_size"] = ((m_bitobj->ql_membank_fcb.bl + 31) / 32) * 4;
+    fcb["readback"] = 0;
+    uint32_t bl_byte_size = (m_bitobj->ql_membank_fcb.bl + 7) / 8;
+    CFG_ASSERT((uint32_t)(m_bitobj->ql_membank_fcb.data.size()) ==
+               (m_bitobj->ql_membank_fcb.wl * bl_byte_size));
+    std::vector<uint8_t> payload;
+    uint32_t padding = 0;
+    for (uint32_t wl = 0, index = 0; wl < m_bitobj->ql_membank_fcb.wl;
+         wl++, index += bl_byte_size) {
+      payload.insert(
+          payload.end(), m_bitobj->ql_membank_fcb.data.begin() + index,
+          m_bitobj->ql_membank_fcb.data.begin() + index + bl_byte_size);
+      padding = 0;
+      while ((bl_byte_size + padding) % 4) {
+        payload.push_back(0);
+        padding++;
+      }
+    }
+    fcb["payload"] = nlohmann::json(payload);
+    bop->actions.push_back(BitGen_JSON::gen_fcb_config_action(fcb));
+    BitGen_JSON::zeroize_array_numbers(fcb["payload"]);
+    memset(&payload[0], 0, payload.size());
+    data.push_back(bop);
+  }
   // ICB data
   // PCB data
-  data.push_back(bop);
 }
 
 std::vector<uint8_t> BitGen_GEMINI::genbits_line_by_line(

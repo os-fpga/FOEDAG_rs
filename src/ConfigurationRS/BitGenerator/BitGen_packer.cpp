@@ -4,6 +4,9 @@
 
 #include "CFGCrypto/CFGOpenSSL.h"
 
+const std::vector<std::string> BitGen_BITSTREAM_SUPPORTED_BOP_IDENTIFIER = {
+    "FSBL", "FPGA", "ACPU", "UBT", "LNX", "ZPHR", "KEYC"};
+
 BitGen_BITSTREAM_BOP_FIELD::~BitGen_BITSTREAM_BOP_FIELD() {
   memset(iv, 0, sizeof(iv));
 }
@@ -474,9 +477,9 @@ static void BitGen_PACKER_gen_bop_bitstream(
   BitGen_PACKER_finalize(header);
 }
 
-void BitGen_PACKER::update_bitstream_ending_size(uint8_t* const data,
-                                                 uint64_t ending_size,
-                                                 bool is_last_bop) {
+void BitGen_PACKER::update_bitstream_end_size(uint8_t* const data,
+                                              uint64_t ending_size,
+                                              bool is_last_bop) {
   uint32_t crc32 = CFG_crc32(data, 0x7FC);
   CFG_ASSERT(memcmp(&data[0x7FC], (void*)(&crc32), sizeof(crc32)) == 0);
   if (is_last_bop) {
@@ -487,6 +490,12 @@ void BitGen_PACKER::update_bitstream_ending_size(uint8_t* const data,
   memcpy(&data[0x788], (void*)(&ending_size), sizeof(ending_size));
   crc32 = CFG_crc32(data, 0x7FC);
   memcpy(&data[0x7FC], (void*)(&crc32), sizeof(crc32));
+}
+
+int BitGen_PACKER::find_supported_bop_identifier(
+    const std::string& identifier) {
+  return CFG_find_string_in_vector(BitGen_BITSTREAM_SUPPORTED_BOP_IDENTIFIER,
+                                   identifier);
 }
 
 void BitGen_PACKER::generate_bitstream(std::vector<BitGen_BITSTREAM_BOP*>& bops,
@@ -516,7 +525,7 @@ void BitGen_PACKER::generate_bitstream(std::vector<BitGen_BITSTREAM_BOP*>& bops,
   size_t total_size = data.size() - start_index;
   for (size_t i = 0, j = tracking_size.size() - 1; i < tracking_size.size();
        i++, j--) {
-    update_bitstream_ending_size(&data[start_index], total_size, j == 0);
+    update_bitstream_end_size(&data[start_index], total_size, j == 0);
     start_index += tracking_size[i];
     total_size -= tracking_size[i];
   }
