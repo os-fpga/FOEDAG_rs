@@ -12,7 +12,9 @@ sudo apt install -y \
   valgrind \
   xorg \
   qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools qtdeclarative5-dev \
-  xvfb
+  xvfb \
+  libusb-1.0-0-dev \
+  pkg-config
 sudo ln -sf /usr/bin/g++-11 /usr/bin/g++
 sudo ln -sf /usr/bin/gcc-11 /usr/bin/gcc
 sudo ln -sf /usr/bin/gcov-11 /usr/bin/gcov
