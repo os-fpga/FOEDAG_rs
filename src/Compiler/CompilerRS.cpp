@@ -1213,8 +1213,11 @@ bool CompilerRS::PowerAnalysis() {
   command += "--script " + m_powerExecutablePath.string() + " ";
   */
 
-  int status = ExecuteAndMonitorSystemCommand(command, {}, false,
-                                              FilePath(Action::Power).string());
+  auto file = ProjManager()->projectName() + "_power.cmd";
+  FileUtils::WriteToFile(file, command);
+
+  int status = ExecuteAndMonitorSystemCommand(
+      command, POWER_ANALYSIS_LOG, false, FilePath(Action::Power).string());
   if (status) {
     ErrorMessage("Design " + ProjManager()->projectName() +
                  " power analysis failed");

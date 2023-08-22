@@ -178,6 +178,12 @@ Tcl commands (Available in GUI or Batch console or Batch script):
 ------------------------------
    sta ?clean?                : Statistical Timing Analysis
      clean                    : Deletes files generated from this task
+     
+------------------------------
+--- Power Analysis -----------
+------------------------------
+   power ?clean?              : Statistical Power Analysis
+     clean                    : Deletes files generated from this task
 
 -----------------
 --- Bitstream ---
@@ -191,6 +197,21 @@ Tcl commands (Available in GUI or Batch console or Batch script):
      clean                    : Deletes files generated from this task
    bitstream_config_files -bitstream <bitstream_setting.xml> -sim <sim_setting.xml> -repack <repack_setting.xml> -key <fabric_key.xml>
                               : Uses alternate bitstream generation configuration files
+
+--------------------------------
+--- Implementation Strategy  ---
+--------------------------------
+timing_flow <"default" | "analytic"> : Timing driven compilation flow. This proc performs a series of steps in the design flow to achieve timing-driven placement and routing.
+  "analytic"                   : Use timing-driven analytic placement as initial placement. The result is then passed through the simulated annealing (SA) placer.
+  "default"                    : Uses VPR's default initial placer (default)
+
+routability_flow <number_of_molecules_in_partition, hmetisPath> : Routability driven compilation flow. This proc accepts two optional arguments:
+  number_of_molecules_in_partition <int>: Average number of molecules in each cluster (default is 200).
+  hmetisPath <file>            : The path to the hmetis executable (default is "~/bin/hmetis")
+  
+congestion_flow <congestion_type> : Congestion driven compilation flow
+  "uniform"                    : For uniformely congested high utilization designs
+  "hotspot"                    : For hotspots of congestion in moderately utilized designs
 
 --------------
 --- Debug  ---
