@@ -240,7 +240,7 @@ jobs:
       with:
         msystem: MSYS
         update: true
-        install:  gcc make cmake ninja python python-devel git diffutils autoconf
+        install:  gcc make cmake ninja python python-devel git diffutils autoconf mingw-w64-x86_64-libusb
         release: false
       env:
         MSYS2_PATH_TYPE: inherit
@@ -340,6 +340,11 @@ jobs:
       with:
         python-version: 3.8
         architecture: x64
+
+    - name: Install libusb with vcpkg
+      run: |
+        C:\vcpkg\vcpkg.exe install libusb:x64-windows
+        C:\vcpkg\vcpkg.exe integrate install
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v3.0.0
@@ -561,7 +566,8 @@ jobs:
         sudo apt -qq -y install clang-tidy-12 \
                                 g++-11 tclsh  default-jre cmake \
                                 uuid-dev build-essential xorg \
-                                qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools qtdeclarative5-dev xvfb
+                                qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools qtdeclarative5-dev xvfb \
+                                libusb-1.0-0-dev pkg-config
 
     - name: Use ccache
       uses: hendrikmuhs/ccache-action@v1.2.3

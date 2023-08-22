@@ -34,7 +34,7 @@ class CompilerRS : public CompilerOpenFPGA {
 
   std::vector<std::string> helpTags() const;
   void Version(std::ostream* out);
-  std::string BaseVprCommand();
+  std::string BaseVprCommand(BaseVprDefaults defaults);
   virtual std::string InitSynthesisScript();
   virtual std::string FinishSynthesisScript(const std::string& script);
   virtual std::string FinishAnalyzeScript(const std::string& script);

@@ -635,7 +635,7 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
   return status;
 }
 
-std::string CompilerRS::BaseVprCommand() {
+std::string CompilerRS::BaseVprCommand(BaseVprDefaults defaults) {
   std::string device_size = "";
   if (PackOpt() == Compiler::PackingOpt::Debug) {
     device_size = " --device auto";
@@ -688,9 +688,10 @@ std::string CompilerRS::BaseVprCommand() {
   }
   if (!PnROpt().empty()) pnrOptions += " " + PnROpt();
   if (!PerDevicePnROptions().empty()) pnrOptions += " " + PerDevicePnROptions();
-  if (pnrOptions.find("gen_post_synthesis_netlist") == std::string::npos) {
-    pnrOptions += " --gen_post_synthesis_netlist on";
-  }
+  if (defaults.gen_post_synthesis_netlist)
+    if (pnrOptions.find("gen_post_synthesis_netlist") == std::string::npos) {
+      pnrOptions += " --gen_post_synthesis_netlist on";
+    }
   if (pnrOptions.find("post_synth_netlist_unconn_inputs") ==
       std::string::npos) {
     pnrOptions += " --post_synth_netlist_unconn_inputs gnd";
@@ -1005,7 +1006,8 @@ bool CompilerRS::TimingAnalysis() {
   auto workingDir = FilePath(Action::STA).string();
   if (TimingAnalysisOpt() == STAOpt::View) {
     TimingAnalysisOpt(STAOpt::None);
-    const std::string command = BaseVprCommand() + " --analysis --disp on";
+    const std::string command =
+        BaseVprCommand({false}) + " --analysis --disp on";
     const int status =
         ExecuteAndMonitorSystemCommand(command, {}, false, workingDir);
     if (status) {
@@ -1036,7 +1038,7 @@ bool CompilerRS::TimingAnalysis() {
     // then it does it work based on that
     std::string vpr_executable_path =
         m_vprExecutablePath.string() + std::string(" ");
-    std::string command = BaseVprCommand();
+    std::string command = BaseVprCommand({false});
     if (command.find(vpr_executable_path) != std::string::npos) {
       command = ReplaceAll(command, vpr_executable_path,
                            m_starsExecutablePath.string() + " ");
@@ -1092,7 +1094,7 @@ bool CompilerRS::TimingAnalysis() {
       return false;
     }
   } else {  // use vpr/tatum engine
-    taCommand = BaseVprCommand() + " --analysis";
+    taCommand = BaseVprCommand({false}) + " --analysis";
     FileUtils::WriteToFile(file, taCommand + " --disp on");
   }
 
@@ -1211,8 +1213,11 @@ bool CompilerRS::PowerAnalysis() {
   command += "--script " + m_powerExecutablePath.string() + " ";
   */
 
-  int status = ExecuteAndMonitorSystemCommand(command, {}, false,
-                                              FilePath(Action::Power).string());
+  auto file = ProjManager()->projectName() + "_power.cmd";
+  FileUtils::WriteToFile(file, command);
+
+  int status = ExecuteAndMonitorSystemCommand(
+      command, POWER_ANALYSIS_LOG, false, FilePath(Action::Power).string());
   if (status) {
     ErrorMessage("Design " + ProjManager()->projectName() +
                  " power analysis failed");
