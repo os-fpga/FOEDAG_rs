@@ -100,6 +100,7 @@ Tcl commands (Available in GUI or Batch console or Batch script):
 -----------------
 --- Synthesis ---
 -----------------
+   parser_type <type>         : Parser <type> in: verific, yosys, surelog, ghdl
    synth_options <option list>:
      -effort <level>          : Optimization effort level (high, medium, low)
        high                   : Most compute, generally impacting runtime (default)

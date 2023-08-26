@@ -59,10 +59,30 @@ write_edif ${OUTPUT_EDIF}
 write_blif -param ${OUTPUT_EBLIF}
   )";
 
-const std::string RapidSiliconYosysScript = R"( 
-# Yosys synthesis script for ${TOP_MODULE}
+const std::string RapidSiliconYosysVerificScript = R"( 
+# Yosys/Verific synthesis script for ${TOP_MODULE}
 # Read source files
 verific -sv2005 ${PRIMITIVES_BLACKBOX}
+${READ_DESIGN_FILES}
+
+# Technology mapping
+hierarchy ${TOP_MODULE_DIRECTIVE}
+
+${KEEP_NAMES}
+
+plugin -i ${PLUGIN_LIB}
+
+${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+
+${OUTPUT_NETLIST}
+
+  )";
+
+const std::string RapidSiliconYosysSurelogScript = R"( 
+# Yosys/Surelog synthesis script for ${TOP_MODULE}
+# Read source files
+plugin -i systemverilog
+read_systemverilog -defer -sv ${PRIMITIVES_BLACKBOX}
 ${READ_DESIGN_FILES}
 
 # Technology mapping
@@ -128,10 +148,26 @@ std::string CompilerRS::InitSynthesisScript() {
     }
     case SynthesisType::RS: {
       Message("RS Synthesis");
-      if (m_mapToTechnology.empty()) m_mapToTechnology = "genesis";
+      if (m_mapToTechnology.empty()) m_mapToTechnology = "genesis3";
       if (m_yosysPluginLib.empty()) m_yosysPluginLib = "synth-rs";
       if (m_yosysPlugin.empty()) m_yosysPlugin = "synth_rs";
-      YosysScript(RapidSiliconYosysScript);
+      switch (GetParserType()) {
+        case ParserType::Verific: {
+          YosysScript(RapidSiliconYosysVerificScript);
+          break;
+        }
+        case ParserType::Surelog: {
+          YosysScript(RapidSiliconYosysSurelogScript);
+          break;
+        }
+        case ParserType::GHDL: {
+          break;
+        }
+        case ParserType::Default: {
+          YosysScript(QLYosysScript);
+          break;
+        }
+      }
       break;
     }
   }
