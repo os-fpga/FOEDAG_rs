@@ -82,7 +82,7 @@ const std::string RapidSiliconYosysSurelogScript = R"(
 # Yosys/Surelog synthesis script for ${TOP_MODULE}
 # Read source files
 plugin -i systemverilog
-read_systemverilog -defer -sv ${PRIMITIVES_BLACKBOX}
+read_systemverilog -sv -v ${PRIMITIVES_BLACKBOX}
 ${READ_DESIGN_FILES}
 
 # Technology mapping
