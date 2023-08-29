@@ -1,21 +1,7 @@
 #include "BitAssembler_ocla.h"
 
-BitAssembler_OCLA_REPORT::BitAssembler_OCLA_REPORT(std::string filepath) {
-  stdout.open(filepath.c_str());
-  CFG_ASSERT_MSG(stdout.is_open(), "Fail to open %s for writing",
-                 filepath.c_str());
-}
-
-void BitAssembler_OCLA_REPORT::write(std::string msg) {
-  CFG_ASSERT(stdout.is_open());
-  stdout.write(msg.c_str(), msg.size());
-  stdout.flush();
-}
-
-void BitAssembler_OCLA_REPORT::close() { stdout.close(); }
-
 #define write_report(...) \
-  { report.write(CFG_print(__VA_ARGS__)); }
+  { write_output(report, CFG_print(__VA_ARGS__)); }
 
 struct BitAssembler_OCLA_PROBE {
   BitAssembler_OCLA_PROBE(std::string n) : name(n) {
@@ -99,12 +85,12 @@ struct BitAssembler_IP_MODULE {
       instantiations.pop_back();
     }
   }
-  void update_param(std::string param, BitAssembler_OCLA_REPORT& report) {
-    write_report("      Param: %s\n", param.c_str());
+  void update_param(std::string param, std::ofstream& report) {
+    report << "      Param: " << param.c_str() << "\n";
     std::vector<std::string> words = CFG_split_string(param, "=");
     if (words.size() == 2) {
       if (value_maps.find(words[0]) != value_maps.end()) {
-        write_report("        Supported\n");
+        report << "        Supported\n";
         uint32_t* value_ptr = value_maps[words[0]];
         std::vector<std::string> values = CFG_split_string(words[1], "'");
         bool status = true;
@@ -119,9 +105,10 @@ struct BitAssembler_IP_MODULE {
         if (status) {
           backup_values[words[0]] = *value_ptr;
           *value_ptr = (uint32_t)(temp);
-          write_report("        Overwrite to 0x%08X\n", temp);
+          report << "        Overwrite to ";
+          report << CFG_print("0x%08X\n", temp).c_str();
         } else {
-          write_report("        Invalid number conversion\n");
+          report << "        Invalid number conversion\n";
           CFG_POST_WARNING("Invalid number conversion - %s", param.c_str());
         }
       }
@@ -184,15 +171,15 @@ struct BitAssembler_OCLA_INSTANCE {
       trigger_inputs.pop_back();
     }
   }
-  void update_param(BitAssembler_OCLA_MODULE*& ocla,
-                    BitAssembler_OCLA_REPORT& report) {
+  void update_param(BitAssembler_OCLA_MODULE*& ocla, std::ofstream& report) {
     size_t index = module_unique_name.rfind("(");
     if (index > 0 && index != std::string::npos &&
         module_unique_name[module_unique_name.size() - 1] == ')') {
       std::string param_string = module_unique_name.substr(
           index + 1, module_unique_name.size() - index - 2);
-      write_report("    Found Potential Param to overwrite: %s\n",
-                   param_string.c_str());
+      report << "    Found Potential Param to overwrite: ";
+      report << param_string.c_str();
+      report << "\n";
       std::vector<std::string> params = CFG_split_string(param_string, ",");
       for (std::string& param : params) {
         ocla->update_param(param, report);
@@ -236,8 +223,7 @@ void BitAssembler_OCLA::parse(CFGObject_BITOBJ& bitobj,
     nlohmann::json hier = nlohmann::json::parse(file);
     file.close();
     std::string rptPath = CFG_print("%s/ocla.rpt", taskPath.c_str());
-    BitAssembler_OCLA_REPORT report(rptPath);
-
+    std::ofstream report(rptPath.c_str());
     std::vector<BitAssembler_OCLA_MODULE*> ocla_modules;
     std::vector<BitAssembler_AXIL_MODULE*> axil_modules;
     get_ip_wrapper_module(hier, "ocla", 0x6F636C61, ocla_modules, report);
@@ -360,9 +346,11 @@ void BitAssembler_OCLA::parse(CFGObject_BITOBJ& bitobj,
 }
 
 template <typename T>
-void BitAssembler_OCLA::get_ip_wrapper_module(
-    nlohmann::json& hier, const std::string& ip_name, const uint32_t ip_type,
-    std::vector<T*>& ip_modules, BitAssembler_OCLA_REPORT& report) {
+void BitAssembler_OCLA::get_ip_wrapper_module(nlohmann::json& hier,
+                                              const std::string& ip_name,
+                                              const uint32_t ip_type,
+                                              std::vector<T*>& ip_modules,
+                                              std::ofstream& report) {
   std::vector<T*> temp_modules;
   if (hier.is_object() && hier.contains("modules") &&
       hier["modules"].is_object()) {
@@ -726,7 +714,7 @@ bool BitAssembler_OCLA::generate_rtlil(
 bool BitAssembler_OCLA::get_modules(
     const std::vector<std::string>& modules,
     std::vector<std::pair<std::string, std::string>>& cells,
-    const std::string& rtlilPath, BitAssembler_OCLA_REPORT& report) {
+    const std::string& rtlilPath, std::ofstream& report) {
   // Read text line by line
   std::ifstream file(rtlilPath.c_str());
   CFG_ASSERT_MSG(file.is_open(), "Fail to open %s", rtlilPath.c_str());
@@ -782,7 +770,7 @@ bool BitAssembler_OCLA::get_probes(
     std::vector<BitAssembler_OCLA_INSTANCE*>& instances,
     const std::string& rtlilPath, const std::string& module,
     const std::string& module_instance, uint32_t& connection_start_line,
-    BitAssembler_OCLA_REPORT& report) {
+    std::ofstream& report) {
   bool status = true;
   // Read text line by line
   std::ifstream file(rtlilPath.c_str());
@@ -1033,7 +1021,7 @@ bool BitAssembler_OCLA::get_probe_size(
     const size_t start_line, const std::string& rtlilPath,
     std::vector<std::string>& signals,
     std::vector<std::vector<BitAssembler_OCLA_PROBE*>>& signal_ptrs,
-    BitAssembler_OCLA_REPORT& report) {
+    std::ofstream& report) {
   // Read text line by line
   std::ifstream file(rtlilPath.c_str());
   CFG_ASSERT_MSG(file.is_open(), "Fail to open %s", rtlilPath.c_str());
@@ -1116,8 +1104,7 @@ bool BitAssembler_OCLA::get_probe_size(
 
 bool BitAssembler_OCLA::match_instance(
     BitAssembler_OCLA_INSTANCE*& instance,
-    std::vector<BitAssembler_OCLA_MODULE*>& oclas,
-    BitAssembler_OCLA_REPORT& report) {
+    std::vector<BitAssembler_OCLA_MODULE*>& oclas, std::ofstream& report) {
   bool status = false;
   for (auto& ocla : oclas) {
     if (ocla->module_name == instance->module) {
@@ -1166,7 +1153,7 @@ bool BitAssembler_OCLA::get_connection(
     BitAssembler_AXIL_MODULE*& axil_instance,
     std::vector<std::string>& axil_connections,
     std::vector<uint32_t>& found_axil_connections, const std::string& source,
-    uint32_t start_line, uint32_t level, BitAssembler_OCLA_REPORT& report) {
+    uint32_t start_line, uint32_t level, std::ofstream& report) {
   bool status = level < 100;
   // Read text line by line
   std::ifstream file;
@@ -1243,4 +1230,10 @@ bool BitAssembler_OCLA::get_connection(
     }
   }
   return status;
+}
+
+void BitAssembler_OCLA::write_output(std::ofstream& report, std::string msg) {
+  CFG_ASSERT(report.is_open());
+  report.write(msg.c_str(), msg.size());
+  report.flush();
 }

@@ -14,13 +14,6 @@ struct BitAssembler_AXIL_MODULE;
 struct BitAssembler_OCLA_INSTANTIATION;
 struct BitAssembler_OCLA_INSTANCE;
 struct BitAssembler_OCLA_PROBE;
-struct BitAssembler_OCLA_REPORT {
-  BitAssembler_OCLA_REPORT() {}
-  BitAssembler_OCLA_REPORT(std::string filepath);
-  void write(std::string msg);
-  void close();
-  std::ofstream stdout;
-};
 
 class BitAssembler_OCLA {
  public:
@@ -34,7 +27,7 @@ class BitAssembler_OCLA {
                                     const std::string& ip_name,
                                     const uint32_t ip_type,
                                     std::vector<T*>& ocla_modules,
-                                    BitAssembler_OCLA_REPORT& report);
+                                    std::ofstream& report);
   static bool get_module_instantiations(BitAssembler_IP_MODULE*& ip,
                                         nlohmann::json& hier);
   static bool get_module_instantiations(BitAssembler_IP_MODULE*& ip,
@@ -62,29 +55,30 @@ class BitAssembler_OCLA {
   static bool get_modules(
       const std::vector<std::string>& modules,
       std::vector<std::pair<std::string, std::string>>& cells,
-      const std::string& rtlilPath, BitAssembler_OCLA_REPORT& report);
+      const std::string& rtlilPath, std::ofstream& report);
   static bool get_probes(const std::vector<std::string>& modules,
                          std::vector<BitAssembler_OCLA_INSTANCE*>& instances,
                          const std::string& rtlilPath,
                          const std::string& module,
                          const std::string& module_instance,
                          uint32_t& connection_start_line,
-                         BitAssembler_OCLA_REPORT& report);
+                         std::ofstream& report);
   static bool get_probe_size(
       const size_t start_line, const std::string& rtlilPath,
       std::vector<std::string>& signals,
       std::vector<std::vector<BitAssembler_OCLA_PROBE*>>& signal_ptrs,
-      BitAssembler_OCLA_REPORT& report);
+      std::ofstream& report);
   static bool match_instance(BitAssembler_OCLA_INSTANCE*& instance,
                              std::vector<BitAssembler_OCLA_MODULE*>& oclas,
-                             BitAssembler_OCLA_REPORT& report);
+                             std::ofstream& report);
   static bool get_connection(const std::string& rtlilPath,
                              BitAssembler_OCLA_INSTANCE*& instance,
                              BitAssembler_AXIL_MODULE*& axil_instance,
                              std::vector<std::string>& axil_connections,
                              std::vector<uint32_t>& found_axil_connections,
                              const std::string& source, uint32_t start_line,
-                             uint32_t level, BitAssembler_OCLA_REPORT& report);
+                             uint32_t level, std::ofstream& report);
+  static void write_output(std::ofstream& report, std::string msg);
 };
 
 #endif
