@@ -21,8 +21,8 @@ add_custom_target(post-configurationRS
 # Define the subsystem here
 list(APPEND LEVEL1_SUBSYSTEMS CFGCommonRS)
 list(APPEND LEVEL2_SUBSYSTEMS CFGCrypto CFGObject)
-list(APPEND LEVEL3_SUBSYSTEMS BitAssembler BitGenerator)
-list(APPEND EXE_SUBSYSTEMS BitAssembler BitGenerator)
+list(APPEND LEVEL3_SUBSYSTEMS BitAssembler BitGenerator Ocla)
+list(APPEND EXE_SUBSYSTEMS BitAssembler BitGenerator Ocla)
 
 # Only change this if you know what it does
 list(APPEND PRE-SUBSYSTEMS ${LEVEL1_SUBSYSTEMS} ${LEVEL2_SUBSYSTEMS})
