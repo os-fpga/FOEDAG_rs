@@ -101,7 +101,7 @@ inline T* CFG_mem_new_function(const char* filename, uint32_t lineno, T* ptr) {
   return ptr;
 }
 #define CFG_MEM_NEW(T, ...) \
-  CFG_mem_new_function<T>(__FILENAME__, __LINE__, new T(__VA_ARGS__));
+  CFG_mem_new_function<T>(__FILENAME__, __LINE__, new T(__VA_ARGS__))
 #else
 // This easier way work for GCC but not MSVC
 #define CFG_MEM_NEW(CLASS, ...)                 \

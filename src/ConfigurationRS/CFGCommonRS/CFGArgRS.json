@@ -181,7 +181,9 @@
         "desc": "Generate UBI package by combination BOP input(s)",
         "help": [
           "To generate UBI file:",
-          "  <BOP input>s <output .cfgbit>\n",
+          "  --header_version=<header version> --product_id=<prod id>",
+          "  --customer_id=<customer id> --image_version=<img version>",
+          "  --type=<img type> <BOP input>s <output .cfgbit>\n",
           "BOP input can be single or two files. Both old and new",
           "  formats are supported"
         ],
@@ -244,7 +246,6 @@
             "name": "device",
             "short": "d",
             "type": "str",
-            "optional": true,
             "help": "Device name or device database file (.ddb)"
           },
           {
