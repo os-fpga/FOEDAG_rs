@@ -99,6 +99,34 @@ struct BitAssembler_IP_MODULE {
       instantiations.pop_back();
     }
   }
+  void update_param(std::string param, BitAssembler_OCLA_REPORT& report) {
+    write_report("      Param: %s\n", param.c_str());
+    std::vector<std::string> words = CFG_split_string(param, "=");
+    if (words.size() == 2) {
+      if (value_maps.find(words[0]) != value_maps.end()) {
+        write_report("        Supported\n");
+        uint32_t* value_ptr = value_maps[words[0]];
+        std::vector<std::string> values = CFG_split_string(words[1], "'");
+        bool status = true;
+        uint64_t temp = 0;
+        std::string vstr = "";
+        if (values.size() == 1) {
+          vstr = values[0];
+        } else {
+          vstr = values[1];
+        }
+        temp = CFG_convert_string_to_u64(vstr, true, &status);
+        if (status) {
+          backup_values[words[0]] = *value_ptr;
+          *value_ptr = (uint32_t)(temp);
+          write_report("        Overwrite to 0x%08X\n", temp);
+        } else {
+          write_report("        Invalid number conversion\n");
+          CFG_POST_WARNING("Invalid number conversion - %s", param.c_str());
+        }
+      }
+    }
+  }
   void backup_param() {
     for (auto& param : backup_values) {
       *value_maps[param.first] = param.second;
@@ -167,39 +195,7 @@ struct BitAssembler_OCLA_INSTANCE {
                    param_string.c_str());
       std::vector<std::string> params = CFG_split_string(param_string, ",");
       for (std::string& param : params) {
-        write_report("      Param: %s\n", param.c_str());
-        std::vector<std::string> words = CFG_split_string(param, "=");
-        if (words.size() == 2) {
-          if (ocla->value_maps.find(words[0]) != ocla->value_maps.end()) {
-            write_report("        Supported\n");
-            uint32_t* value_ptr = ocla->value_maps[words[0]];
-            std::vector<std::string> values = CFG_split_string(words[1], "'");
-            bool status = true;
-            if (values.size() == 1) {
-              uint32_t temp = (uint32_t)(CFG_convert_string_to_u64(
-                  values[0], true, &status));
-              if (status) {
-                ocla->backup_values[words[0]] = *value_ptr;
-                *value_ptr = temp;
-                write_report("        Overwrite to 0x%08X\n", temp);
-              } else {
-                CFG_POST_WARNING("Invalid number conversion - %s",
-                                 param.c_str());
-              }
-            } else {
-              uint32_t temp = (uint32_t)(CFG_convert_string_to_u64(
-                  values[1], true, &status));
-              if (status) {
-                ocla->backup_values[words[0]] = *value_ptr;
-                *value_ptr = temp;
-                write_report("        Overwrite to 0x%08X\n", temp);
-              } else {
-                CFG_POST_WARNING("Invalid number conversion - %s",
-                                 param.c_str());
-              }
-            }
-          }
-        }
+        ocla->update_param(param, report);
       }
     }
   }
@@ -485,9 +481,8 @@ bool BitAssembler_OCLA::get_module_instantiations(BitAssembler_IP_MODULE*& ip,
     if (hier.contains("hierTree") && hier["hierTree"].is_array() &&
         hier["hierTree"].size() == 1 && hier["hierTree"][0].is_object()) {
       nlohmann::json& top = hier["hierTree"][0];
-      status =
-          get_module_instantiations(ip, hier["hierTree"][0], true, "top_level",
-                                    "topModule", hier["fileIDs"]);
+      status = get_module_instantiations(ip, top, true, "top_level",
+                                         "topModule", hier["fileIDs"]);
     } else {
       CFG_POST_WARNING("Could not detect top level module - hierTree");
     }
@@ -732,7 +727,6 @@ bool BitAssembler_OCLA::get_modules(
     const std::vector<std::string>& modules,
     std::vector<std::pair<std::string, std::string>>& cells,
     const std::string& rtlilPath, BitAssembler_OCLA_REPORT& report) {
-  bool status = true;
   // Read text line by line
   std::ifstream file(rtlilPath.c_str());
   CFG_ASSERT_MSG(file.is_open(), "Fail to open %s", rtlilPath.c_str());
