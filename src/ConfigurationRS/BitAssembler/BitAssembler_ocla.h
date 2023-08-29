@@ -1,6 +1,8 @@
 #ifndef BITASSEMBLER_OCLA_H
 #define BITASSEMBLER_OCLA_H
 
+#include <fstream>
+#include <iostream>
 #include <string>
 
 #include "CFGObject/CFGObject_auto.h"
@@ -17,7 +19,7 @@ struct BitAssembler_OCLA_REPORT {
   BitAssembler_OCLA_REPORT(std::string filepath);
   void write(std::string msg);
   void close();
-  std::fstream stdout;
+  std::ofstream stdout;
 };
 
 class BitAssembler_OCLA {

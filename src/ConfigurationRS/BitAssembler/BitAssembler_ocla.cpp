@@ -1,7 +1,7 @@
 #include "BitAssembler_ocla.h"
 
 BitAssembler_OCLA_REPORT::BitAssembler_OCLA_REPORT(std::string filepath) {
-  stdout.open(filepath.c_str(), std::ios::out);
+  stdout.open(filepath.c_str());
   CFG_ASSERT_MSG(stdout.is_open(), "Fail to open %s for writing",
                  filepath.c_str());
 }
@@ -671,12 +671,10 @@ bool BitAssembler_OCLA::generate_full_rtlil(const std::string& yosysBin,
                                             const std::string& taskPath,
                                             const std::string& rtlilPath) {
   // Read text line by line
-  std::fstream file;
-  file.open(ysPath.c_str(), std::ios::in);
+  std::ifstream file(ysPath.c_str());
   CFG_ASSERT_MSG(file.is_open(), "Fail to open %s", ysPath.c_str());
   std::string outPath = CFG_print("%s/ocla.full.ys", taskPath.c_str());
-  std::fstream outfile;
-  outfile.open(outPath.c_str(), std::ios::out);
+  std::ofstream outfile(outPath.c_str());
   CFG_ASSERT_MSG(outfile.is_open(), "Fail to open %s for writing",
                  outPath.c_str());
   std::string line = "";
@@ -702,12 +700,10 @@ bool BitAssembler_OCLA::generate_rtlil(
     const std::string& yosysBin, const std::string& ysPath,
     const std::string& taskPath, const std::string& rtlilPath) {
   // Read text line by line
-  std::fstream file;
-  file.open(ysPath.c_str(), std::ios::in);
+  std::ifstream file(ysPath.c_str());
   CFG_ASSERT_MSG(file.is_open(), "Fail to open %s", ysPath.c_str());
   std::string outPath = CFG_print("%s/ocla.ys", taskPath.c_str());
-  std::fstream outfile;
-  outfile.open(outPath.c_str(), std::ios::out);
+  std::ofstream outfile(outPath.c_str());
   CFG_ASSERT_MSG(outfile.is_open(), "Fail to open %s for writing",
                  outPath.c_str());
   std::string line = "";
@@ -738,8 +734,7 @@ bool BitAssembler_OCLA::get_modules(
     const std::string& rtlilPath, BitAssembler_OCLA_REPORT& report) {
   bool status = true;
   // Read text line by line
-  std::fstream file;
-  file.open(rtlilPath.c_str(), std::ios::in);
+  std::ifstream file(rtlilPath.c_str());
   CFG_ASSERT_MSG(file.is_open(), "Fail to open %s", rtlilPath.c_str());
   write_report("Parse FULL RTLIL to get final module:\n");
   write_report("  %s", CFG_print_strings_to_string(modules, ",").c_str());
@@ -796,8 +791,7 @@ bool BitAssembler_OCLA::get_probes(
     BitAssembler_OCLA_REPORT& report) {
   bool status = true;
   // Read text line by line
-  std::fstream file;
-  file.open(rtlilPath.c_str(), std::ios::in);
+  std::ifstream file(rtlilPath.c_str());
   CFG_ASSERT_MSG(file.is_open(), "Fail to open %s", rtlilPath.c_str());
   write_report("Parse RTLIL for module %s (%s)\n", module.c_str(),
                module_instance.c_str());
@@ -1047,8 +1041,7 @@ bool BitAssembler_OCLA::get_probe_size(
     std::vector<std::vector<BitAssembler_OCLA_PROBE*>>& signal_ptrs,
     BitAssembler_OCLA_REPORT& report) {
   // Read text line by line
-  std::fstream file;
-  file.open(rtlilPath.c_str(), std::ios::in);
+  std::ifstream file(rtlilPath.c_str());
   CFG_ASSERT_MSG(file.is_open(), "Fail to open %s", rtlilPath.c_str());
   bool status = true;
   std::string line = "";
@@ -1182,7 +1175,7 @@ bool BitAssembler_OCLA::get_connection(
     uint32_t start_line, uint32_t level, BitAssembler_OCLA_REPORT& report) {
   bool status = level < 100;
   // Read text line by line
-  std::fstream file;
+  std::ifstream file;
   if (status) {
     write_report("  Trace source: %s (level: %d)\n", source.c_str(), level);
     file.open(rtlilPath.c_str(), std::ios::in);
