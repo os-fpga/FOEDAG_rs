@@ -13,6 +13,7 @@ struct BitAssembler_OCLA_INSTANTIATION;
 struct BitAssembler_OCLA_INSTANCE;
 struct BitAssembler_OCLA_PROBE;
 struct BitAssembler_OCLA_REPORT {
+  BitAssembler_OCLA_REPORT() {}
   BitAssembler_OCLA_REPORT(std::string filepath);
   void write(std::string msg);
   void close();
