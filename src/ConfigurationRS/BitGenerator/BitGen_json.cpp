@@ -393,7 +393,6 @@ static BitGen_BITSTREAM_ACTION* BitGen_JSON_gen_bitstream_bop_action(
   action->field = BitGen_JSON_gen_action_field(json, fields);
   CFG_ASSERT((action->field.size() % 4) == 0);
   if (has_payload) {
-    printf("BitGen_JSON_gen_bitstream_bop_payload\n");
     BitGen_JSON_gen_bitstream_bop_payload(json["payload"], action->payload);
     CFG_ASSERT(action->payload.size());
   } else {

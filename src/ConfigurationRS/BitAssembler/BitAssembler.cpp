@@ -2,6 +2,7 @@
 
 #include "BitAssembler_ddb.h"
 #include "BitAssembler_mgr.h"
+#include "BitAssembler_ocla.h"
 #include "BitGenerator/BitGenerator.h"
 #include "CFGCommonRS/CFGArgRS_auto.h"
 #include "CFGObject/CFGObject_auto.h"
@@ -58,6 +59,15 @@ void BitAssembler_entry(const CFGCommon_ARG* cmdarg) {
     } else {
       mgr.get_ql_membank_fcb(&bitobj.ql_membank_fcb);
     }
+
+    // OCLA
+    std::string yosysBin = CFG_print("%s/yosys", cmdarg->binPath.c_str());
+    std::string hierPath =
+        CFG_print("%s/hier_info.json", cmdarg->analyzePath.c_str());
+    std::string ysPath = CFG_print("%s/%s.ys", cmdarg->synthesisPath.c_str(),
+                                   cmdarg->projectName.c_str());
+    BitAssembler_OCLA::parse(bitobj, cmdarg->taskPath.c_str(), yosysBin,
+                             hierPath, ysPath);
 
     // Writing out
     bitgen = bitobj.write(bitasm_file);

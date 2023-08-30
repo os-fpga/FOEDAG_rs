@@ -60,6 +60,7 @@ add_library(
   BitAssembler_ddb00.cpp
   BitAssembler_ddb.cpp
   BitAssembler_mgr.cpp
+  BitAssembler_ocla.cpp
 )
 
 ###################

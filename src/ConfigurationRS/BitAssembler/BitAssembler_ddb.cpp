@@ -8,7 +8,6 @@
 #include "BitAssembler_mgr.h"
 #include "CFGCommonRS/CFGCommonRS.h"
 #include "CFGObject/CFGObject_auto.h"
-#include "nlohmann_json/json.hpp"
 
 void CFG_ddb_search_device(const std::string& filepath,
                            const std::string& device_name,
