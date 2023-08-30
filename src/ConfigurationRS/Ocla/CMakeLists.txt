@@ -41,11 +41,11 @@ endif()
 #
 # Three elements will be built
 #
-# 1. subsystem library (in this case bitgenerator) - it contains all the core code to generate bitstream. It will be called by other elements
+# 1. subsystem library (in this case ocla) - it contains all the core code to generate bitstream. It will be called by other elements
 #
-# 2. raptor_bin executable (in this case raptor_bitgenerator exe) - it is external command line entry which eventually call subsystem library (item 1)
+# 2. raptor_bin executable (in this case raptor_ocla exe) - it is external command line entry which eventually call subsystem library (item 1)
 #
-# 3. test_bin executable (in this case bitgenerator_test exe) - it is external command line entry which eventually call subsystem library (item 1) for unit testing
+# 3. test_bin executable (in this case ocla exe) - it is external command line entry which eventually call subsystem library (item 1) for unit testing
 #
 #################################################################################################################
 
