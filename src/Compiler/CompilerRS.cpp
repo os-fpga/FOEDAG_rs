@@ -79,7 +79,7 @@ ${OUTPUT_NETLIST}
   )";
 
 const std::string RapidSiliconYosysDefaultScript = R"( 
-# Yosys/Verific synthesis script for ${TOP_MODULE}
+# Yosys synthesis script for ${TOP_MODULE}
 # Read source files
 read_verilog -sv ${PRIMITIVES_BLACKBOX}
 ${READ_DESIGN_FILES}
