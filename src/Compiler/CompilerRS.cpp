@@ -78,6 +78,25 @@ ${OUTPUT_NETLIST}
 
   )";
 
+const std::string RapidSiliconYosysDefaultScript = R"( 
+# Yosys/Verific synthesis script for ${TOP_MODULE}
+# Read source files
+read_verilog -sv ${PRIMITIVES_BLACKBOX}
+${READ_DESIGN_FILES}
+
+# Technology mapping
+hierarchy ${TOP_MODULE_DIRECTIVE}
+
+${KEEP_NAMES}
+
+plugin -i ${PLUGIN_LIB}
+
+${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+
+${OUTPUT_NETLIST}
+
+  )";
+
 const std::string RapidSiliconYosysSurelogScript = R"( 
 # Yosys/Surelog synthesis script for ${TOP_MODULE}
 # Read source files
@@ -185,7 +204,7 @@ std::string CompilerRS::InitSynthesisScript() {
           break;
         }
         case ParserType::Default: {
-          YosysScript(QLYosysScript);
+          YosysScript(RapidSiliconYosysDefaultScript);
           break;
         }
       }
