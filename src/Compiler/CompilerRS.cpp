@@ -98,6 +98,26 @@ ${OUTPUT_NETLIST}
 
   )";
 
+const std::string RapidSiliconYosysGhdlScript = R"( 
+# Yosys/Ghdl synthesis script for ${TOP_MODULE}
+# Read source files
+plugin -i ghdl
+read_verilog -sv ${PRIMITIVES_BLACKBOX}
+${READ_DESIGN_FILES}
+
+# Technology mapping
+hierarchy ${TOP_MODULE_DIRECTIVE}
+
+${KEEP_NAMES}
+
+plugin -i ${PLUGIN_LIB}
+
+${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+
+${OUTPUT_NETLIST}
+
+  )";
+
 static auto assembler_flow(CompilerRS *compiler, bool batchMode, int argc,
                            const char *argv[]) {
   CFGCompiler *cfgcompiler = compiler->GetConfiguration();
@@ -161,6 +181,7 @@ std::string CompilerRS::InitSynthesisScript() {
           break;
         }
         case ParserType::GHDL: {
+          YosysScript(RapidSiliconYosysGhdlScript);
           break;
         }
         case ParserType::Default: {
