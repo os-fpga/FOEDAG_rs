@@ -78,11 +78,50 @@ ${OUTPUT_NETLIST}
 
   )";
 
+const std::string RapidSiliconYosysDefaultScript = R"( 
+# Yosys synthesis script for ${TOP_MODULE}
+# Read source files
+read_verilog -sv ${PRIMITIVES_BLACKBOX}
+${READ_DESIGN_FILES}
+
+# Technology mapping
+hierarchy ${TOP_MODULE_DIRECTIVE}
+
+${KEEP_NAMES}
+
+plugin -i ${PLUGIN_LIB}
+
+${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+
+${OUTPUT_NETLIST}
+
+  )";
+
 const std::string RapidSiliconYosysSurelogScript = R"( 
 # Yosys/Surelog synthesis script for ${TOP_MODULE}
 # Read source files
 plugin -i systemverilog
 read_systemverilog -sv -v ${PRIMITIVES_BLACKBOX}
+${READ_DESIGN_FILES}
+
+# Technology mapping
+hierarchy ${TOP_MODULE_DIRECTIVE}
+
+${KEEP_NAMES}
+
+plugin -i ${PLUGIN_LIB}
+
+${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+
+${OUTPUT_NETLIST}
+
+  )";
+
+const std::string RapidSiliconYosysGhdlScript = R"( 
+# Yosys/Ghdl synthesis script for ${TOP_MODULE}
+# Read source files
+plugin -i ghdl
+read_verilog -sv ${PRIMITIVES_BLACKBOX}
 ${READ_DESIGN_FILES}
 
 # Technology mapping
@@ -161,10 +200,11 @@ std::string CompilerRS::InitSynthesisScript() {
           break;
         }
         case ParserType::GHDL: {
+          YosysScript(RapidSiliconYosysGhdlScript);
           break;
         }
         case ParserType::Default: {
-          YosysScript(QLYosysScript);
+          YosysScript(RapidSiliconYosysDefaultScript);
           break;
         }
       }
