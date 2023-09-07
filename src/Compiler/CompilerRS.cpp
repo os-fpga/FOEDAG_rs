@@ -221,7 +221,14 @@ std::string CompilerRS::FinishAnalyzeScript(const std::string &script) {
       datapath / "raptor" / "sim_models" / "rapidsilicon" / m_mapToTechnology;
   std::filesystem::path primitivesBlackboxPath =
       tech_datapath / "cell_sim_blackbox.v";
-  std::string result = "-sv2009 " + primitivesBlackboxPath.string() + "\n";
+  std::string result;
+  if (GetParserType() == ParserType::Default ||
+      GetParserType() == ParserType::Surelog ||
+      GetParserType() == ParserType::GHDL) {
+    result = "read_verilog -sv " + primitivesBlackboxPath.string() + "\n";
+  } else {
+    result = "-sv2009 " + primitivesBlackboxPath.string() + "\n";
+  }
   result += script;
   return result;
 }
