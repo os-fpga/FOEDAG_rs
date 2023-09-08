@@ -100,9 +100,7 @@ ${OUTPUT_NETLIST}
 const std::string RapidSiliconYosysSurelogScript = R"( 
 # Yosys/Surelog synthesis script for ${TOP_MODULE}
 # Read source files
-plugin -i systemverilog
-read_systemverilog -sv -v ${PRIMITIVES_BLACKBOX}
-${READ_DESIGN_FILES}
+${READ_DESIGN_FILES}${PRIMITIVES_BLACKBOX}
 
 # Technology mapping
 hierarchy ${TOP_MODULE_DIRECTIVE}
@@ -222,12 +220,19 @@ std::string CompilerRS::FinishAnalyzeScript(const std::string &script) {
   std::filesystem::path primitivesBlackboxPath =
       tech_datapath / "cell_sim_blackbox.v";
   std::string result;
-  if (GetParserType() == ParserType::Default ||
-      GetParserType() == ParserType::Surelog ||
-      GetParserType() == ParserType::GHDL) {
-    result = "read_verilog -sv " + primitivesBlackboxPath.string() + "\n";
-  } else {
-    result = "-sv2009 " + primitivesBlackboxPath.string() + "\n";
+  switch (GetParserType()) {
+    case ParserType::Default:
+      result = "read_verilog -sv " + primitivesBlackboxPath.string() + "\n";
+      break;
+    case ParserType::GHDL:
+      result = "read_verilog -sv " + primitivesBlackboxPath.string() + "\n";
+      break;
+    case ParserType::Surelog:
+      result = "read_verilog -sv " + primitivesBlackboxPath.string() + "\n";
+      break;
+    case ParserType::Verific:
+      result = "-sv2009 " + primitivesBlackboxPath.string() + "\n";
+      break;
   }
   result += script;
   return result;
