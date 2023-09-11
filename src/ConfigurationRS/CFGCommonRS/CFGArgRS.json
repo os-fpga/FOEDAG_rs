@@ -274,5 +274,141 @@
     {
       "help": "Configuration File Generation Internal Tool"
     }
+  ],
+  "debugger": [
+    {
+      "session": {
+        "option": [
+          {
+            "name": "file",
+            "short": "f",
+            "type": "str",
+            "optional": true,
+            "help": "Start the session with the user design specified .bitasm file"
+          }
+        ],
+        "desc": "Start or stop a debugging session",
+        "help": [
+          "To start a debugging session with user design specified .bitasm file:",
+          "  start --file=<.bitasm file>",
+          "To end and clear the debugging session:",
+          "  stop"
+        ],
+        "arg": [1, 1]
+      }
+    },
+    {
+      "info": {
+        "desc": "Show all OCLA probe and information that parsed from .bitasm file during session start",
+        "help": [
+          "To show all OCLA probe and information",
+          "  info"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
+      "config": {
+        "option": [
+          {
+            "name": "instance",
+            "short": "i",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "OCLA instance number"
+          },
+          {
+            "name": "mode",
+            "short": "m",
+            "optional": true,
+            "type": "pre-trigger|post-trigger|center-trigger|disable",
+            "help": "Configure the trigger mode of the OCLA instance"
+          },
+          {
+            "name": "sample_size",
+            "short": "s",
+            "type": "str",
+            "optional": true,
+            "help": "Configure the number of samples data"
+          },
+          {
+            "name": "trigger_condition",
+            "short": "t",
+            "type": "single_channel|or|and|xor",
+            "optional": true,
+            "help": "Configure the trigger condition for using single channel or dual channel of <or|and|xor>"
+          }
+        ],
+        "desc": "Configure OCLA trigger mode. Specify number of samples to capture. Configure trigger condition",
+        "help": [
+          "To configure triggering setting:",
+          "  --instance=<1 or 2> --mode=<pre-trigger|post-trigger|center-trigger|disable>",
+          "  --sample_size=<default|<number of samples>",
+          "  --trigger_condition=<single_channel|or|and|xor>"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
+      "config_channel": {
+        "option": [
+          {
+            "name": "instance",
+            "short": "i",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "OCLA instance number"
+          },
+          {
+            "name": "channel",
+            "short": "c",
+            "optional": true,
+            "type": "int",
+            "help": "Trigger channel"
+          },
+          {
+            "name": "type",
+            "short": "s",
+            "type": "edge|level|value_compare",
+            "optional": true,
+            "help": "Trigger type"
+          },
+          {
+            "name": "event",
+            "short": "e",
+            "type": "rising|falling|either|high|low|equal|lesser|greater",
+            "optional": true,
+            "help": "Trigger event that associate to trigger type"
+          },
+          {
+            "name": "value",
+            "short": "v",
+            "type": "int",
+            "optional": true,
+            "help": "Trigger value that associate to trigger type when it is set to equal|lesser|greater"
+          },
+          {
+            "name": "probe",
+            "short": "p",
+            "type": "int",
+            "optional": true,
+            "help": "wire"
+          }
+        ],
+        "desc": "Configure OCLA trigger mode. Specify number of samples to capture. Configure trigger condition",
+        "help": [
+          "To configure triggering setting:",
+          "  --instance=<1 or 2> --mode=<pre-trigger|post-trigger|center-trigger|disable>",
+          "  --sample_size=<default|<number of samples>",
+          "  --trigger_condition=<single_channel|or|and|xor>"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
+      "help": "Configuration File Generation Internal Tool"
+    }
   ]
 }

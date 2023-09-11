@@ -18,11 +18,13 @@ All rights reserved
 #include <filesystem>
 #include <thread>
 
+#include "CFGCommonRS/CFGArgRS_auto.h"
 #include "Compiler/CompilerRS.h"
 #include "Compiler/Constraints.h"
 #include "Compiler/Log.h"
 #include "Configuration/CFGCompiler/CFGCompiler.h"
 #include "ConfigurationRS/BitAssembler/BitAssembler.h"
+#include "ConfigurationRS/Ocla/Ocla.h"
 #include "MainWindow/Session.h"
 #include "NewProject/ProjectManager/project_manager.h"
 #include "ProjNavigator/tcl_command_integration.h"
@@ -168,6 +170,22 @@ static auto assembler_flow(CompilerRS *compiler, bool batchMode, int argc,
       return TCL_ERROR;
     }
   }
+  return TCL_OK;
+}
+
+static auto debugger_flow(CompilerRS *compiler, bool batchMode, int argc,
+                          const char *argv[]) {
+  CFGCompiler *cfgcompiler = compiler->GetConfiguration();
+  cfgcompiler->m_cmdarg.command = "debugger";
+  cfgcompiler->m_cmdarg.compilerName = compiler->Name();
+  auto arg = std::make_shared<CFGArg_DEBUGGER>();
+  // drop the first executable arg,
+  // create pointer to the second element
+  // the parser expect the first arg is the command name
+  const char **argvPtr = &argv[1];
+  std::vector<std::string> errors;
+  arg->parse(argc - 1, argvPtr, &errors);
+  cfgcompiler->m_cmdarg.arg = arg;
   return TCL_OK;
 }
 
@@ -704,6 +722,20 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
       }
     };
     interp->registerCmd("assembler", assembler, this, 0);
+
+    auto debugger = [](void *clientData, Tcl_Interp *interp, int argc,
+                       const char *argv[]) -> int {
+      CompilerRS *compiler = (CompilerRS *)clientData;
+      CFGCompiler *cfgcompiler = compiler->GetConfiguration();
+      int status = TCL_OK;
+      if ((status = debugger_flow(compiler, true, argc, argv)) != TCL_OK) {
+        return CFGCompiler::Compile(cfgcompiler, true);
+      } else {
+        return status;
+      }
+    };
+    interp->registerCmd("debugger", debugger, this, 0);
+
   } else {
     auto assembler = [](void *clientData, Tcl_Interp *interp, int argc,
                         const char *argv[]) -> int {
@@ -717,9 +749,23 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
       }
     };
     interp->registerCmd("assembler", assembler, this, 0);
+
+    auto debugger = [](void *clientData, Tcl_Interp *interp, int argc,
+                       const char *argv[]) -> int {
+      CompilerRS *compiler = (CompilerRS *)clientData;
+      CFGCompiler *cfgcompiler = compiler->GetConfiguration();
+      int status = TCL_OK;
+      if ((status = debugger_flow(compiler, false, argc, argv)) == TCL_OK) {
+        return CFGCompiler::Compile(cfgcompiler, false);
+      } else {
+        return status;
+      }
+    };
+    interp->registerCmd("debugger", debugger, this, 0);
   }
   bool status =
       cfgcompiler->RegisterCallbackFunction("assembler", BitAssembler_entry);
+  status |= cfgcompiler->RegisterCallbackFunction("debugger", Ocla_entry);
   return status;
 }
 
