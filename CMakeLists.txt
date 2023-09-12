@@ -183,6 +183,7 @@ target_include_directories(raptor_gui PRIVATE
   ${FLEX_LM_SRC_DIR}
   ${FLEX_LM_SRC_DIR}/machind
   ${CMAKE_CURRENT_BINARY_DIR}/include
+  ${CMAKE_CURRENT_BINARY_DIR}/src/ConfigurationRS
   FOEDAG/third_party/googletest/googletest/include
   FOEDAG/third_party/googletest/googlemock/include
   FOEDAG/third_party/scope_guard)
