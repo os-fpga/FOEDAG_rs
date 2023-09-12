@@ -21,5 +21,11 @@ void Ocla_entry(const CFGCommon_ARG* cmdarg) {
     CFG_POST_MSG("<implement config tcl command here>");
   } else if (subCmd == "config_channel") {
     CFG_POST_MSG("<implement config_channel tcl command here>");
+  } else if (subCmd == "start") {
+    CFG_POST_MSG("<implement start tcl command here>");
+  } else if (subCmd == "status") {
+    CFG_POST_MSG("<implement status tcl command here>");
+  } else if (subCmd == "show_waveform") {
+    CFG_POST_MSG("<implement show_waveform tcl command here>");
   }
 }

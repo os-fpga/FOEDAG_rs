@@ -308,6 +308,82 @@
       }
     },
     {
+      "status": {
+        "option": [
+          {
+            "name": "instance",
+            "short": "i",
+            "type": "int",
+            "default" : 1,
+            "optional": true,
+            "help": "Specify the index of the OCLA instance to configure. Valid value is 1 or 2"
+          }
+        ],
+        "desc": "For Debugging. Print the OCLA IP status.",
+        "help": [
+          "To show the OCLA IP status",
+          "  debugger status -i{1 or2}"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
+      "start": {
+        "option": [
+          {
+            "name": "instance",
+            "short": "i",
+            "type": "int",
+            "default" : 1,
+            "optional": true,
+            "help": "Specify the index of the OCLA instance to configure. Valid value is 1 or 2"
+          },
+          {
+            "name": "timeout",
+            "short": "t",
+            "type": "int",
+            "default" : 5,
+            "optional": true,
+            "help": "Command timeout in second. Default is 5 seconds"
+          },
+          {
+            "name": "output",
+            "short": "o",
+            "type": "str",
+            "default" : "output.txt",
+            "optional": true,
+            "help": "Specific the filepath to write the output to. If not specified, a default filepath will be chosen"
+          }
+        ],
+        "desc": "Arm the OCLA. It will begin sampling when trigger condition is met.",
+        "help": [
+          "Arm the OCLA/debugger",
+          "  debugger start -i{1 or 2} -t{timeout in second} -o{output filepath}"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
+      "show_waveform": {
+        "option": [
+          {
+            "name": "input",
+            "short": "i",
+            "type": "str",
+            "default" : "waveform.txt",
+            "optional": true,
+            "help": "To display waveform in GTKWave using the specificed file"
+          }
+        ],
+        "desc": "To display waveform in GTKWave using the specificed file.",
+        "help": [
+          "To display the waveform in GTKWave",
+          "  debugger show_waveform -i {filepath}"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
       "config": {
         "option": [
           {
