@@ -177,6 +177,7 @@ endif()
 
 add_dependencies(raptor_gui nlohmann_json)
 add_dependencies(raptor_gui scope_guard)
+add_dependencies(raptor_gui cfgcommonrs)
 #set_target_properties(raptor_gui PROPERTIES PUBLIC_HEADER )
 target_include_directories(raptor_gui PRIVATE
   FOEDAG/third_party/tcl8.6.12/generic/
