@@ -452,7 +452,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
     case NetlistType::EBlif:
       result =
           ReplaceAll(result, "${OUTPUT_NETLIST}",
-                     "write_verilog -noexpr -nodec -norename "
+                     "write_verilog -noexpr -nodec -v "
                      "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
       break;
   }
@@ -475,6 +475,9 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
   GetSimulator()->ResetGateSimulationModel();
   switch (GetNetlistType()) {
     case NetlistType::Verilog:
+    case NetlistType::Edif:
+    case NetlistType::Blif:
+    case NetlistType::EBlif:
       if (action == Simulator::SimulationType::Gate ||
           action == Simulator::SimulationType::PNR) {
         GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.v");
@@ -550,12 +553,6 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
       break;
     case NetlistType::VHDL:
       GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.vhd");
-      break;
-    case NetlistType::Edif:
-      break;
-    case NetlistType::Blif:
-      break;
-    case NetlistType::EBlif:
       break;
   }
 }
