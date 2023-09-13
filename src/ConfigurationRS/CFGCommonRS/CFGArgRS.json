@@ -290,9 +290,9 @@
         "desc": "Start or stop a debugging session",
         "help": [
           "To start a debugging session with user design specified .bitasm file:",
-          "  start --file=<.bitasm file>",
+          "  debugger session start -f {.bitasm file}",
           "To end and clear the debugging session:",
-          "  stop"
+          "  debugger session stop"
         ],
         "arg": [1, 1]
       }
@@ -302,7 +302,7 @@
         "desc": "Show all OCLA probe and information that parsed from .bitasm file during session start",
         "help": [
           "To show all OCLA probe and information",
-          "  info"
+          "  debugger info"
         ],
         "arg": [0, 0]
       }
@@ -322,7 +322,7 @@
         "desc": "For Debugging. Print the OCLA IP status.",
         "help": [
           "To show the OCLA IP status",
-          "  debugger status -i{1 or2}"
+          "  debugger status -i {1 or2}"
         ],
         "arg": [0, 0]
       }
@@ -358,7 +358,7 @@
         "desc": "Arm the OCLA. It will begin sampling when trigger condition is met.",
         "help": [
           "Arm the OCLA/debugger",
-          "  debugger start -i{1 or 2} -t{timeout in second} -o{output filepath}"
+          "  debugger start -i {1 or 2} -t {timeout in second} -o {output filepath}"
         ],
         "arg": [0, 0]
       }
@@ -404,7 +404,7 @@
           {
             "name": "sample_size",
             "short": "s",
-            "type": "str",
+            "type": "int",
             "optional": true,
             "help": "Configure the number of samples data"
           },
@@ -419,9 +419,10 @@
         "desc": "Configure OCLA trigger mode. Specify number of samples to capture. Configure trigger condition",
         "help": [
           "To configure triggering setting:",
-          "  --instance=<1 or 2> --mode=<pre-trigger|post-trigger|center-trigger|disable>",
-          "  --sample_size=<default|<number of samples>",
-          "  --trigger_condition=<single_channel|or|and|xor>"
+          "  debugger config ",
+          "  -i {1 or 2} -m {pre-trigger|post-trigger|center-trigger|disable}",
+          "  -s {<number of samples}",
+          "  -t {single_channel|or|and|xor}"
         ],
         "arg": [0, 0]
       }
@@ -440,13 +441,13 @@
           {
             "name": "channel",
             "short": "c",
-            "optional": true,
+            "optional": false,
             "type": "int",
             "help": "Trigger channel"
           },
           {
             "name": "type",
-            "short": "s",
+            "short": "t",
             "type": "edge|level|value_compare",
             "optional": true,
             "help": "Trigger type"
@@ -468,17 +469,18 @@
           {
             "name": "probe",
             "short": "p",
-            "type": "int",
-            "optional": true,
-            "help": "wire"
+            "type": "str",
+            "optional": false,
+            "help": "signal name"
           }
         ],
-        "desc": "Configure OCLA trigger mode. Specify number of samples to capture. Configure trigger condition",
+        "desc": "Configure a trigger channel, type and probe signal to monitor in a specified OCLA instance",
         "help": [
           "To configure triggering setting:",
-          "  --instance=<1 or 2> --mode=<pre-trigger|post-trigger|center-trigger|disable>",
-          "  --sample_size=<default|<number of samples>",
-          "  --trigger_condition=<single_channel|or|and|xor>"
+          "  debugger config_channel",
+          "  -i {1 or 2} -c <channel 1 to 4> -t {edge|level|value_compare}",
+          "  -e {rising|falling|either|high|low|equal|lesser|greater}",
+          "  -v {compare value} -p <signal name>"
         ],
         "arg": [0, 0]
       }
