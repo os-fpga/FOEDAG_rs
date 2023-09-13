@@ -151,7 +151,8 @@ else()
   )
 endif()
 
-include_directories(${FLEX_LM_SRC_DIR} ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/FOEDAG/src ${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/include/)
+include_directories(${FLEX_LM_SRC_DIR} ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/FOEDAG/src ${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/include/ 
+  ${CMAKE_CURRENT_BINARY_DIR}/src/ConfigurationRS)
 
 set(QRC_MAIN_WINDOW
   FOEDAG/src/NewProject/newproject.qrc
@@ -168,7 +169,7 @@ set(raptor_gui_SRC
 add_library(raptor_gui STATIC ${raptor_gui_SRC})
 #target_link_libraries(raptor_gui PUBLIC Qt5::Widgets Qt5::Core Qt5::Gui Qt5::Xml Qt5::Quick)
 target_link_libraries(raptor_gui PUBLIC Qt5::Widgets Qt5::Core Qt5::Gui Qt5::Xml)
-target_link_libraries(raptor_gui INTERFACE bitassembler)
+target_link_libraries(raptor_gui INTERFACE bitassembler ocla)
 
 if (PRODUCTION_BUILD)
 target_link_libraries(raptor_gui PUBLIC rs_licenseManager)
@@ -176,12 +177,14 @@ endif()
 
 add_dependencies(raptor_gui nlohmann_json)
 add_dependencies(raptor_gui scope_guard)
+add_dependencies(raptor_gui cfgcommonrs)
 #set_target_properties(raptor_gui PROPERTIES PUBLIC_HEADER )
 target_include_directories(raptor_gui PRIVATE
   FOEDAG/third_party/tcl8.6.12/generic/
   ${FLEX_LM_SRC_DIR}
   ${FLEX_LM_SRC_DIR}/machind
   ${CMAKE_CURRENT_BINARY_DIR}/include
+  ${CMAKE_CURRENT_BINARY_DIR}/src/ConfigurationRS
   FOEDAG/third_party/googletest/googletest/include
   FOEDAG/third_party/googletest/googlemock/include
   FOEDAG/third_party/scope_guard)

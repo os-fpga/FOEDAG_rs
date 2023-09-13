@@ -274,5 +274,219 @@
     {
       "help": "Configuration File Generation Internal Tool"
     }
+  ],
+  "debugger": [
+    {
+      "session": {
+        "option": [
+          {
+            "name": "file",
+            "short": "f",
+            "type": "str",
+            "optional": true,
+            "help": "Start the session with the user design specified .bitasm file"
+          }
+        ],
+        "desc": "Start or stop a debugging session",
+        "help": [
+          "To start a debugging session with user design specified .bitasm file:",
+          "  debugger session start -f {.bitasm file}",
+          "To end and clear the debugging session:",
+          "  debugger session stop"
+        ],
+        "arg": [1, 1]
+      }
+    },
+    {
+      "info": {
+        "desc": "Show all OCLA probe and information that parsed from .bitasm file during session start",
+        "help": [
+          "To show all OCLA probe and information",
+          "  debugger info"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
+      "status": {
+        "option": [
+          {
+            "name": "instance",
+            "short": "i",
+            "type": "int",
+            "default" : 1,
+            "optional": true,
+            "help": "Specify the index of the OCLA instance to configure. Valid value is 1 or 2"
+          }
+        ],
+        "desc": "For Debugging. Print the OCLA IP status.",
+        "help": [
+          "To show the OCLA IP status",
+          "  debugger status -i {1 or2}"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
+      "start": {
+        "option": [
+          {
+            "name": "instance",
+            "short": "i",
+            "type": "int",
+            "default" : 1,
+            "optional": true,
+            "help": "Specify the index of the OCLA instance to configure. Valid value is 1 or 2"
+          },
+          {
+            "name": "timeout",
+            "short": "t",
+            "type": "int",
+            "default" : 5,
+            "optional": true,
+            "help": "Command timeout in second. Default is 5 seconds"
+          },
+          {
+            "name": "output",
+            "short": "o",
+            "type": "str",
+            "default" : "output.txt",
+            "optional": true,
+            "help": "Specific the filepath to write the output to. If not specified, a default filepath will be chosen"
+          }
+        ],
+        "desc": "Arm the OCLA. It will begin sampling when trigger condition is met.",
+        "help": [
+          "Arm the OCLA/debugger",
+          "  debugger start -i {1 or 2} -t {timeout in second} -o {output filepath}"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
+      "show_waveform": {
+        "option": [
+          {
+            "name": "input",
+            "short": "i",
+            "type": "str",
+            "default" : "waveform.txt",
+            "optional": true,
+            "help": "To display waveform in GTKWave using the specificed file"
+          }
+        ],
+        "desc": "To display waveform in GTKWave using the specificed file.",
+        "help": [
+          "To display the waveform in GTKWave",
+          "  debugger show_waveform -i {filepath}"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
+      "config": {
+        "option": [
+          {
+            "name": "instance",
+            "short": "i",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "OCLA instance number"
+          },
+          {
+            "name": "mode",
+            "short": "m",
+            "optional": true,
+            "type": "pre-trigger|post-trigger|center-trigger|disable",
+            "help": "Configure the trigger mode of the OCLA instance"
+          },
+          {
+            "name": "sample_size",
+            "short": "s",
+            "type": "int",
+            "optional": true,
+            "help": "Configure the number of samples data"
+          },
+          {
+            "name": "trigger_condition",
+            "short": "t",
+            "type": "single_channel|or|and|xor",
+            "optional": true,
+            "help": "Configure the trigger condition for using single channel or dual channel of <or|and|xor>"
+          }
+        ],
+        "desc": "Configure OCLA trigger mode. Specify number of samples to capture. Configure trigger condition",
+        "help": [
+          "To configure triggering setting:",
+          "  debugger config ",
+          "  -i {1 or 2} -m {pre-trigger|post-trigger|center-trigger|disable}",
+          "  -s {<number of samples}",
+          "  -t {single_channel|or|and|xor}"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
+      "config_channel": {
+        "option": [
+          {
+            "name": "instance",
+            "short": "i",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "OCLA instance number"
+          },
+          {
+            "name": "channel",
+            "short": "c",
+            "optional": false,
+            "type": "int",
+            "help": "Trigger channel"
+          },
+          {
+            "name": "type",
+            "short": "t",
+            "type": "edge|level|value_compare",
+            "optional": true,
+            "help": "Trigger type"
+          },
+          {
+            "name": "event",
+            "short": "e",
+            "type": "rising|falling|either|high|low|equal|lesser|greater",
+            "optional": true,
+            "help": "Trigger event that associate to trigger type"
+          },
+          {
+            "name": "value",
+            "short": "v",
+            "type": "int",
+            "optional": true,
+            "help": "Trigger value that associate to trigger type when it is set to equal|lesser|greater"
+          },
+          {
+            "name": "probe",
+            "short": "p",
+            "type": "str",
+            "optional": false,
+            "help": "signal name"
+          }
+        ],
+        "desc": "Configure a trigger channel, type and probe signal to monitor in a specified OCLA instance",
+        "help": [
+          "To configure triggering setting:",
+          "  debugger config_channel",
+          "  -i {1 or 2} -c <channel 1 to 4> -t {edge|level|value_compare}",
+          "  -e {rising|falling|either|high|low|equal|lesser|greater}",
+          "  -v {compare value} -p <signal name>"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
+      "help": "Configuration File Generation Internal Tool"
+    }
   ]
 }
