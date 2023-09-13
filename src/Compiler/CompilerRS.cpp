@@ -765,7 +765,7 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
   }
   bool status =
       cfgcompiler->RegisterCallbackFunction("assembler", BitAssembler_entry);
-  status |= cfgcompiler->RegisterCallbackFunction("debugger", Ocla_entry);
+  status &= cfgcompiler->RegisterCallbackFunction("debugger", Ocla_entry);
   return status;
 }
 
