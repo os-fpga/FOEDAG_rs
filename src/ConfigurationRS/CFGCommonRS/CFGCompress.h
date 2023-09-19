@@ -1,5 +1,5 @@
-#ifndef CFGOBJECT_H
-#define CFGOBJECT_H
+#ifndef CFG_COMPRESS_H
+#define CFG_COMPRESS_H
 
 #include <cstdint>
 #include <string>
