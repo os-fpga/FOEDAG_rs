@@ -1,7 +1,6 @@
 #ifndef CFG_COMPRESS_H
 #define CFG_COMPRESS_H
 
-#include <cstdint>
 #include <string>
 #include <vector>
 
