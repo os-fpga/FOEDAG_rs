@@ -1,6 +1,7 @@
 #ifndef CFGOBJECT_H
 #define CFGOBJECT_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
