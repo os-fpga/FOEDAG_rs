@@ -3,6 +3,6 @@
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 
-void Ocla_entry(const CFGCommon_ARG* cmdarg);
+void Ocla_entry(CFGCommon_ARG* cmdarg);
 
 #endif
