@@ -88,9 +88,9 @@ class CompilerRS : public CompilerOpenFPGA {
                                     std::string netlistFileName,
                                     std::string sdfFileName,
                                     std::string sdcFileName);
-  SynthesisEffort m_synthEffort = SynthesisEffort::None;
-  SynthesisCarryInference m_synthCarry = SynthesisCarryInference::None;
-  SynthesisFsmEncoding m_synthFsm = SynthesisFsmEncoding::None;
+  SynthesisEffort m_synthEffort = SynthesisEffort::High;
+  SynthesisCarryInference m_synthCarry = SynthesisCarryInference::Auto;
+  SynthesisFsmEncoding m_synthFsm = SynthesisFsmEncoding::Onehot;
   SynthesisClkeStrategy m_synthClke = SynthesisClkeStrategy::None;
   SynthesisIOInference m_synthIO = SynthesisIOInference::None;
   bool m_synthNoAdder = false;
