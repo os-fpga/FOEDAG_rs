@@ -3,6 +3,6 @@
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 
-void BitAssembler_entry(const CFGCommon_ARG* cmdarg);
+void BitAssembler_entry(CFGCommon_ARG* cmdarg);
 
 #endif

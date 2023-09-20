@@ -3,7 +3,7 @@
 #include "CFGCommonRS/CFGArgRS_auto.h"
 #include "CFGObject/CFGObject_auto.h"
 
-void Ocla_entry(const CFGCommon_ARG* cmdarg) {
+void Ocla_entry(CFGCommon_ARG* cmdarg) {
   CFG_POST_MSG("This is OCLA entry");
   auto arg = std::static_pointer_cast<CFGArg_DEBUGGER>(cmdarg->arg);
   if (arg == nullptr) return;
@@ -11,7 +11,7 @@ void Ocla_entry(const CFGCommon_ARG* cmdarg) {
   if (arg->m_help) {
     return;
   }
-
+  CFG_POST_MSG("tool path = %s", cmdarg->toolPath.c_str());
   std::string subCmd = arg->get_sub_arg_name();
   if (subCmd == "info") {
     CFG_POST_MSG("<implement info tcl command here>");

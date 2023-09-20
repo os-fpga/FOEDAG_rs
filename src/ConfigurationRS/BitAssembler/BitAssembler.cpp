@@ -8,7 +8,7 @@
 #include "CFGObject/CFGObject_auto.h"
 #include "Utils/FileUtils.h"
 
-void BitAssembler_entry(const CFGCommon_ARG* cmdarg) {
+void BitAssembler_entry(CFGCommon_ARG* cmdarg) {
   CFG_TIME time_begin = CFG_time_begin();
   std::string bitasm_time = CFG_get_time();
   CFG_POST_MSG("This is BITASM entry");
