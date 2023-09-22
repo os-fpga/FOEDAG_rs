@@ -42,9 +42,7 @@ else()
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Werror")
 endif()
 set(OPENSSL_INC ${CFG_BUILD_ROOT_DIR}/FOEDAG/include)
-set(OPENSSL_BACKUP_INC ${CFG_FOEDAG_PROJECT_ROOT_DIR}/../../third_party/openssl/include)
 message("Openssl include ${OPENSSL_INC}")
-message("Openssl backup include ${OPENSSL_BACKUP_INC}")
 
 #################################################################################################################
 #
@@ -64,12 +62,11 @@ message("Openssl backup include ${OPENSSL_BACKUP_INC}")
 add_custom_target(
   openssl_debug ALL
   COMMAND echo "*** This is for OPENSSL debug ***"
+  cmake -E copy include/openssl/opensslconf.h ${OPENSSL_INC}/openssl/.
   COMMAND ls -la ${CRYPTO_LIB}
   COMMAND ls -la ${SSL_LIB}
   COMMAND ls -la ${OPENSSL_INC}
   COMMAND ls -la ${OPENSSL_INC}/openssl
-  COMMAND ls -la ${OPENSSL_BACKUP_INC}
-  COMMAND ls -la ${OPENSSL_BACKUP_INC}/openssl
   COMMAND echo "*** End of OpenSSL debug ***"
 )
 add_library(
@@ -80,7 +77,7 @@ add_library(
 add_dependencies(${subsystem} openssl_debug)
 add_dependencies(openssl_debug openssl_build)
 target_link_libraries(${subsystem} PRIVATE ${CRYPTO_LIB} ${SSL_LIB} ${ADDITIONAL_LIB})
-target_include_directories(${subsystem} PRIVATE ${OPENSSL_INC} ${OPENSSL_BACKUP_INC})
+target_include_directories(${subsystem} PRIVATE ${OPENSSL_INC})
 
 ###################
 #
