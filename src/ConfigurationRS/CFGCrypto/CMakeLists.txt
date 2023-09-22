@@ -30,27 +30,19 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (MSVC)
-  find_package(OpenSSL)
-  if (OPENSSL_FOUND)
-    message (STATUS "OPENSSL found")
-    message (STATUS "OpenSSL Version: " ${OPENSSL_VERSION})
-    message (STATUS "OpenSSL Include directories: " ${OPENSSL_INCLUDE_DIR})
-  else() 
-    message (FATAL_ERROR "OpenSSL Not found.")
-  endif()
-  set(CRYPTO_LIB OpenSSL::Crypto)
-  set(SSL_LIB OpenSSL::SSL)
-  set(OPENSSL_INC ${OPENSSL_INCLUDE_DIR})
+  set(CRYPTO_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_crypto_1.1.1t.lib)
+  set(SSL_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_ssl_1.1.1t.lib)
   set(ADDITIONAL_LIB "")
 else()
   set(CRYPTO_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_crypto_1.1.1t.a)
   set(SSL_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_ssl_1.1.1t.a)
-  set(OPENSSL_INC ${CFG_BUILD_ROOT_DIR}/FOEDAG/include)
   list(APPEND ADDITIONAL_LIB dl pthread)
   set(CMAKE_CXX_FLAGS_DEBUG
   "${CMAKE_CXX_FLAGS_DEBUG} ${TCMALLOC_COMPILE_OPTIONS} -Werror -Wall -O0 -g ${MSYS_COMPILE_OPTIONS} ${MY_CXX_WARNING_FLAGS} ${MEM_SANITIZER_FLAGS}")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Werror")
 endif()
+set(OPENSSL_INC ${CFG_BUILD_ROOT_DIR}/FOEDAG/include)
+message("Openssl include ${OPENSSL_INC}")
 
 #################################################################################################################
 #
@@ -67,14 +59,23 @@ endif()
 # subsystem library
 #
 ###################
+add_custom_target(
+  openssl_debug ALL
+  COMMAND echo "*** This is for OPENSSL debug ***"
+  COMMAND cmake -E copy ${CFG_FOEDAGRS_PROJECT_ROOT_DIR}/CFGCrypto/include/openssl/opensslconf.h.in ${OPENSSL_INC}/openssl/opensslconf.h
+  COMMAND ls -la ${CRYPTO_LIB}
+  COMMAND ls -la ${SSL_LIB}
+  COMMAND ls -la ${OPENSSL_INC}
+  COMMAND ls -la ${OPENSSL_INC}/openssl
+  COMMAND echo "*** End of OpenSSL debug ***"
+)
 add_library(
   ${subsystem} ${CFG_LIB_TYPE}
   CFGOpenSSL.cpp
   CFGCrypto_key.cpp
 )
-if (NOT MSVC)
-  add_dependencies(${subsystem} openssl_build)
-endif()
+add_dependencies(${subsystem} openssl_debug)
+add_dependencies(openssl_debug openssl_build)
 target_link_libraries(${subsystem} PRIVATE ${CRYPTO_LIB} ${SSL_LIB} ${ADDITIONAL_LIB})
 target_include_directories(${subsystem} PRIVATE ${OPENSSL_INC})
 
