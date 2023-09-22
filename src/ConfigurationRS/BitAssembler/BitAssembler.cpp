@@ -62,12 +62,11 @@ void BitAssembler_entry(CFGCommon_ARG* cmdarg) {
 
     // OCLA
     std::string yosysBin = CFG_print("%s/yosys", cmdarg->binPath.c_str());
-    std::string hierPath =
-        CFG_print("%s/hier_info.json", cmdarg->analyzePath.c_str());
-    std::string ysPath = CFG_print("%s/%s.ys", cmdarg->synthesisPath.c_str(),
-                                   cmdarg->projectName.c_str());
+    std::string analyzeCMDPath =
+        CFG_print("%s/%s_analyzer.cmd", cmdarg->analyzePath.c_str(),
+                  cmdarg->projectName.c_str());
     BitAssembler_OCLA::parse(bitobj, cmdarg->taskPath.c_str(), yosysBin,
-                             hierPath, ysPath);
+                             analyzeCMDPath);
 
     // Writing out
     bitgen = bitobj.write(bitasm_file);
