@@ -62,7 +62,7 @@ message("Openssl include ${OPENSSL_INC}")
 add_custom_target(
   openssl_debug ALL
   COMMAND echo "*** This is for OPENSSL debug ***"
-  cmake -E copy include/openssl/opensslconf.h ${OPENSSL_INC}/openssl/.
+  cmake -E copy include/openssl/opensslconf.h.in ${OPENSSL_INC}/openssl/opensslconf.h
   COMMAND ls -la ${CRYPTO_LIB}
   COMMAND ls -la ${SSL_LIB}
   COMMAND ls -la ${OPENSSL_INC}
