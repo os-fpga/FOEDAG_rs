@@ -77,7 +77,8 @@ add_library(
   CFGOpenSSL.cpp
   CFGCrypto_key.cpp
 )
-add_dependencies(${subsystem} openssl_build openssl_debug)
+add_dependencies(${subsystem} openssl_debug)
+add_dependencies(openssl_debug openssl_build)
 target_link_libraries(${subsystem} PRIVATE ${CRYPTO_LIB} ${SSL_LIB} ${ADDITIONAL_LIB})
 target_include_directories(${subsystem} PRIVATE ${OPENSSL_INC} ${OPENSSL_BACKUP_INC})
 
