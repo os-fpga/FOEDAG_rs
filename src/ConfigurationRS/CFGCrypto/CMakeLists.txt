@@ -63,10 +63,6 @@ add_custom_target(
   openssl_debug ALL
   COMMAND echo "*** This is for OPENSSL debug ***"
   COMMAND cmake -E copy ${CFG_FOEDAGRS_PROJECT_ROOT_DIR}/CFGCrypto/include/openssl/opensslconf.h.in ${OPENSSL_INC}/openssl/opensslconf.h
-  COMMAND ls -la ${CRYPTO_LIB}
-  COMMAND ls -la ${SSL_LIB}
-  COMMAND ls -la ${OPENSSL_INC}
-  COMMAND ls -la ${OPENSSL_INC}/openssl
   COMMAND echo "*** End of OpenSSL debug ***"
 )
 add_library(
