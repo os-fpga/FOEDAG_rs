@@ -462,7 +462,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
 
 CompilerRS::CompilerRS() : CompilerOpenFPGA() {
   m_synthType = SynthesisType::RS;
-  m_netlistType = NetlistType::Verilog;
+  m_netlistType = NetlistType::EBlif;
   m_channel_width = 200;
   m_name = "CompilerRS";
 }
@@ -1274,13 +1274,13 @@ bool CompilerRS::PowerAnalysis() {
       netlistFile = ProjManager()->projectName() + "_post_synth.v";
       break;
     case NetlistType::Edif:
-      netlistFile = ProjManager()->projectName() + "_post_synth.edif";
+      netlistFile = ProjManager()->projectName() + "_post_synth.v";
       break;
     case NetlistType::Blif:
-      netlistFile = ProjManager()->projectName() + "_post_synth.blif";
+      netlistFile = ProjManager()->projectName() + "_post_synth.v";
       break;
     case NetlistType::EBlif:
-      netlistFile = ProjManager()->projectName() + "_post_synth.eblif";
+      netlistFile = ProjManager()->projectName() + "_post_synth.v";
       break;
   }
   netlistFile = FilePath(Action::Synthesis, netlistFile).string();

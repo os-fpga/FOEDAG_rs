@@ -74,7 +74,12 @@
         }
       ],
       "exist" : false
-    } 
+    },
+    {
+      "name" : "ocla",
+      "type" : "str",
+      "exist" : false
+    }
   ],
   "DDB_00" : [
     {
