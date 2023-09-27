@@ -434,9 +434,10 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
     case NetlistType::VHDL:
       // Temporary, once pin_c and the Packer work with VHDL, replace by just
       // VHDL
-      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
-                      "write_vhdl ${OUTPUT_VHDL}\nwrite_verilog "
-                      "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
+      result =
+          ReplaceAll(result, "${OUTPUT_NETLIST}",
+                     "write_vhdl ${OUTPUT_VHDL}\nwrite_verilog "
+                     "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
       break;
     case NetlistType::Edif:
       // Temporary, once pin_c works with Verilog, only output edif
