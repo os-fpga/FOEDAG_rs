@@ -436,7 +436,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
       // VHDL
       result = ReplaceAll(result, "${OUTPUT_NETLIST}",
                           "write_vhdl ${OUTPUT_VHDL}\nwrite_verilog "
-                          "${OUTPUT_VERILOG}\nwrite_blif ${OUTPUT_BLIF}");
+                          "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
       break;
     case NetlistType::Edif:
       // Temporary, once pin_c works with Verilog, only output edif
@@ -776,10 +776,10 @@ std::string CompilerRS::BaseVprCommand(BaseVprDefaults defaults) {
   std::string netlistFile;
   switch (GetNetlistType()) {
     case NetlistType::Verilog:
-      netlistFile = ProjManager()->projectName() + "_post_synth.v";
+      netlistFile = ProjManager()->projectName() + "_post_synth.eblif";
       break;
     case NetlistType::VHDL:
-      netlistFile = ProjManager()->projectName() + "_post_synth.v";
+      netlistFile = ProjManager()->projectName() + "_post_synth.eblif";
       break;
     case NetlistType::Edif:
       netlistFile = ProjManager()->projectName() + "_post_synth.edif";
