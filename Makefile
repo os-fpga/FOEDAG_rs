@@ -118,9 +118,11 @@ test/gui: run-cmake-debug
 
 test/openfpga: run-cmake-release
 	./build/bin/raptor --batch --compiler openfpga --script FOEDAG/tests/Testcases/trivial/test.tcl
+# Disable until Verilog read in VPR
 #	./build/bin/raptor --batch --compiler openfpga --script FOEDAG/tests/Testcases/trivial/test.tcl --verific
 	./build/bin/raptor --batch --compiler openfpga --script FOEDAG/tests/Testcases/aes_decrypt_fpga/aes_decrypt.tcl
 
+# Disable until Verilog read in VPR
 #test/openfpga_gui: run-cmake-release
 #	./build/bin/raptor --compiler openfpga --script FOEDAG/tests/Testcases/aes_decrypt_fpga/aes_decrypt.tcl --verific
 
