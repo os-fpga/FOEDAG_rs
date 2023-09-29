@@ -427,9 +427,10 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   switch (GetNetlistType()) {
     case NetlistType::Verilog:
       // Temporary, once pin_c works with Verilog, only output Verilog
-      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
-                          "write_verilog -noexpr -nodec -v "
-                          "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
+      result =
+          ReplaceAll(result, "${OUTPUT_NETLIST}",
+                     "write_verilog -noexpr -nodec -v "
+                     "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
       break;
     case NetlistType::VHDL:
       // Temporary, once pin_c and the Packer work with VHDL, replace by just
@@ -446,9 +447,10 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
                      "write_edif ${OUTPUT_EDIF}\nwrite_blif ${OUTPUT_BLIF}");
       break;
     case NetlistType::Blif:
-      result = ReplaceAll(result, "${OUTPUT_NETLIST}",
-                          "write_verilog -noexpr -nodec -v "
-                          "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
+      result =
+          ReplaceAll(result, "${OUTPUT_NETLIST}",
+                     "write_verilog -noexpr -nodec -v "
+                     "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
       break;
     case NetlistType::EBlif:
       result =
