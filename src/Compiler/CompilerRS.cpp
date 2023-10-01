@@ -186,6 +186,7 @@ static auto debugger_flow(CompilerRS *compiler, bool batchMode, int argc,
   std::vector<std::string> errors;
   arg->parse(argc - 1, argvPtr, &errors);
   cfgcompiler->m_cmdarg.arg = arg;
+  cfgcompiler->m_cmdarg.toolPath = compiler->GetProgrammerToolExecPath();
   return TCL_OK;
 }
 
@@ -729,7 +730,13 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
       CFGCompiler *cfgcompiler = compiler->GetConfiguration();
       int status = TCL_OK;
       if ((status = debugger_flow(compiler, true, argc, argv)) != TCL_OK) {
-        return CFGCompiler::Compile(cfgcompiler, true);
+        int result = CFGCompiler::Compile(cfgcompiler, true);
+        if (result == TCL_OK && !cfgcompiler->m_cmdarg.tclOutput.empty()) {
+          cfgcompiler->GetCompiler()->TclInterp()->setResult(
+              cfgcompiler->m_cmdarg.tclOutput);
+          cfgcompiler->m_cmdarg.tclOutput.clear();
+        }
+        return result;
       } else {
         return status;
       }
@@ -756,7 +763,13 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
       CFGCompiler *cfgcompiler = compiler->GetConfiguration();
       int status = TCL_OK;
       if ((status = debugger_flow(compiler, false, argc, argv)) == TCL_OK) {
-        return CFGCompiler::Compile(cfgcompiler, false);
+        int result = CFGCompiler::Compile(cfgcompiler, false);
+        if (result == TCL_OK && !cfgcompiler->m_cmdarg.tclOutput.empty()) {
+          cfgcompiler->GetCompiler()->TclInterp()->setResult(
+              cfgcompiler->m_cmdarg.tclOutput);
+          cfgcompiler->m_cmdarg.tclOutput.clear();
+        }
+        return result;
       } else {
         return status;
       }
