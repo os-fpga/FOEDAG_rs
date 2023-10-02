@@ -2,15 +2,12 @@
 #define __OCLA_H__
 
 #include <cstdint>
-#include <filesystem>
-#include <iomanip>
 #include <map>
+#include <string>
 
-#include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
-#include "JtagAdapter.h"
-#include "OclaIP.h"
-
-void Ocla_entry(CFGCommon_ARG *cmdarg);
+class OclaIP;
+class JtagAdapter;
+struct CFGCommon_ARG;
 
 class Ocla {
  public:
@@ -31,5 +28,7 @@ class Ocla {
   std::map<uint32_t, OclaIP> detect();
   JtagAdapter *m_adapter;
 };
+
+void Ocla_entry(CFGCommon_ARG *cmdarg);
 
 #endif  //__OCLA_H__
