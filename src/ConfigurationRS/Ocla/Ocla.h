@@ -11,8 +11,7 @@ struct CFGCommon_ARG;
 
 class Ocla {
  public:
-  Ocla() : m_adapter(nullptr) {}
-  void setJtagAdapter(JtagAdapter *adapter) { m_adapter = adapter; }
+  Ocla(JtagAdapter *adapter) : m_adapter(adapter) {}
   void configure(uint32_t instance, std::string mode, std::string cond,
                  std::string sample_size);
   void configureChannel(uint32_t instance, uint32_t channel, std::string type,

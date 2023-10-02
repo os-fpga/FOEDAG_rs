@@ -36,13 +36,12 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     return;
   }
 
+  OpenocdJtagAdapter openocd{cmdarg->toolPath, CFG_execute_cmd};
   std::string subCmd = arg->get_sub_arg_name();
   if (subCmd == "info") {
     try {
-      OpenocdJtagAdapter openocd{cmdarg->toolPath, CFG_execute_cmd};
       std::stringstream output{};
-      Ocla ocla{};
-      ocla.setJtagAdapter(&openocd);
+      Ocla ocla{&openocd};
       ocla.showInfo(output);
       Ocla_print(output);
     } catch (const OclaException& e) {
@@ -53,7 +52,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       auto parms =
           static_cast<const CFGArg_DEBUGGER_SESSION*>(arg->get_sub_arg());
       if (parms->start ^ parms->stop) {
-        Ocla ocla{};
+        Ocla ocla{&openocd};
         if (parms->start) {
           ocla.startSession(parms->file);
         } else {
@@ -67,9 +66,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     try {
       auto parms =
           static_cast<const CFGArg_DEBUGGER_CONFIG*>(arg->get_sub_arg());
-      OpenocdJtagAdapter openocd{cmdarg->toolPath, CFG_execute_cmd};
-      Ocla ocla{};
-      ocla.setJtagAdapter(&openocd);
+      Ocla ocla{&openocd};
       ocla.configure(parms->instance, parms->mode, parms->trigger_condition,
                      parms->sample_size);
     } catch (const OclaException& e) {
@@ -79,9 +76,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     try {
       auto parms = static_cast<const CFGArg_DEBUGGER_CONFIG_CHANNEL*>(
           arg->get_sub_arg());
-      OpenocdJtagAdapter openocd{cmdarg->toolPath, CFG_execute_cmd};
-      Ocla ocla{};
-      ocla.setJtagAdapter(&openocd);
+      Ocla ocla{&openocd};
       ocla.configureChannel(parms->instance, parms->channel, parms->type,
                             parms->event, parms->value, parms->probe);
     } catch (const OclaException& e) {
@@ -91,9 +86,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     try {
       auto parms =
           static_cast<const CFGArg_DEBUGGER_START*>(arg->get_sub_arg());
-      OpenocdJtagAdapter openocd{cmdarg->toolPath, CFG_execute_cmd};
-      Ocla ocla{};
-      ocla.setJtagAdapter(&openocd);
+      Ocla ocla{&openocd};
       ocla.start(parms->instance, parms->timeout, parms->output);
       CFG_POST_MSG("Written %s successfully.", parms->output.c_str());
       Ocla_launch_gtkwave(parms->output, cmdarg->binPath);
@@ -104,10 +97,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     try {
       auto parms =
           static_cast<const CFGArg_DEBUGGER_STATUS*>(arg->get_sub_arg());
-      OpenocdJtagAdapter openocd{cmdarg->toolPath, CFG_execute_cmd};
       std::stringstream output{};
-      Ocla ocla{};
-      ocla.setJtagAdapter(&openocd);
+      Ocla ocla{&openocd};
       ocla.showStatus(parms->instance, output);
       cmdarg->tclOutput = output.str().c_str();
     } catch (const OclaException& e) {
@@ -121,29 +112,22 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     try {
       auto parms =
           static_cast<const CFGArg_DEBUGGER_DEBUG*>(arg->get_sub_arg());
-
-      OpenocdJtagAdapter openocd{cmdarg->toolPath, CFG_execute_cmd};
       OclaIP ip{&openocd, parms->instance == 1 ? OCLA1_ADDR : OCLA2_ADDR};
-
       if (parms->start) ip.start();
-
       if (parms->reg) {
         std::map<uint32_t, std::string> regs = {
             {0x00, "OCSR"},       {0x08, "TCUR0"}, {0x0c, "TMTR"},
             {0x10, "TDCR"},       {0x14, "TCUR1"}, {0x18, "IP_TYPE"},
             {0x1c, "IP_VERSION"}, {0x20, "IP_ID"},
         };
-
         for (auto const& [offset, name] : regs) {
           uint32_t regaddr = ip.getBaseAddr() + offset;
           CFG_POST_MSG("%-10s (0x%08x) = 0x%08x", name.c_str(), regaddr,
                        openocd.read(regaddr));
         }
       }
-
-      if (parms->dump || parms->waveform) {
+      if (parms->dump) {
         ocla_data data = ip.getData();
-
         if (parms->dump) {
           CFG_POST_MSG("linewidth      : %d", data.linewidth);
           CFG_POST_MSG("depth          : %d", data.depth);
@@ -163,9 +147,6 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       // Will be removed at final
       auto parms =
           static_cast<const CFGArg_DEBUGGER_COUNTER*>(arg->get_sub_arg());
-
-      OpenocdJtagAdapter openocd{cmdarg->toolPath, CFG_execute_cmd};
-
       if (parms->start ^ parms->stop) {
         openocd.write(0x01000004, parms->start ? 0xffffffff : 0x0);
       }
