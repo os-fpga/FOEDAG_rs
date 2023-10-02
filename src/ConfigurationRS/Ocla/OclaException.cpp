@@ -1,11 +1,11 @@
 #include "OclaException.h"
 
-static map<ocla_error, string> error_messages = {
+static std::map<ocla_error, std::string> error_messages = {
     {UNKNOWN_ERROR, "Unknown error"},
     {NOT_IMPLEMENTED, "Not implemented"},
 };
 
-OclaException::OclaException(ocla_error err, string msg)
+OclaException::OclaException(ocla_error err, std::string msg)
     : m_err(err), m_msg(msg) {}
 
 const char *OclaException::what() const throw() {

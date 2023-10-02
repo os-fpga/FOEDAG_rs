@@ -5,16 +5,16 @@
 #include "OclaException.h"
 #include "OpenocdJtagAdapter.h"
 
-void Ocla_print(stringstream& output) {
-  string s;
-  while (getline(output, s)) {
+void Ocla_print(std::stringstream& output) {
+  std::string s;
+  while (std::getline(output, s)) {
     CFG_POST_MSG("%s", s.c_str());
   }
 }
 
-void Ocla_launch_gtkwave(string waveFile, path binPath) {
-  error_code ec;
-  if (exists(waveFile, ec)) {
+void Ocla_launch_gtkwave(std::string waveFile, std::filesystem::path binPath) {
+  std::error_code ec;
+  if (std::filesystem::exists(waveFile, ec)) {
     auto exePath = binPath / "gtkwave" / "bin" / "gtkwave";
     auto cmd = exePath.string() + " " + waveFile;
     if (system(cmd.c_str())) {
@@ -26,18 +26,18 @@ void Ocla_launch_gtkwave(string waveFile, path binPath) {
 }
 
 void Ocla_entry(CFGCommon_ARG* cmdarg) {
-  auto arg = static_pointer_cast<CFGArg_DEBUGGER>(cmdarg->arg);
+  auto arg = std::static_pointer_cast<CFGArg_DEBUGGER>(cmdarg->arg);
   if (arg == nullptr) return;
 
   if (arg->m_help) {
     return;
   }
 
-  string subCmd = arg->get_sub_arg_name();
+  std::string subCmd = arg->get_sub_arg_name();
   if (subCmd == "info") {
     try {
       OpenocdJtagAdapter openocd{cmdarg->toolPath, CFG_execute_cmd};
-      stringstream output{};
+      std::stringstream output{};
       Ocla ocla{};
       ocla.setJtagAdapter(&openocd);
       ocla.showInfo(output);
@@ -102,7 +102,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       auto parms =
           static_cast<const CFGArg_DEBUGGER_STATUS*>(arg->get_sub_arg());
       OpenocdJtagAdapter openocd{cmdarg->toolPath, CFG_execute_cmd};
-      stringstream output{};
+      std::stringstream output{};
       Ocla ocla{};
       ocla.setJtagAdapter(&openocd);
       ocla.showStatus(parms->instance, output);
@@ -125,7 +125,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       if (parms->start) ip.start();
 
       if (parms->reg) {
-        map<uint32_t, string> regs = {
+        std::map<uint32_t, std::string> regs = {
             {0x00, "OCSR"},       {0x08, "TCUR0"}, {0x0c, "TMTR"},
             {0x10, "TDCR"},       {0x14, "TCUR1"}, {0x18, "IP_TYPE"},
             {0x1c, "IP_VERSION"}, {0x20, "IP_ID"},
@@ -151,7 +151,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
           }
         }
       }
-    } catch (const exception& e) {
+    } catch (const std::exception& e) {
       CFG_POST_ERR(e.what());
     }
   } else if (subCmd == "counter") {
@@ -174,7 +174,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
         CFG_POST_MSG("counter1 = 0x%08x", openocd.read(0x01000008));
         CFG_POST_MSG("counter2 = 0x%08x", openocd.read(0x0100000c));
       }
-    } catch (const exception& e) {
+    } catch (const std::exception& e) {
       CFG_POST_ERR(e.what());
     }
   }
@@ -184,29 +184,35 @@ OclaIP Ocla::getOclaInstance(uint32_t instance) {
   throw OclaException(NOT_IMPLEMENTED);
 }
 
-map<uint32_t, OclaIP> Ocla::detect() { throw OclaException(NOT_IMPLEMENTED); }
-
-void Ocla::configure(uint32_t instance, string mode, string cond,
-                     string sample_size) {
+std::map<uint32_t, OclaIP> Ocla::detect() {
   throw OclaException(NOT_IMPLEMENTED);
 }
 
-void Ocla::configureChannel(uint32_t instance, uint32_t channel, string type,
-                            string event, uint32_t value, string probe) {
+void Ocla::configure(uint32_t instance, std::string mode, std::string cond,
+                     std::string sample_size) {
   throw OclaException(NOT_IMPLEMENTED);
 }
 
-void Ocla::start(uint32_t instance, uint32_t timeout, string outputfilepath) {
+void Ocla::configureChannel(uint32_t instance, uint32_t channel,
+                            std::string type, std::string event, uint32_t value,
+                            std::string probe) {
   throw OclaException(NOT_IMPLEMENTED);
 }
 
-void Ocla::showInfo(stringstream& ss) { throw OclaException(NOT_IMPLEMENTED); }
-
-void Ocla::showStatus(uint32_t instance, stringstream& ss) {
+void Ocla::start(uint32_t instance, uint32_t timeout,
+                 std::string outputfilepath) {
   throw OclaException(NOT_IMPLEMENTED);
 }
 
-void Ocla::startSession(string bitasmFilepath) {
+void Ocla::showInfo(std::stringstream& ss) {
+  throw OclaException(NOT_IMPLEMENTED);
+}
+
+void Ocla::showStatus(uint32_t instance, std::stringstream& ss) {
+  throw OclaException(NOT_IMPLEMENTED);
+}
+
+void Ocla::startSession(std::string bitasmFilepath) {
   throw OclaException(NOT_IMPLEMENTED);
 }
 

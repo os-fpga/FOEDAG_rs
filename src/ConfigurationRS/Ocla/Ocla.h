@@ -10,28 +10,25 @@
 #include "JtagAdapter.h"
 #include "OclaIP.h"
 
-using namespace std;
-using namespace std::filesystem;
-
 void Ocla_entry(CFGCommon_ARG *cmdarg);
 
 class Ocla {
  public:
   Ocla() : m_adapter(nullptr) {}
   void setJtagAdapter(JtagAdapter *adapter) { m_adapter = adapter; }
-  void configure(uint32_t instance, string mode, string cond,
-                 string sample_size);
-  void configureChannel(uint32_t instance, uint32_t channel, string type,
-                        string event, uint32_t value, string probe);
-  void start(uint32_t instance, uint32_t timeout, string outputfilepath);
-  void startSession(string bitasmFilepath);
+  void configure(uint32_t instance, std::string mode, std::string cond,
+                 std::string sample_size);
+  void configureChannel(uint32_t instance, uint32_t channel, std::string type,
+                        std::string event, uint32_t value, std::string probe);
+  void start(uint32_t instance, uint32_t timeout, std::string outputfilepath);
+  void startSession(std::string bitasmFilepath);
   void stopSession();
-  void showStatus(uint32_t instance, stringstream &ss);
-  void showInfo(stringstream &ss);
+  void showStatus(uint32_t instance, std::stringstream &ss);
+  void showInfo(std::stringstream &ss);
 
  private:
   OclaIP getOclaInstance(uint32_t instance);
-  map<uint32_t, OclaIP> detect();
+  std::map<uint32_t, OclaIP> detect();
   JtagAdapter *m_adapter;
 };
 

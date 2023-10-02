@@ -4,8 +4,6 @@
 #include <cstdint>
 #include <vector>
 
-using namespace std;
-
 #define OCLA1_ADDR (0x02000000U)
 #define OCLA2_ADDR (0x03000000U)
 #define OCLA_TYPE (0x6f636c61U)
@@ -63,7 +61,7 @@ struct ocla_data {
   uint32_t depth;
   uint32_t linewidth;
   uint32_t reads_per_line;
-  vector<uint32_t> values;
+  std::vector<uint32_t> values;
 };
 
 class OclaIP {
