@@ -26,7 +26,7 @@ OclaIP::OclaIP(JtagAdapter *adapter, uint32_t base_addr)
 
 OclaIP::~OclaIP() {}
 
-ocla_status OclaIP::getStatus() {
+ocla_status OclaIP::getStatus() const {
   try {
     auto ocsr = m_adapter->read(m_base_addr + OCSR);
     return (ocsr & 1) ? DATA_AVAILABLE : NA;
@@ -35,7 +35,7 @@ ocla_status OclaIP::getStatus() {
   }
 }
 
-uint32_t OclaIP::getNumberOfProbes() {
+uint32_t OclaIP::getNumberOfProbes() const {
   try {
     auto numprobes = (m_adapter->read(m_base_addr + OCSR) >> 1) & 0x3ff;
     return numprobes;
@@ -44,7 +44,7 @@ uint32_t OclaIP::getNumberOfProbes() {
   }
 }
 
-uint32_t OclaIP::getMemoryDepth() {
+uint32_t OclaIP::getMemoryDepth() const {
   try {
     auto memdepth = (m_adapter->read(m_base_addr + OCSR) >> 11) & 0x3ff;
     return memdepth;
@@ -53,7 +53,7 @@ uint32_t OclaIP::getMemoryDepth() {
   }
 }
 
-uint32_t OclaIP::getId() {
+uint32_t OclaIP::getId() const {
   try {
     auto id = m_adapter->read(m_base_addr + IP_ID);
     return id;
@@ -62,7 +62,7 @@ uint32_t OclaIP::getId() {
   }
 }
 
-uint32_t OclaIP::getType() {
+uint32_t OclaIP::getType() const {
   try {
     auto type = m_adapter->read(m_base_addr + IP_TYPE);
     return type;
@@ -71,7 +71,7 @@ uint32_t OclaIP::getType() {
   }
 }
 
-uint32_t OclaIP::getVersion() {
+uint32_t OclaIP::getVersion() const {
   try {
     auto version = m_adapter->read(m_base_addr + IP_VERSION);
     return version;
@@ -158,7 +158,7 @@ void OclaIP::start() {
   }
 }
 
-ocla_data OclaIP::getData() {
+ocla_data OclaIP::getData() const {
   try {
     uint32_t ocsr = m_adapter->read(m_base_addr + OCSR);
     uint32_t tmtr = m_adapter->read(m_base_addr + TMTR);
@@ -182,7 +182,7 @@ ocla_data OclaIP::getData() {
   }
 }
 
-ocla_config OclaIP::getConfig() {
+ocla_config OclaIP::getConfig() const {
   try {
     uint32_t tmtr = m_adapter->read(m_base_addr + TMTR);
     ocla_config cfg;
@@ -202,7 +202,7 @@ ocla_config OclaIP::getConfig() {
   }
 }
 
-ocla_trigger_config OclaIP::getChannelConfig(uint32_t channel) {
+ocla_trigger_config OclaIP::getChannelConfig(uint32_t channel) const {
   try {
     uint32_t tcur =
         m_adapter->read(m_base_addr + (channel < 2 ? TCUR0 : TCUR1));

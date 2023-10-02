@@ -69,18 +69,18 @@ class OclaIP {
   OclaIP(JtagAdapter *adapter, uint32_t base_addr);
   virtual ~OclaIP();
   void configure(ocla_config &cfg);
-  ocla_config getConfig();
   void configureChannel(uint32_t channel, ocla_trigger_config &trig_cfg);
-  ocla_trigger_config getChannelConfig(uint32_t channel);
-  ocla_status getStatus();
-  uint32_t getNumberOfProbes();
-  uint32_t getMemoryDepth();
-  uint32_t getVersion();
-  uint32_t getType();
-  uint32_t getId();
   void start();
-  ocla_data getData();
-  uint32_t getBaseAddr() { return m_base_addr; }
+  ocla_config getConfig() const;
+  ocla_trigger_config getChannelConfig(uint32_t channel) const;
+  ocla_status getStatus() const;
+  uint32_t getNumberOfProbes() const;
+  uint32_t getMemoryDepth() const;
+  uint32_t getVersion() const;
+  uint32_t getType() const;
+  uint32_t getId() const;
+  ocla_data getData() const;
+  uint32_t getBaseAddr() const { return m_base_addr; }
 
  private:
   void configureTrigger(uint32_t addr, uint32_t offset,
