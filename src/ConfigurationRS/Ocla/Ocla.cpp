@@ -1,5 +1,7 @@
 #include "Ocla.h"
 
+#include <sstream>
+
 #include "JtagAdapter.h"
 #include "OclaException.h"
 #include "OclaIP.h"
@@ -28,11 +30,9 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
   throw OclaException(NOT_IMPLEMENTED);
 }
 
-void Ocla::showInfo(std::stringstream& ss) {
-  throw OclaException(NOT_IMPLEMENTED);
-}
+std::stringstream Ocla::showInfo() { throw OclaException(NOT_IMPLEMENTED); }
 
-void Ocla::showStatus(uint32_t instance, std::stringstream& ss) {
+std::stringstream Ocla::showStatus(uint32_t instance) {
   throw OclaException(NOT_IMPLEMENTED);
 }
 

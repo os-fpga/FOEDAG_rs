@@ -19,8 +19,8 @@ class Ocla {
   void start(uint32_t instance, uint32_t timeout, std::string outputfilepath);
   void startSession(std::string bitasmFilepath);
   void stopSession();
-  void showStatus(uint32_t instance, std::stringstream &ss);
-  void showInfo(std::stringstream &ss);
+  std::stringstream showStatus(uint32_t instance);
+  std::stringstream showInfo();
 
  private:
   OclaIP getOclaInstance(uint32_t instance);

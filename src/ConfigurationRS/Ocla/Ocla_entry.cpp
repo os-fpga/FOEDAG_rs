@@ -40,9 +40,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
   std::string subCmd = arg->get_sub_arg_name();
   if (subCmd == "info") {
     try {
-      std::stringstream output{};
       Ocla ocla{&openocd};
-      ocla.showInfo(output);
+      auto output = ocla.showInfo();
       Ocla_print(output);
     } catch (const OclaException& e) {
       CFG_POST_ERR("%s (%d). %s", e.what(), e.getError(), e.getMessage());
@@ -97,9 +96,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     try {
       auto parms =
           static_cast<const CFGArg_DEBUGGER_STATUS*>(arg->get_sub_arg());
-      std::stringstream output{};
       Ocla ocla{&openocd};
-      ocla.showStatus(parms->instance, output);
+      auto output = ocla.showStatus(parms->instance);
       cmdarg->tclOutput = output.str().c_str();
     } catch (const OclaException& e) {
       CFG_POST_ERR("%s (%d). %s", e.what(), e.getError(), e.getMessage());
