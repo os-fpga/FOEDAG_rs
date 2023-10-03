@@ -450,7 +450,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
       result =
           ReplaceAll(result, "${OUTPUT_NETLIST}",
                      "write_verilog -noexpr -nodec -v "
-                     "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
+                     "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_BLIF}");
       break;
     case NetlistType::EBlif:
       result =
@@ -465,7 +465,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
 
 CompilerRS::CompilerRS() : CompilerOpenFPGA() {
   m_synthType = SynthesisType::RS;
-  m_netlistType = NetlistType::EBlif;
+  m_netlistType = NetlistType::Verilog;
   m_channel_width = 200;
   m_name = "CompilerRS";
 }
