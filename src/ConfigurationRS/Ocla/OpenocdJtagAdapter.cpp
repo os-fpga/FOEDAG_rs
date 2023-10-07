@@ -12,10 +12,10 @@ OpenocdJtagAdapter::OpenocdJtagAdapter(std::string filepath,
                                        ExecFuncType cmdexec, Cable *cable)
     : m_filepath(filepath),
       m_cmdexec(cmdexec),
+      m_cable(cable),
       m_id(0x10000db3),
       m_irlen(5),
-      m_speedKhz(1000),
-      m_cable(cable) {}
+      m_speedKhz(1000) {}
 
 void OpenocdJtagAdapter::write(uint32_t addr, uint32_t data) {
   // ocla jtag write via openocd command

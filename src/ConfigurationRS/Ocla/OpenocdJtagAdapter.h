@@ -29,12 +29,12 @@ class OpenocdJtagAdapter : public OclaJtagAdapter {
   std::stringstream buildCommand(const std::string& cmd);
   int executeCommand(const std::string& cmd, std::string& output);
   std::vector<uint32_t> parse(const std::string& output);
-  uint32_t m_irlen;
-  uint32_t m_id;
-  uint32_t m_speedKhz;
   std::string m_filepath;
   ExecFuncType m_cmdexec = nullptr;
   Cable* m_cable = nullptr;
+  uint32_t m_id;
+  uint32_t m_irlen;
+  uint32_t m_speedKhz;
 };
 
 #endif  //__OPENOCDJTAGADAPTER_H__

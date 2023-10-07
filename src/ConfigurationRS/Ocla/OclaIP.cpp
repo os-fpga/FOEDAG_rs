@@ -93,6 +93,8 @@ void OclaIP::configureTrigger(uint32_t addr, uint32_t offset,
       tcur |= ((trig_cfg.event & 0xf) << (6 + offset));
       m_adapter->write(m_base_addr + TDCR, trig_cfg.value);
       break;
+    case TRIGGER_NONE:
+      break;
   }
 
   m_adapter->write(addr, tcur);
@@ -174,6 +176,8 @@ ocla_trigger_config OclaIP::getChannelConfig(uint32_t channel) const {
       trig_cfg.event =
           (ocla_trigger_event)(((tcur >> (6 + (offset))) & 0x3) | 0x30);
       trig_cfg.value = m_adapter->read(m_base_addr + TDCR);
+      break;
+    case TRIGGER_NONE:
       break;
   }
   return trig_cfg;
