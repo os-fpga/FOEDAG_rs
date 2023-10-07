@@ -64,6 +64,23 @@ std::stringstream Ocla::dumpRegisters(uint32_t instance) {
   return ss;
 }
 
+std::stringstream Ocla::dumpSamples(uint32_t instance) {
+  OclaIP objIP = getOclaInstance(instance);
+  std::stringstream ss;
+  char buffer[100];
+  auto data = objIP.getData();
+
+  ss << "width " << data.width << " depth " << data.depth << " num_reads "
+     << data.num_reads << " length " << data.values.size() << std::endl;
+
+  for (auto& value : data.values) {
+    sprintf(buffer, "0x%08x\n", value);
+    ss << buffer;
+  }
+
+  return ss;
+}
+
 std::stringstream Ocla::showStatus(uint32_t instance) {
   CFG_ASSERT_MSG(false, "Not implemented");
   return std::stringstream{};

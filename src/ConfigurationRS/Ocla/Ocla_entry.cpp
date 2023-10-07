@@ -80,6 +80,10 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       auto output = ocla.dumpRegisters(parms->instance);
       Ocla_print(output);
     }
+    if (parms->dump) {
+      auto output = ocla.dumpSamples(parms->instance);
+      Ocla_print(output);
+    }
   } else if (subCmd == "counter") {
     // for testing with IP on ocla platform only.
     // Will be removed at final

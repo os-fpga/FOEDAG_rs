@@ -127,10 +127,10 @@ ocla_data OclaIP::getData() const {
     data.depth = (ocsr >> 11) & 0x3ff;
   }
 
-  data.linewidth = (ocsr >> 1) & 0x3ff;
-  data.reads_per_line = ((data.linewidth - 1) / 32) + 1;
+  data.width = (ocsr >> 1) & 0x3ff;
+  data.num_reads = ((data.width - 1) / 32) + 1;
   data.values =
-      m_adapter->read(m_base_addr + TBDR, data.depth * data.reads_per_line);
+      m_adapter->read(m_base_addr + TBDR, data.depth * data.num_reads);
 
   return data;
 }

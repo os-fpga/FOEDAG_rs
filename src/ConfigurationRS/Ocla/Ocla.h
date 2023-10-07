@@ -23,6 +23,7 @@ class Ocla {
   std::stringstream showInfo();
   // debug use
   std::stringstream dumpRegisters(uint32_t instance);
+  std::stringstream dumpSamples(uint32_t instance);
 
  private:
   OclaIP getOclaInstance(uint32_t instance);

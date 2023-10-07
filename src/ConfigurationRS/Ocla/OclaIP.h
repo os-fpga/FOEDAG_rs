@@ -68,8 +68,8 @@ struct ocla_trigger_config {
 
 struct ocla_data {
   uint32_t depth;
-  uint32_t linewidth;
-  uint32_t reads_per_line;
+  uint32_t width;
+  uint32_t num_reads;
   std::vector<uint32_t> values;
 };
 
