@@ -6,6 +6,8 @@
 #include <sstream>
 #include <vector>
 
+#include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
+
 OpenocdJtagAdapter::OpenocdJtagAdapter(std::string filepath,
                                        ExecFuncType cmdexec, Cable *cable)
     : m_filepath(filepath),
@@ -32,15 +34,8 @@ void OpenocdJtagAdapter::write(uint32_t addr, uint32_t data) {
      << " -c \"irscan ocla.tap 0x08\""
      << " -c \"drscan ocla.tap 32 0x0 2 0x0\"";
 
-  if (executeCommand(ss.str(), output) != 0) {
-    throw std::runtime_error("write(), cmdexec error: " + output);
-  }
-
-  try {
-    parse(output);
-  } catch (const std::exception &e) {
-    throw std::runtime_error(std::string("write(), ") + e.what());
-  }
+  CFG_ASSERT_MSG(executeCommand(ss.str(), output) == 0, "cmdexec error");
+  parse(output);
 }
 
 uint32_t OpenocdJtagAdapter::read(uint32_t addr) {
@@ -70,19 +65,11 @@ std::vector<uint32_t> OpenocdJtagAdapter::read(uint32_t base_addr,
     base_addr += increase_by;
   }
 
-  if (executeCommand(ss.str(), output) != 0) {
-    throw std::runtime_error("read(), cmdexec error: " + output);
-  }
-
-  try {
-    auto values = parse(output);
-    if (values.size() != num_reads) {
-      throw std::runtime_error("values size is not equal to read requests");
-    }
-    return values;
-  } catch (const std::exception &e) {
-    throw std::runtime_error(std::string("read(), ") + e.what());
-  }
+  CFG_ASSERT_MSG(executeCommand(ss.str(), output) == 0, "cmdexec error");
+  auto values = parse(output);
+  CFG_ASSERT_MSG(values.size() == num_reads,
+                 "values size is not equal to read requests");
+  return values;
 }
 
 void OpenocdJtagAdapter::setId(uint32_t id) { m_id = id; }
@@ -129,17 +116,11 @@ std::vector<uint32_t> OpenocdJtagAdapter::parse(const std::string &output) {
     if (std::regex_search(s.c_str(), matches,
                           std::regex("^([0-9A-F]{8}) ([0-9A-F]{2})$",
                                      std::regex::icase)) == true) {
-      int status = stoi(matches[2], nullptr, 16);
-      if (status != 0) {
-        throw std::runtime_error("ocla error");
-      }
+      CFG_ASSERT_MSG(stoi(matches[2], nullptr, 16) == 0, "ocla error");
       values.push_back((uint32_t)stoul(matches[1], nullptr, 16));
     }
   }
 
-  if (values.empty()) {
-    throw std::runtime_error("empty result");
-  }
-
+  CFG_ASSERT_MSG(values.empty() == false, "empty result");
   return values;
 }

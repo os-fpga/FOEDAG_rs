@@ -66,6 +66,7 @@ struct ocla_data {
 
 class OclaIP {
  public:
+  OclaIP();
   OclaIP(JtagAdapter *adapter, uint32_t base_addr);
   virtual ~OclaIP();
   void configure(ocla_config &cfg);
