@@ -20,7 +20,7 @@
 #define IP_VERSION (0x1C)
 #define IP_ID (0x20)
 
-class JtagAdapter;
+class OclaJtagAdapter;
 
 enum ocla_status { NA = 0, DATA_AVAILABLE = 1 };
 
@@ -76,7 +76,7 @@ struct ocla_data {
 class OclaIP {
  public:
   OclaIP();
-  OclaIP(JtagAdapter *adapter, uint32_t base_addr);
+  OclaIP(OclaJtagAdapter *adapter, uint32_t base_addr);
   virtual ~OclaIP();
   void configure(ocla_config &cfg);
   void configureChannel(uint32_t channel, ocla_trigger_config &trig_cfg);
@@ -95,7 +95,7 @@ class OclaIP {
  private:
   void configureTrigger(uint32_t addr, uint32_t offset,
                         ocla_trigger_config &trig_cfg);
-  JtagAdapter *m_adapter;
+  OclaJtagAdapter *m_adapter;
   uint32_t m_base_addr;
 };
 

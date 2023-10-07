@@ -3,8 +3,8 @@
 #include <sstream>
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
-#include "JtagAdapter.h"
 #include "OclaIP.h"
+#include "OclaJtagAdapter.h"
 
 OclaIP Ocla::getOclaInstance(uint32_t instance) {
   OclaIP objIP{m_adapter, instance == 1 ? OCLA1_ADDR : OCLA2_ADDR};

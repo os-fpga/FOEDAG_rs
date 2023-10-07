@@ -1,11 +1,11 @@
 #include "OclaIP.h"
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
-#include "JtagAdapter.h"
+#include "OclaJtagAdapter.h"
 
 #define MAX_SAMPLE (1024)
 
-OclaIP::OclaIP(JtagAdapter *adapter, uint32_t base_addr)
+OclaIP::OclaIP(OclaJtagAdapter *adapter, uint32_t base_addr)
     : m_adapter(adapter), m_base_addr(base_addr) {}
 
 OclaIP::OclaIP() : m_adapter(nullptr), m_base_addr(0) {}

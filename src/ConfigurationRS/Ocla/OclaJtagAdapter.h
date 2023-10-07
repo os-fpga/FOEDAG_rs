@@ -1,16 +1,16 @@
-#ifndef __JTAGADAPTER_H__
-#define __JTAGADAPTER_H__
+#ifndef __OCLAJTAGADAPTER_H__
+#define __OCLAJTAGADAPTER_H__
 
 #include <cstdint>
 #include <vector>
 
-class JtagAdapter {
+class OclaJtagAdapter {
  public:
-  virtual ~JtagAdapter(){};
+  virtual ~OclaJtagAdapter(){};
   virtual void write(uint32_t addr, uint32_t data) = 0;
   virtual uint32_t read(uint32_t addr) = 0;
   virtual std::vector<uint32_t> read(uint32_t base_addr, uint32_t num_reads,
                                      uint32_t increase_by = 0) = 0;
 };
 
-#endif  //__JTAGADAPTER_H__
+#endif  //__OCLAJTAGADAPTER_H__

@@ -6,14 +6,14 @@
 #include <functional>
 #include <iostream>
 
-#include "JtagAdapter.h"
+#include "OclaJtagAdapter.h"
 
 class Cable;
 
 using ExecFuncType = std::function<int(const std::string&, std::string&,
                                        std::ostream*, std::atomic<bool>&)>;
 
-class OpenocdJtagAdapter : public JtagAdapter {
+class OpenocdJtagAdapter : public OclaJtagAdapter {
  public:
   OpenocdJtagAdapter(std::string filepath, ExecFuncType cmdexec,
                      Cable* cable = nullptr);

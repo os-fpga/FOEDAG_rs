@@ -6,12 +6,12 @@
 #include <string>
 
 class OclaIP;
-class JtagAdapter;
+class OclaJtagAdapter;
 struct CFGCommon_ARG;
 
 class Ocla {
  public:
-  Ocla(JtagAdapter *adapter) : m_adapter(adapter) {}
+  Ocla(OclaJtagAdapter *adapter) : m_adapter(adapter) {}
   void configure(uint32_t instance, std::string mode, std::string cond,
                  std::string sample_size);
   void configureChannel(uint32_t instance, uint32_t channel, std::string type,
@@ -29,7 +29,7 @@ class Ocla {
  private:
   OclaIP getOclaInstance(uint32_t instance);
   std::map<uint32_t, OclaIP> detect();
-  JtagAdapter *m_adapter;
+  OclaJtagAdapter *m_adapter;
 };
 
 void Ocla_entry(CFGCommon_ARG *cmdarg);
