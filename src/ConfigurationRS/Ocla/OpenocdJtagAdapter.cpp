@@ -9,10 +9,9 @@
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 
 OpenocdJtagAdapter::OpenocdJtagAdapter(std::string filepath,
-                                       ExecFuncType cmdexec, Cable *cable)
+                                       ExecFuncType cmdexec)
     : m_filepath(filepath),
       m_cmdexec(cmdexec),
-      m_cable(cable),
       m_id(0x10000db3),
       m_irlen(5),
       m_speedKhz(1000) {}

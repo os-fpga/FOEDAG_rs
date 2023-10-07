@@ -8,15 +8,12 @@
 
 #include "OclaJtagAdapter.h"
 
-class Cable;
-
 using ExecFuncType = std::function<int(const std::string&, std::string&,
                                        std::ostream*, std::atomic<bool>&)>;
 
 class OpenocdJtagAdapter : public OclaJtagAdapter {
  public:
-  OpenocdJtagAdapter(std::string filepath, ExecFuncType cmdexec,
-                     Cable* cable = nullptr);
+  OpenocdJtagAdapter(std::string filepath, ExecFuncType cmdexec);
   virtual ~OpenocdJtagAdapter(){};
   virtual void write(uint32_t addr, uint32_t data);
   virtual uint32_t read(uint32_t addr);
@@ -31,7 +28,6 @@ class OpenocdJtagAdapter : public OclaJtagAdapter {
   std::vector<uint32_t> parse(const std::string& output);
   std::string m_filepath;
   ExecFuncType m_cmdexec = nullptr;
-  Cable* m_cable = nullptr;
   uint32_t m_id;
   uint32_t m_irlen;
   uint32_t m_speedKhz;
