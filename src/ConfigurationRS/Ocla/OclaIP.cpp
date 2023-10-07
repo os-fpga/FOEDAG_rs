@@ -3,15 +3,6 @@
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 #include "JtagAdapter.h"
 
-#define OCSR (0x00)
-#define TBDR (0x04)
-#define TCUR0 (0x08)
-#define TMTR (0x0C)
-#define TDCR (0x10)
-#define TCUR1 (0x14)
-#define IP_TYPE (0x18)
-#define IP_VERSION (0x1C)
-#define IP_ID (0x20)
 #define MAX_SAMPLE (1024)
 
 OclaIP::OclaIP(JtagAdapter *adapter, uint32_t base_addr)
@@ -65,8 +56,7 @@ void OclaIP::configure(ocla_config &cfg) {
   tmtr |= ((cfg.ns & 0x7ff) << 4);
   m_adapter->write(m_base_addr + TMTR, tmtr);
 
-  for (auto& reg : {TCUR0, TCUR1})
-  {
+  for (auto &reg : {TCUR0, TCUR1}) {
     uint32_t tcur = m_adapter->read(m_base_addr + reg);
     tcur &= ~(3 << 15);
     tcur |= (cfg.cond << 15);

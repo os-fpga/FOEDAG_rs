@@ -4,7 +4,6 @@
 #include "CFGObject/CFGObject_auto.h"
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 #include "Ocla.h"
-#include "OclaIP.h"
 #include "OpenocdJtagAdapter.h"
 
 void Ocla_print(std::stringstream& output) {
@@ -76,31 +75,10 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     Ocla_launch_gtkwave(parms->input, cmdarg->binPath);
   } else if (subCmd == "debug") {
     auto parms = static_cast<const CFGArg_DEBUGGER_DEBUG*>(arg->get_sub_arg());
-    OclaIP ip{&openocd, parms->instance == 1 ? OCLA1_ADDR : OCLA2_ADDR};
-    if (parms->start) ip.start();
+    Ocla ocla{&openocd};
     if (parms->reg) {
-      std::map<uint32_t, std::string> regs = {
-          {0x00, "OCSR"},       {0x08, "TCUR0"}, {0x0c, "TMTR"},
-          {0x10, "TDCR"},       {0x14, "TCUR1"}, {0x18, "IP_TYPE"},
-          {0x1c, "IP_VERSION"}, {0x20, "IP_ID"},
-      };
-      for (auto const& [offset, name] : regs) {
-        uint32_t regaddr = ip.getBaseAddr() + offset;
-        CFG_POST_MSG("%-10s (0x%08x) = 0x%08x", name.c_str(), regaddr,
-                     openocd.read(regaddr));
-      }
-    }
-    if (parms->dump) {
-      ocla_data data = ip.getData();
-      if (parms->dump) {
-        CFG_POST_MSG("linewidth      : %d", data.linewidth);
-        CFG_POST_MSG("depth          : %d", data.depth);
-        CFG_POST_MSG("reads_per_line : %d", data.reads_per_line);
-        CFG_POST_MSG("length         : %d", data.values.size());
-        for (auto& v : data.values) {
-          CFG_POST_MSG("0x%08x", v);
-        }
-      }
+      auto output = ocla.dumpRegisters(parms->instance);
+      Ocla_print(output);
     }
   } else if (subCmd == "counter") {
     // for testing with IP on ocla platform only.

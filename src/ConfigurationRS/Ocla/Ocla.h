@@ -21,6 +21,8 @@ class Ocla {
   void stopSession();
   std::stringstream showStatus(uint32_t instance);
   std::stringstream showInfo();
+  // debug use
+  std::stringstream dumpRegisters(uint32_t instance);
 
  private:
   OclaIP getOclaInstance(uint32_t instance);

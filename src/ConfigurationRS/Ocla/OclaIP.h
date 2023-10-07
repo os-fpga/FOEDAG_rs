@@ -10,6 +10,15 @@
 #define OCLA_TRIGGER_CHANNELS (4U)
 #define OCLA_MAX_SAMPLE_SIZE (1024U)
 #define OCLA_MAX_PROBE (128U)
+#define OCSR (0x00)
+#define TBDR (0x04)
+#define TCUR0 (0x08)
+#define TMTR (0x0C)
+#define TDCR (0x10)
+#define TCUR1 (0x14)
+#define IP_TYPE (0x18)
+#define IP_VERSION (0x1C)
+#define IP_ID (0x20)
 
 class JtagAdapter;
 

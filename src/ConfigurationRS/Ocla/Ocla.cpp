@@ -7,8 +7,9 @@
 #include "OclaIP.h"
 
 OclaIP Ocla::getOclaInstance(uint32_t instance) {
-  CFG_ASSERT_MSG(false, "Not implemented");
-  return OclaIP{};
+  OclaIP objIP{m_adapter, instance == 1 ? OCLA1_ADDR : OCLA2_ADDR};
+  CFG_ASSERT(objIP.getType() == OCLA_TYPE);
+  return objIP;
 }
 
 std::map<uint32_t, OclaIP> Ocla::detect() {
@@ -35,6 +36,32 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
 std::stringstream Ocla::showInfo() {
   CFG_ASSERT_MSG(false, "Not implemented");
   return std::stringstream{};
+}
+
+std::stringstream Ocla::dumpRegisters(uint32_t instance) {
+  std::map<uint32_t, std::string> regs = {
+      {OCSR, "OCSR"},
+      {TCUR0, "TCUR0"},
+      {TMTR, "TMTR"},
+      {TDCR, "TDCR"},
+      {TCUR1, "TCUR1"},
+      {IP_TYPE, "IP_TYPE"},
+      {IP_VERSION, "IP_VERSION"},
+      {IP_ID, "IP_ID"},
+  };
+
+  OclaIP objIP = getOclaInstance(instance);
+  std::stringstream ss;
+  char buffer[100];
+
+  for (auto const& [offset, name] : regs) {
+    uint32_t regaddr = objIP.getBaseAddr() + offset;
+    sprintf(buffer, "%-10s (0x%08x) = 0x%08x\n", name.c_str(), regaddr,
+            m_adapter->read(regaddr));
+    ss << buffer;
+  }
+
+  return ss;
 }
 
 std::stringstream Ocla::showStatus(uint32_t instance) {
