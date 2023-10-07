@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <sstream>
 
 #include "CFGCommonRS/CFGArgRS_auto.h"
 #include "CFGObject/CFGObject_auto.h"
