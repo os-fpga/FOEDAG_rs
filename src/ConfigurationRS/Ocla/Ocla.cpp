@@ -33,12 +33,12 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
   CFG_ASSERT_MSG(false, "Not implemented");
 }
 
-std::stringstream Ocla::showInfo() {
+std::string Ocla::showInfo() {
   CFG_ASSERT_MSG(false, "Not implemented");
-  return std::stringstream{};
+  return std::string{};
 }
 
-std::stringstream Ocla::dumpRegisters(uint32_t instance) {
+std::string Ocla::dumpRegisters(uint32_t instance) {
   std::map<uint32_t, std::string> regs = {
       {OCSR, "OCSR"},
       {TCUR0, "TCUR0"},
@@ -51,22 +51,22 @@ std::stringstream Ocla::dumpRegisters(uint32_t instance) {
   };
 
   OclaIP objIP = getOclaInstance(instance);
-  std::stringstream ss;
+  std::ostringstream ss;
   char buffer[100];
 
   for (auto const& [offset, name] : regs) {
     uint32_t regaddr = objIP.getBaseAddr() + offset;
-    sprintf(buffer, "%-10s (0x%08x) = 0x%08x\n", name.c_str(), regaddr,
-            m_adapter->read(regaddr));
+    snprintf(buffer, sizeof(buffer), "%-10s (0x%08x) = 0x%08x\n", name.c_str(),
+             regaddr, m_adapter->read(regaddr));
     ss << buffer;
   }
 
-  return ss;
+  return ss.str();
 }
 
-std::stringstream Ocla::dumpSamples(uint32_t instance) {
+std::string Ocla::dumpSamples(uint32_t instance) {
   OclaIP objIP = getOclaInstance(instance);
-  std::stringstream ss;
+  std::ostringstream ss;
   char buffer[100];
   auto data = objIP.getData();
 
@@ -74,11 +74,11 @@ std::stringstream Ocla::dumpSamples(uint32_t instance) {
      << data.num_reads << " length " << data.values.size() << std::endl;
 
   for (auto& value : data.values) {
-    sprintf(buffer, "0x%08x\n", value);
+    snprintf(buffer, sizeof(buffer), "0x%08x\n", value);
     ss << buffer;
   }
 
-  return ss;
+  return ss.str();
 }
 
 void Ocla::debugStart(uint32_t instance) {
@@ -86,9 +86,9 @@ void Ocla::debugStart(uint32_t instance) {
   objIP.start();
 }
 
-std::stringstream Ocla::showStatus(uint32_t instance) {
+std::string Ocla::showStatus(uint32_t instance) {
   CFG_ASSERT_MSG(false, "Not implemented");
-  return std::stringstream{};
+  return std::string{};
 }
 
 void Ocla::startSession(std::string bitasmFilepath) {

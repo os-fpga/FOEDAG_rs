@@ -19,11 +19,11 @@ class Ocla {
   void start(uint32_t instance, uint32_t timeout, std::string outputfilepath);
   void startSession(std::string bitasmFilepath);
   void stopSession();
-  std::stringstream showStatus(uint32_t instance);
-  std::stringstream showInfo();
+  std::string showStatus(uint32_t instance);
+  std::string showInfo();
   // debug use
-  std::stringstream dumpRegisters(uint32_t instance);
-  std::stringstream dumpSamples(uint32_t instance);
+  std::string dumpRegisters(uint32_t instance);
+  std::string dumpSamples(uint32_t instance);
   void debugStart(uint32_t instance);
 
  private:

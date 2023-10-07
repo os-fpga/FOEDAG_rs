@@ -6,10 +6,11 @@
 #include "Ocla.h"
 #include "OpenocdJtagAdapter.h"
 
-void Ocla_print(std::stringstream& output) {
-  std::string s;
-  while (std::getline(output, s)) {
-    CFG_POST_MSG("%s", s.c_str());
+void Ocla_print(std::string output) {
+  std::istringstream ss(output);
+  std::string line;
+  while (std::getline(ss, line)) {
+    CFG_POST_MSG("%s", line.c_str());
   }
 }
 
@@ -34,8 +35,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
   std::string subCmd = arg->get_sub_arg_name();
   if (subCmd == "info") {
     Ocla ocla{&openocd};
-    auto output = ocla.showInfo();
-    Ocla_print(output);
+    Ocla_print(ocla.showInfo());
   } else if (subCmd == "session") {
     auto parms =
         static_cast<const CFGArg_DEBUGGER_SESSION*>(arg->get_sub_arg());
@@ -82,7 +82,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
         "Invalid instance parameter. Instance should be either 1 or 2.");
     Ocla ocla{&openocd};
     auto output = ocla.showStatus(parms->instance);
-    cmdarg->tclOutput = output.str().c_str();
+    cmdarg->tclOutput = output.c_str();
   } else if (subCmd == "show_waveform") {
     auto parms =
         static_cast<const CFGArg_DEBUGGER_SHOW_WAVEFORM*>(arg->get_sub_arg());
@@ -94,12 +94,10 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
         "Invalid instance parameter. Instance should be either 1 or 2.");
     Ocla ocla{&openocd};
     if (parms->reg) {
-      auto output = ocla.dumpRegisters(parms->instance);
-      Ocla_print(output);
+      Ocla_print(ocla.dumpRegisters(parms->instance));
     }
     if (parms->dump) {
-      auto output = ocla.dumpSamples(parms->instance);
-      Ocla_print(output);
+      Ocla_print(ocla.dumpSamples(parms->instance));
     }
     if (parms->start) ocla.debugStart(parms->instance);
   } else if (subCmd == "counter") {
