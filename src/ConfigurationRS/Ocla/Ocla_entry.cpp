@@ -84,6 +84,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       auto output = ocla.dumpSamples(parms->instance);
       Ocla_print(output);
     }
+    if (parms->start) ocla.debugStart(parms->instance);
   } else if (subCmd == "counter") {
     // for testing with IP on ocla platform only.
     // Will be removed at final

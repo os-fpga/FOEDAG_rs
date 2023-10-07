@@ -81,6 +81,11 @@ std::stringstream Ocla::dumpSamples(uint32_t instance) {
   return ss;
 }
 
+void Ocla::debugStart(uint32_t instance) {
+  OclaIP objIP = getOclaInstance(instance);
+  objIP.start();
+}
+
 std::stringstream Ocla::showStatus(uint32_t instance) {
   CFG_ASSERT_MSG(false, "Not implemented");
   return std::stringstream{};
