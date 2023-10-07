@@ -23,7 +23,7 @@ class OpenocdJtagAdapter : public OclaJtagAdapter {
   void setSpeedKhz(uint32_t speedKhz);
 
  private:
-  std::stringstream buildCommand(const std::string& cmd);
+  std::string buildCommand(const std::string& cmd);
   int executeCommand(const std::string& cmd, std::string& output);
   std::vector<uint32_t> parse(const std::string& output);
   std::string m_filepath;

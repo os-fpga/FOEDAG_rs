@@ -32,7 +32,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     return;
   }
 
-  OpenocdJtagAdapter openocd{cmdarg->toolPath, CFG_execute_cmd};
+  OpenocdJtagAdapter openocd{cmdarg->toolPath.string(), CFG_execute_cmd};
   std::string subCmd = arg->get_sub_arg_name();
   if (subCmd == "info") {
     Ocla ocla{&openocd};

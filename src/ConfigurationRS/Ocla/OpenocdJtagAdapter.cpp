@@ -77,8 +77,8 @@ void OpenocdJtagAdapter::setSpeedKhz(uint32_t speedKhz) {
   m_speedKhz = speedKhz;
 }
 
-std::stringstream OpenocdJtagAdapter::buildCommand(const std::string &cmd) {
-  std::stringstream ss;
+std::string OpenocdJtagAdapter::buildCommand(const std::string &cmd) {
+  std::ostringstream ss;
 
   ss << " -l /dev/stdout"  //<-- not windows friendly
      << " -d2"
@@ -92,15 +92,15 @@ std::stringstream OpenocdJtagAdapter::buildCommand(const std::string &cmd) {
      << " -c \"target create ocla testee -chain-position ocla.tap\""
      << " -c \"init\"" << cmd << " -c \"exit\"";
 
-  return ss;
+  return ss.str();
 }
 
 int OpenocdJtagAdapter::executeCommand(const std::string &cmd,
                                        std::string &output) {
   std::atomic<bool> stop = false;
-  int res = m_cmdexec(
-      "OPENOCD_DEBUG_LEVEL=-3 " + m_filepath + buildCommand(cmd).str(), output,
-      nullptr, stop);
+  int res =
+      m_cmdexec("OPENOCD_DEBUG_LEVEL=-3 " + m_filepath + buildCommand(cmd),
+                output, nullptr, stop);
   return res;
 }
 
