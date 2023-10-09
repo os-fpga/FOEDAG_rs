@@ -225,8 +225,10 @@ void Ocla::debugStart(uint32_t instance) {
 }
 
 std::string Ocla::showStatus(uint32_t instance) {
-  CFG_ASSERT_MSG(false, "Not implemented");
-  return std::string{};
+  OclaIP objIP = getOclaInstance(instance);
+  std::ostringstream ss;
+  ss << (uint32_t)objIP.getStatus();
+  return ss.str();
 }
 
 void Ocla::startSession(std::string bitasmFilepath) {
