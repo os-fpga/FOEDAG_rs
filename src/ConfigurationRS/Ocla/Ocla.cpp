@@ -1,5 +1,7 @@
 #include "Ocla.h"
 
+#include <unistd.h>
+
 #include <sstream>
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
@@ -158,7 +160,27 @@ void Ocla::configureChannel(uint32_t instance, uint32_t channel,
 
 void Ocla::start(uint32_t instance, uint32_t timeout,
                  std::string outputfilepath) {
-  CFG_ASSERT_MSG(false, "Not implemented");
+  uint32_t countdown = timeout;
+  auto objIP = getOclaInstance(instance);
+  objIP.start();
+
+  while (true) {
+    // wait for 1 sec
+    sleep(1);
+
+    if (objIP.getStatus() == DATA_AVAILABLE) {
+      ocla_data data = objIP.getData();
+      /*
+        todo: Write the acquired samples to a FST waveform file
+      */
+      break;
+    }
+
+    if (timeout > 0) {
+      CFG_ASSERT_MSG(countdown > 0, "Timeout error");
+      --countdown;
+    }
+  }
 }
 
 std::string Ocla::showInfo() {
