@@ -21,7 +21,7 @@ void Ocla_launch_gtkwave(std::string filepath, std::filesystem::path binPath) {
                  (std::string("File not found: ") + filepath).c_str());
   auto exePath = binPath / "gtkwave" / "bin" / "gtkwave";
   auto cmd = exePath.string() + " " + filepath;
-  CFG_ASSERT_MSG(system(cmd.c_str()) == 0, "Fail to open GTKWave");
+  CFG_compiler_execute_cmd(cmd);
 }
 
 void Ocla_entry(CFGCommon_ARG* cmdarg) {
