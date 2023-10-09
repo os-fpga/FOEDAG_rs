@@ -45,7 +45,7 @@ static std::string convertTriggerEventToString(ocla_trigger_event trig_event) {
   return trigger_event_to_string_map[trig_event];
 }
 
-ocla_mode convertOclaMode(std::string mode_string) {
+static ocla_mode convertOclaMode(std::string mode_string) {
   for (auto& [mode, str] : ocla_mode_to_string_map) {
     if (mode_string == str) return mode;
   }
@@ -53,12 +53,29 @@ ocla_mode convertOclaMode(std::string mode_string) {
   return NO_TRIGGER;
 }
 
-ocla_trigger_condition convertTriggerCondition(std::string condition_string) {
+static ocla_trigger_condition convertTriggerCondition(
+    std::string condition_string) {
   for (auto& [condition, str] : trigger_condition_to_string_map) {
     if (condition_string == str) return condition;
   }
   // default if not found
   return DEFAULT;
+}
+
+static ocla_trigger_type convertTriggerType(std::string type_string) {
+  for (auto& [type, str] : trigger_type_to_string_map) {
+    if (type_string == str) return type;
+  }
+  // default if not found
+  return TRIGGER_NONE;
+}
+
+static ocla_trigger_event convertTriggerEvent(std::string event_string) {
+  for (auto& [event, str] : trigger_event_to_string_map) {
+    if (event_string == str) return event;
+  }
+  // default if not found
+  return NONE;
 }
 
 OclaIP Ocla::getOclaInstance(uint32_t instance) {
@@ -89,7 +106,9 @@ void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
   auto depth = objIP.getMemoryDepth();
   CFG_ASSERT_MSG(
       sample_size <= depth,
-      ("Sample size should be beween 0 and " + std::to_string(depth)).c_str());
+      ("Invalid sample size parameter (Sample size should be beween 0 and " +
+       std::to_string(depth) + ")")
+          .c_str());
 
   ocla_config cfg;
 
@@ -104,7 +123,37 @@ void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
 void Ocla::configureChannel(uint32_t instance, uint32_t channel,
                             std::string type, std::string event, uint32_t value,
                             std::string probe) {
-  CFG_ASSERT_MSG(false, "Not implemented");
+  if (type == "edge") {
+    CFG_ASSERT_MSG(event == "rising" || event == "falling" || event == "either",
+                   "Invalid event parameter for edge trigger");
+  } else if (type == "value_compare") {
+    CFG_ASSERT_MSG(event == "equal" || event == "lesser" || event == "greater",
+                   "Invalid event parameter for value compare trigger");
+  } else if (type == "level") {
+    CFG_ASSERT_MSG(event == "high" || event == "low",
+                   "Invalid event parameter for level trigger");
+  }
+
+  bool status = false;
+  uint64_t probe_num = CFG_convert_string_to_u64(probe, false, &status);
+  CFG_ASSERT_MSG(status == true, "Probe by name is not supported for now");
+
+  auto objIP = getOclaInstance(instance);
+  auto max_probes = std::min(objIP.getNumberOfProbes(), OCLA_MAX_PROBE);
+  CFG_ASSERT_MSG(
+      probe_num < max_probes,
+      ("Invalid probe parameter (Probe number should be between 0 and " +
+       std::to_string(max_probes - 1) + ")")
+          .c_str());
+
+  ocla_trigger_config trig_cfg;
+
+  trig_cfg.probe_num = (uint32_t)probe_num;
+  trig_cfg.type = convertTriggerType(type);
+  trig_cfg.event = convertTriggerEvent(event);
+  trig_cfg.value = value;
+
+  objIP.configureChannel(channel - 1, trig_cfg);
 }
 
 void Ocla::start(uint32_t instance, uint32_t timeout,
