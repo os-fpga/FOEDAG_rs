@@ -56,7 +56,10 @@ endif()
 ###################
 add_library(
   ${subsystem} ${CFG_LIB_TYPE}
+  Ocla_entry.cpp
   Ocla.cpp
+  OclaIP.cpp
+  OpenocdJtagAdapter.cpp
 )
 
 ###################
