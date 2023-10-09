@@ -18,7 +18,7 @@ std::map<uint32_t, OclaIP> Ocla::detect() {
 }
 
 void Ocla::configure(uint32_t instance, std::string mode, std::string cond,
-                     std::string sample_size) {
+                     uint32_t sample_size) {
   CFG_ASSERT_MSG(false, "Not implemented");
 }
 

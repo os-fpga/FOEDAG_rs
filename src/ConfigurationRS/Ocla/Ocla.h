@@ -13,7 +13,7 @@ class Ocla {
  public:
   Ocla(OclaJtagAdapter *adapter) : m_adapter(adapter) {}
   void configure(uint32_t instance, std::string mode, std::string cond,
-                 std::string sample_size);
+                 uint32_t sample_size);
   void configureChannel(uint32_t instance, uint32_t channel, std::string type,
                         std::string event, uint32_t value, std::string probe);
   void start(uint32_t instance, uint32_t timeout, std::string outputfilepath);

@@ -508,9 +508,9 @@
           {
             "name": "sample_size",
             "short": "s",
-            "type": "str",
+            "type": "int",
             "optional": true,
-            "default": "default",
+            "default": 0,
             "help": "Configure the number of samples data"
           },
           {
