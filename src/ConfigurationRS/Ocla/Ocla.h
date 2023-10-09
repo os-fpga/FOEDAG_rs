@@ -28,7 +28,7 @@ class Ocla {
 
  private:
   OclaIP getOclaInstance(uint32_t instance);
-  std::map<uint32_t, OclaIP> detect();
+  std::map<uint32_t, OclaIP> detectOclaInstances();
   OclaJtagAdapter *m_adapter;
 };
 
