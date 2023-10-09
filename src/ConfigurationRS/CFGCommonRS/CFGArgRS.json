@@ -530,7 +530,7 @@
           "  debugger config ",
           "  -i {1 or 2} -m {pre-trigger|post-trigger|center-trigger|disable}",
           "  -s {<number of samples}",
-          "  -t {default|or|and|xor}"
+          "  -t {or|and|xor}"
         ],
         "arg": [0, 0]
       }
@@ -556,7 +556,7 @@
           {
             "name": "type",
             "short": "t",
-            "type": "none|edge|level|value_compare",
+            "type": "disable|edge|level|value_compare",
             "optional": true,
             "help": "Trigger type"
           },
@@ -586,7 +586,7 @@
         "help": [
           "To configure triggering setting:",
           "  debugger config_channel",
-          "  -i {1 or 2} -c <channel 1 to 4> -t {edge|level|value_compare}",
+          "  -i {1 or 2} -c <channel 1 to 4> -t {disable|edge|level|value_compare}",
           "  -e {rising|falling|either|high|low|equal|lesser|greater}",
           "  -v {compare value} -p <signal name>"
         ],
