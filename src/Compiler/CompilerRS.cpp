@@ -173,7 +173,7 @@ static auto assembler_flow(CompilerRS *compiler, bool batchMode, int argc,
   return TCL_OK;
 }
 
-static auto debugger_flow(CompilerRS *compiler, bool batchMode, int argc,
+static bool debugger_flow(CompilerRS *compiler, bool batchMode, int argc,
                           const char *argv[]) {
   CFGCompiler *cfgcompiler = compiler->GetConfiguration();
   cfgcompiler->m_cmdarg.command = "debugger";
@@ -184,10 +184,10 @@ static auto debugger_flow(CompilerRS *compiler, bool batchMode, int argc,
   // the parser expect the first arg is the command name
   const char **argvPtr = &argv[1];
   std::vector<std::string> errors;
-  arg->parse(argc - 1, argvPtr, &errors);
+  bool status = arg->parse(argc - 1, argvPtr, &errors);
   cfgcompiler->m_cmdarg.arg = arg;
   cfgcompiler->m_cmdarg.toolPath = compiler->GetProgrammerToolExecPath();
-  return TCL_OK;
+  return status;
 }
 
 std::string CompilerRS::InitSynthesisScript() {
@@ -728,17 +728,18 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
                        const char *argv[]) -> int {
       CompilerRS *compiler = (CompilerRS *)clientData;
       CFGCompiler *cfgcompiler = compiler->GetConfiguration();
-      int status = TCL_OK;
-      if ((status = debugger_flow(compiler, true, argc, argv)) != TCL_OK) {
+      if (debugger_flow(compiler, true, argc, argv)) {
         int result = CFGCompiler::Compile(cfgcompiler, true);
         if (result == TCL_OK && !cfgcompiler->m_cmdarg.tclOutput.empty()) {
           cfgcompiler->GetCompiler()->TclInterp()->setResult(
               cfgcompiler->m_cmdarg.tclOutput);
           cfgcompiler->m_cmdarg.tclOutput.clear();
         }
-        return result;
+        if ((result != TCL_OK) || (cfgcompiler->m_cmdarg.tclStatus != TCL_OK))
+          return TCL_ERROR;
+        return TCL_OK;
       } else {
-        return status;
+        return TCL_ERROR;
       }
     };
     interp->registerCmd("debugger", debugger, this, 0);
@@ -761,17 +762,18 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
                        const char *argv[]) -> int {
       CompilerRS *compiler = (CompilerRS *)clientData;
       CFGCompiler *cfgcompiler = compiler->GetConfiguration();
-      int status = TCL_OK;
-      if ((status = debugger_flow(compiler, false, argc, argv)) == TCL_OK) {
+      if (debugger_flow(compiler, false, argc, argv)) {
         int result = CFGCompiler::Compile(cfgcompiler, false);
         if (result == TCL_OK && !cfgcompiler->m_cmdarg.tclOutput.empty()) {
           cfgcompiler->GetCompiler()->TclInterp()->setResult(
               cfgcompiler->m_cmdarg.tclOutput);
           cfgcompiler->m_cmdarg.tclOutput.clear();
         }
-        return result;
+        if ((result != TCL_OK) || (cfgcompiler->m_cmdarg.tclStatus != TCL_OK))
+          return TCL_ERROR;
+        return TCL_OK;
       } else {
-        return status;
+        return TCL_ERROR;
       }
     };
     interp->registerCmd("debugger", debugger, this, 0);

@@ -283,7 +283,6 @@
             "name": "file",
             "short": "f",
             "type": "str",
-            "optional": true,
             "help": "Specify user design .bitasm file to start debugging"
           }
         ],
