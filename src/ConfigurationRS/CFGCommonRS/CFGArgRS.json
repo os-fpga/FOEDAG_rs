@@ -277,24 +277,31 @@
   ],
   "debugger": [
     {
-      "session": {
+      "load": {
         "option": [
           {
             "name": "file",
             "short": "f",
             "type": "str",
-            "optional": true,
-            "help": "Start the session with the user design specified .bitasm file"
+            "help": "Specify user design .bitasm file to start debugging"
           }
         ],
-        "desc": "Start or stop a debugging session",
+        "desc": "Start a debugging session with user design specified in a .bitasm file",
         "help": [
-          "To start a debugging session with user design specified .bitasm file:",
-          "  debugger session start -f {.bitasm file}",
-          "To end and clear the debugging session:",
-          "  debugger session stop"
+          "To start a debugging session with user design:",
+          "  debugger load -f {.bitasm file}"
         ],
-        "arg": [1, 1]
+        "arg": [0, 0]
+      }
+    },
+    {
+      "unload": {
+        "desc": "Stop the debugging session and clear the loaded OCLA information",
+        "help": [
+          "To stop and clear the debugging session:",
+          "  debugger unload"
+        ],
+        "arg": [0, 0]
       }
     },
     {
@@ -342,15 +349,15 @@
             "name": "timeout",
             "short": "t",
             "type": "int",
-            "default" : 5,
+            "default" : 0,
             "optional": true,
-            "help": "Command timeout in second. Default is 5 seconds"
+            "help": "Command timeout in second. Default is 0 seconds which disables command timeout"
           },
           {
             "name": "output",
             "short": "o",
             "type": "str",
-            "default" : "output.txt",
+            "default" : "/tmp/output.fst",
             "optional": true,
             "help": "Specific the filepath to write the output to. If not specified, a default filepath will be chosen"
           }
@@ -370,7 +377,7 @@
             "name": "input",
             "short": "i",
             "type": "str",
-            "default" : "waveform.txt",
+            "default" : "/tmp/output.fst",
             "optional": true,
             "help": "To display waveform in GTKWave using the specificed file"
           }
@@ -379,6 +386,102 @@
         "help": [
           "To display the waveform in GTKWave",
           "  debugger show_waveform -i {filepath}"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
+      "debug": {
+        "option": [
+          {
+            "name": "instance",
+            "short": "i",
+            "type": "int",
+            "default" : 1,
+            "optional": true,
+            "help": "Specify the index of the OCLA instance to debug"
+          },
+          {
+            "name": "start",
+            "short": "s",
+            "type": "flag",
+            "default" : false,
+            "optional": true,
+            "help": "Set ST bit of OCSR register"
+          },
+          {
+            "name": "dump",
+            "short": "d",
+            "type": "flag",
+            "default" : false,
+            "optional": true,
+            "help": "Dump trace buffer"
+          },
+          {
+            "name": "reg",
+            "short": "r",
+            "type": "flag",
+            "default" : false,
+            "optional": true,
+            "help": "Dump OCLA registers"
+          },
+          {
+            "name": "waveform",
+            "short": "w",
+            "type": "flag",
+            "default" : false,
+            "optional": true,
+            "help": "Generate waveform"
+          }
+        ],
+        "hidden": true,
+        "desc": "For software and IP debugging.",
+        "help": [
+          "For software and IP debugging"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
+      "counter": {
+        "option": [
+          {
+            "name": "start",
+            "short": "s",
+            "type": "flag",
+            "default" : false,
+            "optional": true,
+            "help": "To start DUT counter for test and debugging"
+          },
+          {
+            "name": "stop",
+            "short": "t",
+            "type": "flag",
+            "default" : false,
+            "optional": true,
+            "help": "To stop DUT counter for test and debugging"
+          },
+          {
+            "name": "reset",
+            "short": "e",
+            "type": "flag",
+            "default" : false,
+            "optional": true,
+            "help": "To reset DUT counter for test and debugging"
+          },
+          {
+            "name": "read",
+            "short": "r",
+            "type": "flag",
+            "default" : false,
+            "optional": true,
+            "help": "To read DUT counter 1 and 2 for test and debugging"
+          }
+        ],
+        "hidden": true,
+        "desc": "To start/stop DUT counter for test and debugging",
+        "help": [
+          "To start/stop DUT counter for test and debugging"
         ],
         "arg": [0, 0]
       }
@@ -406,14 +509,18 @@
             "short": "s",
             "type": "int",
             "optional": true,
-            "help": "Configure the number of samples data"
+            "default": 0,
+            "help": [
+              "Configure the number of samples data to acquire",
+              "Set sample_size to 0 to use the design time depth parameter as sample size"
+            ]
           },
           {
             "name": "trigger_condition",
             "short": "t",
-            "type": "single_channel|or|and|xor",
+            "type": "or|and|xor",
             "optional": true,
-            "help": "Configure the trigger condition for using single channel or dual channel of <or|and|xor>"
+            "help": "Configure the global trigger boolean condition"
           }
         ],
         "desc": "Configure OCLA trigger mode. Specify number of samples to capture. Configure trigger condition",
@@ -422,7 +529,7 @@
           "  debugger config ",
           "  -i {1 or 2} -m {pre-trigger|post-trigger|center-trigger|disable}",
           "  -s {<number of samples}",
-          "  -t {single_channel|or|and|xor}"
+          "  -t {or|and|xor}"
         ],
         "arg": [0, 0]
       }
@@ -448,7 +555,7 @@
           {
             "name": "type",
             "short": "t",
-            "type": "edge|level|value_compare",
+            "type": "edge|level|value_compare|disable",
             "optional": true,
             "help": "Trigger type"
           },
@@ -478,7 +585,7 @@
         "help": [
           "To configure triggering setting:",
           "  debugger config_channel",
-          "  -i {1 or 2} -c <channel 1 to 4> -t {edge|level|value_compare}",
+          "  -i {1 or 2} -c <channel 1 to 4> -t {edge|level|value_compare|disable}",
           "  -e {rising|falling|either|high|low|equal|lesser|greater}",
           "  -v {compare value} -p <signal name>"
         ],
