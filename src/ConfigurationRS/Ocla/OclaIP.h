@@ -53,7 +53,7 @@ enum ocla_trigger_event {
 
 struct ocla_config {
   ocla_mode mode;
-  ocla_trigger_condition cond;
+  ocla_trigger_condition condition;
   ocla_fns fns;
   uint32_t ns;
   uint32_t st;

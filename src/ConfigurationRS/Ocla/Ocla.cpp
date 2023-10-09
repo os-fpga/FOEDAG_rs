@@ -12,8 +12,8 @@ std::map<ocla_mode, std::string> ocla_mode_to_string_map = {
     {POST, "post-trigger"},
     {CENTER, "center-trigger"}};
 
-std::map<ocla_trigger_condition, std::string> trig_cond_to_string_map = {
-    {OR, "or"}, {AND, "and"}, {DEFAULT, "or"}, {XOR, "xor"}};
+std::map<ocla_trigger_condition, std::string> trigger_condition_to_string_map =
+    {{OR, "or"}, {AND, "and"}, {DEFAULT, "or"}, {XOR, "xor"}};
 
 std::map<ocla_trigger_type, std::string> trigger_type_to_string_map = {
     {TRIGGER_NONE, "disable"},
@@ -33,8 +33,8 @@ static std::string convertOclaModeToString(ocla_mode mode) {
 }
 
 static std::string convertTriggerConditionToString(
-    ocla_trigger_condition cond) {
-  return trig_cond_to_string_map[cond];
+    ocla_trigger_condition condition) {
+  return trigger_condition_to_string_map[condition];
 }
 
 static std::string convertTriggerTypeToString(ocla_trigger_type trig_type) {
@@ -43,6 +43,22 @@ static std::string convertTriggerTypeToString(ocla_trigger_type trig_type) {
 
 static std::string convertTriggerEventToString(ocla_trigger_event trig_event) {
   return trigger_event_to_string_map[trig_event];
+}
+
+ocla_mode convertOclaMode(std::string mode_string) {
+  for (auto& [mode, str] : ocla_mode_to_string_map) {
+    if (mode_string == str) return mode;
+  }
+  // default if not found
+  return NO_TRIGGER;
+}
+
+ocla_trigger_condition convertTriggerCondition(std::string condition_string) {
+  for (auto& [condition, str] : trigger_condition_to_string_map) {
+    if (condition_string == str) return condition;
+  }
+  // default if not found
+  return DEFAULT;
 }
 
 OclaIP Ocla::getOclaInstance(uint32_t instance) {
@@ -58,16 +74,31 @@ std::map<uint32_t, OclaIP> Ocla::detectOclaInstances() {
   for (auto& baseaddr : {OCLA1_ADDR, OCLA2_ADDR}) {
     OclaIP objIP{m_adapter, baseaddr};
     if (objIP.getType() == OCLA_TYPE) {
-      list.insert(std::pair<uint32_t, OclaIP>(i++, objIP));
+      list.insert(std::pair<uint32_t, OclaIP>(i, objIP));
     }
+    ++i;
   }
 
   return list;
 }
 
-void Ocla::configure(uint32_t instance, std::string mode, std::string cond,
+void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
                      uint32_t sample_size) {
-  CFG_ASSERT_MSG(false, "Not implemented");
+  auto objIP = getOclaInstance(instance);
+
+  auto depth = objIP.getMemoryDepth();
+  CFG_ASSERT_MSG(
+      sample_size <= depth,
+      ("Sample size should be beween 0 and " + std::to_string(depth)).c_str());
+
+  ocla_config cfg;
+
+  cfg.fns = sample_size > 0 ? ENABLED : DISABLED;
+  cfg.ns = sample_size;
+  cfg.mode = convertOclaMode(mode);
+  cfg.condition = convertTriggerCondition(condition);
+
+  objIP.configure(cfg);
 }
 
 void Ocla::configureChannel(uint32_t instance, uint32_t channel,
@@ -85,7 +116,7 @@ std::string Ocla::showInfo() {
   std::ostringstream ss;
 
   for (auto& [index, objIP] : detectOclaInstances()) {
-    uint32_t depth = objIP.getNumberOfProbes();
+    uint32_t depth = objIP.getMemoryDepth();
     ss << "OCLA " << index << std::setfill('0') << std::hex << std::endl
        << "  Base address       : 0x" << std::setw(8) << objIP.getBaseAddr()
        << std::endl
@@ -95,8 +126,9 @@ std::string Ocla::showInfo() {
        << std::endl
        << "  Version            : 0x" << std::setw(8) << objIP.getVersion()
        << std::endl
-       << "  Probes             : " << std::dec << depth << std::endl
-       << "  Memory depth       : " << objIP.getMemoryDepth() << std::endl
+       << "  Probes             : " << std::dec << objIP.getNumberOfProbes()
+       << std::endl
+       << "  Memory depth       : " << depth << std::endl
        << "  DA status          : " << objIP.getStatus() << std::endl;
 
     auto cfg = objIP.getConfig();
@@ -104,10 +136,10 @@ std::string Ocla::showInfo() {
     uint32_t ns = cfg.fns == ENABLED ? cfg.ns : depth;
 
     ss << "  No. of samples     : " << ns << std::endl
-       << "  Trigger condition  : " << convertTriggerConditionToString(cfg.cond)
-       << std::endl
        << "  Trigger mode       : " << convertOclaModeToString(cfg.mode)
        << std::endl
+       << "  Trigger condition  : "
+       << convertTriggerConditionToString(cfg.condition) << std::endl
        << "  Trigger " << std::endl
        << std::setfill(' ');
 

@@ -59,7 +59,7 @@ void OclaIP::configure(ocla_config &cfg) {
   for (auto &reg : {TCUR0, TCUR1}) {
     uint32_t tcur = m_adapter->read(m_base_addr + reg);
     tcur &= ~(3 << 15);
-    tcur |= (cfg.cond << 15);
+    tcur |= (cfg.condition << 15);
     m_adapter->write(m_base_addr + reg, tcur);
   }
 }
@@ -150,7 +150,7 @@ ocla_config OclaIP::getConfig() const {
   tcur0 = ((tcur0 >> 15) & 3);
   uint32_t tcur1 = m_adapter->read(m_base_addr + TCUR1);
   tcur1 = ((tcur1 >> 15) & 3);
-  cfg.cond = tcur0 == tcur1 ? (ocla_trigger_condition)tcur0 : DEFAULT;
+  cfg.condition = tcur0 == tcur1 ? (ocla_trigger_condition)tcur0 : DEFAULT;
   return cfg;
 }
 
