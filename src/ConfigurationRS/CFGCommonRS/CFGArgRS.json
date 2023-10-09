@@ -511,12 +511,15 @@
             "type": "int",
             "optional": true,
             "default": 0,
-            "help": "Configure the number of samples data"
+            "help": [
+              "Configure the number of samples data to acquire",
+              "Set sample_size to 0 to use the design time depth parameter as sample size"
+            ]
           },
           {
             "name": "trigger_condition",
             "short": "t",
-            "type": "default|or|and|xor",
+            "type": "or|and|xor",
             "optional": true,
             "help": "Configure the global trigger boolean condition"
           }
