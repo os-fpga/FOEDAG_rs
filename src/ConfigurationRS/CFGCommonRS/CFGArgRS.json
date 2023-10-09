@@ -277,24 +277,8 @@
   ],
   "debugger": [
     {
-      "session": {
+      "load": {
         "option": [
-          {
-            "name": "start",
-            "short": "s",
-            "type": "flag",
-            "default": false,
-            "optional": true,
-            "help": "Start debugging session"
-          },
-          {
-            "name": "stop",
-            "short": "t",
-            "type": "flag",
-            "default": false,
-            "optional": true,
-            "help": "Stop an existing debugging session and cache the debug cache"
-          },
           {
             "name": "file",
             "short": "f",
@@ -303,12 +287,20 @@
             "help": "Specify user design .bitasm file to start debugging"
           }
         ],
-        "desc": "Start or stop a debugging session",
+        "desc": "Start a debugging session with user design specified in a .bitasm file",
         "help": [
-          "To start a debugging session with user design specified .bitasm file:",
-          "  debugger session start -f {.bitasm file}",
-          "To end and clear the debugging session:",
-          "  debugger session stop"
+          "To start a debugging session with user design:",
+          "  debugger load -f {.bitasm file}"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
+      "unload": {
+        "desc": "Stop the debugging session and clear the loaded OCLA information",
+        "help": [
+          "To stop and clear the debugging session:",
+          "  debugger unload"
         ],
         "arg": [0, 0]
       }

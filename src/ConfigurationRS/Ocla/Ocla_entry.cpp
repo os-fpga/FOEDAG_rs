@@ -37,17 +37,13 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
   if (subCmd == "info") {
     Ocla ocla{&openocd};
     Ocla_print(ocla.showInfo());
-  } else if (subCmd == "session") {
-    auto parms =
-        static_cast<const CFGArg_DEBUGGER_SESSION*>(arg->get_sub_arg());
-    if (parms->start ^ parms->stop) {
-      Ocla ocla{&openocd};
-      if (parms->start) {
-        ocla.startSession(parms->file);
-      } else {
-        ocla.stopSession();
-      }
-    }
+  } else if (subCmd == "load") {
+    auto parms = static_cast<const CFGArg_DEBUGGER_LOAD*>(arg->get_sub_arg());
+    Ocla ocla{&openocd};
+    ocla.startSession(parms->file);
+  } else if (subCmd == "unload") {
+    Ocla ocla{&openocd};
+    ocla.stopSession();
   } else if (subCmd == "config") {
     auto parms = static_cast<const CFGArg_DEBUGGER_CONFIG*>(arg->get_sub_arg());
     CFG_ASSERT_MSG(
