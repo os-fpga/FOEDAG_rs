@@ -556,7 +556,7 @@
           {
             "name": "type",
             "short": "t",
-            "type": "disable|edge|level|value_compare",
+            "type": "edge|level|value_compare|disable",
             "optional": true,
             "help": "Trigger type"
           },
@@ -586,7 +586,7 @@
         "help": [
           "To configure triggering setting:",
           "  debugger config_channel",
-          "  -i {1 or 2} -c <channel 1 to 4> -t {disable|edge|level|value_compare}",
+          "  -i {1 or 2} -c <channel 1 to 4> -t {edge|level|value_compare|disable}",
           "  -e {rising|falling|either|high|low|equal|lesser|greater}",
           "  -v {compare value} -p <signal name>"
         ],
