@@ -34,54 +34,71 @@ std::map<ocla_trigger_event, std::string> trigger_event_to_string_map = {
     {GREATER, "greater"}};
 
 // helpers to convert enum to string and vice versa
-static std::string convertOclaModeToString(ocla_mode mode) {
-  return ocla_mode_to_string_map[mode];
+static std::string convertOclaModeToString(ocla_mode mode,
+                                           std::string defval = "(unknown)") {
+  if (ocla_mode_to_string_map.find(mode) != ocla_mode_to_string_map.end())
+    return ocla_mode_to_string_map[mode];
+  return defval;
 }
 
 static std::string convertTriggerConditionToString(
-    ocla_trigger_condition condition) {
-  return trigger_condition_to_string_map[condition];
+    ocla_trigger_condition condition, std::string defval = "(unknown)") {
+  if (trigger_condition_to_string_map.find(condition) !=
+      trigger_condition_to_string_map.end())
+    return trigger_condition_to_string_map[condition];
+  return defval;
 }
 
-static std::string convertTriggerTypeToString(ocla_trigger_type trig_type) {
-  return trigger_type_to_string_map[trig_type];
+static std::string convertTriggerTypeToString(
+    ocla_trigger_type trig_type, std::string defval = "(unknown)") {
+  if (trigger_type_to_string_map.find(trig_type) !=
+      trigger_type_to_string_map.end())
+    return trigger_type_to_string_map[trig_type];
+  return defval;
 }
 
-static std::string convertTriggerEventToString(ocla_trigger_event trig_event) {
-  return trigger_event_to_string_map[trig_event];
+static std::string convertTriggerEventToString(
+    ocla_trigger_event trig_event, std::string defval = "(unknown)") {
+  if (trigger_event_to_string_map.find(trig_event) !=
+      trigger_event_to_string_map.end())
+    return trigger_event_to_string_map[trig_event];
+  return defval;
 }
 
-static ocla_mode convertOclaMode(std::string mode_string) {
+static ocla_mode convertOclaMode(std::string mode_string,
+                                 ocla_mode defval = NO_TRIGGER) {
   for (auto& [mode, str] : ocla_mode_to_string_map) {
     if (mode_string == str) return mode;
   }
   // default if not found
-  return NO_TRIGGER;
+  return defval;
 }
 
 static ocla_trigger_condition convertTriggerCondition(
-    std::string condition_string) {
+    std::string condition_string, ocla_trigger_condition defval = DEFAULT) {
   for (auto& [condition, str] : trigger_condition_to_string_map) {
     if (condition_string == str) return condition;
   }
   // default if not found
-  return DEFAULT;
+  return defval;
 }
 
-static ocla_trigger_type convertTriggerType(std::string type_string) {
+static ocla_trigger_type convertTriggerType(
+    std::string type_string, ocla_trigger_type defval = TRIGGER_NONE) {
   for (auto& [type, str] : trigger_type_to_string_map) {
     if (type_string == str) return type;
   }
   // default if not found
-  return TRIGGER_NONE;
+  return defval;
 }
 
-static ocla_trigger_event convertTriggerEvent(std::string event_string) {
+static ocla_trigger_event convertTriggerEvent(
+    std::string event_string, ocla_trigger_event defval = NONE) {
   for (auto& [event, str] : trigger_event_to_string_map) {
     if (event_string == str) return event;
   }
   // default if not found
-  return NONE;
+  return defval;
 }
 
 void CFG_sleep_ms(uint32_t milisecond) {
