@@ -150,10 +150,17 @@ void Ocla::configureChannel(uint32_t instance, uint32_t channel,
 
   bool status = false;
   uint64_t probe_num = CFG_convert_string_to_u64(probe, false, &status);
-  CFG_ASSERT_MSG(status == true, "Probe by name is not supported for now");
+  if (!status) {
+    // todo: translate probe name to probe index
+    CFG_ASSERT_MSG(false, "Probe by name is not supported for now");
+  }
 
   auto objIP = getOclaInstance(instance);
-  auto max_probes = std::min(objIP.getNumberOfProbes(), OCLA_MAX_PROBE);
+  uint32_t max_probes = objIP.getNumberOfProbes();
+  if (max_probes > OCLA_MAX_PROBE) {
+    max_probes = OCLA_MAX_PROBE;
+  }
+
   CFG_ASSERT_MSG(
       probe_num < max_probes,
       ("Invalid probe parameter (Probe number should be between 0 and " +
