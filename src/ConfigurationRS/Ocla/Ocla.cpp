@@ -1,6 +1,10 @@
 #include "Ocla.h"
 
+#ifdef _WIN32
+#include <Windows.h>
+#else
 #include <unistd.h>
+#endif
 
 #include <sstream>
 
@@ -78,6 +82,14 @@ static ocla_trigger_event convertTriggerEvent(std::string event_string) {
   }
   // default if not found
   return NONE;
+}
+
+void CFG_sleep_ms(uint32_t milisecond) {
+#ifdef _WIN32
+  Sleep(milisecond);
+#else
+  usleep(milisecond * 1000);
+#endif
 }
 
 OclaIP Ocla::getOclaInstance(uint32_t instance) {
@@ -166,7 +178,7 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
 
   while (true) {
     // wait for 1 sec
-    sleep(1);
+    CFG_sleep_ms(1000);
 
     if (objIP.getStatus() == DATA_AVAILABLE) {
       ocla_data data = objIP.getData();
