@@ -1,25 +1,11 @@
 #include "Ocla.h"
 
-#ifdef _WIN32
-#include <Windows.h>
-#else
-#include <unistd.h>
-#endif
-
 #include <sstream>
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 #include "OclaHelpers.h"
 #include "OclaIP.h"
 #include "OclaJtagAdapter.h"
-
-void CFG_sleep_ms(uint32_t milisecond) {
-#ifdef _WIN32
-  Sleep(milisecond);
-#else
-  usleep(milisecond * 1000);
-#endif
-}
 
 OclaIP Ocla::getOclaInstance(uint32_t instance) {
   OclaIP objIP{m_adapter, instance == 1 ? OCLA1_ADDR : OCLA2_ADDR};
