@@ -152,23 +152,20 @@ std::string Ocla::showInfo() {
       auto trig_cfg = objIP.getChannelConfig(ch - 1);
       switch (trig_cfg.type) {
         case EDGE:
-          ss << "    Channel " << ch << "        : "
-             << convertTriggerTypeToString(trig_cfg.type) << ", "
-             << convertTriggerEventToString(trig_cfg.event)
-             << ", probe=" << trig_cfg.probe_num << std::endl;
-          break;
         case LEVEL:
           ss << "    Channel " << ch << "        : "
-             << convertTriggerTypeToString(trig_cfg.type) << ", "
-             << convertTriggerEventToString(trig_cfg.event)
-             << ", probe=" << trig_cfg.probe_num << std::endl;
+             << "probe=" << trig_cfg.probe_num << "; "
+             << "mode=" << convertTriggerEventToString(trig_cfg.event) << "_"
+             << convertTriggerTypeToString(trig_cfg.type) << std::endl;
           break;
         case VALUE_COMPARE:
           ss << "    Channel " << ch << "        : "
-             << convertTriggerTypeToString(trig_cfg.type) << ", "
-             << convertTriggerEventToString(trig_cfg.event) << ", value=0x"
-             << std::hex << trig_cfg.value << ", probe=" << std::dec
-             << trig_cfg.probe_num << std::endl;
+             << "probe=" << trig_cfg.probe_num << "; "
+             << "mode=" << convertTriggerTypeToString(trig_cfg.type)
+             << "; compare_operator="
+             << convertTriggerEventToString(trig_cfg.event)
+             << "; compare_value=0x" << std::hex << trig_cfg.value << std::dec
+             << std::endl;
           break;
         case TRIGGER_NONE:
           ss << "    Channel " << ch << "        : "

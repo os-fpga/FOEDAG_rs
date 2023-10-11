@@ -8,7 +8,7 @@ static std::map<ocla_mode, std::string> ocla_mode_to_string_map = {
 
 static std::map<ocla_trigger_condition, std::string>
     trigger_condition_to_string_map = {
-        {OR, "or"}, {AND, "and"}, {DEFAULT, "or"}, {XOR, "xor"}};
+        {OR, "OR"}, {AND, "AND"}, {DEFAULT, "OR"}, {XOR, "XOR"}};
 
 static std::map<ocla_trigger_type, std::string> trigger_type_to_string_map = {
     {TRIGGER_NONE, "disable"},
