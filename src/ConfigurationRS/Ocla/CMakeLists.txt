@@ -93,9 +93,9 @@ if(MSVC)
   target_include_directories(${subsystem} PRIVATE
     ${CFG_PROJECT_ROOT_DIR}/FOEDAG/third_party/zlib
     ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib
-    ${CFG_BUILD_ROOT_DIR}FOEDAG/include
-    ${CFG_BUILD_ROOT_DIR}FOEDAG/third_party/zlib
-    ${CFG_BUILD_ROOT_DIR}FOEDAG/third_party/zlib/include
+    ${CFG_BUILD_ROOT_DIR}/FOEDAG/include
+    ${CFG_BUILD_ROOT_DIR}/FOEDAG/third_party/zlib
+    ${CFG_BUILD_ROOT_DIR}/FOEDAG/third_party/zlib/include
   )
 endif()
 # for fstapi, hack to avoid creating dummy config.h
