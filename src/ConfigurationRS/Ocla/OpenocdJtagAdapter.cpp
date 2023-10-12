@@ -33,8 +33,8 @@ void OpenocdJtagAdapter::write(uint32_t addr, uint32_t data) {
      << " -c \"irscan ocla.tap 0x08\""
      << " -c \"drscan ocla.tap 32 0x0 2 0x0\"";
 
-  CFG_ASSERT_MSG(executeCommand(ss.str(), output) == 0,
-                 ("cmdexec error: " + output).c_str());
+  CFG_ASSERT_MSG(executeCommand(ss.str(), output) == 0, "cmdexec error: %s",
+                 output.c_str());
   parse(output);
 }
 
@@ -65,8 +65,8 @@ std::vector<uint32_t> OpenocdJtagAdapter::read(uint32_t base_addr,
     base_addr += increase_by;
   }
 
-  CFG_ASSERT_MSG(executeCommand(ss.str(), output) == 0,
-                 ("cmdexec error: " + output).c_str());
+  CFG_ASSERT_MSG(executeCommand(ss.str(), output) == 0, "cmdexec error: %s",
+                 output.c_str());
   auto values = parse(output);
   CFG_ASSERT_MSG(values.size() == num_reads,
                  "values size is not equal to read requests");

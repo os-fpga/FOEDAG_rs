@@ -39,9 +39,8 @@ void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
   auto depth = objIP.getMemoryDepth();
   CFG_ASSERT_MSG(
       sample_size <= depth,
-      ("Invalid sample size parameter (Sample size should be beween 0 and " +
-       std::to_string(depth) + ")")
-          .c_str());
+      "Invalid sample size parameter (Sample size should be beween 0 and %d)",
+      depth);
 
   ocla_config cfg;
 
@@ -82,9 +81,8 @@ void Ocla::configureChannel(uint32_t instance, uint32_t channel,
 
   CFG_ASSERT_MSG(
       probe_num < max_probes,
-      ("Invalid probe parameter (Probe number should be between 0 and " +
-       std::to_string(max_probes - 1) + ")")
-          .c_str());
+      "Invalid probe parameter (Probe number should be between 0 and %d)",
+      max_probes - 1);
 
   ocla_trigger_config trig_cfg;
 

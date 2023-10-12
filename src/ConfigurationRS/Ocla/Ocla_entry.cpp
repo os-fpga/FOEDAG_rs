@@ -17,9 +17,8 @@ void Ocla_print(std::string output) {
 }
 
 void Ocla_launch_gtkwave(std::string filepath, std::filesystem::path binPath) {
-  std::error_code ec;
-  CFG_ASSERT_MSG(std::filesystem::exists(filepath, ec),
-                 (std::string("File not found: ") + filepath).c_str());
+  CFG_ASSERT_MSG(std::filesystem::exists(filepath), "File not found %s",
+                 filepath.c_str());
   auto exePath = binPath / "gtkwave" / "bin" / "gtkwave";
   auto cmd = exePath.string() + " " + filepath;
   CFG_compiler_execute_cmd(cmd);

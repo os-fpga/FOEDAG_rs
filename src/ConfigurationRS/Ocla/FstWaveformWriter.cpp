@@ -35,17 +35,15 @@ void CFG_read_bitfield_vec32(uint32_t* data, uint32_t pos, uint32_t bitwidth,
 void FstWaveformWriter::write(std::vector<uint32_t> values,
                               std::string filepath) {
   CFG_ASSERT_MSG(m_signals.empty() == false, "No signal info defined");
-  CFG_ASSERT_MSG(
-      m_width <= OCLA_MAX_WIDTH,
-      ("Width is larger than max size of " + std::to_string(OCLA_MAX_WIDTH))
-          .c_str());
+  CFG_ASSERT_MSG(m_width <= OCLA_MAX_WIDTH,
+                 "Width is larger than max size of %d", OCLA_MAX_WIDTH);
   uint32_t words_per_line = ((m_width - 1) / 32) + 1;
   CFG_ASSERT_MSG((words_per_line * m_depth) == values.size(),
                  "No. of values is invalid");
 
   void* fst = fstWriterCreate(filepath.c_str(), /* use_compressed_hier */ 1);
-  CFG_ASSERT_MSG(fst != nullptr,
-                 ("Couldn't create output file '" + filepath + "'").c_str());
+  CFG_ASSERT_MSG(fst != nullptr, "Fail to create output file %s",
+                 filepath.c_str());
 
   // header info
   fstWriterSetPackType(fst, FST_WR_PT_LZ4);
