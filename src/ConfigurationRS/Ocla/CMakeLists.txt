@@ -54,20 +54,20 @@ endif()
 # zlib library
 #
 ###################
-if(MSVC)
-  add_subdirectory(${CFG_PROJECT_ROOT_DIR}/FOEDAG/third_party/zlib ${CMAKE_CURRENT_BINARY_DIR}/zlib) # Do not use EXCLUDE_FROM_ALL else unit tests will fail for this subsystem
-  add_compile_definitions(_CRT_NONSTDC_NO_WARNINGS)
-  set(CMAKE_CXX_FLAGS_DEBUG
-      "${CMAKE_CXX_FLAGS_DEBUG} ${TCMALLOC_COMPILE_OPTIONS} /Zc:__cplusplus /W0 /bigobj /Zl /GL- /MT /DSTATIC_BUILD ${MY_CXX_WARNING_FLAGS}"
-  )
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO
-      "${CMAKE_CXX_FLAGS_RELEASE} ${TCMALLOC_COMPILE_OPTIONS} /Zc:__cplusplus /W0 /bigobj /Zl /GL- /MT /DSTATIC_BUILD ${MY_CXX_WARNING_FLAGS}"
-  )
-  set(CMAKE_CXX_FLAGS_RELEASE
-      "${CMAKE_CXX_FLAGS_RELEASE} ${TCMALLOC_COMPILE_OPTIONS} /Zc:__cplusplus /W0 /bigobj /Zl /GL- /MT /DSTATIC_BUILD ${MY_CXX_WARNING_FLAGS}"
-  )
-  set(CMAKE_EXE_LINKER_FLAGS /STACK:8388608)  # 8MB stack size
-endif()
+# if(MSVC)
+#   add_subdirectory(${CFG_PROJECT_ROOT_DIR}/FOEDAG/third_party/zlib ${CMAKE_CURRENT_BINARY_DIR}/zlib) # Do not use EXCLUDE_FROM_ALL else unit tests will fail for this subsystem
+#   add_compile_definitions(_CRT_NONSTDC_NO_WARNINGS)
+#   set(CMAKE_CXX_FLAGS_DEBUG
+#       "${CMAKE_CXX_FLAGS_DEBUG} ${TCMALLOC_COMPILE_OPTIONS} /Zc:__cplusplus /W0 /bigobj /Zl /GL- /MT /DSTATIC_BUILD ${MY_CXX_WARNING_FLAGS}"
+#   )
+#   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO
+#       "${CMAKE_CXX_FLAGS_RELEASE} ${TCMALLOC_COMPILE_OPTIONS} /Zc:__cplusplus /W0 /bigobj /Zl /GL- /MT /DSTATIC_BUILD ${MY_CXX_WARNING_FLAGS}"
+#   )
+#   set(CMAKE_CXX_FLAGS_RELEASE
+#       "${CMAKE_CXX_FLAGS_RELEASE} ${TCMALLOC_COMPILE_OPTIONS} /Zc:__cplusplus /W0 /bigobj /Zl /GL- /MT /DSTATIC_BUILD ${MY_CXX_WARNING_FLAGS}"
+#   )
+#   set(CMAKE_EXE_LINKER_FLAGS /STACK:8388608)  # 8MB stack size
+# endif()
 
 ###################
 #
