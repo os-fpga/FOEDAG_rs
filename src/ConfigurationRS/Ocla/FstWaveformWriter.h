@@ -5,7 +5,7 @@
 
 class FstWaveformWriter : public WaveformWriter {
  public:
-  virtual void write(vector<uint32_t> values, string filepath);
+  virtual void write(std::vector<uint32_t> values, std::string filepath);
 };
 
 #endif  //__FSTWAVEFORMWRITER_H__

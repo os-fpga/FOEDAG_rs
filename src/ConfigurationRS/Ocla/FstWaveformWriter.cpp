@@ -32,7 +32,8 @@ void CFG_read_bitfield_vec32(uint32_t* data, uint32_t pos, uint32_t bitwidth,
   }
 }
 
-void FstWaveformWriter::write(vector<uint32_t> values, string filepath) {
+void FstWaveformWriter::write(std::vector<uint32_t> values,
+                              std::string filepath) {
   CFG_ASSERT_MSG(m_signals.empty() == false, "No signal info defined");
   CFG_ASSERT_MSG(
       m_width <= OCLA_MAX_WIDTH,
@@ -54,7 +55,7 @@ void FstWaveformWriter::write(vector<uint32_t> values, string filepath) {
   fstWriterSetScope(fst, FST_ST_VCD_MODULE, "ocla", NULL);
 
   // create fst signal vars
-  vector<fstHandle> fst_signals;
+  std::vector<fstHandle> fst_signals;
 
   for (auto& sig : m_signals) {
     fstHandle var =
