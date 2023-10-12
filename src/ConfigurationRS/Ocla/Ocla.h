@@ -12,7 +12,7 @@ struct CFGCommon_ARG;
 class Ocla {
  public:
   Ocla(OclaJtagAdapter *adapter) : m_adapter(adapter) {}
-  void configure(uint32_t instance, std::string mode, std::string cond,
+  void configure(uint32_t instance, std::string mode, std::string condition,
                  uint32_t sample_size);
   void configureChannel(uint32_t instance, uint32_t channel, std::string type,
                         std::string event, uint32_t value, std::string probe);
@@ -28,7 +28,7 @@ class Ocla {
 
  private:
   OclaIP getOclaInstance(uint32_t instance);
-  std::map<uint32_t, OclaIP> detect();
+  std::map<uint32_t, OclaIP> detectOclaInstances();
   OclaJtagAdapter *m_adapter;
 };
 

@@ -59,6 +59,7 @@ add_library(
   Ocla_entry.cpp
   Ocla.cpp
   OclaIP.cpp
+  OclaHelpers.cpp
   OpenocdJtagAdapter.cpp
 )
 
