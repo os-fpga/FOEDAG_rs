@@ -6,6 +6,7 @@
 #include "OclaHelpers.h"
 #include "OclaIP.h"
 #include "OclaJtagAdapter.h"
+#include "WaveformWriter.h"
 
 OclaIP Ocla::getOclaInstance(uint32_t instance) {
   OclaIP objIP{m_adapter, instance == 1 ? OCLA1_ADDR : OCLA2_ADDR};
@@ -27,6 +28,9 @@ std::map<uint32_t, OclaIP> Ocla::detectOclaInstances() {
 
   return list;
 }
+
+Ocla::Ocla(OclaJtagAdapter* adapter, WaveformWriter* writer)
+    : m_adapter(adapter), m_writer(writer) {}
 
 void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
                      uint32_t sample_size) {
@@ -95,6 +99,8 @@ void Ocla::configureChannel(uint32_t instance, uint32_t channel,
 void Ocla::start(uint32_t instance, uint32_t timeout,
                  std::string outputfilepath) {
   uint32_t countdown = timeout;
+
+  CFG_ASSERT(m_writer != nullptr);
   auto objIP = getOclaInstance(instance);
   objIP.start();
 
@@ -104,9 +110,10 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
 
     if (objIP.getStatus() == DATA_AVAILABLE) {
       ocla_data data = objIP.getData();
-      /*
-        todo: Write the acquired samples to a FST waveform file
-      */
+      m_writer->setWidth(data.width);
+      m_writer->setDepth(data.depth);
+      m_writer->setSignals(generateSignalDescriptor(data.width));
+      m_writer->write(data.values, outputfilepath);
       break;
     }
 
@@ -204,18 +211,30 @@ std::string Ocla::dumpRegisters(uint32_t instance) {
   return ss.str();
 }
 
-std::string Ocla::dumpSamples(uint32_t instance) {
+std::string Ocla::dumpSamples(uint32_t instance, bool dumpText,
+                              bool generateWaveform) {
   OclaIP objIP = getOclaInstance(instance);
   std::ostringstream ss;
   char buffer[100];
   auto data = objIP.getData();
 
-  ss << "width " << data.width << " depth " << data.depth << " num_reads "
-     << data.num_reads << " length " << data.values.size() << std::endl;
+  if (dumpText) {
+    ss << "width " << data.width << " depth " << data.depth << " num_reads "
+       << data.num_reads << " length " << data.values.size() << std::endl;
+    for (auto& value : data.values) {
+      snprintf(buffer, sizeof(buffer), "0x%08x\n", value);
+      ss << buffer;
+    }
+  }
 
-  for (auto& value : data.values) {
-    snprintf(buffer, sizeof(buffer), "0x%08x\n", value);
-    ss << buffer;
+  if (generateWaveform) {
+    CFG_ASSERT(m_writer != nullptr);
+    std::string filepath = "/tmp/ocla_debug.fst";
+    m_writer->setWidth(data.width);
+    m_writer->setDepth(data.depth);
+    m_writer->setSignals(generateSignalDescriptor(data.width));
+    m_writer->write(data.values, filepath.c_str());
+    ss << "Waveform written to " << filepath << std::endl;
   }
 
   return ss.str();

@@ -5,6 +5,7 @@
 #include <string>
 
 #include "OclaIP.h"
+#include "WaveformWriter.h"
 
 std::string convertOclaModeToString(ocla_mode mode,
                                     std::string defval = "(unknown)");
@@ -29,5 +30,7 @@ ocla_trigger_type convertTriggerType(std::string type_string,
 
 ocla_trigger_event convertTriggerEvent(std::string event_string,
                                        ocla_trigger_event defval = NONE);
+
+std::vector<signal_info> generateSignalDescriptor(uint32_t width);
 
 #endif  //__OCLAHELPERS_H__

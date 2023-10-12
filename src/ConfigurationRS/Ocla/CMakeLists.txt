@@ -54,6 +54,7 @@ endif()
 # subsystem library
 #
 ###################
+set(LIBFST_SOURCE_DIR ${CFG_PROJECT_ROOT_DIR}/FOEDAG/third_party/gtkwave/lib/libfst)
 add_library(
   ${subsystem} ${CFG_LIB_TYPE}
   Ocla_entry.cpp
@@ -61,7 +62,14 @@ add_library(
   OclaIP.cpp
   OclaHelpers.cpp
   OpenocdJtagAdapter.cpp
+  FstWaveformWriter.cpp
+  ${LIBFST_SOURCE_DIR}/fstapi.c
+  ${LIBFST_SOURCE_DIR}/lz4.c
+  ${LIBFST_SOURCE_DIR}/fastlz.c
 )
+target_include_directories(${subsystem} PRIVATE ${LIBFST_SOURCE_DIR})
+# for fstapi, hack to avoid creating dummy config.h
+target_compile_definitions(${subsystem} PRIVATE -DFST_CONFIG_INCLUDE="fstapi.h")
 
 ###################
 #

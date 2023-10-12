@@ -87,3 +87,11 @@ ocla_trigger_event convertTriggerEvent(std::string event_string,
   // default if not found
   return defval;
 }
+
+std::vector<signal_info> generateSignalDescriptor(uint32_t width) {
+  std::vector<signal_info> signals;
+  for (uint32_t i = 0; i < width; i++) {
+    signals.push_back({"s" + std::to_string(i), 1});
+  }
+  return signals;
+}
