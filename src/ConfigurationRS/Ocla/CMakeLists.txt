@@ -97,6 +97,8 @@ if(MSVC)
     ${CFG_BUILD_ROOT_DIR}/FOEDAG/third_party/zlib
     ${CFG_BUILD_ROOT_DIR}/FOEDAG/third_party/zlib/include
   )
+  target_compile_definitions(${subsystem} PRIVATE __MINGW32__  _CRT_SECURE_NO_WARNINGS  FST_DO_MISALIGNED_OPS)
+  target_compile_options(${subsystem} PRIVATE /wd4244 /wd4267 /wd4146 /wd4996)
 endif()
 # for fstapi, hack to avoid creating dummy config.h
 target_compile_definitions(${subsystem} PRIVATE -DFST_CONFIG_INCLUDE="fstapi.h")
