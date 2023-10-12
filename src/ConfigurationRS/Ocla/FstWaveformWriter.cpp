@@ -18,15 +18,22 @@
 #define OCLA_MAX_WIDTH (1024U)  // OCLA supports max of 1024 probes
 
 uint32_t CFG_read_bit_vec32(uint32_t* data, uint32_t pos) {
+  // callee should make sure data ptr not out of bound
+  CFG_ASSERT(data != nullptr);
   return data[pos / 32] >> (pos % 32) & 1;
 }
 
 void CFG_write_bit_vec32(uint32_t* data, uint32_t pos, uint32_t value) {
+  // callee should make sure data ptr not out of bound
+  CFG_ASSERT(data != nullptr);
   data[pos / 32] |= value << (pos % 32);
 }
 
 void CFG_read_bitfield_vec32(uint32_t* data, uint32_t pos, uint32_t bitwidth,
                              uint32_t* output) {
+  // callee should make sure data ptr not out of bound
+  CFG_ASSERT(data != nullptr);
+  CFG_ASSERT(output != nullptr);
   for (uint32_t i = 0; i < bitwidth; i++) {
     CFG_write_bit_vec32(output, i, CFG_read_bit_vec32(data, pos + i));
   }
@@ -37,9 +44,17 @@ void FstWaveformWriter::write(std::vector<uint32_t> values,
   CFG_ASSERT_MSG(m_signals.empty() == false, "No signal info defined");
   CFG_ASSERT_MSG(m_width <= OCLA_MAX_WIDTH,
                  "Width is larger than max size of %d", OCLA_MAX_WIDTH);
+
   uint32_t words_per_line = ((m_width - 1) / 32) + 1;
-  CFG_ASSERT_MSG((words_per_line * m_depth) == values.size(),
-                 "No. of values is invalid");
+  uint32_t expected_size = words_per_line * m_depth;
+  uint32_t total_bit_width = countTotalBitwidth();
+
+  CFG_ASSERT_MSG(expected_size == values.size(),
+                 "Size of values vector is invalid. Expected size is %d",
+                 expected_size);
+  CFG_ASSERT_MSG(total_bit_width == m_width,
+                 "Total bitwidth %d is not equal to line width %d",
+                 total_bit_width, m_width);
 
   void* fst = fstWriterCreate(filepath.c_str(), /* use_compressed_hier */ 1);
   CFG_ASSERT_MSG(fst != nullptr, "Fail to create output file %s",
@@ -79,4 +94,12 @@ void FstWaveformWriter::write(std::vector<uint32_t> values,
   }
 
   fstWriterClose(fst);
+}
+
+uint32_t FstWaveformWriter::countTotalBitwidth() {
+  uint32_t bitwidth = 0;
+  for (auto& sig : m_signals) {
+    bitwidth += sig.bitwidth;
+  }
+  return bitwidth;
 }
