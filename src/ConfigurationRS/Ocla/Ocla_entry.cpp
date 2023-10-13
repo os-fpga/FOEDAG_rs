@@ -4,6 +4,7 @@
 #include "CFGCommonRS/CFGArgRS_auto.h"
 #include "CFGObject/CFGObject_auto.h"
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
+#include "FstWaveformWriter.h"
 #include "Ocla.h"
 #include "OpenocdJtagAdapter.h"
 
@@ -16,9 +17,8 @@ void Ocla_print(std::string output) {
 }
 
 void Ocla_launch_gtkwave(std::string filepath, std::filesystem::path binPath) {
-  std::error_code ec;
-  CFG_ASSERT_MSG(std::filesystem::exists(filepath, ec),
-                 (std::string("File not found: ") + filepath).c_str());
+  CFG_ASSERT_MSG(std::filesystem::exists(filepath), "File not found %s",
+                 filepath.c_str());
   auto exePath = binPath / "gtkwave" / "bin" / "gtkwave";
   auto cmd = exePath.string() + " " + filepath;
   CFG_compiler_execute_cmd(cmd);
@@ -33,6 +33,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
   }
 
   OpenocdJtagAdapter openocd{cmdarg->toolPath.string(), CFG_execute_cmd};
+  FstWaveformWriter writer{};
   std::string subCmd = arg->get_sub_arg_name();
   if (subCmd == "info") {
     Ocla ocla{&openocd};
@@ -68,7 +69,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     CFG_ASSERT_MSG(
         parms->instance >= 1 && parms->instance <= 2,
         "Invalid instance parameter. Instance should be either 1 or 2.");
-    Ocla ocla{&openocd};
+    Ocla ocla{&openocd, &writer};
     ocla.start(parms->instance, parms->timeout, parms->output);
     CFG_POST_MSG("Written %s successfully.", parms->output.c_str());
     Ocla_launch_gtkwave(parms->output, cmdarg->binPath);
@@ -89,12 +90,13 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     CFG_ASSERT_MSG(
         parms->instance >= 1 && parms->instance <= 2,
         "Invalid instance parameter. Instance should be either 1 or 2.");
-    Ocla ocla{&openocd};
+    Ocla ocla{&openocd, &writer};
     if (parms->reg) {
       Ocla_print(ocla.dumpRegisters(parms->instance));
     }
-    if (parms->dump) {
-      Ocla_print(ocla.dumpSamples(parms->instance));
+    if (parms->dump || parms->waveform) {
+      Ocla_print(
+          ocla.dumpSamples(parms->instance, parms->dump, parms->waveform));
     }
     if (parms->start) ocla.debugStart(parms->instance);
   } else if (subCmd == "counter") {
