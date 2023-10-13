@@ -5,7 +5,7 @@
 #include <string>
 
 #include "OclaIP.h"
-#include "WaveformWriter.h"
+#include "OclaWaveformWriter.h"
 
 std::string convertOclaModeToString(ocla_mode mode,
                                     std::string defval = "(unknown)");

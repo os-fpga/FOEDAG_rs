@@ -1,7 +1,7 @@
 #ifndef __FSTWAVEFORMWRITER_H__
 #define __FSTWAVEFORMWRITER_H__
 
-#include "WaveformWriter.h"
+#include "OclaWaveformWriter.h"
 
 class FstWaveformWriter : public WaveformWriter {
  public:

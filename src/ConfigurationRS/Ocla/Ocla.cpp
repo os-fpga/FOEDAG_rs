@@ -7,7 +7,7 @@
 #include "OclaIP.h"
 #include "OclaJtagAdapter.h"
 #include "OclaSession.h"
-#include "WaveformWriter.h"
+#include "OclaWaveformWriter.h"
 
 OclaIP Ocla::getOclaInstance(uint32_t instance) {
   OclaIP objIP{m_adapter, instance == 1 ? OCLA1_ADDR : OCLA2_ADDR};
