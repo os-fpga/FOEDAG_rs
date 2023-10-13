@@ -63,6 +63,7 @@ add_library(
   OclaHelpers.cpp
   OpenocdJtagAdapter.cpp
   FstWaveformWriter.cpp
+  MemorySession.cpp
   ${LIBFST_SOURCE_DIR}/fstapi.c
   ${LIBFST_SOURCE_DIR}/lz4.c
   ${LIBFST_SOURCE_DIR}/fastlz.c

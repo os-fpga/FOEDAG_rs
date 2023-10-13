@@ -5,6 +5,7 @@
 #include "CFGObject/CFGObject_auto.h"
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 #include "FstWaveformWriter.h"
+#include "MemorySession.h"
 #include "Ocla.h"
 #include "OpenocdJtagAdapter.h"
 
@@ -32,25 +33,29 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     return;
   }
 
-  OpenocdJtagAdapter openocd{cmdarg->toolPath.string(), CFG_execute_cmd};
+  // initialize dependencies
+  OpenocdJtagAdapter adapter{cmdarg->toolPath.string(), CFG_execute_cmd};
+  MemorySession session{};
   FstWaveformWriter writer{};
+
+  // dispatch commands
   std::string subCmd = arg->get_sub_arg_name();
   if (subCmd == "info") {
-    Ocla ocla{&openocd};
+    Ocla ocla{&adapter, &session};
     Ocla_print(ocla.showInfo());
   } else if (subCmd == "load") {
     auto parms = static_cast<const CFGArg_DEBUGGER_LOAD*>(arg->get_sub_arg());
-    Ocla ocla{&openocd};
+    Ocla ocla{&adapter, &session};
     ocla.startSession(parms->file);
   } else if (subCmd == "unload") {
-    Ocla ocla{&openocd};
+    Ocla ocla{&adapter, &session};
     ocla.stopSession();
   } else if (subCmd == "config") {
     auto parms = static_cast<const CFGArg_DEBUGGER_CONFIG*>(arg->get_sub_arg());
     CFG_ASSERT_MSG(
         parms->instance >= 1 && parms->instance <= 2,
         "Invalid instance parameter. Instance should be either 1 or 2.");
-    Ocla ocla{&openocd};
+    Ocla ocla{&adapter, &session};
     ocla.configure(parms->instance, parms->mode, parms->trigger_condition,
                    parms->sample_size);
   } else if (subCmd == "config_channel") {
@@ -61,7 +66,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
         "Invalid instance parameter. Instance should be either 1 or 2.");
     CFG_ASSERT_MSG(parms->channel >= 1 && parms->channel <= 4,
                    "Invalid channel parameter. Channel should be 1 to 4.");
-    Ocla ocla{&openocd};
+    Ocla ocla{&adapter, &session};
     ocla.configureChannel(parms->instance, parms->channel, parms->type,
                           parms->event, parms->value, parms->probe);
   } else if (subCmd == "start") {
@@ -69,7 +74,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     CFG_ASSERT_MSG(
         parms->instance >= 1 && parms->instance <= 2,
         "Invalid instance parameter. Instance should be either 1 or 2.");
-    Ocla ocla{&openocd, &writer};
+    Ocla ocla{&adapter, &session, &writer};
     ocla.start(parms->instance, parms->timeout, parms->output);
     CFG_POST_MSG("Written %s successfully.", parms->output.c_str());
     Ocla_launch_gtkwave(parms->output, cmdarg->binPath);
@@ -78,7 +83,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     CFG_ASSERT_MSG(
         parms->instance >= 1 && parms->instance <= 2,
         "Invalid instance parameter. Instance should be either 1 or 2.");
-    Ocla ocla{&openocd};
+    Ocla ocla{&adapter, &session};
     auto output = ocla.showStatus(parms->instance);
     cmdarg->tclOutput = output.c_str();
   } else if (subCmd == "show_waveform") {
@@ -90,7 +95,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     CFG_ASSERT_MSG(
         parms->instance >= 1 && parms->instance <= 2,
         "Invalid instance parameter. Instance should be either 1 or 2.");
-    Ocla ocla{&openocd, &writer};
+    Ocla ocla{&adapter, &session, &writer};
     if (parms->reg) {
       Ocla_print(ocla.dumpRegisters(parms->instance));
     }
@@ -105,15 +110,15 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     auto parms =
         static_cast<const CFGArg_DEBUGGER_COUNTER*>(arg->get_sub_arg());
     if (parms->start ^ parms->stop) {
-      openocd.write(0x01000004, parms->start ? 0xffffffff : 0x0);
+      adapter.write(0x01000004, parms->start ? 0xffffffff : 0x0);
     }
     if (parms->reset) {
-      openocd.write(0x01000000, 0xffffffff);
-      openocd.write(0x01000000, 0);
+      adapter.write(0x01000000, 0xffffffff);
+      adapter.write(0x01000000, 0);
     }
     if (parms->read) {
-      CFG_POST_MSG("counter1 = 0x%08x", openocd.read(0x01000008));
-      CFG_POST_MSG("counter2 = 0x%08x", openocd.read(0x0100000c));
+      CFG_POST_MSG("counter1 = 0x%08x", adapter.read(0x01000008));
+      CFG_POST_MSG("counter2 = 0x%08x", adapter.read(0x0100000c));
     }
   }
 }

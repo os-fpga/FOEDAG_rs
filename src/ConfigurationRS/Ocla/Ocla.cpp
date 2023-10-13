@@ -6,6 +6,7 @@
 #include "OclaHelpers.h"
 #include "OclaIP.h"
 #include "OclaJtagAdapter.h"
+#include "OclaSession.h"
 #include "WaveformWriter.h"
 
 OclaIP Ocla::getOclaInstance(uint32_t instance) {
@@ -29,8 +30,9 @@ std::map<uint32_t, OclaIP> Ocla::detectOclaInstances() {
   return list;
 }
 
-Ocla::Ocla(OclaJtagAdapter* adapter, WaveformWriter* writer)
-    : m_adapter(adapter), m_writer(writer) {}
+Ocla::Ocla(OclaJtagAdapter* adapter, OclaSession* session,
+           WaveformWriter* writer)
+    : m_adapter(adapter), m_session(session), m_writer(writer) {}
 
 void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
                      uint32_t sample_size) {
