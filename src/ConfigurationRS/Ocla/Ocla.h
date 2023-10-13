@@ -7,14 +7,14 @@
 
 class OclaIP;
 class OclaJtagAdapter;
-class WaveformWriter;
+class OclaWaveformWriter;
 class OclaSession;
 struct CFGCommon_ARG;
 
 class Ocla {
  public:
   Ocla(OclaJtagAdapter *adapter, OclaSession *session = nullptr,
-       WaveformWriter *writer = nullptr);
+       OclaWaveformWriter *writer = nullptr);
   void configure(uint32_t instance, std::string mode, std::string condition,
                  uint32_t sample_size);
   void configureChannel(uint32_t instance, uint32_t channel, std::string type,
@@ -35,7 +35,7 @@ class Ocla {
   std::map<uint32_t, OclaIP> detectOclaInstances();
   OclaJtagAdapter *m_adapter;
   OclaSession *m_session;
-  WaveformWriter *m_writer;
+  OclaWaveformWriter *m_writer;
 };
 
 void Ocla_entry(CFGCommon_ARG *cmdarg);
