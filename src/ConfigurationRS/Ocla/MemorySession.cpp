@@ -6,14 +6,11 @@
 
 static bool g_loaded = false;
 
-MemorySession::MemorySession() { }
+MemorySession::MemorySession() {}
 
 MemorySession::~MemorySession() {}
 
-bool MemorySession::is_loaded() const
-{
-  return g_loaded;
-}
+bool MemorySession::is_loaded() const { return g_loaded; }
 
 void MemorySession::load(std::string bitasmfile) {
   std::string ocla_json = BitAssembler_MGR::get_ocla_design(bitasmfile);
@@ -22,9 +19,7 @@ void MemorySession::load(std::string bitasmfile) {
   g_loaded = true;
 }
 
-void MemorySession::unload() {
-  g_loaded = false;
-}
+void MemorySession::unload() { g_loaded = false; }
 
 uint32_t MemorySession::get_instance_count() { return 0; }
 
