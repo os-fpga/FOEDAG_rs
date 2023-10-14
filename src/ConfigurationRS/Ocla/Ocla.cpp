@@ -266,6 +266,6 @@ void Ocla::startSession(std::string bitasmFilepath) {
 
 void Ocla::stopSession() {
   CFG_ASSERT(m_session != nullptr);
-  CFG_ASSERT_MSG(m_session->is_loaded() == false, "No session is loaded");
+  CFG_ASSERT_MSG(m_session->is_loaded() == true, "No session is loaded");
   m_session->unload();
 }

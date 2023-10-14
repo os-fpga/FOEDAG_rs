@@ -22,15 +22,12 @@ struct Ocla_PROBE_INFO {
 class OclaSession {
  public:
   virtual ~OclaSession(){};
-  virtual bool is_loaded() const { return m_loaded; };
+  virtual bool is_loaded() const = 0;
   virtual void load(std::string bitasmfile) = 0;
   virtual void unload() = 0;
   virtual uint32_t get_instance_count() = 0;
   virtual Ocla_INSTANCE_INFO get_instance_info(uint32_t instance) = 0;
   virtual std::vector<Ocla_PROBE_INFO> get_probe_info(uint32_t instance) = 0;
-
- protected:
-  bool m_loaded = false;
 };
 
 #endif  //__OCLASESSION_H__
