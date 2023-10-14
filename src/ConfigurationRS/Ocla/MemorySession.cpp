@@ -1,5 +1,9 @@
 #include "MemorySession.h"
 
+#include "BitAssembler/BitAssembler_mgr.h"
+#include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
+#include "nlohmann_json/json.hpp"
+
 MemorySession::MemorySession() {}
 
 MemorySession::~MemorySession() {}

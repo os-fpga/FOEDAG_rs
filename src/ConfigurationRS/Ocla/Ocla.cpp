@@ -9,22 +9,24 @@
 #include "OclaSession.h"
 #include "OclaWaveformWriter.h"
 
+static std::map<uint32_t, uint32_t> ocla_base_address = {{1, OCLA1_ADDR},
+                                                         {2, OCLA2_ADDR}};
+
 OclaIP Ocla::getOclaInstance(uint32_t instance) {
-  OclaIP objIP{m_adapter, instance == 1 ? OCLA1_ADDR : OCLA2_ADDR};
+  CFG_ASSERT(ocla_base_address.find(instance) != ocla_base_address.end());
+  OclaIP objIP{m_adapter, ocla_base_address[instance]};
   CFG_ASSERT(objIP.getType() == OCLA_TYPE);
   return objIP;
 }
 
 std::map<uint32_t, OclaIP> Ocla::detectOclaInstances() {
   std::map<uint32_t, OclaIP> list;
-  uint32_t i = 1;
 
-  for (auto& baseaddr : {OCLA1_ADDR, OCLA2_ADDR}) {
+  for (auto& [i, baseaddr] : ocla_base_address) {
     OclaIP objIP{m_adapter, baseaddr};
     if (objIP.getType() == OCLA_TYPE) {
       list.insert(std::pair<uint32_t, OclaIP>(i, objIP));
     }
-    ++i;
   }
 
   return list;
@@ -32,7 +34,9 @@ std::map<uint32_t, OclaIP> Ocla::detectOclaInstances() {
 
 Ocla::Ocla(OclaJtagAdapter* adapter, OclaSession* session,
            OclaWaveformWriter* writer)
-    : m_adapter(adapter), m_session(session), m_writer(writer) {}
+    : m_adapter(adapter), m_session(session), m_writer(writer) {
+  CFG_ASSERT(adapter != nullptr);
+}
 
 void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
                      uint32_t sample_size) {
@@ -253,7 +257,15 @@ std::string Ocla::showStatus(uint32_t instance) {
 }
 
 void Ocla::startSession(std::string bitasmFilepath) {
-  CFG_ASSERT_MSG(false, "Not implemented");
+  CFG_ASSERT(m_session != nullptr);
+  CFG_ASSERT_MSG(m_session->is_loaded() == false, "Session is already loaded");
+  CFG_ASSERT_MSG(std::filesystem::exists(bitasmFilepath),
+                 "File %s is not found", bitasmFilepath.c_str());
+  m_session->load(bitasmFilepath);
 }
 
-void Ocla::stopSession() { CFG_ASSERT_MSG(false, "Not implemented"); }
+void Ocla::stopSession() {
+  CFG_ASSERT(m_session != nullptr);
+  CFG_ASSERT_MSG(m_session->is_loaded() == false, "No session is loaded");
+  m_session->unload();
+}
