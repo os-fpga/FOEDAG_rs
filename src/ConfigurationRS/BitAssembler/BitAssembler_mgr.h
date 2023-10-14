@@ -30,6 +30,7 @@ class BitAssembler_MGR {
                                            bool reverse);
   static void get_one_region_ccff_fcb(const std::string& filepath,
                                       std::vector<uint8_t>& data);
+  static std::string get_ocla_design(const std::string& filepath);
 
  private:
   template <typename T>

@@ -257,6 +257,14 @@ void BitAssembler_MGR::get_one_region_ccff_fcb(const std::string& filepath,
   file.close();
 }
 
+std::string BitAssembler_MGR::get_ocla_design(const std::string& filepath) {
+  CFG_ASSERT(CFG_check_file_extensions(filepath, {".bitasm"}) == 0);
+  // Read the BitObj file
+  CFGObject_BITOBJ bitobj;
+  CFG_ASSERT(bitobj.read(filepath));
+  return bitobj.ocla;
+}
+
 template <typename T>
 uint32_t BitAssembler_MGR::get_bitline_into_bytes(T& start, T& end,
                                                   std::vector<uint8_t>& bytes,
