@@ -189,6 +189,46 @@ std::string Ocla::showInfo() {
   return ss.str();
 }
 
+std::string Ocla::showSessionInfo() {
+  std::ostringstream ss;
+
+  CFG_ASSERT(m_session != nullptr);
+  CFG_ASSERT(m_session->is_loaded() == true);
+
+  ss << "Session Info" << std::endl;
+
+  for (uint32_t i = 0; i < m_session->get_instance_count(); i++) {
+    auto ocla = m_session->get_instance_info(i);
+    ss << "  OCLA " << (i + 1) << std::endl
+       << "    base_addr " << std::hex << std::showbase << ocla.base_addr
+       << std::endl
+       << "    type '" << ocla.type << "'" << std::endl
+       << "    version " << std::hex << std::showbase << ocla.version
+       << std::endl
+       << "    id " << std::hex << std::showbase << ocla.id << std::endl
+       << "    depth " << std::dec << ocla.depth << std::endl
+       << "    num_probes " << std::dec << ocla.num_probes << std::endl
+       << "    num_trigger_inputs " << std::dec << ocla.num_trigger_inputs
+       << std::endl
+       << "    num_probe_width " << std::dec << ocla.probe_width << std::endl
+       << "    axi_data_width " << std::dec << ocla.axi_addr_width << std::endl
+       << "    axi_data_width " << std::dec << ocla.axi_addr_width << std::endl
+       << "    Probes" << std::endl;
+    auto probes = m_session->get_probe_info(i);
+    uint32_t n = 1;
+    for (const auto& p : probes) {
+      ss << "      Probe " << n << std::endl
+         << "        name = '" << p.signal_name << "'" << std::endl
+         << "        bitwidth = " << p.bitwidth << std::endl
+         << "        value = " << p.value << std::endl
+         << "        type = " << p.type << std::endl;
+      ++n;
+    }
+  }
+
+  return ss.str();
+}
+
 std::string Ocla::dumpRegisters(uint32_t instance) {
   std::map<uint32_t, std::string> regs = {
       {OCSR, "OCSR"},

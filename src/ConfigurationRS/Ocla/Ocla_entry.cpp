@@ -96,14 +96,12 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
         parms->instance >= 1 && parms->instance <= 2,
         "Invalid instance parameter. Instance should be either 1 or 2.");
     Ocla ocla{&adapter, &session, &writer};
-    if (parms->reg) {
-      Ocla_print(ocla.dumpRegisters(parms->instance));
-    }
-    if (parms->dump || parms->waveform) {
+    if (parms->start) ocla.debugStart(parms->instance);
+    if (parms->reg) Ocla_print(ocla.dumpRegisters(parms->instance));
+    if (parms->dump || parms->waveform)
       Ocla_print(
           ocla.dumpSamples(parms->instance, parms->dump, parms->waveform));
-    }
-    if (parms->start) ocla.debugStart(parms->instance);
+    if (parms->session_info) Ocla_print(ocla.showSessionInfo());
   } else if (subCmd == "counter") {
     // for testing with IP on ocla platform only.
     // Will be removed at final

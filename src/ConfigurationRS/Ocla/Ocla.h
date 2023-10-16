@@ -24,6 +24,7 @@ class Ocla {
   void stopSession();
   std::string showStatus(uint32_t instance);
   std::string showInfo();
+  std::string showSessionInfo();
   // debug use
   std::string dumpRegisters(uint32_t instance);
   std::string dumpSamples(uint32_t instance, bool dumpText,
