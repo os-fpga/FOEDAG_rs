@@ -5,6 +5,11 @@
 
 #define MAX_SAMPLE (1024)
 
+uint32_t CFG_reverse_u32(uint32_t value) {
+  return (value >> 24) | ((value >> 8) & 0xff00) | ((value << 8) & 0xff0000) |
+         (value << 24);
+}
+
 OclaIP::OclaIP(OclaJtagAdapter *adapter, uint32_t base_addr)
     : m_adapter(adapter), m_base_addr(base_addr) {}
 
@@ -36,10 +41,12 @@ uint32_t OclaIP::getId() const {
   return id;
 }
 
-uint32_t OclaIP::getType() const {
+std::string OclaIP::getType() const {
   CFG_ASSERT(m_adapter != nullptr);
-  auto type = m_adapter->read(m_base_addr + IP_TYPE);
-  return type;
+  char buffer[10];
+  uint32_t type = CFG_reverse_u32(m_adapter->read(m_base_addr + IP_TYPE));
+  snprintf(buffer, sizeof(buffer), "%.*s", 4, (char *)&type);
+  return std::string(buffer);
 }
 
 uint32_t OclaIP::getVersion() const {

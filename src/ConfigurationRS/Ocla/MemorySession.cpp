@@ -41,7 +41,7 @@ std::vector<Ocla_PROBE_INFO> MemorySession::get_probe_info(uint32_t instance) {
 
 void MemorySession::parse(std::string ocla_json) {
   uint32_t total_bitwidth = 0;
-  uint32_t id = 0;
+  uint32_t idx = 0;
 
   // just in case parse is called twice for some reason
   m_instances.clear();
@@ -62,7 +62,7 @@ void MemorySession::parse(std::string ocla_json) {
       inf.num_probes = ocla.at("NO_OF_PROBES");
       inf.num_trigger_inputs = ocla.at("NO_OF_TRIGGER_INPUTS");
       inf.probe_width = ocla.at("PROBE_WIDHT");  //<-- RTL typo
-      m_instances.insert(std::make_pair(id, inf));
+      m_instances.insert(std::make_pair(idx, inf));
       // probe info
       std::vector<Ocla_PROBE_INFO> probes{};
       for (const auto& probe : ocla.at("probes")) {
@@ -71,11 +71,11 @@ void MemorySession::parse(std::string ocla_json) {
         total_bitwidth += probe_inf.bitwidth;
       }
       CFG_ASSERT_MSG(total_bitwidth == inf.num_probes,
-                     "Ocla %d total probe width is %u but expect %u", id,
+                     "Ocla %d total probe width is %u but expect %u", idx,
                      total_bitwidth, inf.num_probes);
-      m_probes.insert(std::make_pair(id, probes));
+      m_probes.insert(std::make_pair(idx, probes));
       total_bitwidth = 0;
-      ++id;
+      ++idx;
     }
   } catch (const nlohmann::detail::exception& e) {
     CFG_ASSERT_MSG(false, e.what());

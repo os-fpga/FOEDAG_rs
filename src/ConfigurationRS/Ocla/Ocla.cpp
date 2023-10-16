@@ -32,14 +32,47 @@ std::map<uint32_t, OclaIP> Ocla::detectOclaInstances() {
   return list;
 }
 
-std::vector<Ocla_PROBE_INFO> Ocla::getProbes(uint32_t base_addr) {
+bool Ocla::getInstanceInfo(uint32_t base_addr,
+                           Ocla_INSTANCE_INFO& instance_info, uint32_t& idx) {
   for (uint32_t i = 0; i < m_session->get_instance_count(); i++) {
     auto ocla = m_session->get_instance_info(i);
     if (ocla.base_addr == base_addr) {
-      return m_session->get_probe_info(i);
+      instance_info = ocla;
+      idx = i;
+      return true;
     }
   }
+  return false;
+}
+
+std::vector<Ocla_PROBE_INFO> Ocla::getProbeInfo(uint32_t base_addr) {
+  Ocla_INSTANCE_INFO inf{};
+  uint32_t idx;
+  if (getInstanceInfo(base_addr, inf, idx)) {
+    return m_session->get_probe_info(idx);
+  }
   return {};
+}
+
+bool Ocla::validate() {
+  if (m_session->is_loaded()) {
+    auto instances = detectOclaInstances();
+    if (instances.size() != m_session->get_instance_count()) return false;
+
+    for (const auto& [i, objIP] : instances) {
+      Ocla_INSTANCE_INFO inf{};
+      uint32_t idx;
+      if (!getInstanceInfo(objIP.getBaseAddr(), inf, idx)) {
+        return false;
+      }
+      if (inf.version != objIP.getVersion()) return false;
+      if (inf.type != objIP.getType()) return false;
+      if (inf.id != objIP.getId()) return false;
+      if (inf.num_probes != objIP.getNumberOfProbes()) return false;
+      if (inf.depth != objIP.getMemoryDepth()) return false;
+    }
+  }
+  return true;
 }
 
 Ocla::Ocla(OclaJtagAdapter* adapter, OclaSession* session,
@@ -141,16 +174,21 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
 
 std::string Ocla::showInfo() {
   std::ostringstream ss;
+  int count = 0;
 
-  for (auto& [index, objIP] : detectOclaInstances()) {
+  if (m_session->is_loaded()) {
+    CFG_ASSERT_MSG(validate() == true,
+                   "User design and connected IP not matched");
+  }
+
+  for (auto& [idx, objIP] : detectOclaInstances()) {
     uint32_t depth = objIP.getMemoryDepth();
     uint32_t base_addr = objIP.getBaseAddr();
-    ss << "OCLA " << index << std::setfill('0') << std::hex << std::endl
+    ss << "OCLA " << idx << std::setfill('0') << std::hex << std::endl
        << "  Base address       : 0x" << std::setw(8) << base_addr << std::endl
        << "  ID                 : 0x" << std::setw(8) << objIP.getId()
        << std::endl
-       << "  Type               : 0x" << std::setw(8) << objIP.getType()
-       << std::endl
+       << "  Type               : '" << objIP.getType() << "'" << std::endl
        << "  Version            : 0x" << std::setw(8) << objIP.getVersion()
        << std::endl
        << "  Probes             : " << std::dec << objIP.getNumberOfProbes()
@@ -199,7 +237,7 @@ std::string Ocla::showInfo() {
     if (m_session->is_loaded() == true) {
       ss << "  Probe Table" << std::endl;
 
-      auto probes = getProbes(base_addr);
+      auto probes = getProbeInfo(base_addr);
       if (!probes.empty()) {
         ss << "  "
               "+-------+-------------------------------------+--------------+--"
@@ -235,8 +273,10 @@ std::string Ocla::showInfo() {
         ss << "   No probe info" << std::endl;
       }
     }
+    ++count;
   }
 
+  if (count == 0) ss << "No OCLA IP detected" << std::endl;
   return ss.str();
 }
 
@@ -350,12 +390,13 @@ void Ocla::startSession(std::string bitasmFilepath) {
   CFG_ASSERT_MSG(std::filesystem::exists(bitasmFilepath),
                  "File %s is not found", bitasmFilepath.c_str());
   m_session->load(bitasmFilepath);
-  if (m_session->get_instance_count() > 2) {
+  uint32_t count = m_session->get_instance_count();
+  if (count > 2) {
+    m_session->unload();
     CFG_ASSERT_MSG(false,
                    "Found %u OCLA instances in bit assember file but expect "
                    "max of 2 instances",
-                   m_session->get_instance_count());
-    m_session->unload();
+                   count);
   }
 }
 

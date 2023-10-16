@@ -11,6 +11,7 @@ class OclaJtagAdapter;
 class OclaWaveformWriter;
 class OclaSession;
 struct CFGCommon_ARG;
+struct Ocla_INSTANCE_INFO;
 struct Ocla_PROBE_INFO;
 
 class Ocla {
@@ -36,7 +37,10 @@ class Ocla {
  private:
   OclaIP getOclaInstance(uint32_t instance);
   std::map<uint32_t, OclaIP> detectOclaInstances();
-  std::vector<Ocla_PROBE_INFO> getProbes(uint32_t base_addr);
+  bool getInstanceInfo(uint32_t base_addr, Ocla_INSTANCE_INFO &instance_info,
+                       uint32_t &idx);
+  std::vector<Ocla_PROBE_INFO> getProbeInfo(uint32_t base_addr);
+  bool validate();
   OclaJtagAdapter *m_adapter;
   OclaSession *m_session;
   OclaWaveformWriter *m_writer;

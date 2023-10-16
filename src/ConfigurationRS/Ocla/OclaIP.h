@@ -2,11 +2,12 @@
 #define __OCLAIP_H__
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 #define OCLA1_ADDR (0x02000000U)
 #define OCLA2_ADDR (0x03000000U)
-#define OCLA_TYPE (0x6f636c61U)
+#define OCLA_TYPE ("ocla")
 #define OCLA_TRIGGER_CHANNELS (4U)
 #define OCLA_MAX_SAMPLE_SIZE (1024U)
 #define OCLA_MAX_PROBE (128U)
@@ -87,7 +88,7 @@ class OclaIP {
   uint32_t getNumberOfProbes() const;
   uint32_t getMemoryDepth() const;
   uint32_t getVersion() const;
-  uint32_t getType() const;
+  std::string getType() const;
   uint32_t getId() const;
   ocla_data getData() const;
   uint32_t getBaseAddr() const { return m_base_addr; }
