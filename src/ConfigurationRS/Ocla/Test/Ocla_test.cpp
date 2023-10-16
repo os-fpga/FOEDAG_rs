@@ -1,6 +1,6 @@
-#include "CFGCommonRS/CFGCommonRS.h"
+#include <gtest/gtest.h>
 
-int main(int argc, const char** argv) {
-  CFG_POST_MSG("This is Ocla unit test");
-  return 0;
+int main(int argc, char* argv[]) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
