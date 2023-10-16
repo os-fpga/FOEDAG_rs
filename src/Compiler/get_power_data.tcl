@@ -61,6 +61,29 @@ proc find_bus_width {line} {
   }
   foreach test [split $line ,] {
     set temp [string trim $test]
+    set modified_string ""
+    set inside_brackets 0
+
+    # Iterate through each character in the input string
+    for {set i 0} {$i < [string length $temp]} {incr i} {
+        set char [string index $temp $i]
+        
+        if {$char eq "\["} {
+            set inside_brackets 1
+        } elseif {$char eq "\]"} {
+            set inside_brackets 0
+        }
+        
+        if {$char eq ":" && !$inside_brackets} {
+            # Skip colons outside of square brackets
+            continue
+        }
+        
+        append modified_string $char
+    }
+
+    # Store the modified string back in the 'temp' variable
+    set temp $modified_string
     if {[string first \: $temp]>0} {
       # Remove square brackets
       while {[string first \[ $temp]>=0} {
