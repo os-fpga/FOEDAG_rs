@@ -85,8 +85,12 @@ Ocla::Ocla(OclaJtagAdapter* adapter, OclaSession* session,
 
 void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
                      uint32_t sample_size) {
-  auto objIP = getOclaInstance(instance);
+  if (m_session->is_loaded()) {
+    CFG_ASSERT_MSG(validate() == true,
+                   "User design and connected IP not matched");
+  }
 
+  auto objIP = getOclaInstance(instance);
   auto depth = objIP.getMemoryDepth();
   CFG_ASSERT_MSG(
       sample_size <= depth,
@@ -106,6 +110,11 @@ void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
 void Ocla::configureChannel(uint32_t instance, uint32_t channel,
                             std::string type, std::string event, uint32_t value,
                             std::string probe) {
+  if (m_session->is_loaded()) {
+    CFG_ASSERT_MSG(validate() == true,
+                   "User design and connected IP not matched");
+  }
+
   if (type == "edge") {
     CFG_ASSERT_MSG(event == "rising" || event == "falling" || event == "either",
                    "Invalid event parameter for edge trigger");
@@ -147,8 +156,12 @@ void Ocla::configureChannel(uint32_t instance, uint32_t channel,
 
 void Ocla::start(uint32_t instance, uint32_t timeout,
                  std::string outputfilepath) {
-  uint32_t countdown = timeout;
+  if (m_session->is_loaded()) {
+    CFG_ASSERT_MSG(validate() == true,
+                   "User design and connected IP not matched");
+  }
 
+  uint32_t countdown = timeout;
   auto objIP = getOclaInstance(instance);
   objIP.start();
 
@@ -160,7 +173,12 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
       ocla_data data = objIP.getData();
       m_writer->setWidth(data.width);
       m_writer->setDepth(data.depth);
-      m_writer->setSignals(generateSignalDescriptor(data.width));
+      if (m_session->is_loaded()) {
+        m_writer->setSignals(
+            generateSignalDescriptor(getProbeInfo(objIP.getBaseAddr())));
+      } else {
+        m_writer->setSignals(generateSignalDescriptor(data.width));
+      }
       m_writer->write(data.values, outputfilepath);
       break;
     }
