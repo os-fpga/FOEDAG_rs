@@ -32,6 +32,16 @@ std::map<uint32_t, OclaIP> Ocla::detectOclaInstances() {
   return list;
 }
 
+std::vector<Ocla_PROBE_INFO> Ocla::getProbes(uint32_t base_addr) {
+  for (uint32_t i = 0; i < m_session->get_instance_count(); i++) {
+    auto ocla = m_session->get_instance_info(i);
+    if (ocla.base_addr == base_addr) {
+      return m_session->get_probe_info(i);
+    }
+  }
+  return {};
+}
+
 Ocla::Ocla(OclaJtagAdapter* adapter, OclaSession* session,
            OclaWaveformWriter* writer)
     : m_adapter(adapter), m_session(session), m_writer(writer) {
@@ -134,9 +144,9 @@ std::string Ocla::showInfo() {
 
   for (auto& [index, objIP] : detectOclaInstances()) {
     uint32_t depth = objIP.getMemoryDepth();
+    uint32_t base_addr = objIP.getBaseAddr();
     ss << "OCLA " << index << std::setfill('0') << std::hex << std::endl
-       << "  Base address       : 0x" << std::setw(8) << objIP.getBaseAddr()
-       << std::endl
+       << "  Base address       : 0x" << std::setw(8) << base_addr << std::endl
        << "  ID                 : 0x" << std::setw(8) << objIP.getId()
        << std::endl
        << "  Type               : 0x" << std::setw(8) << objIP.getType()
@@ -183,6 +193,46 @@ std::string Ocla::showInfo() {
           ss << "    Channel " << ch << "        : "
              << convertTriggerTypeToString(trig_cfg.type) << std::endl;
           break;
+      }
+    }
+
+    if (m_session->is_loaded() == true) {
+      ss << "  Probe Table" << std::endl;
+
+      auto probes = getProbes(base_addr);
+      if (!probes.empty()) {
+        ss << "  "
+              "+-------+-------------------------------------+--------------+--"
+              "------------+"
+           << std::endl
+           << "  | Index | Probe name                          | Bit pos      "
+              "| No. of bits  |"
+           << std::endl
+           << "  "
+              "+-------+-------------------------------------+--------------+--"
+              "------------+"
+           << std::endl;
+
+        uint32_t i = 1;
+        uint32_t bitoffset = 0;
+
+        for (auto p : probes) {
+          if (p.type == SIGNAL) {
+            ss << "  | " << std::left << std::setw(5) << i << " | "
+               << std::setw(35) << p.signal_name << " | " << std::setw(12)
+               << bitoffset << " | " << std::setw(12) << p.bitwidth << " | "
+               << std::right << std::endl;
+            ++i;
+          }
+          bitoffset += p.bitwidth;
+        }
+
+        ss << "  "
+              "+-------+-------------------------------------+--------------+--"
+              "------------+"
+           << std::endl;
+      } else {
+        ss << "   No probe info" << std::endl;
       }
     }
   }
@@ -300,6 +350,13 @@ void Ocla::startSession(std::string bitasmFilepath) {
   CFG_ASSERT_MSG(std::filesystem::exists(bitasmFilepath),
                  "File %s is not found", bitasmFilepath.c_str());
   m_session->load(bitasmFilepath);
+  if (m_session->get_instance_count() > 2) {
+    CFG_ASSERT_MSG(false,
+                   "Found %u OCLA instances in bit assember file but expect "
+                   "max of 2 instances",
+                   m_session->get_instance_count());
+    m_session->unload();
+  }
 }
 
 void Ocla::stopSession() {
