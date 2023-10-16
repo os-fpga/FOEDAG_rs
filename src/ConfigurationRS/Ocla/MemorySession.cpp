@@ -42,6 +42,11 @@ std::vector<Ocla_PROBE_INFO> MemorySession::get_probe_info(uint32_t instance) {
 void MemorySession::parse(std::string ocla_json) {
   uint32_t total_bitwidth = 0;
   uint32_t id = 0;
+
+  // just in case parse is called twice for some reason
+  m_instances.clear();
+  m_probes.clear();
+
   try {
     nlohmann::json json = nlohmann::json::parse(ocla_json);
     nlohmann::json ocla_array = json.at("ocla");
