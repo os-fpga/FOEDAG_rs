@@ -432,6 +432,14 @@
             "default" : false,
             "optional": true,
             "help": "Generate waveform"
+          },
+          {
+            "name": "session_info",
+            "short": "e",
+            "type": "flag",
+            "default" : false,
+            "optional": true,
+            "help": "Show session info"
           }
         ],
         "hidden": true,

@@ -6,31 +6,39 @@
 #include "OclaHelpers.h"
 #include "OclaIP.h"
 #include "OclaJtagAdapter.h"
-#include "WaveformWriter.h"
+#include "OclaSession.h"
+#include "OclaWaveformWriter.h"
+
+static std::map<uint32_t, uint32_t> ocla_base_address = {{1, OCLA1_ADDR},
+                                                         {2, OCLA2_ADDR}};
 
 OclaIP Ocla::getOclaInstance(uint32_t instance) {
-  OclaIP objIP{m_adapter, instance == 1 ? OCLA1_ADDR : OCLA2_ADDR};
+  CFG_ASSERT(ocla_base_address.find(instance) != ocla_base_address.end());
+  OclaIP objIP{m_adapter, ocla_base_address[instance]};
   CFG_ASSERT(objIP.getType() == OCLA_TYPE);
   return objIP;
 }
 
 std::map<uint32_t, OclaIP> Ocla::detectOclaInstances() {
   std::map<uint32_t, OclaIP> list;
-  uint32_t i = 1;
 
-  for (auto& baseaddr : {OCLA1_ADDR, OCLA2_ADDR}) {
+  for (auto& [i, baseaddr] : ocla_base_address) {
     OclaIP objIP{m_adapter, baseaddr};
     if (objIP.getType() == OCLA_TYPE) {
       list.insert(std::pair<uint32_t, OclaIP>(i, objIP));
     }
-    ++i;
   }
 
   return list;
 }
 
-Ocla::Ocla(OclaJtagAdapter* adapter, WaveformWriter* writer)
-    : m_adapter(adapter), m_writer(writer) {}
+Ocla::Ocla(OclaJtagAdapter* adapter, OclaSession* session,
+           OclaWaveformWriter* writer)
+    : m_adapter(adapter), m_session(session), m_writer(writer) {
+  CFG_ASSERT(m_adapter != nullptr);
+  CFG_ASSERT(m_session != nullptr);
+  CFG_ASSERT(m_writer != nullptr);
+}
 
 void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
                      uint32_t sample_size) {
@@ -98,7 +106,6 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
                  std::string outputfilepath) {
   uint32_t countdown = timeout;
 
-  CFG_ASSERT(m_writer != nullptr);
   auto objIP = getOclaInstance(instance);
   objIP.start();
 
@@ -183,6 +190,45 @@ std::string Ocla::showInfo() {
   return ss.str();
 }
 
+std::string Ocla::showSessionInfo() {
+  std::ostringstream ss;
+
+  CFG_ASSERT(m_session->is_loaded() == true);
+
+  ss << "Session Info" << std::endl;
+
+  for (uint32_t i = 0; i < m_session->get_instance_count(); i++) {
+    auto ocla = m_session->get_instance_info(i);
+    ss << "  OCLA " << (i + 1) << std::endl
+       << "    base_addr " << std::hex << std::showbase << ocla.base_addr
+       << std::endl
+       << "    type '" << ocla.type << "'" << std::endl
+       << "    version " << std::hex << std::showbase << ocla.version
+       << std::endl
+       << "    id " << std::hex << std::showbase << ocla.id << std::endl
+       << "    depth " << std::dec << ocla.depth << std::endl
+       << "    num_probes " << std::dec << ocla.num_probes << std::endl
+       << "    num_trigger_inputs " << std::dec << ocla.num_trigger_inputs
+       << std::endl
+       << "    num_probe_width " << std::dec << ocla.probe_width << std::endl
+       << "    axi_data_width " << std::dec << ocla.axi_addr_width << std::endl
+       << "    axi_data_width " << std::dec << ocla.axi_addr_width << std::endl
+       << "    Probes" << std::endl;
+    auto probes = m_session->get_probe_info(i);
+    uint32_t n = 1;
+    for (const auto& p : probes) {
+      ss << "      Probe " << n << std::endl
+         << "        name = '" << p.signal_name << "'" << std::endl
+         << "        bitwidth = " << p.bitwidth << std::endl
+         << "        value = " << p.value << std::endl
+         << "        type = " << p.type << std::endl;
+      ++n;
+    }
+  }
+
+  return ss.str();
+}
+
 std::string Ocla::dumpRegisters(uint32_t instance) {
   std::map<uint32_t, std::string> regs = {
       {OCSR, "OCSR"},
@@ -226,7 +272,6 @@ std::string Ocla::dumpSamples(uint32_t instance, bool dumpText,
   }
 
   if (generateWaveform) {
-    CFG_ASSERT(m_writer != nullptr);
     std::string filepath = "/tmp/ocla_debug.fst";
     m_writer->setWidth(data.width);
     m_writer->setDepth(data.depth);
@@ -251,7 +296,13 @@ std::string Ocla::showStatus(uint32_t instance) {
 }
 
 void Ocla::startSession(std::string bitasmFilepath) {
-  CFG_ASSERT_MSG(false, "Not implemented");
+  CFG_ASSERT_MSG(m_session->is_loaded() == false, "Session is already loaded");
+  CFG_ASSERT_MSG(std::filesystem::exists(bitasmFilepath),
+                 "File %s is not found", bitasmFilepath.c_str());
+  m_session->load(bitasmFilepath);
 }
 
-void Ocla::stopSession() { CFG_ASSERT_MSG(false, "Not implemented"); }
+void Ocla::stopSession() {
+  CFG_ASSERT_MSG(m_session->is_loaded() == true, "No session is loaded");
+  m_session->unload();
+}
