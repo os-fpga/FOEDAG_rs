@@ -13,8 +13,8 @@ struct CFGCommon_ARG;
 
 class Ocla {
  public:
-  Ocla(OclaJtagAdapter *adapter, OclaSession *session = nullptr,
-       OclaWaveformWriter *writer = nullptr);
+  Ocla(OclaJtagAdapter *adapter, OclaSession *session,
+       OclaWaveformWriter *writer);
   void configure(uint32_t instance, std::string mode, std::string condition,
                  uint32_t sample_size);
   void configureChannel(uint32_t instance, uint32_t channel, std::string type,

@@ -35,7 +35,9 @@ std::map<uint32_t, OclaIP> Ocla::detectOclaInstances() {
 Ocla::Ocla(OclaJtagAdapter* adapter, OclaSession* session,
            OclaWaveformWriter* writer)
     : m_adapter(adapter), m_session(session), m_writer(writer) {
-  CFG_ASSERT(adapter != nullptr);
+  CFG_ASSERT(m_adapter != nullptr);
+  CFG_ASSERT(m_session != nullptr);
+  CFG_ASSERT(m_writer != nullptr);
 }
 
 void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
