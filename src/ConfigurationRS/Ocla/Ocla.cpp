@@ -106,7 +106,6 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
                  std::string outputfilepath) {
   uint32_t countdown = timeout;
 
-  CFG_ASSERT(m_writer != nullptr);
   auto objIP = getOclaInstance(instance);
   objIP.start();
 
@@ -194,7 +193,6 @@ std::string Ocla::showInfo() {
 std::string Ocla::showSessionInfo() {
   std::ostringstream ss;
 
-  CFG_ASSERT(m_session != nullptr);
   CFG_ASSERT(m_session->is_loaded() == true);
 
   ss << "Session Info" << std::endl;
@@ -274,7 +272,6 @@ std::string Ocla::dumpSamples(uint32_t instance, bool dumpText,
   }
 
   if (generateWaveform) {
-    CFG_ASSERT(m_writer != nullptr);
     std::string filepath = "/tmp/ocla_debug.fst";
     m_writer->setWidth(data.width);
     m_writer->setDepth(data.depth);
@@ -299,7 +296,6 @@ std::string Ocla::showStatus(uint32_t instance) {
 }
 
 void Ocla::startSession(std::string bitasmFilepath) {
-  CFG_ASSERT(m_session != nullptr);
   CFG_ASSERT_MSG(m_session->is_loaded() == false, "Session is already loaded");
   CFG_ASSERT_MSG(std::filesystem::exists(bitasmFilepath),
                  "File %s is not found", bitasmFilepath.c_str());
@@ -307,7 +303,6 @@ void Ocla::startSession(std::string bitasmFilepath) {
 }
 
 void Ocla::stopSession() {
-  CFG_ASSERT(m_session != nullptr);
   CFG_ASSERT_MSG(m_session->is_loaded() == true, "No session is loaded");
   m_session->unload();
 }
