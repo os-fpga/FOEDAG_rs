@@ -29,6 +29,7 @@ project(${subsystem} LANGUAGES CXX)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_definitions(-DGTEST_LANGUAGE_CXX17)
 
 if (MSVC)
 else()
@@ -103,8 +104,9 @@ target_link_libraries(${raptor_bin} ${subsystem})
 add_executable(
   ${test_bin}
   Test/Ocla_test.cpp
+  Test/OclaHelpersTests.cpp
 )
-target_link_libraries(${test_bin} ${subsystem})
+target_link_libraries(${test_bin} ${subsystem} gtest gmock gtest_main)
 
 ###################
 #
