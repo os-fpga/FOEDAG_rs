@@ -54,6 +54,34 @@ std::vector<Ocla_PROBE_INFO> Ocla::getProbeInfo(uint32_t base_addr) {
   return {};
 }
 
+std::map<uint32_t, Ocla_PROBE_INFO> Ocla::find_probe_by_name(
+    uint32_t base_addr, std::string probe_name) {
+  std::map<uint32_t, Ocla_PROBE_INFO> list{};
+  uint32_t offset = 0;
+
+  for (const auto& probe_inf : getProbeInfo(base_addr)) {
+    if (probe_inf.signal_name.find(probe_name) == 0) {
+      list.insert(std::make_pair(offset, probe_inf));
+    }
+    offset += probe_inf.bitwidth;
+  }
+
+  return list;
+}
+
+bool Ocla::find_probe_by_offset(uint32_t base_addr, uint32_t bit_offset,
+                                Ocla_PROBE_INFO& output) {
+  uint32_t offset = 0;
+  for (const auto& probe_inf : getProbeInfo(base_addr)) {
+    if (offset == bit_offset) {
+      output = probe_inf;
+      return true;
+    }
+    offset += probe_inf.bitwidth;
+  }
+  return false;
+}
+
 bool Ocla::validate() {
   if (m_session->is_loaded()) {
     auto instances = detectOclaInstances();
@@ -133,15 +161,25 @@ void Ocla::configureChannel(uint32_t instance, uint32_t channel,
     }
   }
 
+  auto objIP = getOclaInstance(instance);
   bool status = false;
   uint64_t probe_num = CFG_convert_string_to_u64(probe, false, &status);
   if (!status) {
-    // todo: translate probe name to probe index
-    CFG_POST_ERR("Probe by name is not supported for now");
-    return;
+    if (!m_session->is_loaded()) {
+      CFG_POST_ERR("Probe name cannot be used when no user design loaded");
+      return;
+    }
+    // translate probe name to probe index
+    auto probe_list = find_probe_by_name(objIP.getBaseAddr(), probe);
+    if (probe_list.empty()) {
+      CFG_POST_ERR("Invalid probe name '%s'", probe.c_str());
+      return;
+    }
+    probe_num = probe_list.begin()->first;
+    CFG_POST_MSG("Selected probe '%s' at bit pos %u",
+                 probe_list.begin()->second.signal_name.c_str(), probe_num);
   }
 
-  auto objIP = getOclaInstance(instance);
   uint32_t max_probes = objIP.getNumberOfProbes();
   if (max_probes > OCLA_MAX_PROBE) {
     max_probes = OCLA_MAX_PROBE;
@@ -245,17 +283,28 @@ std::string Ocla::showInfo() {
 
     for (uint32_t ch = 1; ch < 5; ch++) {
       auto trig_cfg = objIP.getChannelConfig(ch - 1);
+
+      std::string probe_name = std::to_string(trig_cfg.probe_num);
+      if (m_session->is_loaded()) {
+        // try translate probe index to probe name
+        Ocla_PROBE_INFO probe_inf{};
+        if (find_probe_by_offset(objIP.getBaseAddr(), trig_cfg.probe_num,
+                                 probe_inf)) {
+          probe_name += "(" + probe_inf.signal_name + ")";
+        }
+      }
+
       switch (trig_cfg.type) {
         case EDGE:
         case LEVEL:
           ss << "    Channel " << ch << "        : "
-             << "probe=" << trig_cfg.probe_num << "; "
+             << "probe=" << probe_name << "; "
              << "mode=" << convertTriggerEventToString(trig_cfg.event) << "_"
              << convertTriggerTypeToString(trig_cfg.type) << std::endl;
           break;
         case VALUE_COMPARE:
           ss << "    Channel " << ch << "        : "
-             << "probe=" << trig_cfg.probe_num << "; "
+             << "probe=" << probe_name << "; "
              << "mode=" << convertTriggerTypeToString(trig_cfg.type)
              << "; compare_operator="
              << convertTriggerEventToString(trig_cfg.event)
