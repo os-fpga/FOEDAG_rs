@@ -86,16 +86,20 @@ Ocla::Ocla(OclaJtagAdapter* adapter, OclaSession* session,
 void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
                      uint32_t sample_size) {
   if (m_session->is_loaded()) {
-    CFG_ASSERT_MSG(validate() == true,
-                   "User design and connected IP not matched");
+    if (!validate()) {
+      CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
+      return;
+    }
   }
 
   auto objIP = getOclaInstance(instance);
   auto depth = objIP.getMemoryDepth();
-  CFG_ASSERT_MSG(
-      sample_size <= depth,
-      "Invalid sample size parameter (Sample size should be beween 0 and %d)",
-      depth);
+  if (sample_size > depth) {
+    CFG_POST_ERR(
+        "Invalid sample size parameter (Sample size should be beween 0 and %d)",
+        depth);
+    return;
+  }
 
   ocla_config cfg;
 
@@ -111,26 +115,35 @@ void Ocla::configureChannel(uint32_t instance, uint32_t channel,
                             std::string type, std::string event, uint32_t value,
                             std::string probe) {
   if (m_session->is_loaded()) {
-    CFG_ASSERT_MSG(validate() == true,
-                   "User design and connected IP not matched");
+    if (!validate()) {
+      CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
+      return;
+    }
   }
 
   if (type == "edge") {
-    CFG_ASSERT_MSG(event == "rising" || event == "falling" || event == "either",
-                   "Invalid event parameter for edge trigger");
+    if (event != "rising" && event != "falling" && event != "either") {
+      CFG_POST_ERR("Invalid event parameter for edge trigger");
+      return;
+    }
   } else if (type == "value_compare") {
-    CFG_ASSERT_MSG(event == "equal" || event == "lesser" || event == "greater",
-                   "Invalid event parameter for value compare trigger");
+    if (event != "equal" && event != "lesser" && event != "greater") {
+      CFG_POST_ERR("Invalid event parameter for value compare trigger");
+      return;
+    }
   } else if (type == "level") {
-    CFG_ASSERT_MSG(event == "high" || event == "low",
-                   "Invalid event parameter for level trigger");
+    if (event != "high" && event != "low") {
+      CFG_POST_ERR("Invalid event parameter for level trigger");
+      return;
+    }
   }
 
   bool status = false;
   uint64_t probe_num = CFG_convert_string_to_u64(probe, false, &status);
   if (!status) {
     // todo: translate probe name to probe index
-    CFG_ASSERT_MSG(false, "Probe by name is not supported for now");
+    CFG_POST_ERR("Probe by name is not supported for now");
+    return;
   }
 
   auto objIP = getOclaInstance(instance);
@@ -139,10 +152,12 @@ void Ocla::configureChannel(uint32_t instance, uint32_t channel,
     max_probes = OCLA_MAX_PROBE;
   }
 
-  CFG_ASSERT_MSG(
-      probe_num < max_probes,
-      "Invalid probe parameter (Probe number should be between 0 and %d)",
-      max_probes - 1);
+  if (probe_num >= max_probes) {
+    CFG_POST_ERR(
+        "Invalid probe parameter (Probe number should be between 0 and %d)",
+        max_probes - 1);
+    return;
+  }
 
   ocla_trigger_config trig_cfg;
 
@@ -157,8 +172,10 @@ void Ocla::configureChannel(uint32_t instance, uint32_t channel,
 void Ocla::start(uint32_t instance, uint32_t timeout,
                  std::string outputfilepath) {
   if (m_session->is_loaded()) {
-    CFG_ASSERT_MSG(validate() == true,
-                   "User design and connected IP not matched");
+    if (!validate()) {
+      CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
+      return;
+    }
   }
 
   uint32_t countdown = timeout;
@@ -184,7 +201,10 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
     }
 
     if (timeout > 0) {
-      CFG_ASSERT_MSG(countdown > 0, "Timeout error");
+      if (countdown == 0) {
+        CFG_POST_ERR("Timeout error");
+        break;
+      }
       --countdown;
     }
   }
@@ -193,10 +213,14 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
 std::string Ocla::showInfo() {
   std::ostringstream ss;
   int count = 0;
+  bool is_valid = false;
 
   if (m_session->is_loaded()) {
-    CFG_ASSERT_MSG(validate() == true,
-                   "User design and connected IP not matched");
+    is_valid = validate();
+    if (!is_valid)
+      CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
+    ss << "User design loaded   : " << m_session->get_bitasm_filepath()
+       << std::endl;
   }
 
   for (auto& [idx, objIP] : detectOclaInstances()) {
@@ -252,7 +276,7 @@ std::string Ocla::showInfo() {
       }
     }
 
-    if (m_session->is_loaded() == true) {
+    if (m_session->is_loaded() == true & is_valid == true) {
       ss << "  Probe Table" << std::endl;
 
       auto probes = getProbeInfo(base_addr);
@@ -273,13 +297,11 @@ std::string Ocla::showInfo() {
         uint32_t bitoffset = 0;
 
         for (auto p : probes) {
-          if (p.type == SIGNAL) {
-            ss << "  | " << std::left << std::setw(5) << i << " | "
-               << std::setw(35) << p.signal_name << " | " << std::setw(12)
-               << bitoffset << " | " << std::setw(12) << p.bitwidth << " | "
-               << std::right << std::endl;
-            ++i;
-          }
+          ss << "  | " << std::left << std::setw(5) << i << " | "
+             << std::setw(35) << p.signal_name << " | " << std::setw(12)
+             << bitoffset << " | " << std::setw(12) << p.bitwidth << " | "
+             << std::right << std::endl;
+          ++i;
           bitoffset += p.bitwidth;
         }
 
@@ -301,7 +323,10 @@ std::string Ocla::showInfo() {
 std::string Ocla::showSessionInfo() {
   std::ostringstream ss;
 
-  CFG_ASSERT(m_session->is_loaded() == true);
+  if (!m_session->is_loaded()) {
+    CFG_POST_ERR("No session is loaded");
+    return "";
+  }
 
   ss << "Session Info" << std::endl;
 
@@ -404,21 +429,31 @@ std::string Ocla::showStatus(uint32_t instance) {
 }
 
 void Ocla::startSession(std::string bitasmFilepath) {
-  CFG_ASSERT_MSG(m_session->is_loaded() == false, "Session is already loaded");
-  CFG_ASSERT_MSG(std::filesystem::exists(bitasmFilepath),
-                 "File %s is not found", bitasmFilepath.c_str());
+  if (m_session->is_loaded()) {
+    CFG_POST_ERR("Session is already loaded");
+    return;
+  }
+
+  if (!std::filesystem::exists(bitasmFilepath)) {
+    CFG_POST_ERR("File %s not found", bitasmFilepath.c_str());
+    return;
+  }
+
   m_session->load(bitasmFilepath);
   uint32_t count = m_session->get_instance_count();
-  if (count > 2) {
+  if (count > OCLA_MAX_INSTANCE_COUNT) {
+    CFG_POST_ERR(
+        "Found %u OCLA instances in bit assember file but expect max of 2 "
+        "instances",
+        count);
     m_session->unload();
-    CFG_ASSERT_MSG(false,
-                   "Found %u OCLA instances in bit assember file but expect "
-                   "max of 2 instances",
-                   count);
   }
 }
 
 void Ocla::stopSession() {
-  CFG_ASSERT_MSG(m_session->is_loaded() == true, "No session is loaded");
+  if (!m_session->is_loaded()) {
+    CFG_POST_ERR("No session is loaded");
+    return;
+  }
   m_session->unload();
 }

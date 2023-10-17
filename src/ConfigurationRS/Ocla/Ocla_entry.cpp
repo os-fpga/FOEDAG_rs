@@ -52,34 +52,40 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     ocla.stopSession();
   } else if (subCmd == "config") {
     auto parms = static_cast<const CFGArg_DEBUGGER_CONFIG*>(arg->get_sub_arg());
-    CFG_ASSERT_MSG(
-        parms->instance >= 1 && parms->instance <= 2,
-        "Invalid instance parameter. Instance should be either 1 or 2.");
+    if (parms->instance == 0 || parms->instance > 2) {
+      CFG_POST_ERR("Invalid instance parameter. Instance should be either 1 or 2.");
+      return;
+    }
     ocla.configure(parms->instance, parms->mode, parms->trigger_condition,
                    parms->sample_size);
   } else if (subCmd == "config_channel") {
     auto parms =
         static_cast<const CFGArg_DEBUGGER_CONFIG_CHANNEL*>(arg->get_sub_arg());
-    CFG_ASSERT_MSG(
-        parms->instance >= 1 && parms->instance <= 2,
-        "Invalid instance parameter. Instance should be either 1 or 2.");
-    CFG_ASSERT_MSG(parms->channel >= 1 && parms->channel <= 4,
-                   "Invalid channel parameter. Channel should be 1 to 4.");
+    if (parms->instance == 0 || parms->instance > 2) {
+      CFG_POST_ERR("Invalid instance parameter. Instance should be either 1 or 2.");
+      return;
+    }
+    if (parms->channel == 0 || parms->channel > 4) {
+      CFG_POST_ERR("Invalid channel parameter. Channel should be 1 to 4.");
+      return;
+    }
     ocla.configureChannel(parms->instance, parms->channel, parms->type,
                           parms->event, parms->value, parms->probe);
   } else if (subCmd == "start") {
     auto parms = static_cast<const CFGArg_DEBUGGER_START*>(arg->get_sub_arg());
-    CFG_ASSERT_MSG(
-        parms->instance >= 1 && parms->instance <= 2,
-        "Invalid instance parameter. Instance should be either 1 or 2.");
+    if (parms->instance == 0 || parms->instance > 2) {
+      CFG_POST_ERR("Invalid instance parameter. Instance should be either 1 or 2.");
+      return;
+    }
     ocla.start(parms->instance, parms->timeout, parms->output);
     CFG_POST_MSG("Written %s successfully.", parms->output.c_str());
     Ocla_launch_gtkwave(parms->output, cmdarg->binPath);
   } else if (subCmd == "status") {
     auto parms = static_cast<const CFGArg_DEBUGGER_STATUS*>(arg->get_sub_arg());
-    CFG_ASSERT_MSG(
-        parms->instance >= 1 && parms->instance <= 2,
-        "Invalid instance parameter. Instance should be either 1 or 2.");
+    if (parms->instance == 0 || parms->instance > 2) {
+      CFG_POST_ERR("Invalid instance parameter. Instance should be either 1 or 2.");
+      return;
+    }
     auto output = ocla.showStatus(parms->instance);
     cmdarg->tclOutput = output.c_str();
   } else if (subCmd == "show_waveform") {
@@ -88,9 +94,10 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     Ocla_launch_gtkwave(parms->input, cmdarg->binPath);
   } else if (subCmd == "debug") {
     auto parms = static_cast<const CFGArg_DEBUGGER_DEBUG*>(arg->get_sub_arg());
-    CFG_ASSERT_MSG(
-        parms->instance >= 1 && parms->instance <= 2,
-        "Invalid instance parameter. Instance should be either 1 or 2.");
+    if (parms->instance == 0 || parms->instance > 2) {
+      CFG_POST_ERR("Invalid instance parameter. Instance should be either 1 or 2.");
+      return;
+    }
     if (parms->start) ocla.debugStart(parms->instance);
     if (parms->reg) Ocla_print(ocla.dumpRegisters(parms->instance));
     if (parms->dump || parms->waveform)

@@ -11,6 +11,7 @@
 #define OCLA_TRIGGER_CHANNELS (4U)
 #define OCLA_MAX_SAMPLE_SIZE (1024U)
 #define OCLA_MAX_PROBE (128U)
+#define OCLA_MAX_INSTANCE_COUNT (2U)
 #define OCSR (0x00)
 #define TBDR (0x04)
 #define TCUR0 (0x08)

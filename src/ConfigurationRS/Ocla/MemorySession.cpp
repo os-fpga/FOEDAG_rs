@@ -8,6 +8,7 @@
 
 std::map<uint32_t, Ocla_INSTANCE_INFO> MemorySession::m_instances{};
 std::map<uint32_t, std::vector<Ocla_PROBE_INFO>> MemorySession::m_probes{};
+std::string MemorySession::m_bitasmfile = "";
 bool MemorySession::m_loaded = false;
 
 MemorySession::MemorySession() {}
@@ -18,12 +19,14 @@ void MemorySession::load(std::string bitasmfile) {
   std::string ocla_json = BitAssembler_MGR::get_ocla_design(bitasmfile);
   CFG_ASSERT_MSG(!ocla_json.empty(), "No OCLA info");
   parse(ocla_json);
+  m_bitasmfile = bitasmfile;
   m_loaded = true;
 }
 
 void MemorySession::unload() {
   m_instances.clear();
   m_probes.clear();
+  m_bitasmfile.clear();
   m_loaded = false;
 }
 
@@ -38,6 +41,8 @@ std::vector<Ocla_PROBE_INFO> MemorySession::get_probe_info(uint32_t instance) {
   CFG_ASSERT(instance < m_probes.size());
   return m_probes[instance];
 }
+
+std::string MemorySession::get_bitasm_filepath() { return m_bitasmfile; }
 
 void MemorySession::parse(std::string ocla_json) {
   uint32_t total_bitwidth = 0;
@@ -111,7 +116,7 @@ Ocla_PROBE_INFO MemorySession::parse_probe(std::string probe) {
       uint64_t bit_end = CFG_convert_string_to_u64(m[2].str());
       CFG_ASSERT_MSG(bit_end >= bit_start, "Invalid bit position '%s'",
                      probe.c_str());
-      probe_inf.signal_name = m[1].str();
+      probe_inf.signal_name = m[0].str();
       probe_inf.type = SIGNAL;
       probe_inf.value = 0;
       probe_inf.bitwidth = static_cast<uint32_t>(bit_end - bit_start) + 1;
@@ -119,7 +124,7 @@ Ocla_PROBE_INFO MemorySession::parse_probe(std::string probe) {
     }
     case 2U:  // pattern 2: 4'0000
     {
-      probe_inf.signal_name = "_";
+      probe_inf.signal_name = m[0].str();
       probe_inf.type = PLACEHOLDER;
       probe_inf.value =
           static_cast<uint32_t>(CFG_convert_string_to_u64("b" + m[2].str()));
@@ -130,7 +135,7 @@ Ocla_PROBE_INFO MemorySession::parse_probe(std::string probe) {
     case 3U:  // pattern 3: s_axil_awprot[0]
     case 4U:  // pattern 4: s_axil_bready
     {
-      probe_inf.signal_name = m[1].str();
+      probe_inf.signal_name = m[0].str();
       probe_inf.type = SIGNAL;
       probe_inf.value = 0;
       probe_inf.bitwidth = 1;

@@ -36,6 +36,7 @@ class OclaSession {
   virtual uint32_t get_instance_count() = 0;
   virtual Ocla_INSTANCE_INFO get_instance_info(uint32_t instance) = 0;
   virtual std::vector<Ocla_PROBE_INFO> get_probe_info(uint32_t instance) = 0;
+  virtual std::string get_bitasm_filepath() = 0;
 };
 
 #endif  //__OCLASESSION_H__
