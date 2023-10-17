@@ -5,7 +5,7 @@
 
 #define MAX_SAMPLE (1024)
 
-uint32_t CFG_reverse_u32(uint32_t value) {
+uint32_t CFG_reverse_byte_order_u32(uint32_t value) {
   return (value >> 24) | ((value >> 8) & 0xff00) | ((value << 8) & 0xff0000) |
          (value << 24);
 }
@@ -44,7 +44,8 @@ uint32_t OclaIP::getId() const {
 std::string OclaIP::getType() const {
   CFG_ASSERT(m_adapter != nullptr);
   char buffer[10];
-  uint32_t type = CFG_reverse_u32(m_adapter->read(m_base_addr + IP_TYPE));
+  uint32_t type =
+      CFG_reverse_byte_order_u32(m_adapter->read(m_base_addr + IP_TYPE));
   snprintf(buffer, sizeof(buffer), "%.*s", 4, (char *)&type);
   return std::string(buffer);
 }

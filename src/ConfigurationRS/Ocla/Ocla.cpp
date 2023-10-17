@@ -62,14 +62,13 @@ bool Ocla::validate() {
     for (const auto& [i, objIP] : instances) {
       Ocla_INSTANCE_INFO inf{};
       uint32_t idx;
-      if (!getInstanceInfo(objIP.getBaseAddr(), inf, idx)) {
+      if (!getInstanceInfo(objIP.getBaseAddr(), inf, idx) ||
+          (inf.version != objIP.getVersion()) ||
+          (inf.type != objIP.getType()) || (inf.id != objIP.getId()) ||
+          (inf.num_probes != objIP.getNumberOfProbes()) ||
+          (inf.depth != objIP.getMemoryDepth())) {
         return false;
       }
-      if (inf.version != objIP.getVersion()) return false;
-      if (inf.type != objIP.getType()) return false;
-      if (inf.id != objIP.getId()) return false;
-      if (inf.num_probes != objIP.getNumberOfProbes()) return false;
-      if (inf.depth != objIP.getMemoryDepth()) return false;
     }
   }
   return true;
@@ -85,11 +84,9 @@ Ocla::Ocla(OclaJtagAdapter* adapter, OclaSession* session,
 
 void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
                      uint32_t sample_size) {
-  if (m_session->is_loaded()) {
-    if (!validate()) {
-      CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
-      return;
-    }
+  if (!validate()) {
+    CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
+    return;
   }
 
   auto objIP = getOclaInstance(instance);
@@ -114,11 +111,9 @@ void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
 void Ocla::configureChannel(uint32_t instance, uint32_t channel,
                             std::string type, std::string event, uint32_t value,
                             std::string probe) {
-  if (m_session->is_loaded()) {
-    if (!validate()) {
-      CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
-      return;
-    }
+  if (!validate()) {
+    CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
+    return;
   }
 
   if (type == "edge") {
@@ -171,11 +166,9 @@ void Ocla::configureChannel(uint32_t instance, uint32_t channel,
 
 void Ocla::start(uint32_t instance, uint32_t timeout,
                  std::string outputfilepath) {
-  if (m_session->is_loaded()) {
-    if (!validate()) {
-      CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
-      return;
-    }
+  if (!validate()) {
+    CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
+    return;
   }
 
   uint32_t countdown = timeout;
@@ -276,7 +269,7 @@ std::string Ocla::showInfo() {
       }
     }
 
-    if (m_session->is_loaded() == true && is_valid == true) {
+    if (m_session->is_loaded() && is_valid) {
       ss << "  Probe Table" << std::endl;
 
       auto probes = getProbeInfo(base_addr);
