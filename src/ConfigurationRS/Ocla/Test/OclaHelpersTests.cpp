@@ -12,7 +12,7 @@ TEST_P(ConvertOclaModeToStringParamTest, ConvertOclaMode) {
   const ocla_mode mode = param.first;
   const std::string& expected_result = param.second;
 
-  std::string result = convertOclaModeToString(mode);
+  std::string result = convert_ocla_mode_to_string(mode);
   EXPECT_EQ(result, expected_result);
 }
 
@@ -33,7 +33,7 @@ TEST_P(ConvertTriggerConditionToStringParamTest, ConvertTriggerCondition) {
   const ocla_trigger_condition condition = param.first;
   const std::string& expected_result = param.second;
 
-  std::string result = convertTriggerConditionToString(condition);
+  std::string result = convert_trigger_condition_to_string(condition);
   EXPECT_EQ(result, expected_result);
 }
 
@@ -45,10 +45,10 @@ INSTANTIATE_TEST_SUITE_P(
                       std::make_pair(ocla_trigger_condition(99), "(unknown)"),
                       std::make_pair(ocla_trigger_condition::XOR, "XOR")));
 
-TEST(convertTriggerConditionToString, DefaultModeString) {
+TEST(convert_trigger_condition_to_string, DefaultModeString) {
   // Test converting with a default value
   auto result =
-      convertTriggerConditionToString((ocla_trigger_condition)10, "AND");
+      convert_trigger_condition_to_string((ocla_trigger_condition)10, "AND");
   EXPECT_EQ(result, "AND");
 }
 
@@ -61,7 +61,7 @@ TEST_P(ConvertTriggerTypeToStringTest, ConvertTriggerType) {
   const ocla_trigger_type type = param.first;
   const std::string& expected_result = param.second;
 
-  std::string result = convertTriggerTypeToString(type);
+  std::string result = convert_trigger_type_to_string(type);
   EXPECT_EQ(result, expected_result);
 }
 
@@ -83,7 +83,7 @@ TEST_P(ConvertTriggerEventToStringTest, ConvertTriggerType) {
   const ocla_trigger_event type = param.first;
   const std::string& expected_result = param.second;
 
-  std::string result = convertTriggerEventToString(type);
+  std::string result = convert_trigger_event_to_string(type);
   EXPECT_EQ(result, expected_result);
 }
 
@@ -110,7 +110,7 @@ TEST_P(ConvertOclaModeParamTest, ConvertModeString) {
   const std::string& mode_string = param.first;
   ocla_mode expected_result = param.second;
 
-  ocla_mode result = convertOclaMode(mode_string);
+  ocla_mode result = convert_ocla_mode(mode_string);
   EXPECT_EQ(result, expected_result);
 }
 
@@ -124,7 +124,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST(ConvertOclaModeTest, DefaultModeString) {
   // Test converting with a default value
-  ocla_mode result = convertOclaMode("invalid-mode", POST);
+  ocla_mode result = convert_ocla_mode("invalid-mode", POST);
   EXPECT_EQ(result, POST);
 }
 
@@ -141,7 +141,7 @@ TEST_P(ConvertTriggerConditionTest, ConvertTriggerCondition) {
   const std::string condition = param.condition_string;
   const ocla_trigger_condition expected_result = param.expected_result;
 
-  ocla_trigger_condition result = convertTriggerCondition(condition);
+  ocla_trigger_condition result = convert_trigger_condition(condition);
   EXPECT_EQ(result, expected_result);
 }
 
@@ -160,7 +160,7 @@ TEST(ConvertTriggerTypeTest, ValidTriggerType) {
   // ocla_trigger_type expected = ocla_trigger_type::TRIGGER_NONE;
   for (const auto& [expected, param] : testParam) {
     std::string type_string = param;
-    ocla_trigger_type result = convertTriggerType(type_string);
+    ocla_trigger_type result = convert_trigger_type(type_string);
     EXPECT_EQ(result, expected);
   }
 }
@@ -168,21 +168,21 @@ TEST(ConvertTriggerTypeTest, ValidTriggerType) {
 TEST(ConvertTriggerTypeTest, InvalidTriggerType) {
   std::string type_string = "dummyTestString";
   ocla_trigger_type expected = TRIGGER_NONE;
-  ocla_trigger_type result = convertTriggerType(type_string);
+  ocla_trigger_type result = convert_trigger_type(type_string);
   EXPECT_EQ(result, expected);
 }
 
 TEST(ConvertTriggerTypeTest, EmptyTriggerType) {
   std::string type_string = "";
   ocla_trigger_type expected = TRIGGER_NONE;
-  ocla_trigger_type result = convertTriggerType(type_string);
+  ocla_trigger_type result = convert_trigger_type(type_string);
   EXPECT_EQ(result, expected);
 }
 
 TEST(ConvertTriggerTypeTest, defaultTriggerType) {
   std::string type_string = "my default";
   ocla_trigger_type expected = VALUE_COMPARE;
-  ocla_trigger_type result = convertTriggerType(type_string, VALUE_COMPARE);
+  ocla_trigger_type result = convert_trigger_type(type_string, VALUE_COMPARE);
   EXPECT_EQ(result, expected);
 }
 
@@ -195,7 +195,7 @@ TEST(ConvertTriggerEventTest, ValidTriggerType) {
   // ocla_trigger_type expected = ocla_trigger_type::TRIGGER_NONE;
   for (const auto& [expected, param] : testParam) {
     std::string type_string = param;
-    ocla_trigger_event result = convertTriggerEvent(type_string);
+    ocla_trigger_event result = convert_trigger_event(type_string);
     EXPECT_EQ(result, expected);
   }
 }
@@ -203,21 +203,21 @@ TEST(ConvertTriggerEventTest, ValidTriggerType) {
 TEST(ConvertTriggerEventTest, InvalidTriggerType) {
   std::string type_string = "dummyTestString";
   ocla_trigger_event expected = NONE;
-  ocla_trigger_event result = convertTriggerEvent(type_string);
+  ocla_trigger_event result = convert_trigger_event(type_string);
   EXPECT_EQ(result, expected);
 }
 
 TEST(ConvertTriggerEventTest, EmptyTriggerType) {
   std::string type_string = "";
   ocla_trigger_event expected = NONE;
-  ocla_trigger_event result = convertTriggerEvent(type_string);
+  ocla_trigger_event result = convert_trigger_event(type_string);
   EXPECT_EQ(result, expected);
 }
 
 TEST(ConvertTriggerEventTest, defaultTriggerType) {
   std::string type_string = "my default";
   ocla_trigger_event expected = NONE;
-  ocla_trigger_event result = convertTriggerEvent(type_string, NONE);
+  ocla_trigger_event result = convert_trigger_event(type_string, NONE);
   EXPECT_EQ(result, expected);
 }
 
@@ -226,7 +226,7 @@ TEST(GenerateSignalDescriptorTest, ValidWidth) {
   std::vector<signal_info> expected = {{"s0", 1}, {"s1", 1}, {"s2", 1},
                                        {"s3", 1}, {"s4", 1}, {"s5", 1},
                                        {"s6", 1}, {"s7", 1}};
-  auto result = generateSignalDescriptor(width);
+  auto result = generate_signal_descriptor(width);
   for (size_t i = 0; i < width; i++) {
     EXPECT_EQ(result[i].name, expected[i].name);
     EXPECT_EQ(result[i].bitwidth, expected[i].bitwidth);
@@ -236,6 +236,6 @@ TEST(GenerateSignalDescriptorTest, ValidWidth) {
 TEST(GenerateSignalDescriptorTest, ZeroWidth) {
   uint32_t width = 0;
   std::vector<signal_info> expected = {};
-  std::vector<signal_info> result = generateSignalDescriptor(width);
+  std::vector<signal_info> result = generate_signal_descriptor(width);
   EXPECT_EQ(result.size(), expected.size());
 }

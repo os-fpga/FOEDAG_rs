@@ -130,8 +130,8 @@ void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
 
   cfg.fns = sample_size > 0 ? ENABLED : DISABLED;
   cfg.ns = sample_size;
-  cfg.mode = convertOclaMode(mode);
-  cfg.condition = convertTriggerCondition(condition);
+  cfg.mode = convert_ocla_mode(mode);
+  cfg.condition = convert_trigger_condition(condition);
 
   ocla_ip.configure(cfg);
 }
@@ -195,8 +195,8 @@ void Ocla::configure_channel(uint32_t instance, uint32_t channel,
   ocla_trigger_config trig_cfg;
 
   trig_cfg.probe_num = (uint32_t)probe_num;
-  trig_cfg.type = convertTriggerType(type);
-  trig_cfg.event = convertTriggerEvent(event);
+  trig_cfg.type = convert_trigger_type(type);
+  trig_cfg.event = convert_trigger_event(event);
   trig_cfg.value = value;
 
   ocla_ip.configureChannel(channel - 1, trig_cfg);
@@ -223,9 +223,9 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
       m_writer->setDepth(data.depth);
       if (m_session->is_loaded()) {
         m_writer->setSignals(
-            generateSignalDescriptor(get_probe_info(ocla_ip.getBaseAddr())));
+            generate_signal_descriptor(get_probe_info(ocla_ip.getBaseAddr())));
       } else {
-        m_writer->setSignals(generateSignalDescriptor(data.width));
+        m_writer->setSignals(generate_signal_descriptor(data.width));
       }
       m_writer->write(data.values, output_filepath);
       break;
@@ -274,10 +274,10 @@ std::string Ocla::show_info() {
     uint32_t ns = cfg.fns == ENABLED ? cfg.ns : depth;
 
     ss << "  No. of samples     : " << ns << std::endl
-       << "  Trigger mode       : " << convertOclaModeToString(cfg.mode)
+       << "  Trigger mode       : " << convert_ocla_mode_to_string(cfg.mode)
        << std::endl
        << "  Trigger condition  : "
-       << convertTriggerConditionToString(cfg.condition) << std::endl
+       << convert_trigger_condition_to_string(cfg.condition) << std::endl
        << "  Trigger " << std::endl
        << std::setfill(' ');
 
@@ -299,21 +299,22 @@ std::string Ocla::show_info() {
         case LEVEL:
           ss << "    Channel " << ch << "        : "
              << "probe=" << probe_name << "; "
-             << "mode=" << convertTriggerEventToString(trig_cfg.event) << "_"
-             << convertTriggerTypeToString(trig_cfg.type) << std::endl;
+             << "mode=" << convert_trigger_event_to_string(trig_cfg.event)
+             << "_" << convert_trigger_type_to_string(trig_cfg.type)
+             << std::endl;
           break;
         case VALUE_COMPARE:
           ss << "    Channel " << ch << "        : "
              << "probe=" << probe_name << "; "
-             << "mode=" << convertTriggerTypeToString(trig_cfg.type)
+             << "mode=" << convert_trigger_type_to_string(trig_cfg.type)
              << "; compare_operator="
-             << convertTriggerEventToString(trig_cfg.event)
+             << convert_trigger_event_to_string(trig_cfg.event)
              << "; compare_value=0x" << std::hex << trig_cfg.value << std::dec
              << std::endl;
           break;
         case TRIGGER_NONE:
           ss << "    Channel " << ch << "        : "
-             << convertTriggerTypeToString(trig_cfg.type) << std::endl;
+             << convert_trigger_type_to_string(trig_cfg.type) << std::endl;
           break;
       }
     }
@@ -450,7 +451,7 @@ std::string Ocla::dump_samples(uint32_t instance, bool dumpText,
     std::string filepath = "/tmp/ocla_debug.fst";
     m_writer->setWidth(data.width);
     m_writer->setDepth(data.depth);
-    m_writer->setSignals(generateSignalDescriptor(data.width));
+    m_writer->setSignals(generate_signal_descriptor(data.width));
     m_writer->write(data.values, filepath.c_str());
     ss << "Waveform written to " << filepath << std::endl;
   }
