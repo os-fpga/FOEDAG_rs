@@ -276,7 +276,7 @@ std::string Ocla::showInfo() {
       }
     }
 
-    if (m_session->is_loaded() == true & is_valid == true) {
+    if (m_session->is_loaded() == true && is_valid == true) {
       ss << "  Probe Table" << std::endl;
 
       auto probes = getProbeInfo(base_addr);
