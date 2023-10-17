@@ -95,3 +95,12 @@ std::vector<signal_info> generateSignalDescriptor(uint32_t width) {
   }
   return signals;
 }
+
+std::vector<signal_info> generateSignalDescriptor(
+    std::vector<Ocla_PROBE_INFO> probes) {
+  std::vector<signal_info> signals;
+  for (const auto& p : probes) {
+    signals.push_back({p.signal_name, p.bitwidth});
+  }
+  return signals;
+}

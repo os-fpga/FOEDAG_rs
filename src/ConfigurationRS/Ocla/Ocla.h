@@ -4,12 +4,15 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <vector>
 
 class OclaIP;
 class OclaJtagAdapter;
 class OclaWaveformWriter;
 class OclaSession;
 struct CFGCommon_ARG;
+struct Ocla_INSTANCE_INFO;
+struct Ocla_PROBE_INFO;
 
 class Ocla {
  public:
@@ -34,6 +37,14 @@ class Ocla {
  private:
   OclaIP getOclaInstance(uint32_t instance);
   std::map<uint32_t, OclaIP> detectOclaInstances();
+  bool getInstanceInfo(uint32_t base_addr, Ocla_INSTANCE_INFO &instance_info,
+                       uint32_t &idx);
+  std::vector<Ocla_PROBE_INFO> getProbeInfo(uint32_t base_addr);
+  std::map<uint32_t, Ocla_PROBE_INFO> find_probe_by_name(
+      uint32_t base_addr, std::string probe_name);
+  bool find_probe_by_offset(uint32_t base_addr, uint32_t bit_offset,
+                            Ocla_PROBE_INFO &output);
+  bool validate();
   OclaJtagAdapter *m_adapter;
   OclaSession *m_session;
   OclaWaveformWriter *m_writer;

@@ -16,6 +16,7 @@ class MemorySession : public OclaSession {
   virtual uint32_t get_instance_count();
   virtual Ocla_INSTANCE_INFO get_instance_info(uint32_t instance);
   virtual std::vector<Ocla_PROBE_INFO> get_probe_info(uint32_t instance);
+  virtual std::string get_bitasm_filepath();
 
  private:
   void parse(std::string ocla_json);
@@ -23,6 +24,7 @@ class MemorySession : public OclaSession {
   static std::map<uint32_t, Ocla_INSTANCE_INFO> m_instances;
   static std::map<uint32_t, std::vector<Ocla_PROBE_INFO>> m_probes;
   static bool m_loaded;
+  static std::string m_bitasmfile;
 };
 
 #endif  //__MEMORYSESSION_H__
