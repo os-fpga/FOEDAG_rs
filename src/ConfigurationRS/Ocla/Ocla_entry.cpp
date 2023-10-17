@@ -53,7 +53,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
   } else if (subCmd == "config") {
     auto parms = static_cast<const CFGArg_DEBUGGER_CONFIG*>(arg->get_sub_arg());
     if (parms->instance == 0 || parms->instance > 2) {
-      CFG_POST_ERR("Invalid instance parameter. Instance should be either 1 or 2.");
+      CFG_POST_ERR(
+          "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
     ocla.configure(parms->instance, parms->mode, parms->trigger_condition,
@@ -62,7 +63,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     auto parms =
         static_cast<const CFGArg_DEBUGGER_CONFIG_CHANNEL*>(arg->get_sub_arg());
     if (parms->instance == 0 || parms->instance > 2) {
-      CFG_POST_ERR("Invalid instance parameter. Instance should be either 1 or 2.");
+      CFG_POST_ERR(
+          "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
     if (parms->channel == 0 || parms->channel > 4) {
@@ -74,7 +76,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
   } else if (subCmd == "start") {
     auto parms = static_cast<const CFGArg_DEBUGGER_START*>(arg->get_sub_arg());
     if (parms->instance == 0 || parms->instance > 2) {
-      CFG_POST_ERR("Invalid instance parameter. Instance should be either 1 or 2.");
+      CFG_POST_ERR(
+          "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
     ocla.start(parms->instance, parms->timeout, parms->output);
@@ -83,7 +86,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
   } else if (subCmd == "status") {
     auto parms = static_cast<const CFGArg_DEBUGGER_STATUS*>(arg->get_sub_arg());
     if (parms->instance == 0 || parms->instance > 2) {
-      CFG_POST_ERR("Invalid instance parameter. Instance should be either 1 or 2.");
+      CFG_POST_ERR(
+          "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
     auto output = ocla.showStatus(parms->instance);
@@ -95,7 +99,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
   } else if (subCmd == "debug") {
     auto parms = static_cast<const CFGArg_DEBUGGER_DEBUG*>(arg->get_sub_arg());
     if (parms->instance == 0 || parms->instance > 2) {
-      CFG_POST_ERR("Invalid instance parameter. Instance should be either 1 or 2.");
+      CFG_POST_ERR(
+          "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
     if (parms->start) ocla.debugStart(parms->instance);
