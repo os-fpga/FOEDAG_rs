@@ -20,26 +20,26 @@ class Ocla {
        OclaWaveformWriter *writer);
   void configure(uint32_t instance, std::string mode, std::string condition,
                  uint32_t sample_size);
-  void configureChannel(uint32_t instance, uint32_t channel, std::string type,
-                        std::string event, uint32_t value, std::string probe);
-  void start(uint32_t instance, uint32_t timeout, std::string outputfilepath);
-  void startSession(std::string bitasmFilepath);
-  void stopSession();
-  std::string showStatus(uint32_t instance);
-  std::string showInfo();
-  std::string showSessionInfo();
+  void configure_channel(uint32_t instance, uint32_t channel, std::string type,
+                         std::string event, uint32_t value, std::string probe);
+  void start(uint32_t instance, uint32_t timeout, std::string output_filepath);
+  void start_session(std::string bitasm_filepath);
+  void stop_session();
+  std::string show_status(uint32_t instance);
+  std::string show_info();
+  std::string show_session_info();
   // debug use
-  std::string dumpRegisters(uint32_t instance);
-  std::string dumpSamples(uint32_t instance, bool dumpText,
-                          bool genrateWaveform);
-  void debugStart(uint32_t instance);
+  std::string dump_registers(uint32_t instance);
+  std::string dump_samples(uint32_t instance, bool dump_text,
+                           bool generate_waveform);
+  void debug_start(uint32_t instance);
 
  private:
-  OclaIP getOclaInstance(uint32_t instance);
-  std::map<uint32_t, OclaIP> detectOclaInstances();
-  bool getInstanceInfo(uint32_t base_addr, Ocla_INSTANCE_INFO &instance_info,
-                       uint32_t &idx);
-  std::vector<Ocla_PROBE_INFO> getProbeInfo(uint32_t base_addr);
+  OclaIP get_ocla_instance(uint32_t instance);
+  std::map<uint32_t, OclaIP> detect_ocla_instances();
+  bool get_instance_info(uint32_t base_addr, Ocla_INSTANCE_INFO &instance_info,
+                         uint32_t &idx);
+  std::vector<Ocla_PROBE_INFO> get_probe_info(uint32_t base_addr);
   std::map<uint32_t, Ocla_PROBE_INFO> find_probe_by_name(
       uint32_t base_addr, std::string probe_name);
   bool find_probe_by_offset(uint32_t base_addr, uint32_t bit_offset,
