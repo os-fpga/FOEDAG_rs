@@ -11,7 +11,7 @@
 #include "OclaWaveformWriter.h"
 
 static std::vector<HardwareManager_DEVICE_INFO> ocla_device_db = {
-    {"OCLA", 0x1000563d, 5, 0xffffffff, OCLA},
+    {"OCLA", 0x10000db3, 5, 0xffffffff, OCLA},
     {"OCLA", 0x20000913, 5, 0xffffffff, OCLA},
 };
 
