@@ -1,5 +1,6 @@
 #include "Ocla.h"
 
+#include <algorithm>
 #include <sstream>
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
@@ -141,6 +142,8 @@ void Ocla::configure(std::string cable_name, uint32_t device_index,
 
   ocla_config cfg;
 
+  std::transform(condition.begin(), condition.end(), condition.begin(),
+                 ::toupper);
   cfg.fns = sample_size > 0 ? ENABLED : DISABLED;
   cfg.ns = sample_size;
   cfg.mode = convert_ocla_mode(mode);
