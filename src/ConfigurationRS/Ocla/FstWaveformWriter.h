@@ -8,7 +8,7 @@ class FstWaveformWriter : public OclaWaveformWriter {
   virtual void write(std::vector<uint32_t> values, std::string filepath);
 
  private:
-  uint32_t countTotalBitwidth();
+  uint32_t count_total_bitwidth();
 };
 
 #endif  //__FSTWAVEFORMWRITER_H__

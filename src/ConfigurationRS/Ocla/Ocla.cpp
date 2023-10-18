@@ -219,13 +219,13 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
 
     if (ocla_ip.get_status() == DATA_AVAILABLE) {
       ocla_data data = ocla_ip.get_data();
-      m_writer->setWidth(data.width);
-      m_writer->setDepth(data.depth);
+      m_writer->set_width(data.width);
+      m_writer->set_depth(data.depth);
       if (m_session->is_loaded()) {
-        m_writer->setSignals(generate_signal_descriptor(
+        m_writer->set_signals(generate_signal_descriptor(
             get_probe_info(ocla_ip.get_base_addr())));
       } else {
-        m_writer->setSignals(generate_signal_descriptor(data.width));
+        m_writer->set_signals(generate_signal_descriptor(data.width));
       }
       m_writer->write(data.values, output_filepath);
       break;
@@ -449,9 +449,9 @@ std::string Ocla::dump_samples(uint32_t instance, bool dumpText,
 
   if (generate_waveform) {
     std::string filepath = "/tmp/ocla_debug.fst";
-    m_writer->setWidth(data.width);
-    m_writer->setDepth(data.depth);
-    m_writer->setSignals(generate_signal_descriptor(data.width));
+    m_writer->set_width(data.width);
+    m_writer->set_depth(data.depth);
+    m_writer->set_signals(generate_signal_descriptor(data.width));
     m_writer->write(data.values, filepath.c_str());
     ss << "Waveform written to " << filepath << std::endl;
   }
