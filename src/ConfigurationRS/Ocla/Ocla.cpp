@@ -15,7 +15,7 @@ static std::map<uint32_t, uint32_t> ocla_base_address = {{1, OCLA1_ADDR},
 OclaIP Ocla::get_ocla_instance(uint32_t instance) {
   CFG_ASSERT(ocla_base_address.find(instance) != ocla_base_address.end());
   OclaIP ocla_ip{m_adapter, ocla_base_address[instance]};
-  CFG_ASSERT(ocla_ip.getType() == OCLA_TYPE);
+  CFG_ASSERT(ocla_ip.get_type() == OCLA_TYPE);
   return ocla_ip;
 }
 
@@ -24,7 +24,7 @@ std::map<uint32_t, OclaIP> Ocla::detect_ocla_instances() {
 
   for (auto& [i, baseaddr] : ocla_base_address) {
     OclaIP ocla_ip{m_adapter, baseaddr};
-    if (ocla_ip.getType() == OCLA_TYPE) {
+    if (ocla_ip.get_type() == OCLA_TYPE) {
       list.insert(std::pair<uint32_t, OclaIP>(i, ocla_ip));
     }
   }
@@ -90,11 +90,11 @@ bool Ocla::validate() {
     for (const auto& [i, ocla_ip] : instances) {
       Ocla_INSTANCE_INFO inf{};
       uint32_t idx;
-      if (!get_instance_info(ocla_ip.getBaseAddr(), inf, idx) ||
-          (inf.version != ocla_ip.getVersion()) ||
-          (inf.type != ocla_ip.getType()) || (inf.id != ocla_ip.getId()) ||
-          (inf.num_probes != ocla_ip.getNumberOfProbes()) ||
-          (inf.depth != ocla_ip.getMemoryDepth())) {
+      if (!get_instance_info(ocla_ip.get_base_addr(), inf, idx) ||
+          (inf.version != ocla_ip.get_version()) ||
+          (inf.type != ocla_ip.get_type()) || (inf.id != ocla_ip.get_id()) ||
+          (inf.num_probes != ocla_ip.get_number_of_probes()) ||
+          (inf.depth != ocla_ip.get_memory_depth())) {
         return false;
       }
     }
@@ -118,7 +118,7 @@ void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
   }
 
   auto ocla_ip = get_ocla_instance(instance);
-  auto depth = ocla_ip.getMemoryDepth();
+  auto depth = ocla_ip.get_memory_depth();
   if (sample_size > depth) {
     CFG_POST_ERR(
         "Invalid sample size parameter (Sample size should be beween 0 and %d)",
@@ -170,7 +170,7 @@ void Ocla::configure_channel(uint32_t instance, uint32_t channel,
       return;
     }
     // translate probe name to probe index
-    auto probe_list = find_probe_by_name(ocla_ip.getBaseAddr(), probe);
+    auto probe_list = find_probe_by_name(ocla_ip.get_base_addr(), probe);
     if (probe_list.empty()) {
       CFG_POST_ERR("Invalid probe name '%s'", probe.c_str());
       return;
@@ -180,7 +180,7 @@ void Ocla::configure_channel(uint32_t instance, uint32_t channel,
                  probe_list.begin()->second.signal_name.c_str(), probe_num);
   }
 
-  uint32_t max_probes = ocla_ip.getNumberOfProbes();
+  uint32_t max_probes = ocla_ip.get_number_of_probes();
   if (max_probes > OCLA_MAX_PROBE) {
     max_probes = OCLA_MAX_PROBE;
   }
@@ -199,7 +199,7 @@ void Ocla::configure_channel(uint32_t instance, uint32_t channel,
   trig_cfg.event = convert_trigger_event(event);
   trig_cfg.value = value;
 
-  ocla_ip.configureChannel(channel - 1, trig_cfg);
+  ocla_ip.configure_channel(channel - 1, trig_cfg);
 }
 
 void Ocla::start(uint32_t instance, uint32_t timeout,
@@ -217,13 +217,13 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
     // wait for 1 sec
     CFG_sleep_ms(1000);
 
-    if (ocla_ip.getStatus() == DATA_AVAILABLE) {
-      ocla_data data = ocla_ip.getData();
+    if (ocla_ip.get_status() == DATA_AVAILABLE) {
+      ocla_data data = ocla_ip.get_data();
       m_writer->setWidth(data.width);
       m_writer->setDepth(data.depth);
       if (m_session->is_loaded()) {
-        m_writer->setSignals(
-            generate_signal_descriptor(get_probe_info(ocla_ip.getBaseAddr())));
+        m_writer->setSignals(generate_signal_descriptor(
+            get_probe_info(ocla_ip.get_base_addr())));
       } else {
         m_writer->setSignals(generate_signal_descriptor(data.width));
       }
@@ -255,21 +255,21 @@ std::string Ocla::show_info() {
   }
 
   for (auto& [idx, ocla_ip] : detect_ocla_instances()) {
-    uint32_t depth = ocla_ip.getMemoryDepth();
-    uint32_t base_addr = ocla_ip.getBaseAddr();
+    uint32_t depth = ocla_ip.get_memory_depth();
+    uint32_t base_addr = ocla_ip.get_base_addr();
     ss << "OCLA " << idx << std::setfill('0') << std::hex << std::endl
        << "  Base address       : 0x" << std::setw(8) << base_addr << std::endl
-       << "  ID                 : 0x" << std::setw(8) << ocla_ip.getId()
+       << "  ID                 : 0x" << std::setw(8) << ocla_ip.get_id()
        << std::endl
-       << "  Type               : '" << ocla_ip.getType() << "'" << std::endl
-       << "  Version            : 0x" << std::setw(8) << ocla_ip.getVersion()
+       << "  Type               : '" << ocla_ip.get_type() << "'" << std::endl
+       << "  Version            : 0x" << std::setw(8) << ocla_ip.get_version()
        << std::endl
-       << "  Probes             : " << std::dec << ocla_ip.getNumberOfProbes()
-       << std::endl
+       << "  Probes             : " << std::dec
+       << ocla_ip.get_number_of_probes() << std::endl
        << "  Memory depth       : " << depth << std::endl
-       << "  DA status          : " << ocla_ip.getStatus() << std::endl;
+       << "  DA status          : " << ocla_ip.get_status() << std::endl;
 
-    auto cfg = ocla_ip.getConfig();
+    auto cfg = ocla_ip.get_config();
 
     uint32_t ns = cfg.fns == ENABLED ? cfg.ns : depth;
 
@@ -282,13 +282,13 @@ std::string Ocla::show_info() {
        << std::setfill(' ');
 
     for (uint32_t ch = 1; ch < 5; ch++) {
-      auto trig_cfg = ocla_ip.getChannelConfig(ch - 1);
+      auto trig_cfg = ocla_ip.get_channel_config(ch - 1);
 
       std::string probe_name = std::to_string(trig_cfg.probe_num);
       if (m_session->is_loaded()) {
         // try translate probe index to probe name
         Ocla_PROBE_INFO probe_inf{};
-        if (find_probe_by_offset(ocla_ip.getBaseAddr(), trig_cfg.probe_num,
+        if (find_probe_by_offset(ocla_ip.get_base_addr(), trig_cfg.probe_num,
                                  probe_inf)) {
           probe_name += "(" + probe_inf.signal_name + ")";
         }
@@ -422,7 +422,7 @@ std::string Ocla::dump_registers(uint32_t instance) {
   char buffer[100];
 
   for (auto const& [offset, name] : regs) {
-    uint32_t regaddr = ocla_ip.getBaseAddr() + offset;
+    uint32_t regaddr = ocla_ip.get_base_addr() + offset;
     snprintf(buffer, sizeof(buffer), "%-10s (0x%08x) = 0x%08x\n", name.c_str(),
              regaddr, m_adapter->read(regaddr));
     ss << buffer;
@@ -436,7 +436,7 @@ std::string Ocla::dump_samples(uint32_t instance, bool dumpText,
   OclaIP ocla_ip = get_ocla_instance(instance);
   std::ostringstream ss;
   char buffer[100];
-  auto data = ocla_ip.getData();
+  auto data = ocla_ip.get_data();
 
   if (dumpText) {
     ss << "width " << data.width << " depth " << data.depth << " num_reads "
@@ -467,7 +467,7 @@ void Ocla::debug_start(uint32_t instance) {
 std::string Ocla::show_status(uint32_t instance) {
   OclaIP ocla_ip = get_ocla_instance(instance);
   std::ostringstream ss;
-  ss << (uint32_t)ocla_ip.getStatus();
+  ss << (uint32_t)ocla_ip.get_status();
   return ss.str();
 }
 
