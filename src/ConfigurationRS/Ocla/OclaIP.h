@@ -81,22 +81,22 @@ class OclaIP {
   OclaIP(OclaJtagAdapter *adapter, uint32_t base_addr);
   virtual ~OclaIP();
   void configure(ocla_config &cfg);
-  void configureChannel(uint32_t channel, ocla_trigger_config &trig_cfg);
+  void configure_channel(uint32_t channel, ocla_trigger_config &trig_cfg);
   void start();
-  ocla_config getConfig() const;
-  ocla_trigger_config getChannelConfig(uint32_t channel) const;
-  ocla_status getStatus() const;
-  uint32_t getNumberOfProbes() const;
-  uint32_t getMemoryDepth() const;
-  uint32_t getVersion() const;
-  std::string getType() const;
-  uint32_t getId() const;
-  ocla_data getData() const;
-  uint32_t getBaseAddr() const { return m_base_addr; }
+  ocla_config get_config() const;
+  ocla_trigger_config get_channel_config(uint32_t channel) const;
+  ocla_status get_status() const;
+  uint32_t get_number_of_probes() const;
+  uint32_t get_memory_depth() const;
+  uint32_t get_version() const;
+  std::string get_type() const;
+  uint32_t get_id() const;
+  ocla_data get_data() const;
+  uint32_t get_base_addr() const { return m_base_addr; }
 
  private:
-  void configureTrigger(uint32_t addr, uint32_t offset,
-                        ocla_trigger_config &trig_cfg);
+  void configure_trigger(uint32_t addr, uint32_t offset,
+                         ocla_trigger_config &trig_cfg);
   OclaJtagAdapter *m_adapter;
   uint32_t m_base_addr;
 };

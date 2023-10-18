@@ -17,31 +17,31 @@ OclaIP::OclaIP() : m_adapter(nullptr), m_base_addr(0) {}
 
 OclaIP::~OclaIP() {}
 
-ocla_status OclaIP::getStatus() const {
+ocla_status OclaIP::get_status() const {
   CFG_ASSERT(m_adapter != nullptr);
   auto ocsr = m_adapter->read(m_base_addr + OCSR);
   return (ocsr & 1) ? DATA_AVAILABLE : NA;
 }
 
-uint32_t OclaIP::getNumberOfProbes() const {
+uint32_t OclaIP::get_number_of_probes() const {
   CFG_ASSERT(m_adapter != nullptr);
   auto numprobes = (m_adapter->read(m_base_addr + OCSR) >> 1) & 0x3ff;
   return numprobes;
 }
 
-uint32_t OclaIP::getMemoryDepth() const {
+uint32_t OclaIP::get_memory_depth() const {
   CFG_ASSERT(m_adapter != nullptr);
   auto memdepth = (m_adapter->read(m_base_addr + OCSR) >> 11) & 0x3ff;
   return memdepth;
 }
 
-uint32_t OclaIP::getId() const {
+uint32_t OclaIP::get_id() const {
   CFG_ASSERT(m_adapter != nullptr);
   auto id = m_adapter->read(m_base_addr + IP_ID);
   return id;
 }
 
-std::string OclaIP::getType() const {
+std::string OclaIP::get_type() const {
   CFG_ASSERT(m_adapter != nullptr);
   char buffer[10];
   uint32_t type =
@@ -50,7 +50,7 @@ std::string OclaIP::getType() const {
   return std::string(buffer);
 }
 
-uint32_t OclaIP::getVersion() const {
+uint32_t OclaIP::get_version() const {
   CFG_ASSERT(m_adapter != nullptr);
   auto version = m_adapter->read(m_base_addr + IP_VERSION);
   return version;
@@ -72,14 +72,15 @@ void OclaIP::configure(ocla_config &cfg) {
   }
 }
 
-void OclaIP::configureChannel(uint32_t channel, ocla_trigger_config &trig_cfg) {
+void OclaIP::configure_channel(uint32_t channel,
+                               ocla_trigger_config &trig_cfg) {
   CFG_ASSERT(m_adapter != nullptr);
-  configureTrigger(channel < 2 ? m_base_addr + TCUR0 : m_base_addr + TCUR1,
-                   channel % 2 ? 7 : 0, trig_cfg);
+  configure_trigger(channel < 2 ? m_base_addr + TCUR0 : m_base_addr + TCUR1,
+                    channel % 2 ? 7 : 0, trig_cfg);
 }
 
-void OclaIP::configureTrigger(uint32_t addr, uint32_t offset,
-                              ocla_trigger_config &trig_cfg) {
+void OclaIP::configure_trigger(uint32_t addr, uint32_t offset,
+                               ocla_trigger_config &trig_cfg) {
   uint32_t tcur = m_adapter->read(addr);
 
   tcur &= ~(0x3 << (1 + offset));
@@ -124,7 +125,7 @@ void OclaIP::start() {
   m_adapter->write(m_base_addr + TMTR, tmtr);
 }
 
-ocla_data OclaIP::getData() const {
+ocla_data OclaIP::get_data() const {
   CFG_ASSERT(m_adapter != nullptr);
   uint32_t ocsr = m_adapter->read(m_base_addr + OCSR);
   uint32_t tmtr = m_adapter->read(m_base_addr + TMTR);
@@ -145,7 +146,7 @@ ocla_data OclaIP::getData() const {
   return data;
 }
 
-ocla_config OclaIP::getConfig() const {
+ocla_config OclaIP::get_config() const {
   CFG_ASSERT(m_adapter != nullptr);
   uint32_t tmtr = m_adapter->read(m_base_addr + TMTR);
   ocla_config cfg;
@@ -162,7 +163,7 @@ ocla_config OclaIP::getConfig() const {
   return cfg;
 }
 
-ocla_trigger_config OclaIP::getChannelConfig(uint32_t channel) const {
+ocla_trigger_config OclaIP::get_channel_config(uint32_t channel) const {
   CFG_ASSERT(m_adapter != nullptr);
   uint32_t tcur = m_adapter->read(m_base_addr + (channel < 2 ? TCUR0 : TCUR1));
   uint32_t offset = channel % 2 ? 7 : 0;

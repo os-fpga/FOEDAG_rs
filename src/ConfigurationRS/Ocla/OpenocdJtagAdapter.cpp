@@ -14,7 +14,7 @@ OpenocdJtagAdapter::OpenocdJtagAdapter(std::string filepath,
       m_cmdexec(cmdexec),
       m_id(0x10000db3),
       m_irlen(5),
-      m_speedKhz(1000) {}
+      m_speed_khz(1000) {}
 
 void OpenocdJtagAdapter::write(uint32_t addr, uint32_t data) {
   // ocla jtag write via openocd command
@@ -33,7 +33,7 @@ void OpenocdJtagAdapter::write(uint32_t addr, uint32_t data) {
      << " -c \"irscan ocla.tap 0x08\""
      << " -c \"drscan ocla.tap 32 0x0 2 0x0\"";
 
-  CFG_ASSERT_MSG(executeCommand(ss.str(), output) == 0, "cmdexec error: %s",
+  CFG_ASSERT_MSG(execute_command(ss.str(), output) == 0, "cmdexec error: %s",
                  output.c_str());
   parse(output);
 }
@@ -65,7 +65,7 @@ std::vector<uint32_t> OpenocdJtagAdapter::read(uint32_t base_addr,
     base_addr += increase_by;
   }
 
-  CFG_ASSERT_MSG(executeCommand(ss.str(), output) == 0, "cmdexec error: %s",
+  CFG_ASSERT_MSG(execute_command(ss.str(), output) == 0, "cmdexec error: %s",
                  output.c_str());
   auto values = parse(output);
   CFG_ASSERT_MSG(values.size() == num_reads,
@@ -73,13 +73,13 @@ std::vector<uint32_t> OpenocdJtagAdapter::read(uint32_t base_addr,
   return values;
 }
 
-void OpenocdJtagAdapter::setId(uint32_t id) { m_id = id; }
+void OpenocdJtagAdapter::set_id(uint32_t id) { m_id = id; }
 
-void OpenocdJtagAdapter::setSpeedKhz(uint32_t speedKhz) {
-  m_speedKhz = speedKhz;
+void OpenocdJtagAdapter::set_speed_khz(uint32_t speed_khz) {
+  m_speed_khz = speed_khz;
 }
 
-std::string OpenocdJtagAdapter::buildCommand(const std::string &cmd) {
+std::string OpenocdJtagAdapter::build_command(const std::string &cmd) {
   std::ostringstream ss;
 
   ss << " -l /dev/stdout"  //<-- not windows friendly
@@ -87,7 +87,7 @@ std::string OpenocdJtagAdapter::buildCommand(const std::string &cmd) {
      << " -c \"adapter driver ftdi\""
      << " -c \"ftdi vid_pid 0x0403 0x6014\""
      << " -c \"ftdi layout_init 0x0c08 0x0f1b\""
-     << " -c \"adapter speed " << m_speedKhz << "\""
+     << " -c \"adapter speed " << m_speed_khz << "\""
      << " -c \"transport select jtag\""
      << " -c \"jtag newtap ocla tap -irlen " << m_irlen << " -expected-id "
      << std::hex << std::showbase << m_id << "\""
@@ -97,11 +97,11 @@ std::string OpenocdJtagAdapter::buildCommand(const std::string &cmd) {
   return ss.str();
 }
 
-int OpenocdJtagAdapter::executeCommand(const std::string &cmd,
-                                       std::string &output) {
+int OpenocdJtagAdapter::execute_command(const std::string &cmd,
+                                        std::string &output) {
   std::atomic<bool> stop = false;
   int res =
-      m_cmdexec("OPENOCD_DEBUG_LEVEL=-3 " + m_filepath + buildCommand(cmd),
+      m_cmdexec("OPENOCD_DEBUG_LEVEL=-3 " + m_filepath + build_command(cmd),
                 output, nullptr, stop);
   return res;
 }

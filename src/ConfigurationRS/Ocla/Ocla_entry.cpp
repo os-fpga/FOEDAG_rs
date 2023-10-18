@@ -17,11 +17,11 @@ void Ocla_print(std::string output) {
   }
 }
 
-void Ocla_launch_gtkwave(std::string filepath, std::filesystem::path binPath) {
+void Ocla_launch_gtkwave(std::string filepath, std::filesystem::path binpath) {
   CFG_ASSERT_MSG(std::filesystem::exists(filepath), "File not found %s",
                  filepath.c_str());
-  auto exePath = binPath / "gtkwave" / "bin" / "gtkwave";
-  auto cmd = exePath.string() + " " + filepath;
+  auto exepath = binpath / "gtkwave" / "bin" / "gtkwave";
+  auto cmd = exepath.string() + " " + filepath;
   CFG_compiler_execute_cmd(cmd);
 }
 
@@ -42,15 +42,15 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
   Ocla ocla{&adapter, &session, &writer};
 
   // dispatch commands
-  std::string subCmd = arg->get_sub_arg_name();
-  if (subCmd == "info") {
-    Ocla_print(ocla.showInfo());
-  } else if (subCmd == "load") {
+  std::string subcmd = arg->get_sub_arg_name();
+  if (subcmd == "info") {
+    Ocla_print(ocla.show_info());
+  } else if (subcmd == "load") {
     auto parms = static_cast<const CFGArg_DEBUGGER_LOAD*>(arg->get_sub_arg());
-    ocla.startSession(parms->file);
-  } else if (subCmd == "unload") {
-    ocla.stopSession();
-  } else if (subCmd == "config") {
+    ocla.start_session(parms->file);
+  } else if (subcmd == "unload") {
+    ocla.stop_session();
+  } else if (subcmd == "config") {
     auto parms = static_cast<const CFGArg_DEBUGGER_CONFIG*>(arg->get_sub_arg());
     if (parms->instance == 0 || parms->instance > 2) {
       CFG_POST_ERR(
@@ -59,7 +59,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     }
     ocla.configure(parms->instance, parms->mode, parms->trigger_condition,
                    parms->sample_size);
-  } else if (subCmd == "config_channel") {
+  } else if (subcmd == "config_channel") {
     auto parms =
         static_cast<const CFGArg_DEBUGGER_CONFIG_CHANNEL*>(arg->get_sub_arg());
     if (parms->instance == 0 || parms->instance > 2) {
@@ -71,9 +71,9 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       CFG_POST_ERR("Invalid channel parameter. Channel should be 1 to 4.");
       return;
     }
-    ocla.configureChannel(parms->instance, parms->channel, parms->type,
-                          parms->event, parms->value, parms->probe);
-  } else if (subCmd == "start") {
+    ocla.configure_channel(parms->instance, parms->channel, parms->type,
+                           parms->event, parms->value, parms->probe);
+  } else if (subcmd == "start") {
     auto parms = static_cast<const CFGArg_DEBUGGER_START*>(arg->get_sub_arg());
     if (parms->instance == 0 || parms->instance > 2) {
       CFG_POST_ERR(
@@ -83,33 +83,33 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     ocla.start(parms->instance, parms->timeout, parms->output);
     CFG_POST_MSG("Written %s successfully.", parms->output.c_str());
     Ocla_launch_gtkwave(parms->output, cmdarg->binPath);
-  } else if (subCmd == "status") {
+  } else if (subcmd == "status") {
     auto parms = static_cast<const CFGArg_DEBUGGER_STATUS*>(arg->get_sub_arg());
     if (parms->instance == 0 || parms->instance > 2) {
       CFG_POST_ERR(
           "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
-    auto output = ocla.showStatus(parms->instance);
+    auto output = ocla.show_status(parms->instance);
     cmdarg->tclOutput = output.c_str();
-  } else if (subCmd == "show_waveform") {
+  } else if (subcmd == "show_waveform") {
     auto parms =
         static_cast<const CFGArg_DEBUGGER_SHOW_WAVEFORM*>(arg->get_sub_arg());
     Ocla_launch_gtkwave(parms->input, cmdarg->binPath);
-  } else if (subCmd == "debug") {
+  } else if (subcmd == "debug") {
     auto parms = static_cast<const CFGArg_DEBUGGER_DEBUG*>(arg->get_sub_arg());
     if (parms->instance == 0 || parms->instance > 2) {
       CFG_POST_ERR(
           "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
-    if (parms->start) ocla.debugStart(parms->instance);
-    if (parms->reg) Ocla_print(ocla.dumpRegisters(parms->instance));
+    if (parms->start) ocla.debug_start(parms->instance);
+    if (parms->reg) Ocla_print(ocla.dump_registers(parms->instance));
     if (parms->dump || parms->waveform)
       Ocla_print(
-          ocla.dumpSamples(parms->instance, parms->dump, parms->waveform));
-    if (parms->session_info) Ocla_print(ocla.showSessionInfo());
-  } else if (subCmd == "counter") {
+          ocla.dump_samples(parms->instance, parms->dump, parms->waveform));
+    if (parms->session_info) Ocla_print(ocla.show_session_info());
+  } else if (subcmd == "counter") {
     // for testing with IP on ocla platform only.
     // Will be removed at final
     auto parms =

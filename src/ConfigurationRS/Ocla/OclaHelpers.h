@@ -8,33 +8,33 @@
 #include "OclaSession.h"
 #include "OclaWaveformWriter.h"
 
-std::string convertOclaModeToString(ocla_mode mode,
-                                    std::string defval = "(unknown)");
-
-std::string convertTriggerConditionToString(ocla_trigger_condition condition,
-                                            std::string defval = "(unknown)");
-
-std::string convertTriggerTypeToString(ocla_trigger_type trig_type,
-                                       std::string defval = "(unknown)");
-
-std::string convertTriggerEventToString(ocla_trigger_event trig_event,
+std::string convert_ocla_mode_to_string(ocla_mode mode,
                                         std::string defval = "(unknown)");
 
-ocla_mode convertOclaMode(std::string mode_string,
-                          ocla_mode defval = NO_TRIGGER);
+std::string convert_trigger_condition_to_string(
+    ocla_trigger_condition condition, std::string defval = "(unknown)");
 
-ocla_trigger_condition convertTriggerCondition(
+std::string convert_trigger_type_to_string(ocla_trigger_type trig_type,
+                                           std::string defval = "(unknown)");
+
+std::string convert_trigger_event_to_string(ocla_trigger_event trig_event,
+                                            std::string defval = "(unknown)");
+
+ocla_mode convert_ocla_mode(std::string mode_string,
+                            ocla_mode defval = NO_TRIGGER);
+
+ocla_trigger_condition convert_trigger_condition(
     std::string condition_string, ocla_trigger_condition defval = DEFAULT);
 
-ocla_trigger_type convertTriggerType(std::string type_string,
-                                     ocla_trigger_type defval = TRIGGER_NONE);
+ocla_trigger_type convert_trigger_type(std::string type_string,
+                                       ocla_trigger_type defval = TRIGGER_NONE);
 
-ocla_trigger_event convertTriggerEvent(std::string event_string,
-                                       ocla_trigger_event defval = NONE);
+ocla_trigger_event convert_trigger_event(std::string event_string,
+                                         ocla_trigger_event defval = NONE);
 
-std::vector<signal_info> generateSignalDescriptor(uint32_t width);
+std::vector<signal_info> generate_signal_descriptor(uint32_t width);
 
-std::vector<signal_info> generateSignalDescriptor(
+std::vector<signal_info> generate_signal_descriptor(
     std::vector<Ocla_PROBE_INFO> probes);
 
 #endif  //__OCLAHELPERS_H__

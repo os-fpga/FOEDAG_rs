@@ -8,25 +8,25 @@
 
 std::map<uint32_t, Ocla_INSTANCE_INFO> MemorySession::m_instances{};
 std::map<uint32_t, std::vector<Ocla_PROBE_INFO>> MemorySession::m_probes{};
-std::string MemorySession::m_bitasmfile = "";
+std::string MemorySession::m_bitasm_filepath = "";
 bool MemorySession::m_loaded = false;
 
 MemorySession::MemorySession() {}
 
 MemorySession::~MemorySession() {}
 
-void MemorySession::load(std::string bitasmfile) {
-  std::string ocla_json = BitAssembler_MGR::get_ocla_design(bitasmfile);
+void MemorySession::load(std::string bitasm_filepath) {
+  std::string ocla_json = BitAssembler_MGR::get_ocla_design(bitasm_filepath);
   CFG_ASSERT_MSG(!ocla_json.empty(), "No OCLA info");
   parse(ocla_json);
-  m_bitasmfile = bitasmfile;
+  m_bitasm_filepath = bitasm_filepath;
   m_loaded = true;
 }
 
 void MemorySession::unload() {
   m_instances.clear();
   m_probes.clear();
-  m_bitasmfile.clear();
+  m_bitasm_filepath.clear();
   m_loaded = false;
 }
 
@@ -42,7 +42,7 @@ std::vector<Ocla_PROBE_INFO> MemorySession::get_probe_info(uint32_t instance) {
   return m_probes[instance];
 }
 
-std::string MemorySession::get_bitasm_filepath() { return m_bitasmfile; }
+std::string MemorySession::get_bitasm_filepath() { return m_bitasm_filepath; }
 
 void MemorySession::parse(std::string ocla_json) {
   uint32_t total_bitwidth = 0;

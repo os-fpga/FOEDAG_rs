@@ -47,7 +47,7 @@ void FstWaveformWriter::write(std::vector<uint32_t> values,
 
   uint32_t words_per_line = ((m_width - 1) / 32) + 1;
   uint32_t expected_size = words_per_line * m_depth;
-  uint32_t total_bit_width = countTotalBitwidth();
+  uint32_t total_bit_width = count_total_bitwidth();
 
   CFG_ASSERT_MSG(expected_size == values.size(),
                  "Size of values vector is invalid. Expected size is %d",
@@ -96,7 +96,7 @@ void FstWaveformWriter::write(std::vector<uint32_t> values,
   fstWriterClose(fst);
 }
 
-uint32_t FstWaveformWriter::countTotalBitwidth() {
+uint32_t FstWaveformWriter::count_total_bitwidth() {
   uint32_t bitwidth = 0;
   for (auto& sig : m_signals) {
     bitwidth += sig.bitwidth;

@@ -19,9 +19,9 @@ class OclaWaveformWriter {
  public:
   virtual ~OclaWaveformWriter(){};
   virtual void write(std::vector<uint32_t> values, std::string filepath) = 0;
-  virtual void setWidth(uint32_t width) { m_width = width; }
-  virtual void setDepth(uint32_t depth) { m_depth = depth; }
-  virtual void setSignals(std::vector<signal_info> sigs) { m_signals = sigs; }
+  virtual void set_width(uint32_t width) { m_width = width; }
+  virtual void set_depth(uint32_t depth) { m_depth = depth; }
+  virtual void set_signals(std::vector<signal_info> sigs) { m_signals = sigs; }
 };
 
 #endif  //__OCLAWAVEFORMWRITER_H__
