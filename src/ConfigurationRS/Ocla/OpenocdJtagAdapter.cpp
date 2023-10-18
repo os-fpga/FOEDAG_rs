@@ -104,7 +104,7 @@ std::string OpenocdJtagAdapter::build_command(const std::string &cmd,
   if (cable->cable_type == FTDI) {
     ss << " -c \"adapter driver ftdi;"
        << "ftdi vid_pid " << std::hex << std::showbase << cable->vendor_id
-       << " " << cable->product_id << ";"
+       << " " << cable->product_id << ";" << std::noshowbase << std::dec
        << "ftdi layout_init 0x0c08 0x0f1b;\"";
   } else if (cable->cable_type == JLINK) {
     ss << " -c \"adapter driver jlink;\"";
@@ -122,7 +122,7 @@ std::string OpenocdJtagAdapter::build_command(const std::string &cmd,
     for (const auto &tap : taps) {
       ss << "jtag newtap ocla" << tap.index << " tap"
          << " -irlen " << tap.irlength << " -expected-id " << std::hex
-         << std::showbase << tap.idcode << ";" << std::dec;
+         << std::showbase << tap.idcode << ";" << std::noshowbase << std::dec;
     }
     ss << "\"";
   }
