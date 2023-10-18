@@ -26,7 +26,9 @@ class HardwareManager {
   HardwareManager(JtagAdapter *m_adapter);
   virtual ~HardwareManager();
   std::vector<Cable> get_cables();
-
+  std::vector<Tap> get_taps(const Cable &cable);
+  std::vector<Device> get_devices(const Cable &cable,
+                                  std::vector<Tap> *output = nullptr);
   void set_device_db(std::vector<HardwareManager_DEVICE_INFO> device_db) {
     m_device_db = device_db;
   };

@@ -42,7 +42,7 @@ struct Cable {
 
 class JtagAdapter {
  public:
-  virtual std::vector<Tap> get_taps(Cable &cable) = 0;
+  virtual std::vector<Tap> get_taps(const Cable &cable) = 0;
 };
 
 #endif  //__JTAGADAPTER_H__

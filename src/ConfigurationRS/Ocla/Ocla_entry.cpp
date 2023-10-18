@@ -44,7 +44,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
   // dispatch commands
   std::string subcmd = arg->get_sub_arg_name();
   if (subcmd == "info") {
-    Ocla_print(ocla.show_info());
+    auto parms = static_cast<const CFGArg_DEBUGGER_INFO*>(arg->get_sub_arg());
+    Ocla_print(ocla.show_info(parms->cable, parms->device));
   } else if (subcmd == "load") {
     auto parms = static_cast<const CFGArg_DEBUGGER_LOAD*>(arg->get_sub_arg());
     ocla.start_session(parms->file);
@@ -57,8 +58,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
           "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
-    ocla.configure(parms->instance, parms->mode, parms->trigger_condition,
-                   parms->sample_size);
+    ocla.configure(parms->cable, parms->device, parms->instance, parms->mode,
+                   parms->trigger_condition, parms->sample_size);
   } else if (subcmd == "config_channel") {
     auto parms =
         static_cast<const CFGArg_DEBUGGER_CONFIG_CHANNEL*>(arg->get_sub_arg());
@@ -113,6 +114,15 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     auto parms =
         static_cast<const CFGArg_DEBUGGER_LIST_CABLE*>(arg->get_sub_arg());
     auto output = ocla.show_cables(cmdarg->tclOutput);
+    if (parms->verbose) Ocla_print(output);
+  } else if (subcmd == "list_device") {
+    auto parms =
+        static_cast<const CFGArg_DEBUGGER_LIST_DEVICE*>(arg->get_sub_arg());
+    std::string cable_name = "";
+    if (parms->m_args.size() == 1) {
+      cable_name = parms->m_args[0];
+    }
+    auto output = ocla.show_devices(cable_name, cmdarg->tclOutput);
     if (parms->verbose) Ocla_print(output);
   } else if (subcmd == "counter") {
     // for testing with IP on ocla platform only.

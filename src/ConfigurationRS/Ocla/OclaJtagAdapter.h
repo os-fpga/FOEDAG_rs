@@ -13,6 +13,9 @@ class OclaJtagAdapter : public JtagAdapter {
   virtual uint32_t read(uint32_t addr) = 0;
   virtual std::vector<uint32_t> read(uint32_t base_addr, uint32_t num_reads,
                                      uint32_t increase_by = 0) = 0;
+  virtual void set_cable(Cable *cable) = 0;
+  virtual void set_device(Device *device) = 0;
+  virtual void set_taps(std::vector<Tap> taps) = 0;
 };
 
 #endif  //__OCLAJTAGADAPTER_H__

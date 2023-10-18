@@ -22,7 +22,7 @@ std::vector<Cable> HardwareManager::get_cables() {
   struct libusb_context* ctx = nullptr;         /**< Libusb context **/
   struct libusb_device** device_list = nullptr; /**< The usb device list **/
   struct libusb_device_handle* device_handle = nullptr;
-  uint16_t cable_index = 1;
+  uint32_t cable_index = 1;
   char desc_string[HM_USB_DESC_LENGTH]; /* Max size of string descriptor */
   int rc;
   int device_count;
@@ -99,4 +99,58 @@ std::vector<Cable> HardwareManager::get_cables() {
   }
 
   return cables;
+}
+
+std::vector<Tap> HardwareManager::get_taps(const Cable& cable) {
+  auto taps = m_adapter->get_taps(cable);
+
+  for (auto& tap : taps) {
+    for (auto& device_info : m_device_db) {
+      if ((tap.idcode & device_info.irmask) ==
+          (device_info.idcode & device_info.irmask)) {
+        tap.irlength = device_info.irlength;
+      }
+    }
+  }
+
+  return taps;
+}
+
+std::vector<Device> HardwareManager::get_devices(const Cable& cable,
+                                                 std::vector<Tap>* output) {
+  auto taps = m_adapter->get_taps(cable);
+  uint32_t device_index = 1;
+  std::vector<Device> devices{};
+
+  for (auto& tap : taps) {
+    bool found = false;
+    for (auto& device_info : m_device_db) {
+      if ((tap.idcode & device_info.irmask) ==
+          (device_info.idcode & device_info.irmask)) {
+        found = true;
+        tap.irlength = device_info.irlength;
+        if (device_info.type == GEMINI || device_info.type == OCLA) {
+          Device device{};
+          device.index = device_index++;
+          device.type = device_info.type;
+          device.name = device_info.name;
+          device.tap.index = tap.index;
+          device.tap.idcode = tap.idcode;
+          device.tap.irlength = device_info.irlength;
+          devices.push_back(device);
+        }
+        break;
+      }
+    }
+
+    CFG_ASSERT_MSG(found, "Unknown tap id 0x%08x", tap.idcode);
+  }
+
+  // return tap info
+  if (output) {
+    output->clear();
+    *output = taps;
+  }
+
+  return devices;
 }

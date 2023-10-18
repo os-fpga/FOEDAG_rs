@@ -18,7 +18,8 @@ class Ocla {
  public:
   Ocla(OclaJtagAdapter *adapter, OclaSession *session,
        OclaWaveformWriter *writer);
-  void configure(uint32_t instance, std::string mode, std::string condition,
+  void configure(std::string cable_name, uint32_t device_index,
+                 uint32_t instance, std::string mode, std::string condition,
                  uint32_t sample_size);
   void configure_channel(uint32_t instance, uint32_t channel, std::string type,
                          std::string event, uint32_t value, std::string probe);
@@ -26,9 +27,10 @@ class Ocla {
   void start_session(std::string bitasm_filepath);
   void stop_session();
   std::string show_status(uint32_t instance);
-  std::string show_info();
+  std::string show_info(std::string cable_name, uint32_t device_index);
   std::string show_session_info();
   std::string show_cables(std::string &tcl_output);
+  std::string show_devices(std::string cable_name, std::string &tcl_output);
   // debug use
   std::string dump_registers(uint32_t instance);
   std::string dump_samples(uint32_t instance, bool dump_text,
@@ -45,6 +47,8 @@ class Ocla {
       uint32_t base_addr, std::string probe_name);
   bool find_probe_by_offset(uint32_t base_addr, uint32_t bit_offset,
                             Ocla_PROBE_INFO &output);
+  bool configure_adapter(std::string cable_name, uint32_t device_index,
+                         std::string &error_msg);
   bool validate();
   OclaJtagAdapter *m_adapter;
   OclaSession *m_session;
