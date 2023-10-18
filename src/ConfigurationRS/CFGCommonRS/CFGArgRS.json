@@ -391,6 +391,23 @@
       }
     },
     {
+      "list_cable": {
+        "option": [
+          {
+            "name": "verbose",
+            "short": "v",
+            "type": "flag",
+            "optional": true,
+            "default": false,
+            "help": "Display additional information of list_cable output"
+          }
+        ],
+        "desc": "To display all the connected/detected cables.",
+        "help": ["To display all the connected/detected cables"],
+        "arg" : [0, 0]
+      }
+    },
+    {
       "debug": {
         "option": [
           {

@@ -19,6 +19,7 @@ class OpenocdJtagAdapter : public OclaJtagAdapter {
   virtual uint32_t read(uint32_t addr);
   virtual std::vector<uint32_t> read(uint32_t base_addr, uint32_t num_reads,
                                      uint32_t increase_by = 0);
+  virtual std::vector<Tap> get_taps(Cable& cable);
   // debug use
   void set_id(uint32_t id);
   void set_speed_khz(uint32_t speed_khz);

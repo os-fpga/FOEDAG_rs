@@ -4,7 +4,9 @@
 #include <cstdint>
 #include <vector>
 
-class OclaJtagAdapter {
+#include "JtagAdapter.h"
+
+class OclaJtagAdapter : public JtagAdapter {
  public:
   virtual ~OclaJtagAdapter(){};
   virtual void write(uint32_t addr, uint32_t data) = 0;

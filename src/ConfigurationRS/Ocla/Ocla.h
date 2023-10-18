@@ -28,6 +28,7 @@ class Ocla {
   std::string show_status(uint32_t instance);
   std::string show_info();
   std::string show_session_info();
+  std::string show_cables(std::string &tcl_output);
   // debug use
   std::string dump_registers(uint32_t instance);
   std::string dump_samples(uint32_t instance, bool dump_text,

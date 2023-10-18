@@ -109,6 +109,11 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       Ocla_print(
           ocla.dump_samples(parms->instance, parms->dump, parms->waveform));
     if (parms->session_info) Ocla_print(ocla.show_session_info());
+  } else if (subcmd == "list_cable") {
+    auto parms =
+        static_cast<const CFGArg_DEBUGGER_LIST_CABLE*>(arg->get_sub_arg());
+    auto output = ocla.show_cables(cmdarg->tclOutput);
+    if (parms->verbose) Ocla_print(output);
   } else if (subcmd == "counter") {
     // for testing with IP on ocla platform only.
     // Will be removed at final

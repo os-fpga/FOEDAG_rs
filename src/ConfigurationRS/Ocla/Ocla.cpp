@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
+#include "HardwareManager.h"
 #include "OclaHelpers.h"
 #include "OclaIP.h"
 #include "OclaJtagAdapter.h"
@@ -499,4 +500,26 @@ void Ocla::stop_session() {
     return;
   }
   m_session->unload();
+}
+
+std::string Ocla::show_cables(std::string& tcl_output) {
+  std::ostringstream ss;
+  HardwareManager mgr{m_adapter};
+
+  tcl_output.clear();
+  auto cables = mgr.get_cables();
+  if (cables.empty()) {
+    ss << "No cable detected" << std::endl;
+  } else {
+    ss << "Cable" << std::endl << "-----------------" << std::endl;
+    for (const auto& cable : cables) {
+      ss << "(" << cable.index << ") " << cable.name << std::endl;
+      if (tcl_output.empty())
+        tcl_output = cable.name;
+      else
+        tcl_output += " " + cable.name;
+    }
+  }
+
+  return ss.str();
 }

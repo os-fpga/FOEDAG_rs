@@ -125,3 +125,5 @@ std::vector<uint32_t> OpenocdJtagAdapter::parse(const std::string &output) {
   CFG_ASSERT_MSG(values.empty() == false, "empty result");
   return values;
 }
+
+std::vector<Tap> OpenocdJtagAdapter::get_taps(Cable &cable) { return {}; }
