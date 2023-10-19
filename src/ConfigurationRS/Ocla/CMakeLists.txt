@@ -107,6 +107,7 @@ add_executable(
   ${test_bin}
   Test/Ocla_test.cpp
   Test/OclaHelpersTests.cpp
+  Test/OclaIpTests.cpp
 )
 target_link_libraries(${test_bin} ${subsystem} gtest gmock gtest_main)
 
