@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <regex>
+#include <sstream>
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 
