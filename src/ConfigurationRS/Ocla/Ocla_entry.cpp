@@ -40,7 +40,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
   HardwareManager hardware_manager{&jtag_adapter};
 
   // setup dependencies
-  OpenocdJtagAdapter adapter{cmdarg->toolPath.string(), CFG_execute_cmd};
+  OclaOpenocdAdapter adapter{cmdarg->toolPath.string(), CFG_execute_cmd};
   MemorySession session{};
   FstWaveformWriter writer{};
 

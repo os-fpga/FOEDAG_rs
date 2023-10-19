@@ -8,15 +8,15 @@
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 
-OpenocdJtagAdapter::OpenocdJtagAdapter(std::string filepath,
+OclaOpenocdAdapter::OclaOpenocdAdapter(std::string filepath,
                                        ExecFuncType cmdexec)
     : m_filepath(filepath), m_cmdexec(cmdexec), m_device{}, m_taplist{} {
   CFG_ASSERT(m_cmdexec != nullptr);
 }
 
-OpenocdJtagAdapter::~OpenocdJtagAdapter() {}
+OclaOpenocdAdapter::~OclaOpenocdAdapter() {}
 
-void OpenocdJtagAdapter::write(uint32_t addr, uint32_t data) {
+void OclaOpenocdAdapter::write(uint32_t addr, uint32_t data) {
   // ocla jtag write via openocd command
   // -----------------------------------
   // irscan ocla 0x04
@@ -39,12 +39,12 @@ void OpenocdJtagAdapter::write(uint32_t addr, uint32_t data) {
   parse(output);
 }
 
-uint32_t OpenocdJtagAdapter::read(uint32_t addr) {
+uint32_t OclaOpenocdAdapter::read(uint32_t addr) {
   auto values = read(addr, 1);
   return values[0];
 }
 
-std::vector<uint32_t> OpenocdJtagAdapter::read(uint32_t base_addr,
+std::vector<uint32_t> OclaOpenocdAdapter::read(uint32_t base_addr,
                                                uint32_t num_reads,
                                                uint32_t increase_by) {
   // ocla jtag read via openocd command
@@ -75,7 +75,7 @@ std::vector<uint32_t> OpenocdJtagAdapter::read(uint32_t base_addr,
   return values;
 }
 
-std::string OpenocdJtagAdapter::build_command(const std::string &cmd) {
+std::string OclaOpenocdAdapter::build_command(const std::string &cmd) {
   std::ostringstream ss;
 
   ss << " -l /dev/stdout"  //<-- not windows friendly
@@ -117,7 +117,7 @@ std::string OpenocdJtagAdapter::build_command(const std::string &cmd) {
   return ss.str();
 }
 
-int OpenocdJtagAdapter::execute_command(const std::string &cmd,
+int OclaOpenocdAdapter::execute_command(const std::string &cmd,
                                         std::string &output) {
   std::atomic<bool> stop = false;
   int res =
@@ -126,7 +126,7 @@ int OpenocdJtagAdapter::execute_command(const std::string &cmd,
   return res;
 }
 
-std::vector<uint32_t> OpenocdJtagAdapter::parse(const std::string &output) {
+std::vector<uint32_t> OclaOpenocdAdapter::parse(const std::string &output) {
   std::stringstream ss(output);
   std::string s;
   std::cmatch matches;
@@ -146,7 +146,7 @@ std::vector<uint32_t> OpenocdJtagAdapter::parse(const std::string &output) {
   return values;
 }
 
-void OpenocdJtagAdapter::set_target_device(Device device,
+void OclaOpenocdAdapter::set_target_device(Device device,
                                            std::vector<Tap> taplist) {
   m_device = device;
   m_taplist = taplist;
