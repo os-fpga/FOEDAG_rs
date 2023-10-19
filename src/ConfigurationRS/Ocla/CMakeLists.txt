@@ -49,7 +49,6 @@ endif()
 # 3. test_bin executable (in this case ocla exe) - it is external command line entry which eventually call subsystem library (item 1) for unit testing
 #
 #################################################################################################################
-message("${CMAKE_CURRENT_SOURCE_DIR}")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../../../FOEDAG/cmake/")
 find_package(USB1 REQUIRED)
 include_directories(${LIBUSB_INCLUDE_DIR})
@@ -115,6 +114,7 @@ add_executable(
   Test/OclaIpTests.cpp
 )
 target_link_libraries(${test_bin} ${subsystem} gtest gmock gtest_main)
+target_include_directories(${test_bin} PRIVATE Common)
 
 ###################
 #
