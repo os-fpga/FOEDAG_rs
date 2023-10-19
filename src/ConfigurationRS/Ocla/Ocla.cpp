@@ -4,17 +4,11 @@
 #include <sstream>
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
-#include "HardwareManager.h"
 #include "OclaHelpers.h"
 #include "OclaIP.h"
 #include "OclaJtagAdapter.h"
 #include "OclaSession.h"
 #include "OclaWaveformWriter.h"
-
-static std::vector<HardwareManager_DEVICE_INFO> ocla_device_db = {
-    {"OCLA", 0x10000db3, 5, 0xffffffff, OCLA},
-    {"OCLA", 0x20000913, 5, 0xffffffff, OCLA},
-};
 
 static std::map<uint32_t, uint32_t> ocla_base_address = {{1, OCLA1_ADDR},
                                                          {2, OCLA2_ADDR}};
@@ -61,7 +55,7 @@ std::vector<Ocla_PROBE_INFO> Ocla::get_probe_info(uint32_t base_addr) {
   return {};
 }
 
-std::map<uint32_t, Ocla_PROBE_INFO> Ocla::find_probe_by_name(
+std::map<uint32_t, Ocla_PROBE_INFO> Ocla::find_probe_info_by_name(
     uint32_t base_addr, std::string probe_name) {
   std::map<uint32_t, Ocla_PROBE_INFO> list{};
   uint32_t offset = 0;
@@ -76,8 +70,8 @@ std::map<uint32_t, Ocla_PROBE_INFO> Ocla::find_probe_by_name(
   return list;
 }
 
-bool Ocla::find_probe_by_offset(uint32_t base_addr, uint32_t bit_offset,
-                                Ocla_PROBE_INFO& output) {
+bool Ocla::find_probe_info_by_offset(uint32_t base_addr, uint32_t bit_offset,
+                                     Ocla_PROBE_INFO& output) {
   uint32_t offset = 0;
   for (const auto& probe_inf : get_probe_info(base_addr)) {
     if (offset == bit_offset) {
@@ -117,15 +111,8 @@ Ocla::Ocla(OclaJtagAdapter* adapter, OclaSession* session,
   CFG_ASSERT(m_writer != nullptr);
 }
 
-void Ocla::configure(std::string cable_name, uint32_t device_index,
-                     uint32_t instance, std::string mode, std::string condition,
+void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
                      uint32_t sample_size) {
-  std::string msg{};
-  if (!configure_adapter(cable_name, device_index, msg)) {
-    CFG_POST_ERR("%s", msg.c_str());
-    return;
-  }
-
   if (!validate()) {
     CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
     return;
@@ -186,7 +173,7 @@ void Ocla::configure_channel(uint32_t instance, uint32_t channel,
       return;
     }
     // translate probe name to probe index
-    auto probe_list = find_probe_by_name(ocla_ip.get_base_addr(), probe);
+    auto probe_list = find_probe_info_by_name(ocla_ip.get_base_addr(), probe);
     if (probe_list.empty()) {
       CFG_POST_ERR("Invalid probe name '%s'", probe.c_str());
       return;
@@ -257,16 +244,11 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
   }
 }
 
-std::string Ocla::show_info(std::string cable_name, uint32_t device_index) {
+std::string Ocla::show_info() {
   std::ostringstream ss;
   int count = 0;
   bool is_valid = false;
   std::string msg{};
-
-  if (!configure_adapter(cable_name, device_index, msg)) {
-    CFG_POST_ERR("%s", msg.c_str());
-    return "";
-  }
 
   if (m_session->is_loaded()) {
     is_valid = validate();
@@ -310,8 +292,8 @@ std::string Ocla::show_info(std::string cable_name, uint32_t device_index) {
       if (m_session->is_loaded()) {
         // try translate probe index to probe name
         Ocla_PROBE_INFO probe_inf{};
-        if (find_probe_by_offset(ocla_ip.get_base_addr(), trig_cfg.probe_num,
-                                 probe_inf)) {
+        if (find_probe_info_by_offset(ocla_ip.get_base_addr(),
+                                      trig_cfg.probe_num, probe_inf)) {
           probe_name += "(" + probe_inf.signal_name + ")";
         }
       }
@@ -521,104 +503,4 @@ void Ocla::stop_session() {
     return;
   }
   m_session->unload();
-}
-
-std::string Ocla::show_cables(std::string& tcl_output) {
-  std::ostringstream ss;
-  HardwareManager mgr{m_adapter};
-
-  tcl_output.clear();
-  auto cables = mgr.get_cables();
-  if (cables.empty()) {
-    ss << "No cable detected" << std::endl;
-  } else {
-    ss << "Cable" << std::endl << "-----------------" << std::endl;
-    for (const auto& cable : cables) {
-      ss << "(" << cable.index << ") " << cable.name << std::endl;
-      if (tcl_output.empty())
-        tcl_output = cable.name;
-      else
-        tcl_output += " " + cable.name;
-    }
-  }
-
-  return ss.str();
-}
-
-std::string Ocla::show_devices(std::string cable_name,
-                               std::string& tcl_output) {
-  std::ostringstream ss;
-  HardwareManager mgr{m_adapter};
-  uint32_t device_count = 0;
-  uint32_t cable_count = 0;
-  bool use_index = false;
-  uint32_t cable_index = 0;
-
-  mgr.set_device_db(ocla_device_db);
-  tcl_output.clear();
-  auto cables = mgr.get_cables();
-  if (cables.empty()) {
-    ss << "No cable detected" << std::endl;
-  } else {
-    if (!cable_name.empty())
-      cable_index =
-          (uint32_t)CFG_convert_string_to_u64(cable_name, false, &use_index);
-
-    ss << "Cable                       | Device            " << std::endl
-       << "------------------------------------------------" << std::endl;
-    for (const auto& cable : cables) {
-      if (cable_name.empty() || (use_index && cable.index == cable_index) ||
-          !use_index && cable.name.find(cable_name) == 0) {
-        for (const auto& device : mgr.get_devices(cable)) {
-          ss << "(" << cable.index << ") " << std::setw(24) << std::left
-             << cable.name << " (" << device.index << ") " << device.name << "<"
-             << device.index << ">" << std::right << std::endl;
-          tcl_output += cable.name + " " + device.name + "<" +
-                        std::to_string(device.index) + "> ";
-          ++device_count;
-        }
-        ++cable_count;
-      }
-    }
-
-    if (!cable_count)
-      ss << "Cable '" << cable_name << "' not found" << std::endl;
-    else if (!device_count)
-      ss << "No device detected" << std::endl;
-  }
-
-  return ss.str();
-}
-
-bool Ocla::configure_adapter(std::string cable_name, uint32_t device_index,
-                             std::string& error_msg) {
-  HardwareManager hw_mgr{m_adapter};
-  std::vector<Tap> taps{};
-  bool use_index = false;
-  uint32_t cable_index =
-      (uint32_t)CFG_convert_string_to_u64(cable_name, false, &use_index);
-
-  hw_mgr.set_device_db(ocla_device_db);
-
-  // find cable
-  for (const auto& cable : hw_mgr.get_cables()) {
-    if ((use_index && cable.index == cable_index) ||
-        (!use_index && cable.name.find(cable_name) == 0)) {
-      // find device
-      for (const auto& device : hw_mgr.get_devices(cable, &taps)) {
-        if (device.index == device_index) {
-          // set cable and device to the adapter
-          m_adapter->set_cable(new Cable(cable));
-          m_adapter->set_device(new Device(device));
-          m_adapter->set_taps(taps);
-          return true;
-        }
-      }
-      error_msg =
-          "Device with index " + std::to_string(device_index) + " not found";
-      return false;
-    }
-  }
-  error_msg = "Cable '" + cable_name + "' not found";
-  return false;
 }

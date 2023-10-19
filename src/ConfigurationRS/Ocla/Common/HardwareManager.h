@@ -4,7 +4,9 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "Device.h"
 #include "JtagAdapter.h"
+#include "Tap.h"
 
 struct HardwareManager_CABLE_INFO {
   std::string name;
@@ -25,17 +27,23 @@ class HardwareManager {
  public:
   HardwareManager(JtagAdapter *m_adapter);
   virtual ~HardwareManager();
-  std::vector<Cable> get_cables();
   std::vector<Tap> get_taps(const Cable &cable);
-  std::vector<Device> get_devices(const Cable &cable,
-                                  std::vector<Tap> *output = nullptr);
-  void set_device_db(std::vector<HardwareManager_DEVICE_INFO> device_db) {
-    m_device_db = device_db;
-  };
+  std::vector<Cable> get_cables();
+  bool is_cable_exists(uint32_t cable_index);
+  bool is_cable_exists(std::string cable_name,
+                       bool numeric_name_as_index = false);
+  std::vector<Device> get_devices();
+  std::vector<Device> get_devices(const Cable &cable);
+  std::vector<Device> get_devices(uint32_t cable_index);
+  std::vector<Device> get_devices(std::string cable_name,
+                                  bool numeric_name_as_index = false);
+  bool find_device(std::string cable_name, uint32_t device_index,
+                   Device &device, std::vector<Tap> &taplist,
+                   bool numeric_name_as_index = false);
 
  private:
   static const std::vector<HardwareManager_CABLE_INFO> m_cable_db;
-  std::vector<HardwareManager_DEVICE_INFO> m_device_db;
+  static const std::vector<HardwareManager_DEVICE_INFO> m_device_db;
   JtagAdapter *m_adapter;
 };
 

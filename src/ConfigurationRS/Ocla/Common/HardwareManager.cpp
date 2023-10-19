@@ -12,6 +12,11 @@ const std::vector<HardwareManager_CABLE_INFO> HardwareManager::m_cable_db = {
     {"RsFtdi", FTDI, 0x0403, 0x6014},
     {"Jlink", JLINK, 0x1366, 0x0101}};
 
+const std::vector<HardwareManager_DEVICE_INFO> HardwareManager::m_device_db = {
+    {"OCLA", 0x10000db3, 5, 0xffffffff, OCLA},
+    {"OCLA", 0x20000913, 5, 0xffffffff, OCLA},
+};
+
 HardwareManager::HardwareManager(JtagAdapter* adapter) : m_adapter(adapter) {
   CFG_ASSERT(m_adapter != nullptr);
 }
@@ -60,6 +65,7 @@ std::vector<Cable> HardwareManager::get_cables() {
             "";  // Note: not all usb cable has a serial number
         cable.speed = HM_DEFAULT_CABLE_SPEED_KHZ;
         cable.transport = TransportType::JTAG;
+        cable.channel = 0;
 
         rc = libusb_open(device_list[index], &device_handle);
         if (rc < 0) {
@@ -101,14 +107,43 @@ std::vector<Cable> HardwareManager::get_cables() {
   return cables;
 }
 
-std::vector<Tap> HardwareManager::get_taps(const Cable& cable) {
-  auto taps = m_adapter->get_taps(cable);
+bool HardwareManager::is_cable_exists(uint32_t cable_index) {
+  for (const auto& cable : get_cables()) {
+    if (cable.index == cable_index) return true;
+  }
+  return false;
+}
 
-  for (auto& tap : taps) {
+bool HardwareManager::is_cable_exists(std::string cable_name,
+                                      bool numeric_name_as_index) {
+  if (numeric_name_as_index) {
+    bool status = false;
+    uint32_t cable_index =
+        (uint32_t)CFG_convert_string_to_u64(cable_name, false, &status);
+    if (status) {
+      return is_cable_exists(cable_index);
+    }
+  }
+  for (const auto& cable : get_cables()) {
+    if (cable.name.find(cable_name) == 0) return true;
+  }
+  return false;
+}
+
+std::vector<Tap> HardwareManager::get_taps(const Cable& cable) {
+  auto idcode_array = m_adapter->scan(cable);
+  std::vector<Tap> taps;
+  uint32_t idx = 1;
+
+  for (auto& idcode : idcode_array) {
     for (auto& device_info : m_device_db) {
-      if ((tap.idcode & device_info.irmask) ==
+      if ((idcode & device_info.irmask) ==
           (device_info.idcode & device_info.irmask)) {
+        Tap tap{};
+        tap.idcode = idcode;
+        tap.index = idx++;
         tap.irlength = device_info.irlength;
+        taps.push_back(tap);
       }
     }
   }
@@ -116,40 +151,83 @@ std::vector<Tap> HardwareManager::get_taps(const Cable& cable) {
   return taps;
 }
 
-std::vector<Device> HardwareManager::get_devices(const Cable& cable,
-                                                 std::vector<Tap>* output) {
-  auto taps = m_adapter->get_taps(cable);
-  uint32_t device_index = 1;
+std::vector<Device> HardwareManager::get_devices() {
   std::vector<Device> devices{};
 
-  for (auto& tap : taps) {
+  for (const auto& cable : get_cables()) {
+    auto list = get_devices(cable);
+    devices.insert(devices.end(), list.begin(), list.end());
+  }
+
+  return devices;
+}
+
+std::vector<Device> HardwareManager::get_devices(uint32_t cable_index) {
+  for (const auto& cable : get_cables()) {
+    if (cable.index == cable_index) return get_devices(cable);
+  }
+  return {};
+}
+
+std::vector<Device> HardwareManager::get_devices(std::string cable_name,
+                                                 bool numeric_name_as_index) {
+  if (numeric_name_as_index) {
+    bool status = false;
+    uint32_t cable_index =
+        (uint32_t)CFG_convert_string_to_u64(cable_name, false, &status);
+    if (status) {
+      return get_devices(cable_index);
+    }
+  }
+
+  for (const auto& cable : get_cables()) {
+    if (cable.name.find(cable_name) == 0) return get_devices(cable);
+  }
+  return {};
+}
+
+bool HardwareManager::find_device(std::string cable_name, uint32_t device_index,
+                                  Device& device, std::vector<Tap>& taplist,
+                                  bool numeric_name_as_index) {
+  if (is_cable_exists(cable_name, numeric_name_as_index)) {
+    for (const auto& d : get_devices(cable_name, numeric_name_as_index)) {
+      if (d.index == device_index) {
+        taplist = get_taps(d.cable);
+        device = d;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+std::vector<Device> HardwareManager::get_devices(const Cable& cable) {
+  auto idcode_array = m_adapter->scan(cable);
+  uint32_t device_index = 1;
+  uint32_t tap_index = 1;
+  std::vector<Device> devices{};
+
+  for (auto& idcode : idcode_array) {
     bool found = false;
     for (auto& device_info : m_device_db) {
-      if ((tap.idcode & device_info.irmask) ==
+      if ((idcode & device_info.irmask) ==
           (device_info.idcode & device_info.irmask)) {
         found = true;
-        tap.irlength = device_info.irlength;
+        Tap tap{tap_index++, idcode, device_info.irlength};
         if (device_info.type == GEMINI || device_info.type == OCLA) {
           Device device{};
           device.index = device_index++;
           device.type = device_info.type;
           device.name = device_info.name;
-          device.tap.index = tap.index;
-          device.tap.idcode = tap.idcode;
-          device.tap.irlength = device_info.irlength;
+          device.cable = cable;
+          device.tap = tap;
           devices.push_back(device);
         }
         break;
       }
     }
 
-    CFG_ASSERT_MSG(found, "Unknown tap id 0x%08x", tap.idcode);
-  }
-
-  // return tap info
-  if (output) {
-    output->clear();
-    *output = taps;
+    CFG_ASSERT_MSG(found, "Unknown tap id 0x%08x", idcode);
   }
 
   return devices;

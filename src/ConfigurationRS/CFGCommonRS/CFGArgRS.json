@@ -336,6 +336,22 @@
       "status": {
         "option": [
           {
+            "name": "cable",
+            "short": "b",
+            "type": "str",
+            "optional": true,
+            "default" : "1",
+            "help": "Specify the index of the cable"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Specify the index of the device on the selected cable"
+          },
+          {
             "name": "instance",
             "short": "i",
             "type": "int",
@@ -355,6 +371,22 @@
     {
       "start": {
         "option": [
+          {
+            "name": "cable",
+            "short": "b",
+            "type": "str",
+            "optional": true,
+            "default" : "1",
+            "help": "Specify the index of the cable"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Specify the index of the device on the selected cable"
+          },
           {
             "name": "instance",
             "short": "i",
@@ -449,6 +481,22 @@
       "debug": {
         "option": [
           {
+            "name": "cable",
+            "short": "b",
+            "type": "str",
+            "optional": true,
+            "default" : "1",
+            "help": "Specify the index of the cable"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Specify the index of the device on the selected cable"
+          },
+          {
             "name": "instance",
             "short": "i",
             "type": "int",
@@ -466,7 +514,7 @@
           },
           {
             "name": "dump",
-            "short": "d",
+            "short": "u",
             "type": "flag",
             "default" : false,
             "optional": true,
@@ -616,6 +664,22 @@
     {
       "config_channel": {
         "option": [
+          {
+            "name": "cable",
+            "short": "b",
+            "type": "str",
+            "optional": true,
+            "default" : "1",
+            "help": "Specify the index of the cable"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Specify the index of the device on the selected cable"
+          },
           {
             "name": "instance",
             "short": "i",

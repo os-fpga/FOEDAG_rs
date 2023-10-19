@@ -67,13 +67,14 @@ add_library(
   OclaHelpers.cpp
   OpenocdJtagAdapter.cpp
   FstWaveformWriter.cpp
-  HardwareManager.cpp
+  Common/HardwareManager.cpp
+  Common/OpenocdAdapter.cpp
   MemorySession.cpp
   ${LIBFST_SOURCE_DIR}/fstapi.c
   ${LIBFST_SOURCE_DIR}/lz4.c
   ${LIBFST_SOURCE_DIR}/fastlz.c
 )
-target_include_directories(${subsystem} PRIVATE ${LIBFST_SOURCE_DIR})
+target_include_directories(${subsystem} PRIVATE ${LIBFST_SOURCE_DIR} Common)
 if(MSVC)
   target_link_libraries(${subsystem} INTERFACE zlibstatic)
   target_include_directories(${subsystem} PRIVATE
