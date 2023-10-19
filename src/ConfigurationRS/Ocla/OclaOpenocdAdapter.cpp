@@ -30,7 +30,7 @@ void OclaOpenocdAdapter::write(uint32_t addr, uint32_t data) {
 
   ss << " -c \"irscan ocla" << i << ".tap 0x04;"
      << "drscan ocla" << i << ".tap 1 0x1 1 0x1 32 " << std::hex
-     << std::showbase << i << " 32 " << data << " 2 0x0;" << std::dec
+     << std::showbase << addr << " 32 " << data << " 2 0x0;" << std::dec
      << std::noshowbase << "irscan ocla" << i << ".tap 0x08;"
      << "drscan ocla" << i << ".tap 32 0x0 2 0x0;\"";
 
