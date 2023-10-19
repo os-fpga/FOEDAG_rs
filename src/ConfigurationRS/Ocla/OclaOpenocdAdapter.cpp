@@ -1,4 +1,4 @@
-#include "OpenocdJtagAdapter.h"
+#include "OclaOpenocdAdapter.h"
 
 #include <cassert>
 #include <iomanip>

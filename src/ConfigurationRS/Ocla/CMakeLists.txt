@@ -65,7 +65,7 @@ add_library(
   Ocla.cpp
   OclaIP.cpp
   OclaHelpers.cpp
-  OpenocdJtagAdapter.cpp
+  OclaOpenocdAdapter.cpp
   FstWaveformWriter.cpp
   Common/HardwareManager.cpp
   Common/OpenocdAdapter.cpp

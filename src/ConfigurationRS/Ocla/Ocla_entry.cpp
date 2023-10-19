@@ -8,8 +8,8 @@
 #include "HardwareManager.h"
 #include "MemorySession.h"
 #include "Ocla.h"
+#include "OclaOpenocdAdapter.h"
 #include "OpenocdAdapter.h"
-#include "OpenocdJtagAdapter.h"
 
 void Ocla_print(std::string output) {
   std::istringstream ss(output);
