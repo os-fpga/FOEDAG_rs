@@ -13,9 +13,8 @@ const std::vector<HardwareManager_CABLE_INFO> HardwareManager::m_cable_db = {
     {"Jlink", JLINK, 0x1366, 0x0101}};
 
 const std::vector<HardwareManager_DEVICE_INFO> HardwareManager::m_device_db = {
-    {"OCLA", 0x10000db3, 5, 0xffffffff, OCLA},
-    {"OCLA", 0x20000913, 5, 0xffffffff, OCLA},
-};
+    {"Gemini", 0x1000563d, 5, 0xffffffff, GEMINI},
+    {"OCLA", 0x10000db3, 5, 0xffffffff, OCLA}};
 
 HardwareManager::HardwareManager(JtagAdapter* adapter) : m_adapter(adapter) {
   CFG_ASSERT(m_adapter != nullptr);
