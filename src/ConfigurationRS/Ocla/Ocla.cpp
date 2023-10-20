@@ -248,7 +248,6 @@ std::string Ocla::show_info() {
   std::ostringstream ss;
   int count = 0;
   bool is_valid = false;
-  std::string msg{};
 
   if (m_session->is_loaded()) {
     is_valid = validate();
