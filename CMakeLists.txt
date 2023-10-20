@@ -470,9 +470,10 @@ if (NOT RAPTOR)
     if (MSVC)
         set(VCPKG_LIBUSB_DIR "$ENV{VCPKG_INSTALLATION_ROOT}/packages/libusb_x64-windows")
         file(TO_CMAKE_PATH "${VCPKG_LIBUSB_DIR}" VCPKG_LIBUSB_DIR)
-        message("helloworld ${VCPKG_LIBUSB_DIR}...")
         install(
           PROGRAMS ${VCPKG_LIBUSB_DIR}/bin/libusb-1.0.dll DESTINATION ${CMAKE_INSTALL_BINDIR})
+        install(
+          PROGRAMS ${VCPKG_LIBUSB_DIR}/bin/libusb-1.0.dll DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
     endif()
 endif()
 
