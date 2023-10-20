@@ -466,6 +466,13 @@ if (NOT RAPTOR)
         DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/configuration DESTINATION  ${CMAKE_INSTALL_DATAROOTDIR}/raptor)
     install(
         PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/bin/openocd${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+    if (MSVC)
+        set(VCPKG_LIBUSB_DIR "$ENV{VCPKG_INSTALLATION_ROOT}/packages/libusb_x64-windows")
+        message("helloworld ${VCPKG_LIBUSB_DIR}...")
+        install(
+          PROGRAMS ${VCPKG_LIBUSB_DIR}/bin/libusb-1.0.dll DESTINATION ${CMAKE_INSTALL_BINDIR})
+    endif()
 endif()
 
 if ((DEFINED ENV{MSYSTEM}) AND ("$ENV{MSYSTEM}" STREQUAL "MINGW64"))
