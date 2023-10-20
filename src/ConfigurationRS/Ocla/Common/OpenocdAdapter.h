@@ -21,6 +21,8 @@ class OpenocdAdapter : public JtagAdapter {
 
  private:
   int execute(const Cable &cable, std::string &output);
+  std::string convert_transport_to_string(TransportType transport,
+                                          std::string defval = "jtag");
   std::string m_openocd_filepath;
   CommandExecutorFuncType m_command_executor;
 };

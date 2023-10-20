@@ -54,13 +54,18 @@ int OpenocdAdapter::execute(const Cable &cable, std::string &output) {
        << "ftdi vid_pid " << std::hex << std::showbase << cable.vendor_id << " "
        << cable.product_id << ";" << std::noshowbase << std::dec
        << "ftdi layout_init 0x0c08 0x0f1b;";
+
+    if (!cable.serial_number.empty()) {
+      ss << "adapter serial " << cable.serial_number << ";";
+    }
   } else if (cable.cable_type == JLINK) {
     ss << " -c \"adapter driver jlink;";
   }
 
   // setup general cable configuration
   ss << "adapter speed " << cable.speed << ";"
-     << "transport select jtag;"
+     << "transport select " << convert_transport_to_string(cable.transport)
+     << ";"
      << "telnet_port disabled;"
      << "gdb_port disabled;\"";
 
@@ -74,4 +79,14 @@ int OpenocdAdapter::execute(const Cable &cable, std::string &output) {
       "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd_filepath + ss.str(), output,
       nullptr, stop);
   return res;
+}
+
+std::string OpenocdAdapter::convert_transport_to_string(TransportType transport,
+                                                        std::string defval) {
+  switch (transport) {
+    case TransportType::JTAG:
+      return "jtag";
+      // Handle other transport types as needed
+  }
+  return defval;
 }
