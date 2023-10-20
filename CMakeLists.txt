@@ -473,7 +473,7 @@ if (NOT RAPTOR)
         install(
           PROGRAMS ${VCPKG_LIBUSB_DIR}/bin/libusb-1.0.dll DESTINATION ${CMAKE_INSTALL_BINDIR})
         install(
-          PROGRAMS ${VCPKG_LIBUSB_DIR}/bin/libusb-1.0.dll DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+          PROGRAMS ${VCPKG_LIBUSB_DIR}/bin/libusb-1.0.dll DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin)
     endif()
 endif()
 
