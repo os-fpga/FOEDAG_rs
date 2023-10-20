@@ -22,6 +22,8 @@ class OclaOpenocdAdapter : public OclaJtagAdapter {
   virtual void set_target_device(Device device, std::vector<Tap> taplist);
 
  private:
+  std::string convert_transport_to_string(TransportType transport,
+                                          std::string defval = "jtag");
   std::string build_command(const std::string& cmd);
   int execute_command(const std::string& cmd, std::string& output);
   std::vector<uint32_t> parse(const std::string& output);

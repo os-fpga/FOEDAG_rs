@@ -87,13 +87,18 @@ std::string OclaOpenocdAdapter::build_command(const std::string &cmd) {
        << "ftdi vid_pid " << std::hex << std::showbase
        << m_device.cable.vendor_id << " " << m_device.cable.product_id << ";"
        << std::noshowbase << std::dec << "ftdi layout_init 0x0c08 0x0f1b;\"";
+
+    if (!m_device.cable.serial_number.empty()) {
+      ss << "adapter serial " << m_device.cable.serial_number << ";";
+    }
   } else if (m_device.cable.cable_type == JLINK) {
     ss << " -c \"adapter driver jlink;\"";
   }
 
   // setup general cable configuration
   ss << " -c \"adapter speed " << m_device.cable.speed << ";"
-     << "transport select jtag;"
+     << "transport select "
+     << convert_transport_to_string(m_device.cable.transport) << ";"
      << "telnet_port disabled;"
      << "gdb_port disabled;\"";
 
@@ -151,3 +156,13 @@ void OclaOpenocdAdapter::set_target_device(Device device,
   m_device = device;
   m_taplist = taplist;
 };
+
+std::string OclaOpenocdAdapter::convert_transport_to_string(
+    TransportType transport, std::string defval) {
+  switch (transport) {
+    case TransportType::JTAG:
+      return "jtag";
+      // Handle other transport types as needed
+  }
+  return defval;
+}
