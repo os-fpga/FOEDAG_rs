@@ -40,10 +40,10 @@ class Ocla {
   bool get_instance_info(uint32_t base_addr, Ocla_INSTANCE_INFO &instance_info,
                          uint32_t &idx);
   std::vector<Ocla_PROBE_INFO> get_probe_info(uint32_t base_addr);
-  std::map<uint32_t, Ocla_PROBE_INFO> find_probe_by_name(
+  std::map<uint32_t, Ocla_PROBE_INFO> find_probe_info_by_name(
       uint32_t base_addr, std::string probe_name);
-  bool find_probe_by_offset(uint32_t base_addr, uint32_t bit_offset,
-                            Ocla_PROBE_INFO &output);
+  bool find_probe_info_by_offset(uint32_t base_addr, uint32_t bit_offset,
+                                 Ocla_PROBE_INFO &output);
   bool validate();
   OclaJtagAdapter *m_adapter;
   OclaSession *m_session;

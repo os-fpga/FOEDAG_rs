@@ -1,5 +1,6 @@
 #include "Ocla.h"
 
+#include <algorithm>
 #include <sstream>
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
@@ -54,7 +55,7 @@ std::vector<Ocla_PROBE_INFO> Ocla::get_probe_info(uint32_t base_addr) {
   return {};
 }
 
-std::map<uint32_t, Ocla_PROBE_INFO> Ocla::find_probe_by_name(
+std::map<uint32_t, Ocla_PROBE_INFO> Ocla::find_probe_info_by_name(
     uint32_t base_addr, std::string probe_name) {
   std::map<uint32_t, Ocla_PROBE_INFO> list{};
   uint32_t offset = 0;
@@ -69,8 +70,8 @@ std::map<uint32_t, Ocla_PROBE_INFO> Ocla::find_probe_by_name(
   return list;
 }
 
-bool Ocla::find_probe_by_offset(uint32_t base_addr, uint32_t bit_offset,
-                                Ocla_PROBE_INFO& output) {
+bool Ocla::find_probe_info_by_offset(uint32_t base_addr, uint32_t bit_offset,
+                                     Ocla_PROBE_INFO& output) {
   uint32_t offset = 0;
   for (const auto& probe_inf : get_probe_info(base_addr)) {
     if (offset == bit_offset) {
@@ -128,6 +129,8 @@ void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
 
   ocla_config cfg;
 
+  std::transform(condition.begin(), condition.end(), condition.begin(),
+                 ::toupper);
   cfg.fns = sample_size > 0 ? ENABLED : DISABLED;
   cfg.ns = sample_size;
   cfg.mode = convert_ocla_mode(mode);
@@ -170,7 +173,7 @@ void Ocla::configure_channel(uint32_t instance, uint32_t channel,
       return;
     }
     // translate probe name to probe index
-    auto probe_list = find_probe_by_name(ocla_ip.get_base_addr(), probe);
+    auto probe_list = find_probe_info_by_name(ocla_ip.get_base_addr(), probe);
     if (probe_list.empty()) {
       CFG_POST_ERR("Invalid probe name '%s'", probe.c_str());
       return;
@@ -288,8 +291,8 @@ std::string Ocla::show_info() {
       if (m_session->is_loaded()) {
         // try translate probe index to probe name
         Ocla_PROBE_INFO probe_inf{};
-        if (find_probe_by_offset(ocla_ip.get_base_addr(), trig_cfg.probe_num,
-                                 probe_inf)) {
+        if (find_probe_info_by_offset(ocla_ip.get_base_addr(),
+                                      trig_cfg.probe_num, probe_inf)) {
           probe_name += "(" + probe_inf.signal_name + ")";
         }
       }

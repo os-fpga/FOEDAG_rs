@@ -306,6 +306,24 @@
     },
     {
       "info": {
+        "option": [
+          {
+            "name": "cable",
+            "short": "b",
+            "type": "str",
+            "optional": true,
+            "default" : "1",
+            "help": "Specify the index of the cable"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Specify the index of the device on the selected cable"
+          }
+        ],
         "desc": "Show all OCLA probe and information that parsed from .bitasm file during session start",
         "help": [
           "To show all OCLA probe and information",
@@ -317,6 +335,22 @@
     {
       "status": {
         "option": [
+          {
+            "name": "cable",
+            "short": "b",
+            "type": "str",
+            "optional": true,
+            "default" : "1",
+            "help": "Specify the index of the cable"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Specify the index of the device on the selected cable"
+          },
           {
             "name": "instance",
             "short": "i",
@@ -337,6 +371,22 @@
     {
       "start": {
         "option": [
+          {
+            "name": "cable",
+            "short": "b",
+            "type": "str",
+            "optional": true,
+            "default" : "1",
+            "help": "Specify the index of the cable"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Specify the index of the device on the selected cable"
+          },
           {
             "name": "instance",
             "short": "i",
@@ -391,8 +441,61 @@
       }
     },
     {
+      "list_cable": {
+        "option": [
+          {
+            "name": "verbose",
+            "short": "v",
+            "type": "flag",
+            "optional": true,
+            "default": false,
+            "help": "Display additional information of list_cable output"
+          }
+        ],
+        "desc": "To display all the connected/detected cables.",
+        "help": ["To display all the connected/detected cables"],
+        "arg" : [0, 0]
+      }
+    },
+    {
+      "list_device": {
+        "option": [
+          {
+            "name": "verbose",
+            "short": "v",
+            "type": "flag",
+            "optional": true,
+            "default": false,
+            "help": "Display additional information of list_device output"
+          }
+        ],
+        "desc": "To display list of connected devices to each conneceted/detected cable.",
+        "help": [ "To display list of connected devices to each conneceted/detected cable.",
+                  "To display list of all connected devices on specify cable.",
+                  "The cable argument input can be the cable name or cable index that map to its name."
+                ],
+        "arg" : [0, 1]
+      }
+    },
+    {
       "debug": {
         "option": [
+          {
+            "name": "cable",
+            "short": "b",
+            "type": "str",
+            "optional": true,
+            "default" : "1",
+            "help": "Specify the index of the cable"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Specify the index of the device on the selected cable"
+          },
           {
             "name": "instance",
             "short": "i",
@@ -411,7 +514,7 @@
           },
           {
             "name": "dump",
-            "short": "d",
+            "short": "u",
             "type": "flag",
             "default" : false,
             "optional": true,
@@ -529,6 +632,22 @@
             "type": "or|and|xor",
             "optional": true,
             "help": "Configure the global trigger boolean condition"
+          },
+          {
+            "name": "cable",
+            "short": "b",
+            "type": "str",
+            "optional": true,
+            "default" : "1",
+            "help": "Specify the index of the cable"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Specify the index of the device on the selected cable"
           }
         ],
         "desc": "Configure OCLA trigger mode. Specify number of samples to capture. Configure trigger condition",
@@ -545,6 +664,22 @@
     {
       "config_channel": {
         "option": [
+          {
+            "name": "cable",
+            "short": "b",
+            "type": "str",
+            "optional": true,
+            "default" : "1",
+            "help": "Specify the index of the cable"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Specify the index of the device on the selected cable"
+          },
           {
             "name": "instance",
             "short": "i",

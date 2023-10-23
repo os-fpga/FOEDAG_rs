@@ -5,9 +5,11 @@
 #include "CFGObject/CFGObject_auto.h"
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 #include "FstWaveformWriter.h"
+#include "HardwareManager.h"
 #include "MemorySession.h"
 #include "Ocla.h"
-#include "OpenocdJtagAdapter.h"
+#include "OclaOpenocdAdapter.h"
+#include "OpenocdAdapter.h"
 
 void Ocla_print(std::string output) {
   std::istringstream ss(output);
@@ -33,17 +35,31 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     return;
   }
 
-  // initialize dependencies
-  OpenocdJtagAdapter adapter{cmdarg->toolPath.string(), CFG_execute_cmd};
+  // setup hardware manager and its depencencies
+  OpenocdAdapter jtag_adapter{cmdarg->toolPath.string(), CFG_execute_cmd};
+  HardwareManager hardware_manager{&jtag_adapter};
+
+  // setup dependencies
+  OclaOpenocdAdapter adapter{cmdarg->toolPath.string(), CFG_execute_cmd};
   MemorySession session{};
   FstWaveformWriter writer{};
 
-  // initialize ocla debugger class
+  // setup main Ocla Debugger class
   Ocla ocla{&adapter, &session, &writer};
 
   // dispatch commands
   std::string subcmd = arg->get_sub_arg_name();
   if (subcmd == "info") {
+    auto parms = static_cast<const CFGArg_DEBUGGER_INFO*>(arg->get_sub_arg());
+    std::vector<Tap> taplist{};
+    Device device{};
+    if (!hardware_manager.find_device(parms->cable, parms->device, device,
+                                      taplist, true)) {
+      CFG_POST_ERR("Could't find device %u on cable '%s'", parms->device,
+                   parms->cable.c_str());
+      return;
+    }
+    adapter.set_target_device(device, taplist);
     Ocla_print(ocla.show_info());
   } else if (subcmd == "load") {
     auto parms = static_cast<const CFGArg_DEBUGGER_LOAD*>(arg->get_sub_arg());
@@ -57,6 +73,15 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
           "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
+    std::vector<Tap> taplist{};
+    Device device{};
+    if (!hardware_manager.find_device(parms->cable, parms->device, device,
+                                      taplist, true)) {
+      CFG_POST_ERR("Could't find device %u on cable '%s'", parms->device,
+                   parms->cable.c_str());
+      return;
+    }
+    adapter.set_target_device(device, taplist);
     ocla.configure(parms->instance, parms->mode, parms->trigger_condition,
                    parms->sample_size);
   } else if (subcmd == "config_channel") {
@@ -71,6 +96,15 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       CFG_POST_ERR("Invalid channel parameter. Channel should be 1 to 4.");
       return;
     }
+    std::vector<Tap> taplist{};
+    Device device{};
+    if (!hardware_manager.find_device(parms->cable, parms->device, device,
+                                      taplist, true)) {
+      CFG_POST_ERR("Could't find device %u on cable '%s'", parms->device,
+                   parms->cable.c_str());
+      return;
+    }
+    adapter.set_target_device(device, taplist);
     ocla.configure_channel(parms->instance, parms->channel, parms->type,
                            parms->event, parms->value, parms->probe);
   } else if (subcmd == "start") {
@@ -80,6 +114,15 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
           "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
+    std::vector<Tap> taplist{};
+    Device device{};
+    if (!hardware_manager.find_device(parms->cable, parms->device, device,
+                                      taplist, true)) {
+      CFG_POST_ERR("Could't find device %u on cable '%s'", parms->device,
+                   parms->cable.c_str());
+      return;
+    }
+    adapter.set_target_device(device, taplist);
     ocla.start(parms->instance, parms->timeout, parms->output);
     CFG_POST_MSG("Written %s successfully.", parms->output.c_str());
     Ocla_launch_gtkwave(parms->output, cmdarg->binPath);
@@ -90,6 +133,15 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
           "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
+    std::vector<Tap> taplist{};
+    Device device{};
+    if (!hardware_manager.find_device(parms->cable, parms->device, device,
+                                      taplist, true)) {
+      CFG_POST_ERR("Could't find device %u on cable '%s'", parms->device,
+                   parms->cable.c_str());
+      return;
+    }
+    adapter.set_target_device(device, taplist);
     auto output = ocla.show_status(parms->instance);
     cmdarg->tclOutput = output.c_str();
   } else if (subcmd == "show_waveform") {
@@ -103,12 +155,77 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
           "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
+    std::vector<Tap> taplist{};
+    Device device{};
+    if (!hardware_manager.find_device(parms->cable, parms->device, device,
+                                      taplist, true)) {
+      CFG_POST_ERR("Could't find device %u on cable '%s'", parms->device,
+                   parms->cable.c_str());
+      return;
+    }
+    adapter.set_target_device(device, taplist);
     if (parms->start) ocla.debug_start(parms->instance);
     if (parms->reg) Ocla_print(ocla.dump_registers(parms->instance));
     if (parms->dump || parms->waveform)
       Ocla_print(
           ocla.dump_samples(parms->instance, parms->dump, parms->waveform));
     if (parms->session_info) Ocla_print(ocla.show_session_info());
+  } else if (subcmd == "list_cable") {
+    auto parms =
+        static_cast<const CFGArg_DEBUGGER_LIST_CABLE*>(arg->get_sub_arg());
+
+    auto cables = hardware_manager.get_cables();
+    if (cables.empty()) {
+      if (parms->verbose) CFG_POST_MSG("No cable detected");
+    } else {
+      if (parms->verbose) {
+        CFG_POST_MSG("Cable");
+        CFG_POST_MSG("-----------------");
+      }
+      for (const auto& cable : cables) {
+        if (parms->verbose)
+          CFG_POST_MSG("(%u) %s", cable.index, cable.name.c_str());
+        cmdarg->tclOutput += cable.name + " ";
+      }
+    }
+
+  } else if (subcmd == "list_device") {
+    auto parms =
+        static_cast<const CFGArg_DEBUGGER_LIST_DEVICE*>(arg->get_sub_arg());
+
+    std::vector<Device> devices{};
+
+    if (parms->m_args.size() == 1) {
+      std::string cable_name = parms->m_args[0];
+      if (!hardware_manager.is_cable_exists(cable_name, true)) {
+        CFG_POST_ERR("Cable '%s' not found", cable_name.c_str());
+        return;
+      }
+      devices = hardware_manager.get_devices(cable_name, true);
+    } else {
+      // fild all ocla devices
+      devices = hardware_manager.get_devices();
+    }
+
+    if (devices.empty()) {
+      CFG_POST_MSG("No OCLA device detected");
+      return;
+    }
+
+    if (parms->verbose) {
+      CFG_POST_MSG("Cable                       | Device            ");
+      CFG_POST_MSG("------------------------------------------------");
+    }
+
+    for (const auto& device : devices) {
+      if (parms->verbose)
+        CFG_POST_MSG("(%u) %-24s  %s<%u>", device.cable.index,
+                     device.cable.name.c_str(), device.name.c_str(),
+                     device.index);
+      cmdarg->tclOutput += device.cable.name + " " + device.name + "<" +
+                           std::to_string(device.index) + "> ";
+    }
+
   } else if (subcmd == "counter") {
     // for testing with IP on ocla platform only.
     // Will be removed at final

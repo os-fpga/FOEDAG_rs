@@ -1,5 +1,5 @@
-#ifndef __OPENOCDJTAGADAPTER_H__
-#define __OPENOCDJTAGADAPTER_H__
+#ifndef __OCLAOPENOCDADAPTER_H__
+#define __OCLAOPENOCDADAPTER_H__
 
 #include <atomic>
 #include <cstdint>
@@ -11,27 +11,26 @@
 using ExecFuncType = std::function<int(const std::string&, std::string&,
                                        std::ostream*, std::atomic<bool>&)>;
 
-class OpenocdJtagAdapter : public OclaJtagAdapter {
+class OclaOpenocdAdapter : public OclaJtagAdapter {
  public:
-  OpenocdJtagAdapter(std::string filepath, ExecFuncType cmdexec);
-  virtual ~OpenocdJtagAdapter(){};
+  OclaOpenocdAdapter(std::string filepath, ExecFuncType cmdexec);
+  virtual ~OclaOpenocdAdapter();
   virtual void write(uint32_t addr, uint32_t data);
   virtual uint32_t read(uint32_t addr);
   virtual std::vector<uint32_t> read(uint32_t base_addr, uint32_t num_reads,
                                      uint32_t increase_by = 0);
-  // debug use
-  void set_id(uint32_t id);
-  void set_speed_khz(uint32_t speed_khz);
+  virtual void set_target_device(Device device, std::vector<Tap> taplist);
 
  private:
+  std::string convert_transport_to_string(TransportType transport,
+                                          std::string defval = "jtag");
   std::string build_command(const std::string& cmd);
   int execute_command(const std::string& cmd, std::string& output);
   std::vector<uint32_t> parse(const std::string& output);
   std::string m_filepath;
-  ExecFuncType m_cmdexec = nullptr;
-  uint32_t m_id;
-  uint32_t m_irlen;
-  uint32_t m_speed_khz;
+  ExecFuncType m_cmdexec;
+  Device m_device;
+  std::vector<Tap> m_taplist;
 };
 
-#endif  //__OPENOCDJTAGADAPTER_H__
+#endif  //__OCLAOPENOCDADAPTER_H__

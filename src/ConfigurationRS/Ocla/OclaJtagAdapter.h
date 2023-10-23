@@ -4,6 +4,9 @@
 #include <cstdint>
 #include <vector>
 
+#include "Device.h"
+#include "Tap.h"
+
 class OclaJtagAdapter {
  public:
   virtual ~OclaJtagAdapter(){};
@@ -11,6 +14,7 @@ class OclaJtagAdapter {
   virtual uint32_t read(uint32_t addr) = 0;
   virtual std::vector<uint32_t> read(uint32_t base_addr, uint32_t num_reads,
                                      uint32_t increase_by = 0) = 0;
+  virtual void set_target_device(Device device, std::vector<Tap> taps) = 0;
 };
 
 #endif  //__OCLAJTAGADAPTER_H__
