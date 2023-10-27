@@ -791,44 +791,7 @@ std::string CompilerRS::BaseVprCommand(BaseVprDefaults defaults) {
   } else if (!m_deviceSize.empty()) {
     device_size = " --device " + m_deviceSize;
   }
-  std::string netlistFile;
-  switch (GetNetlistType()) {
-    case NetlistType::Verilog:
-      netlistFile = ProjManager()->projectName() + "_post_synth.eblif";
-      break;
-    case NetlistType::VHDL:
-      netlistFile = ProjManager()->projectName() + "_post_synth.eblif";
-      break;
-    case NetlistType::Edif:
-      netlistFile = ProjManager()->projectName() + "_post_synth.edif";
-      break;
-    case NetlistType::Blif:
-      netlistFile = ProjManager()->projectName() + "_post_synth.blif";
-      break;
-    case NetlistType::EBlif:
-      netlistFile = ProjManager()->projectName() + "_post_synth.eblif";
-      break;
-  }
-  netlistFile = FilePath(Action::Synthesis, netlistFile).string();
-  for (const auto &lang_file : m_projManager->DesignFiles()) {
-    switch (lang_file.first.language) {
-      case Design::Language::VERILOG_NETLIST:
-      case Design::Language::BLIF:
-      case Design::Language::EBLIF: {
-        netlistFile = lang_file.second;
-        std::filesystem::path the_path = netlistFile;
-        if (!the_path.is_absolute()) {
-          netlistFile =
-              std::filesystem::path(std::filesystem::path("..") / netlistFile)
-                  .string();
-        }
-        break;
-      }
-      default:
-        break;
-    }
-  }
-
+  const std::string netlistFile = GetNetlistPath();
   std::string pnrOptions;
   if (ClbPackingOption() == ClbPacking::Timing_driven) {
     pnrOptions += " --allow_unrelated_clustering off";
