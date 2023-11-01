@@ -140,15 +140,16 @@ ${OUTPUT_NETLIST}
 static auto assembler_flow(CompilerRS *compiler, bool batchMode, int argc,
                            const char *argv[]) {
   CFGCompiler *cfgcompiler = compiler->GetConfiguration();
-  compiler->BitsOpt(Compiler::BitstreamOpt::DefaultBitsOpt);
+  compiler->BitsFlags(BitstreamFlags::DefaultBitsOpt);
+  compiler->BitsOpt(Compiler::BitstreamOpt::None);
   for (int i = 1; i < argc; i++) {
     std::string arg = argv[i];
     if (arg == "force") {
-      compiler->BitsOpt(Compiler::BitstreamOpt::Force);
+      compiler->BitsFlags(BitstreamFlags::Force);
     } else if (arg == "clean") {
       compiler->BitsOpt(Compiler::BitstreamOpt::Clean);
     } else if (arg == "enable_simulation") {
-      compiler->BitsOpt(Compiler::BitstreamOpt::EnableSimulation);
+      compiler->BitsFlags(BitstreamFlags::EnableSimulation);
     } else {
       compiler->ErrorMessage("Unknown bitstream option: " + arg);
       return TCL_ERROR;
@@ -280,17 +281,15 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   }
   result = ReplaceAll(result, "${KEEP_NAMES}", keeps);
   std::string optimization;
-  switch (m_synthOpt) {
-    case SynthesisOpt::Area:
+  switch (SynthOptimization()) {
+    case SynthesisOptimization::Area:
       optimization = "-de -goal area";
       break;
-    case SynthesisOpt::Delay:
+    case SynthesisOptimization::Delay:
       optimization = "-de -goal delay";
       break;
-    case SynthesisOpt::Mixed:
+    case SynthesisOptimization::Mixed:
       optimization = "-de -goal mixed";
-      break;
-    case SynthesisOpt::Clean:
       break;
   }
   std::string io_inference;
@@ -973,11 +972,11 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const std::string &argsStr) {
     if (option == "-_SynthOpt_" && tokens.size() > 1) {
       std::string arg = tokens[1];
       if (arg == "area") {
-        compiler->SynthOpt(Compiler::SynthesisOpt::Area);
+        compiler->SynthOptimization(SynthesisOptimization::Area);
       } else if (arg == "delay") {
-        compiler->SynthOpt(Compiler::SynthesisOpt::Delay);
+        compiler->SynthOptimization(SynthesisOptimization::Delay);
       } else if (arg == "mixed") {
-        compiler->SynthOpt(Compiler::SynthesisOpt::Mixed);
+        compiler->SynthOptimization(SynthesisOptimization::Mixed);
       }
       continue;
     }
