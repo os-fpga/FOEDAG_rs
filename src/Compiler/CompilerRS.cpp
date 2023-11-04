@@ -1142,6 +1142,7 @@ bool CompilerRS::TimingAnalysis() {
   // use OpenSTA to do the job
   auto file = ProjManager()->projectName() + "_sta.cmd";
   if (TimingAnalysisEngineOpt() == STAEngineOpt::Opensta) {
+#ifdef ENABLE_OPENSTA
     // allows SDF to be generated for OpenSTA
 
     // calls stars to generate files for opensta
@@ -1204,6 +1205,14 @@ bool CompilerRS::TimingAnalysis() {
           fileList);
       return false;
     }
+#else
+    Message(
+        "Raptor was not compiled with OpenSTA enabled, defaulting to VPR's "
+        "Tatum timing engine");
+    taCommand = BaseVprCommand({false}) + " --analysis";
+    FileUtils::WriteToFile(file, taCommand + " --disp on");
+#endif
+
   } else {  // use vpr/tatum engine
     taCommand = BaseVprCommand({false}) + " --analysis";
     FileUtils::WriteToFile(file, taCommand + " --disp on");
