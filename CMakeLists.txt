@@ -473,12 +473,11 @@ if (NOT RAPTOR)
         PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/bin/openocd${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${CMAKE_INSTALL_BINDIR})
 
     if (MSVC)
-        set(VCPKG_LIBUSB_DIR "$ENV{VCPKG_INSTALLATION_ROOT}/packages/libusb_x64-windows")
-        file(TO_CMAKE_PATH "${VCPKG_LIBUSB_DIR}" VCPKG_LIBUSB_DIR)
-        install(
-          PROGRAMS ${VCPKG_LIBUSB_DIR}/bin/libusb-1.0.dll DESTINATION ${CMAKE_INSTALL_BINDIR})
-        install(
-          PROGRAMS ${VCPKG_LIBUSB_DIR}/bin/libusb-1.0.dll DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin)
+      set(VCPKG_LIBUSB_DIR "$ENV{VCPKG_INSTALLATION_ROOT}/packages/libusb_x64-windows")
+      file(TO_CMAKE_PATH "${VCPKG_LIBUSB_DIR}" VCPKG_LIBUSB_DIR)
+      set(libusb_dll "${VCPKG_LIBUSB_DIR}/bin/libusb-1.0.dll")
+      file(COPY ${libusb_dll} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+      install(FILES ${libusb_dll} DESTINATION ${CMAKE_INSTALL_BINDIR})
     endif()
 endif()
 
