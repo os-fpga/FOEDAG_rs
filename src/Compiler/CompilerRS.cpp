@@ -239,6 +239,12 @@ std::string CompilerRS::FinishAnalyzeScript(const std::string &script) {
       datapath / "raptor" / "sim_models" / "rapidsilicon" / m_mapToTechnology;
   std::filesystem::path primitivesBlackboxPath =
       tech_datapath / "cell_sim_blackbox.v";
+  std::filesystem::path latestPrimitivesBlackboxPath =
+      tech_datapath / "RS_PRIMITIVES" / "blackbox_models" /
+      "cell_sim_blackbox.v";
+  if (FileUtils::FileExists(latestPrimitivesBlackboxPath)) {
+    primitivesBlackboxPath = latestPrimitivesBlackboxPath;
+  }
   std::string result;
   switch (GetParserType()) {
     case ParserType::Default:
