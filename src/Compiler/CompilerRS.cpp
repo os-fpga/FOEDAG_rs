@@ -490,106 +490,75 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
         GetSimulator()->AddGateSimulationModel(tech_datapath / "TDP18K_FIFO.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "ufifo_ctl.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "sram1024x18.v");
-
-        // TODO, model is invalid:
-        // GetSimulator()->AddGateSimulationModel(tech_datapath /
-        // "RS_PRIMITIVES" / "CARRY_CHAIN" / "CARRY_CHAIN.v");
-
-        // TODO, only one version of BRAM, DSP FIFO need to stay
-
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog/" /
+                                               "sim_models" / "verilog" /
                                                "DSP38.v");
 
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog" /
+                                               "sim_models" / "verilog" /
                                                "TDP_RAM18KX2.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog" /
+                                               "sim_models" / "verilog" /
                                                "TDP_RAM36K.v");
 
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog/" /
+                                               "sim_models" / "verilog" /
                                                "FIFO18KX2.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog/" /
+                                               "sim_models" / "verilog" /
                                                "FIFO36K.v");
 
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog" / "LUT1.v");
+                                               "sim_models" / "verilog" /
+                                               "LUT1.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog" / "LUT2.v");
+                                               "sim_models" / "verilog" /
+                                               "LUT2.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog" / "LUT3.v");
+                                               "sim_models" / "verilog" /
+                                               "LUT3.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog" / "LUT4.v");
+                                               "sim_models" / "verilog" /
+                                               "LUT4.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog" / "LUT5.v");
+                                               "sim_models" / "verilog" /
+                                               "LUT5.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog" / "LUT6.v");
-
-        // TODO: model is not valid for IVerilog/Verilator
-        // GetSimulator()->AddGateSimulationModel(tech_datapath /
-        // "RS_PRIMITIVES" / "IO" / "IO_MODELS" / "PLL" / "PLL_ADVANCE.sv");
-
-#ifdef PRODUCTION_BUILD
-        // TODO: We cannot ship the GB models, need abstract models
-#else
-        // GetSimulator()->AddGateSimulationModel(
-        //     tech_datapath / "RS_PRIMITIVES" / "IO" / "IO_MODELS" /
-        //     "GBX_CONFIG" / "GEARBOX_CONFIG_PKG.sv");
-
+                                               "sim_models" / "verilog" /
+                                               "LUT6.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog" /
+                                               "sim_models" / "verilog" /
                                                "CLK_BUF.v");
-        GetSimulator()->AddGateSimulationModel(
-            tech_datapath / "RS_PRIMITIVES" / "sim_models/verilog" / "I_BUF.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog" /
+                                               "sim_models" / "verilog" /
+                                               "I_BUF.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "sim_models" / "verilog" /
                                                "I_BUF_DS.v");
-        GetSimulator()->AddGateSimulationModel(
-            tech_datapath / "RS_PRIMITIVES" / "sim_models/verilog" / "I_DDR.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog" /
+                                               "sim_models" / "verilog" /
+                                               "I_DDR.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "sim_models" / "verilog" /
                                                "I_DELAY.v");
-        GetSimulator()->AddGateSimulationModel(
-            tech_datapath / "RS_PRIMITIVES" / "sim_models/verilog" / "O_BUF.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog" /
+                                               "sim_models" / "verilog" /
+                                               "O_BUF.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "sim_models" / "verilog" /
                                                "O_BUFT.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog" /
+                                               "sim_models" / "verilog" /
                                                "O_BUFT_DS.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog" /
+                                               "sim_models" / "verilog" /
                                                "O_BUF_DS.v");
-        GetSimulator()->AddGateSimulationModel(
-            tech_datapath / "RS_PRIMITIVES" / "sim_models/verilog" / "O_DDR.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
-                                               "sim_models/verilog" /
+                                               "sim_models" / "verilog" /
+                                               "O_DDR.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "sim_models" / "verilog" /
                                                "O_DELAY.v");
-
-        // GetSimulator()->AddGateSimulationModel(tech_datapath /
-        // "RS_PRIMITIVES" /
-        //                                        "IO" / "IO_MODELS" / "GBX" /
-        //                                        "gbox_top.sv");
-        // GetSimulator()->AddGateSimulationModel(tech_datapath /
-        // "RS_PRIMITIVES" /
-        //                                        "IO" / "IO_MODELS" / "GBX" /
-        //                                        "delay_line_tap64.sv");
-        // GetSimulator()->AddGateSimulationModel(tech_datapath /
-        // "RS_PRIMITIVES" /
-        //                                        "IO" / "IO_MODELS" / "GBX" /
-        //                                        "phase_sel.sv");
-        // GetSimulator()->AddGateSimulationModel(tech_datapath /
-        // "RS_PRIMITIVES" /
-        //                                        "IO" / "IO_MODELS" / "GBX" /
-        //                                        "gbox_bslip.sv");
-        // ProjManager()->addLibraryPath(
-        //     (tech_datapath / "RS_PRIMITIVES" / "IO" / "IO_MODELS" / "GBX")
-        //         .string());
-        // ProjManager()->addLibraryExtension(".sv");
-#endif
 
         if (FileUtils::FileExists(tech_datapath / "llatches_sim.v")) {
           GetSimulator()->AddGateSimulationModel(tech_datapath /
