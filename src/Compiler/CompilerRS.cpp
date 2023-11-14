@@ -499,21 +499,21 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
                                                "sim_models" / "verilog" /
                                                "DSP38.v");
-
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "sim_models" / "verilog" /
+                                               "CARRY_CHAIN.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
                                                "sim_models" / "verilog" /
                                                "TDP_RAM18KX2.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
                                                "sim_models" / "verilog" /
                                                "TDP_RAM36K.v");
-
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
                                                "sim_models" / "verilog" /
                                                "FIFO18KX2.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
                                                "sim_models" / "verilog" /
                                                "FIFO36K.v");
-
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
                                                "sim_models" / "verilog" /
                                                "LUT1.v");
