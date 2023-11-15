@@ -292,9 +292,9 @@ congestion_flow <congestion_type> : Congestion driven compilation flow
        -i <n>                   : Specify the index of the OCLA instance to configure
        -t <seconds>             : Specify command timeout in second
        -o <output filepath>     : Specify the ouput filepath to write the FST waveform output
-     status -b <cable_name/index>: Show current data available status of the IP 
+     status -b <cable_name/index> -i <n>: Show current data available status of the IP 
        -b <cable_name/index>    : Specify the cable name or index
-       -i                       : Specify the index of the OCLA instance to configure
+       -i <n>                   : Specify the index of the OCLA instance to configure
      show_waveform ?-i <input filepath>?: Show signal waveform in a specified FST file in GTKWave 
        -i <input filepath>      : Specific the input filepath to open in GTKWave
 
