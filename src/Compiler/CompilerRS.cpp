@@ -489,9 +489,6 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
     case NetlistType::EBlif:
       if (action == Simulator::SimulationType::Gate ||
           action == Simulator::SimulationType::PNR) {
-        GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.v");
-        GetSimulator()->AddGateSimulationModel(tech_datapath / "simlib.v");
-        GetSimulator()->AddGateSimulationModel(tech_datapath / "dsp_sim.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "brams_sim.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "TDP18K_FIFO.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "ufifo_ctl.v");
@@ -501,7 +498,19 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
                                                "DSP38.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
                                                "sim_models" / "verilog" /
-                                               "CARRY_CHAIN.v");
+                                               "CARRY.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "sim_models" / "verilog" /
+                                               "adder_carry.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "sim_models" / "verilog" /
+                                               "DFFRE.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "sim_models" / "verilog" /
+                                               "DFFNRE.v");
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
+                                               "sim_models" / "verilog" /
+                                               "BOOT_CLOCK.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
                                                "sim_models" / "verilog" /
                                                "TDP_RAM18KX2.v");
@@ -565,7 +574,6 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
         GetSimulator()->AddGateSimulationModel(tech_datapath / "RS_PRIMITIVES" /
                                                "sim_models" / "verilog" /
                                                "O_DELAY.v");
-
         if (FileUtils::FileExists(tech_datapath / "llatches_sim.v")) {
           GetSimulator()->AddGateSimulationModel(tech_datapath /
                                                  "llatches_sim.v");
