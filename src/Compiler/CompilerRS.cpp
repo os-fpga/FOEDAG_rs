@@ -489,6 +489,7 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
     case NetlistType::EBlif:
       if (action == Simulator::SimulationType::Gate ||
           action == Simulator::SimulationType::PNR) {
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "simlib.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "brams_sim.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "TDP18K_FIFO.v");
         GetSimulator()->AddGateSimulationModel(tech_datapath / "ufifo_ctl.v");
