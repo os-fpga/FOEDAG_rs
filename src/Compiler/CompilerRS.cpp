@@ -1345,24 +1345,18 @@ bool CompilerRS::PowerAnalysis() {
     }
   }
 
-  std::filesystem::path binpath = GetSession()->Context()->BinaryPath();
-  std::filesystem::path tclLibPath = binpath / ".." / "lib";
-  std::filesystem::path tclLibraryPath = binpath / ".." / "lib" / "tcl8.6";
-  SetEnvironmentVariable("TCLLIBPATH", tclLibPath.string());
-  SetEnvironmentVariable("TCL_LIBRARY", tclLibraryPath.string());
   std::string command = m_tclExecutablePath.string() + " ";
   command += m_powerExecutablePath.string() + " ";
   command += "--netlist=" + netlistFile + " ";
   if (!sdcFile.empty()) command += "--sdc=" + sdcFile + " ";
 
-  // Use the following sub job to run the power tcl script: raptor --cmd "cmd"
+  // Use the following sub job to run the power tcl script: raptor.exe --cmd
+  // "cmd"
   // --script <script>
-  /* This code fails in CI on CentOS so we use the tclsh approach above:
-  std::string command = m_raptorExecutablePath.string() + " ";
-  command += "--cmd \"";
-  command += "set netlist_file " + netlistFile + ";";
-  if (!sdcFile.empty()) {
-    command += "set sdc " + sdcFile + ";";
+  /* This code fails in CI on docker container so we use the tclsh approach
+  above: std::string command = m_raptorExecutablePath.string() + " "; command +=
+  "--cmd \""; command += "set netlist_file " + netlistFile + ";"; if
+  (!sdcFile.empty()) { command += "set sdc " + sdcFile + ";";
   }
   command += "\" ";
   command += "--batch ";
