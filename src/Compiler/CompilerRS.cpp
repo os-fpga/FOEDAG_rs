@@ -1344,24 +1344,15 @@ bool CompilerRS::PowerAnalysis() {
       break;
     }
   }
-
-  std::string command = m_tclExecutablePath.string() + " ";
-  command += m_powerExecutablePath.string() + " ";
-  command += "--netlist=" + netlistFile + " ";
-  if (!sdcFile.empty()) command += "--sdc=" + sdcFile + " ";
-
-  // Use the following sub job to run the power tcl script: raptor.exe --cmd
-  // "cmd"
-  // --script <script>
-  /* This code fails in CI on docker container so we use the tclsh approach
-  above: std::string command = m_raptorExecutablePath.string() + " "; command +=
-  "--cmd \""; command += "set netlist_file " + netlistFile + ";"; if
-  (!sdcFile.empty()) { command += "set sdc " + sdcFile + ";";
+  std::string command = m_raptorExecutablePath.string() + ".exe" + " "; 
+  command +="--cmd \""; 
+  command += "set netlist_file " + netlistFile + ";"; 
+  if(!sdcFile.empty()) { 
+    command += "set sdc " + sdcFile + ";";
   }
   command += "\" ";
   command += "--batch ";
   command += "--script " + m_powerExecutablePath.string() + " ";
-  */
 
   auto file = ProjManager()->projectName() + "_power.cmd";
   FileUtils::WriteToFile(file, command);
