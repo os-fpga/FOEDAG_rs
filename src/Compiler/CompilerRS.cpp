@@ -1344,10 +1344,10 @@ bool CompilerRS::PowerAnalysis() {
       break;
     }
   }
-  std::string command = m_raptorExecutablePath.string() + ".exe" + " "; 
-  command +="--cmd \""; 
-  command += "set netlist_file " + netlistFile + ";"; 
-  if(!sdcFile.empty()) { 
+  std::string command = m_raptorExecutablePath.string() + ".exe" + " ";
+  command += "--cmd \"";
+  command += "set netlist_file " + netlistFile + ";";
+  if (!sdcFile.empty()) {
     command += "set sdc " + sdcFile + ";";
   }
   command += "\" ";
