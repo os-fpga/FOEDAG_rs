@@ -127,7 +127,7 @@ jobs:
 
 # Reference: https://github.com/OPM/ResInsight/blob/dev/.github/workflows/centos7.yml
   centos7-gcc:
-    name:  ${{ matrix.mode }}
+    name:  centos7-${{ matrix.mode }}
 
     runs-on: ubuntu-latest
     container:
@@ -481,9 +481,8 @@ jobs:
 
     - name: Build
       run: |
-        make run-cmake-release
-       # make release
-       # make install
+         make release
+         make install
 
     - name: Unit tests
       run: |
