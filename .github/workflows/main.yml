@@ -101,7 +101,6 @@ jobs:
       run: |
            make debug
            make test/valgrind
-           cat valgrind.log
 
     - name: Install Test
       if: matrix.mode == 'install'
@@ -244,29 +243,11 @@ jobs:
       with:
         msystem: MSYS
         update: true
-        install:  gcc make cmake ninja python python-devel git diffutils autoconf mingw-w64-x86_64-libusb
+        install:  gcc make cmake ninja python python-devel git diffutils autoconf mingw-w64-x86_64-libusb base-devel git mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-qt6-base-debug mingw-w64-x86_64-qt6 mingw-w64-x86_64-qt6-declarative-debug mingw-w64-x86_64-tcl mingw-w64-x86_64-zlib
         release: false
       env:
         MSYS2_PATH_TYPE: inherit
- 
-    - name: Setup MSYS2
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: MINGW64
-        path-type: minimal
-        update: true
-        release: false
-        install: >-
-          base-devel
-          git
-          mingw-w64-x86_64-toolchain
-          mingw-w64-x86_64-cmake
-          mingw-w64-x86_64-qt6-base-debug
-          mingw-w64-x86_64-qt6
-          mingw-w64-x86_64-qt6-declarative-debug
-          mingw-w64-x86_64-tcl
-          mingw-w64-x86_64-zlib
-
+          
     - shell: msys2 {0}
       run: |
         pacman --noconfirm -S zlib
