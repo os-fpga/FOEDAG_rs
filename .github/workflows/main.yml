@@ -315,8 +315,7 @@ jobs:
          export Qt6_Dir=/mingw64/lib/cmake/Qt6/
          export Qt6_Dir=/mingw64/qt6-static/lib/cmake/Qt6/
          export PATH=$Qt6_DIR:$PATH
-         make lib-only
-# There are Qt linkage issues, so build only the libs for now        
+         make lib-only # There are Qt linkage issues, so build only the libs for now        
          make VERBOSE=1 release
          make debug 
          make install
