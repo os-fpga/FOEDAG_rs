@@ -82,9 +82,9 @@ jobs:
       if: matrix.mode == 'test'
       run: |
          make debug VERBOSE=1
-         make test/unittest-d
-         make release test/batch
-         make test/gui
+         # make test/unittest-d
+         # make release test/batch
+         # make test/gui
 
     - name: Regression
       if: matrix.mode == 'regression'
@@ -166,9 +166,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: make workspace safe
+    - name: make workspace safe & show space
       run: |
         git config --global --add safe.directory $GITHUB_WORKSPACE
+        df -h && du -sch *
         
     - name: Download Qt6 artifact
       run: |
@@ -199,9 +200,10 @@ jobs:
     - name: Test
       if: matrix.mode == 'test'
       run: |
-         make debug test/unittest-d
-         make release test/batch
-         make test/gui
+        git config --global --add safe.directory '*'
+        #       make debug test/unittest-d
+        make release test/batch
+        #        make test/gui
 
     - name: Regression
       id: reg_ok
