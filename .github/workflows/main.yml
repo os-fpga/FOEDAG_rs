@@ -101,6 +101,7 @@ jobs:
       run: |
            make debug
            make test/valgrind
+           cat valgrind.log
 
     - name: Install Test
       if: matrix.mode == 'install'
@@ -247,20 +248,6 @@ jobs:
         release: false
       env:
         MSYS2_PATH_TYPE: inherit
-    
-# Install Qt
- #   - shell: msys2 {0}
- #     run: |
- #       pacman --noconfirm -S zlib
- #       pacman --noconfirm -S zlib-devel
- #       pacman --noconfirm -S mingw-w64-x86_64-qt6
- #       # Static version pacman --noconfirm -Syu mingw-w64-x86_64-qt6-static
- #       find . -name qt5-config.cmake
- #       find . -name Qt5Config.cmake
- #       find /mingw64 -name qt5-config.cmake
- #       find /mingw64 -name Qt5Config.cmake
- #       find C:/msys64/ -name qt5-config.cmake
- #       find C:/msys64/ -name Qt5Config.cmake
  
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
@@ -279,23 +266,34 @@ jobs:
           mingw-w64-x86_64-qt6-declarative-debug
           mingw-w64-x86_64-tcl
           mingw-w64-x86_64-zlib
+
+    - shell: msys2 {0}
+      run: |
+        pacman --noconfirm -S zlib
+        pacman --noconfirm -S zlib-devel
+        pacman --noconfirm -S mingw-w64-x86_64-qt6
+        # Static version pacman --noconfirm -Syu mingw-w64-x86_64-qt6-static
+        find . -name qt6-config.cmake
+        find . -name Qt6Config.cmake
+        find /mingw64 -name qt6-config.cmake
+        find /mingw64 -name Qt6Config.cmake
+        find C:/msys64/ -name qt6-config.cmake
+        find C:/msys64/ -name Qt6Config.cmake
         
     - name: Configure shell environment variables
       run: |
+        export Qt6_Dir=/mingw64/lib/cmake/Qt6/
+        # Static version: export Qt6_Dir=/mingw64/qt6-static/lib/cmake/Qt6/
+        export Qt6_DIR=$Qt6_Dir
         export CWD=`pwd`
-        echo 'NO_TCMALLOC=On' >> $GITHUB_ENV
-        echo "PREFIX=$CWD/install" >> $GITHUB_ENV
+        echo "Qt6_DIR=$Qt6_DIR" >> $GITHUB_ENV
+        echo 'CMAKE_GENERATOR=Ninja' >> $GITHUB_ENV
         echo 'CC=gcc' >> $GITHUB_ENV
         echo 'CXX=g++' >> $GITHUB_ENV
-    #    export Qt5_Dir=/mingw64/lib/cmake/Qt5/
-    #    # Static version: export Qt5_Dir=/mingw64/qt5-static/lib/cmake/Qt5/
-    #    export Qt5_DIR=$Qt5_Dir
-    #    export CWD=`pwd`
-    #    echo "Qt5_DIR=$Qt5_DIR" >> $GITHUB_ENV
-    #    echo 'CMAKE_GENERATOR=Ninja' >> $GITHUB_ENV
-    
-    #    echo 'NO_TCMALLOC=On' >> $GITHUB_ENV
-    #    echo "PREFIX=$CWD/install" >> $GITHUB_ENV
+        echo 'NO_TCMALLOC=On' >> $GITHUB_ENV
+        echo "PREFIX=$CWD/install" >> $GITHUB_ENV
+
+        echo "$Qt6_DIR" >> $GITHUB_PATH
 
 
     - name: Show shell configuration
@@ -312,22 +310,26 @@ jobs:
 
     - name: Build
       run: |
-         export Qt6_Dir=/mingw64/lib/cmake/Qt6/
-         export Qt6_Dir=/mingw64/qt6-static/lib/cmake/Qt6/
-         export PATH=$Qt6_DIR:$PATH
-         make lib-only # There are Qt linkage issues, so build only the libs for now        
-         make VERBOSE=1 release
-         make debug 
-         make install
+        export Qt6_Dir=/mingw64/lib/cmake/Qt6/
+        # export Qt6_Dir=/mingw64/qt6-static/lib/cmake/Qt6/
+        export Qt6_DIR=$Qt6_Dir
+        export PATH=$Qt6_DIR:$PATH
+        make lib-only
+# There are Qt linkage issues, so build only the libs for now        
+#        make VERBOSE=1 release
+#        make debug 
+#        make install
 
     - name: Test
       run: |
-         export Qt6_Dir=/mingw64/lib/cmake/Qt6/
-         export Qt6_Dir=/mingw64/qt6-static/lib/cmake/Qt6/
-         export PATH=$Qt6_DIR:$PATH       
-         make test_install # There Qt are linkage issues, so build only the libs for now 
-         make test/unittest
-         make regression
+        export Qt6_Dir=/mingw64/lib/cmake/Qt6/
+        # export Qt6_Dir=/mingw64/qt5-static/lib/cmake/Qt6/
+        export Qt6_DIR=$Qt6_Dir
+        export PATH=$Qt6_DIR:$PATH
+# There Qt are linkage issues, so build only the libs for now        
+#        make test_install
+#        make test/unittest
+#        make regression
 
   windows-msvc:
     runs-on: windows-2022
