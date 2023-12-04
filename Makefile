@@ -101,14 +101,14 @@ test_install_mac:
 	find /Users/runner/work/FOEDAG_rs/ -name "*QtXml*" -print
 	find /Users/runner/work/FOEDAG_rs/ -name "*QtQuick*" -print
 	otool -L $(PREFIX)/bin/raptor
-	install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtWidgets /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtWidgets.framework/QtWidgets $(PREFIX)/bin/raptor
-	install_name_tool -change @rpath/QtCore.framework/Versions/5/QtCore /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtCore.framework/QtCore $(PREFIX)/bin/raptor
-	install_name_tool -change @rpath/QtGui.framework/Versions/5/QtGui /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtGui.framework/QtGui $(PREFIX)/bin/raptor
-	install_name_tool -change @rpath/QtXml.framework/Versions/5/QtXml /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtXml.framework/QtXml $(PREFIX)/bin/raptor
-	install_name_tool -change @rpath/QtQuick.framework/Versions/5/QtQuick /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtQuick.framework/QtQuick $(PREFIX)/bin/raptor
-	install_name_tool -change @rpath/QtQmlModels.framework/Versions/5/QtQmlModels /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtQmlModels.framework/QtQmlModels $(PREFIX)/bin/raptor
-	install_name_tool -change @rpath/QtQml.framework/Versions/5/QtQml /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtQml.framework/QtQml $(PREFIX)/bin/raptor
-	install_name_tool -change @rpath/QtNetwork.framework/Versions/5/QtNetwork /Users/runner/work/FOEDAG_rs/Qt/5.15.2/clang_64/lib/QtNetwork.framework/QtNetwork $(PREFIX)/bin/raptor
+	install_name_tool -change @rpath/QtWidgets.framework/Versions/6/QtWidgets /Users/runner/work/FOEDAG_rs/Qt/6.2.4/clang_64/lib/QtWidgets.framework/QtWidgets $(PREFIX)/bin/raptor
+	install_name_tool -change @rpath/QtCore.framework/Versions/6/QtCore /Users/runner/work/FOEDAG_rs/Qt/6.2.4/clang_64/lib/QtCore.framework/QtCore $(PREFIX)/bin/raptor
+	install_name_tool -change @rpath/QtGui.framework/Versions/6/QtGui /Users/runner/work/FOEDAG_rs/Qt/6.2.4/clang_64/lib/QtGui.framework/QtGui $(PREFIX)/bin/raptor
+	install_name_tool -change @rpath/QtXml.framework/Versions/6/QtXml /Users/runner/work/FOEDAG_rs/Qt/6.2.4/clang_64/lib/QtXml.framework/QtXml $(PREFIX)/bin/raptor
+	install_name_tool -change @rpath/QtQuick.framework/Versions/6/QtQuick /Users/runner/work/FOEDAG_rs/Qt/6.2.4/clang_64/lib/QtQuick.framework/QtQuick $(PREFIX)/bin/raptor
+	install_name_tool -change @rpath/QtQmlModels.framework/Versions/6/QtQmlModels /Users/runner/work/FOEDAG_rs/Qt/6.2.4/clang_64/lib/QtQmlModels.framework/QtQmlModels $(PREFIX)/bin/raptor
+	install_name_tool -change @rpath/QtQml.framework/Versions/6/QtQml /Users/runner/work/FOEDAG_rs/Qt/6.2.4/clang_64/lib/QtQml.framework/QtQml $(PREFIX)/bin/raptor
+	install_name_tool -change @rpath/QtNetwork.framework/Versions/6/QtNetwork /Users/runner/work/FOEDAG_rs/Qt/6.2.4/clang_64/lib/QtNetwork.framework/QtNetwork $(PREFIX)/bin/raptor
 test_install:
 	$(PREFIX)/bin/raptor --batch --compiler dummy --script tests/TestBatch/test_compiler_batch.tcl
 	$(PREFIX)/bin/raptor --batch --compiler dummy --script tests/TestBatch/test_compiler_mt.tcl
