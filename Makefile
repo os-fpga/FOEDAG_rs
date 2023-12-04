@@ -68,8 +68,9 @@ coverage-build/html: raptor_gui-build/raptor_gui.coverage
 
 test/regression: run-cmake-release
 
+valgrind_args = --log-file=valgrind.log --gen-suppressions=all --suppressions=FOEDAG/valgrind.supp
 test/valgrind: run-cmake-debug
-	$(XVFB) valgrind --tool=memcheck --log-file=valgrind.log ./dbuild/bin/raptor --compiler dummy --replay tests/TestGui/gui_foedag.tcl
+	$(XVFB) valgrind --tool=memcheck $(valgrind_args) ./dbuild/bin/raptor --compiler dummy --replay tests/TestGui/gui_foedag.tcl
 	grep "ERROR SUMMARY: 0" valgrind.log
 
 test: test/unittest test/regression
