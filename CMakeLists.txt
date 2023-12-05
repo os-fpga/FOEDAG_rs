@@ -167,7 +167,6 @@ set(QRC_MAIN_WINDOW
 # Put source code here, files that are generated at build time in
 # raptor_gui_generated_SRC
 set(raptor_gui_SRC  
-  ${QRC_MAIN_WINDOW}
   ${PROJECT_SOURCE_DIR}/src/Compiler/CompilerRS.cpp
 )
 
