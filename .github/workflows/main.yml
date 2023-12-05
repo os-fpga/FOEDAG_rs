@@ -560,7 +560,7 @@ jobs:
       run: ./.github/bin/run-clang-format.sh
 
   ClangTidy:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: ${{github.event_name == 'pull_request'}}
 
     steps:
