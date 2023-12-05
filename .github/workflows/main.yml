@@ -6,7 +6,7 @@ on:
 
 jobs:
   linux-gcc:
-    name: ${{ matrix.mode }}
+    name: ubuntu-${{ matrix.mode }}
 
     runs-on: ubuntu-latest
     defaults:
@@ -81,46 +81,40 @@ jobs:
     - name: Test
       if: matrix.mode == 'test'
       run: |
-        make run-cmake-release
-   #     make debug VERBOSE=1
-#        make test/unittest-d
-#        make release test/batch
-#        make test/gui
+         make debug VERBOSE=1
+         # make test/unittest-d
+         # make release test/batch
+         # make test/gui
 
     - name: Regression
       if: matrix.mode == 'regression'
       run: |
-       make run-cmake-release
- #     make regression
+       make regression
 
     - name: Coverage
       if: matrix.mode == 'coverage'
       run: |
-        make run-cmake-release
-      #  make debug coverage-build/raptor_gui.coverage
+           make debug coverage-build/raptor_gui.coverage
 
     - name: Valgrind
       if: matrix.mode == 'valgrind'
       run: |
-        make run-cmake-release
-    #    make debug
-    #    make test/valgrind
+           make debug
+           make test/valgrind
 
     - name: Install Test
       if: matrix.mode == 'install'
       run: |
-       make run-cmake-release
-  #      make release
-  #      make install
-  #      make clean   # make sure we only see installation artifacts
-  #      make test_install
+          make release
+          make install
+          make clean   # make sure we only see installation artifacts
+          make test_install
 
     - name: Production
       if: matrix.mode == 'production'
       run: |
-        make run-cmake-release
-    #    make release PRODUCTION_BUILD=ON
-    #    ./build/bin/raptor --version
+          make release PRODUCTION_BUILD=ON
+          ./build/bin/raptor --version
 
     - name: Archive regression artifacts
       if: matrix.mode == 'regression' && always()
@@ -133,7 +127,7 @@ jobs:
 
 # Reference: https://github.com/OPM/ResInsight/blob/dev/.github/workflows/centos7.yml
   centos7-gcc:
-    name:  ${{ matrix.mode }}
+    name:  centos7-${{ matrix.mode }}
 
     runs-on: ubuntu-latest
     container:
@@ -172,9 +166,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: make workspace safe
+    - name: make workspace safe & show space
       run: |
         git config --global --add safe.directory $GITHUB_WORKSPACE
+        df -h && du -sch *
         
     - name: Download Qt6 artifact
       run: |
@@ -205,17 +200,16 @@ jobs:
     - name: Test
       if: matrix.mode == 'test'
       run: |
-        make run-cmake-release
+        git config --global --add safe.directory '*'
         #       make debug test/unittest-d
-  #      make release test/batch
+        make release test/batch
         #        make test/gui
 
     - name: Regression
       id: reg_ok
       if: matrix.mode == 'regression'
       run: |
-        make run-cmake-release
-   #     make regression
+         make regression
 
 # Reference: https://github.com/eyllanesc/69108420/blob/main/.github/workflows/test.yml
   msys2-gcc:
@@ -251,59 +245,38 @@ jobs:
       with:
         msystem: MSYS
         update: true
-        install:  gcc make cmake ninja python python-devel git diffutils autoconf mingw-w64-x86_64-libusb
+        install:  gcc make cmake ninja python python-devel git diffutils autoconf mingw-w64-x86_64-libusb base-devel git mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-qt6-base-debug mingw-w64-x86_64-qt6 mingw-w64-x86_64-qt6-declarative-debug mingw-w64-x86_64-tcl mingw-w64-x86_64-zlib
         release: false
       env:
         MSYS2_PATH_TYPE: inherit
-    
-# Install Qt
- #   - shell: msys2 {0}
- #     run: |
- #       pacman --noconfirm -S zlib
- #       pacman --noconfirm -S zlib-devel
- #       pacman --noconfirm -S mingw-w64-x86_64-qt6
- #       # Static version pacman --noconfirm -Syu mingw-w64-x86_64-qt6-static
- #       find . -name qt5-config.cmake
- #       find . -name Qt5Config.cmake
- #       find /mingw64 -name qt5-config.cmake
- #       find /mingw64 -name Qt5Config.cmake
- #       find C:/msys64/ -name qt5-config.cmake
- #       find C:/msys64/ -name Qt5Config.cmake
- 
-    - name: Setup MSYS2
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: MINGW64
-        path-type: minimal
-        update: true
-        release: false
-        install: >-
-          base-devel
-          git
-          mingw-w64-x86_64-toolchain
-          mingw-w64-x86_64-cmake
-          mingw-w64-x86_64-qt6-base-debug
-          mingw-w64-x86_64-qt6
-          mingw-w64-x86_64-qt6-declarative-debug
-          mingw-w64-x86_64-tcl
-          mingw-w64-x86_64-zlib
+          
+    - shell: msys2 {0}
+      run: |
+        pacman --noconfirm -S zlib
+        pacman --noconfirm -S zlib-devel
+        pacman --noconfirm -S mingw-w64-x86_64-qt6
+        # Static version pacman --noconfirm -Syu mingw-w64-x86_64-qt6-static
+        find . -name qt6-config.cmake
+        find . -name Qt6Config.cmake
+        find /mingw64 -name qt6-config.cmake
+        find /mingw64 -name Qt6Config.cmake
+        find C:/msys64/ -name qt6-config.cmake
+        find C:/msys64/ -name Qt6Config.cmake
         
     - name: Configure shell environment variables
       run: |
+        export Qt6_Dir=/mingw64/lib/cmake/Qt6/
+        # Static version: export Qt6_Dir=/mingw64/qt6-static/lib/cmake/Qt6/
+        export Qt6_DIR=$Qt6_Dir
         export CWD=`pwd`
+        echo "Qt6_DIR=$Qt6_DIR" >> $GITHUB_ENV
+        echo 'CMAKE_GENERATOR=Ninja' >> $GITHUB_ENV
+        echo 'CC=gcc' >> $GITHUB_ENV
+        echo 'CXX=g++' >> $GITHUB_ENV
         echo 'NO_TCMALLOC=On' >> $GITHUB_ENV
         echo "PREFIX=$CWD/install" >> $GITHUB_ENV
-         echo 'CC=gcc' >> $GITHUB_ENV
-         echo 'CXX=g++' >> $GITHUB_ENV
-    #    export Qt5_Dir=/mingw64/lib/cmake/Qt5/
-    #    # Static version: export Qt5_Dir=/mingw64/qt5-static/lib/cmake/Qt5/
-    #    export Qt5_DIR=$Qt5_Dir
-    #    export CWD=`pwd`
-    #    echo "Qt5_DIR=$Qt5_DIR" >> $GITHUB_ENV
-    #    echo 'CMAKE_GENERATOR=Ninja' >> $GITHUB_ENV
-    
-    #    echo 'NO_TCMALLOC=On' >> $GITHUB_ENV
-    #    echo "PREFIX=$CWD/install" >> $GITHUB_ENV
+
+        echo "$Qt6_DIR" >> $GITHUB_PATH
 
 
     - name: Show shell configuration
@@ -320,12 +293,11 @@ jobs:
 
     - name: Build
       run: |
-       make run-cmake-release
-  #      export Qt5_Dir=/mingw64/lib/cmake/Qt5/
-  #      # export Qt5_Dir=/mingw64/qt5-static/lib/cmake/Qt5/
-  #      export Qt5_DIR=$Qt5_Dir
-  #      export PATH=$Qt5_DIR:$PATH
-  #      make lib-only
+        export Qt6_Dir=/mingw64/lib/cmake/Qt6/
+        # export Qt6_Dir=/mingw64/qt6-static/lib/cmake/Qt6/
+        export Qt6_DIR=$Qt6_Dir
+        export PATH=$Qt6_DIR:$PATH
+        make lib-only
 # There are Qt linkage issues, so build only the libs for now        
 #        make VERBOSE=1 release
 #        make debug 
@@ -333,11 +305,10 @@ jobs:
 
     - name: Test
       run: |
-        make run-cmake-release
-   #     export Qt5_Dir=/mingw64/lib/cmake/Qt5/
-   #     # export Qt5_Dir=/mingw64/qt5-static/lib/cmake/Qt5/
-   #     export Qt5_DIR=$Qt5_Dir
-   #     export PATH=$Qt5_DIR:$PATH
+        export Qt6_Dir=/mingw64/lib/cmake/Qt6/
+        # export Qt6_Dir=/mingw64/qt5-static/lib/cmake/Qt6/
+        export Qt6_DIR=$Qt6_Dir
+        export PATH=$Qt6_DIR:$PATH
 # There Qt are linkage issues, so build only the libs for now        
 #        make test_install
 #        make test/unittest
@@ -419,17 +390,17 @@ jobs:
         where python && python --version
         where ninja && ninja --version
 
-  #      make release
-  #      if %errorlevel% neq 0 exit /b %errorlevel%
-  #      make install
-  #      if %errorlevel% neq 0 exit /b %errorlevel%
-  #      make test/unittest
-  #      if %errorlevel% neq 0 exit /b %errorlevel%
-  #      make test_install
-  #      if %errorlevel% neq 0 exit /b %errorlevel%
-  #      make regression
-  #      if %errorlevel% neq 0 exit /b %errorlevel%
-  #      make test/batch
+         make release
+         if %errorlevel% neq 0 exit /b %errorlevel%
+         make install
+         if %errorlevel% neq 0 exit /b %errorlevel%
+         make test/unittest
+         if %errorlevel% neq 0 exit /b %errorlevel%
+         make test_install
+         if %errorlevel% neq 0 exit /b %errorlevel%
+         make regression
+         if %errorlevel% neq 0 exit /b %errorlevel%
+         make test/batch
 
     - name: Archive build artifacts
       uses: actions/upload-artifact@v3.1.0
@@ -495,20 +466,17 @@ jobs:
 
     - name: Build
       run: |
-        make run-cmake-release
-       # make release
-       # make install
+         make release
+         make install
 
     - name: Unit tests
       run: |
-        make run-cmake-release
-    #    make test_install_mac    
-    #    make test_install
+         make test_install_mac    
+         make test_install
 
     - name: Regression tests
       run: |
-        make run-cmake-release
-   #     make regression
+         make regression
 
   macos-clang:
     runs-on: macos-latest
@@ -559,22 +527,19 @@ jobs:
 
     - name: Build
       run: |
-        make run-cmake-release
-       # make release
-       # make install
+        make release
+        make install
 
     - name: Unit tests
       run: |
-        make run-cmake-release
-       # make test_install_mac    
-       # make test_install
-       # make test/unittest
-       # make XVFB="" debug test/gui_mac
+         make test_install_mac    
+         make test_install
+         make test/unittest
+         make XVFB="" debug test/gui_mac
 
     - name: Regression tests
       run: |
-        make run-cmake-release
-       # make regression
+         make regression
 
   CodeFormatting:
     runs-on: ubuntu-20.04
@@ -616,7 +581,7 @@ jobs:
         sudo apt -qq -y install clang-tidy-12 \
                                 g++-11 tclsh  default-jre cmake \
                                 uuid-dev build-essential xorg \
-                                qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools qtdeclarative5-dev xvfb \
+                                qt6-base-dev libegl1-mesa-dev libx11-xcb-dev libxkbcommon-dev \
                                 libusb-1.0-0-dev pkg-config
 
     - name: Use ccache
