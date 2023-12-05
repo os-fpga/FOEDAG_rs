@@ -5,7 +5,7 @@
 #include <string>
 
 #include "CFGCrypto_key.h"
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__CYGWIN__)
 #include <windows.h>
 #else
 #include <termios.h>
@@ -47,7 +47,7 @@ static void memory_clean(std::string& passphrase, EVP_PKEY*& evp_key,
 }
 
 static void SetStdinEcho(bool enable) {
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__CYGWIN__)
   HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
   uint32_t mode;
   GetConsoleMode(hStdin, (LPDWORD)(&mode));

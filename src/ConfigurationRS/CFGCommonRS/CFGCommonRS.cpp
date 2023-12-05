@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__CYGWIN__)
 #include <windows.h>
 #else
 #include <sys/time.h>
@@ -608,7 +608,7 @@ std::string CFG_get_null_terminate_string(const uint8_t* data,
 }
 
 std::string CFG_get_machine_name() {
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__CYGWIN__)
   char computer_name[1024];
   uint32_t size = 1024;
   GetComputerName(computer_name, (LPDWORD)(&size));
@@ -624,7 +624,7 @@ std::string CFG_get_machine_name() {
 
 uint32_t CFG_get_volume_serial_number() {
   uint32_t serial_number = 0;
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__CYGWIN__)
   // Determine if this volume uses an NTFS file system.
   GetVolumeInformation("c:\\", nullptr, 0, (LPDWORD)(&serial_number), nullptr,
                        nullptr, nullptr, 0);
@@ -636,7 +636,7 @@ uint32_t CFG_get_volume_serial_number() {
 
 uint64_t CFG_get_nano_time() {
   uint64_t current_time = 0;
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__CYGWIN__)
   FILETIME ft;
   ::GetSystemTimeAsFileTime(&ft);
   uint32_t* ptr = (uint32_t*)(&current_time);
