@@ -889,7 +889,7 @@ std::string CompilerRS::BaseVprCommand(BaseVprDefaults defaults) {
   auto name = netlistFileName.stem().string();
   command += " --net_file " + FilePath(Action::Pack, name + ".net").string();
   command +=
-      " --place_file " + FilePath(Action::Detailed, name + ".place").string();
+      " --place_file " + FilePath(Action::Placement, name + ".place").string();
   command +=
       " --route_file " + FilePath(Action::Routing, name + ".route").string();
   return command;
