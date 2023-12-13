@@ -2,17 +2,16 @@
 Copyright 2022 RapidSilicon
 All rights reserved
  */
+#ifndef COMPILER_RS_H
+#define COMPILER_RS_H
 
 #include <filesystem>
-#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 
 #include "Compiler/CompilerOpenFPGA.h"
-
-#ifndef COMPILER_RS_H
-#define COMPILER_RS_H
+#include "Utils/ArgumentsMap.h"
 
 #ifdef PRODUCTION_BUILD
 class License_Manager;
@@ -108,8 +107,8 @@ class CompilerRS : public CompilerOpenFPGA {
 #endif
 };
 
-std::string TclArgs_getRsSynthesisOptions();
-void TclArgs_setRsSynthesisOptions(const std::string& argsStr);
+ArgumentsMap TclArgs_getRsSynthesisOptions();
+void TclArgs_setRsSynthesisOptions(const ArgumentsMap& argsStr);
 
 }  // namespace FOEDAG
 
