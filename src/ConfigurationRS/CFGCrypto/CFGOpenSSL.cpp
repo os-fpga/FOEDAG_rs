@@ -12,9 +12,9 @@
 #include <unistd.h>
 #endif
 
-#include "openssl/configuration.h"
 #include "openssl/aes.h"
 #include "openssl/bio.h"
+#include "openssl/configuration.h"
 #include "openssl/crypto.h"
 #include "openssl/ec.h"
 #include "openssl/evp.h"
@@ -221,8 +221,9 @@ void CFGOpenSSL::ctr_encrypt(const uint8_t* plain_data, uint8_t* cipher_data,
   }
   memset(internal_iv, 0, sizeof(internal_iv));
 #else
-  // This piece of code is written (and tested working) which is compatible with 3.0
-  EVP_CIPHER_CTX * ctx = EVP_CIPHER_CTX_new();
+  // This piece of code is written (and tested working) which is compatible
+  // with 3.0
+  EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
   CFG_ASSERT(ctx != nullptr);
   unsigned char internal_iv[16] = {0};
   CFG_ASSERT(sizeof(internal_iv) == iv_size);
@@ -235,13 +236,14 @@ void CFGOpenSSL::ctr_encrypt(const uint8_t* plain_data, uint8_t* cipher_data,
   }
   // Update (should be able to check overflow if the data_size is too big
   int cipher_data_size = 0;
-  CFG_ASSERT(EVP_EncryptUpdate(ctx, cipher_data, &cipher_data_size, plain_data, int(data_size)));
+  CFG_ASSERT(EVP_EncryptUpdate(ctx, cipher_data, &cipher_data_size, plain_data,
+                               int(data_size)));
   CFG_ASSERT((size_t)(cipher_data_size) == data_size);
   // Finalize
   // Pernally do not think CTR has any final size (unlike GCM)
   // Hence make sure final_data_size == 0
   int final_data_size = 0;
-  unsigned char final_dummy[128] = { 0 };
+  unsigned char final_dummy[128] = {0};
   CFG_ASSERT(EVP_EncryptFinal_ex(ctx, final_dummy, &final_data_size));
   CFG_ASSERT(final_data_size == 0);
   if (returned_iv != nullptr) {

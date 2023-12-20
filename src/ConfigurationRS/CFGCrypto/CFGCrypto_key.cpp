@@ -336,7 +336,8 @@ bool CFGCrypto_KEY::verify_signature(const uint8_t* digest,
     CFG_ASSERT(r != nullptr && s != nullptr);
     ECDSA_SIG* ec_sig = ECDSA_SIG_new();
     ECDSA_SIG_set0(ec_sig, r, s);
-    status = ECDSA_do_verify(digest, digest_size, ec_sig, const_cast<EC_KEY*>(ec_key)) == 1;
+    status = ECDSA_do_verify(digest, digest_size, ec_sig,
+                             const_cast<EC_KEY*>(ec_key)) == 1;
     ECDSA_SIG_free(ec_sig);
   } else {
     const RSA* rsa_key = EVP_PKEY_get0_RSA(get_evp_pkey(m_evp_key));
@@ -359,9 +360,11 @@ size_t CFGCrypto_KEY::sign(const uint8_t* digest, const size_t digest_size,
     signed_size = (size_t)(2 * m_key_info->size);
     CFG_ASSERT(signature_size >= signed_size);
     const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(get_evp_pkey(m_evp_key));
-    ECDSA_SIG* signature = ECDSA_do_sign(digest, digest_size, const_cast<EC_KEY*>(ec_key));
+    ECDSA_SIG* signature =
+        ECDSA_do_sign(digest, digest_size, const_cast<EC_KEY*>(ec_key));
     CFG_ASSERT(signature != nullptr);
-    CFG_ASSERT(ECDSA_do_verify(digest, digest_size, signature, const_cast<EC_KEY*>(ec_key)) == 1);
+    CFG_ASSERT(ECDSA_do_verify(digest, digest_size, signature,
+                               const_cast<EC_KEY*>(ec_key)) == 1);
     memset(signature_data, 0, signed_size);
     // Get RS
     const BIGNUM* r = nullptr;
@@ -387,7 +390,8 @@ size_t CFGCrypto_KEY::sign(const uint8_t* digest, const size_t digest_size,
                         const_cast<RSA*>(rsa_key)) == 1);
     CFG_ASSERT(signed_size == (size_t)(m_key_info->size));
     CFG_ASSERT(RSA_verify(m_key_info->digest_nid, digest, digest_size,
-                          signature_data, signed_size, const_cast<RSA*>(rsa_key)) == 1);
+                          signature_data, signed_size,
+                          const_cast<RSA*>(rsa_key)) == 1);
   }
   return signed_size;
 }
