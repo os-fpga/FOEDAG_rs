@@ -59,19 +59,12 @@ message("Openssl include ${OPENSSL_INC}")
 # subsystem library
 #
 ###################
-add_custom_target(
-  openssl_debug ALL
-  COMMAND echo "*** This is for OPENSSL debug ***"
-  COMMAND cmake -E copy ${CFG_FOEDAGRS_PROJECT_ROOT_DIR}/CFGCrypto/include/openssl/opensslconf.h.in ${OPENSSL_INC}/openssl/opensslconf.h
-  COMMAND echo "*** End of OpenSSL debug ***"
-)
 add_library(
   ${subsystem} ${CFG_LIB_TYPE}
   CFGOpenSSL.cpp
   CFGCrypto_key.cpp
 )
-add_dependencies(${subsystem} openssl_debug)
-add_dependencies(openssl_debug openssl_build)
+add_dependencies(${subsystem} openssl_build)
 target_link_libraries(${subsystem} PRIVATE ${CRYPTO_LIB} ${SSL_LIB} ${ADDITIONAL_LIB})
 target_include_directories(${subsystem} PRIVATE ${OPENSSL_INC})
 
