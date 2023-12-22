@@ -1,5 +1,6 @@
 #include "CFGCrypto_key.h"
 
+#include "openssl/configuration.h"
 #include "openssl/evp.h"
 #include "openssl/rsa.h"
 #include "openssl/x509.h"
@@ -162,11 +163,11 @@ void CFGCrypto_KEY::initial(const std::string& filepath,
   }
   // Make sure the real key (not just key type) is supported
   if (m_is_ec) {
-    EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(get_evp_pkey(m_evp_key));
+    const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(get_evp_pkey(m_evp_key));
     int nid = EC_GROUP_get_curve_name(EC_KEY_get0_group(ec_key));
     m_key_info = CFGOpenSSL::get_key_info(nid, 0);
   } else {
-    RSA* rsa_key = EVP_PKEY_get0_RSA(get_evp_pkey(m_evp_key));
+    const RSA* rsa_key = EVP_PKEY_get0_RSA(get_evp_pkey(m_evp_key));
     m_key_info = CFGOpenSSL::get_key_info(NID_rsa, RSA_size(rsa_key));
   }
   CFG_ASSERT(m_key_info != nullptr);
@@ -179,7 +180,7 @@ void CFGCrypto_KEY::get_public_key() {
   memset(m_public_key, 0, sizeof(m_public_key));
   if (m_is_ec) {
     CFG_ASSERT((size_t)(m_key_info->size * 2) <= sizeof(m_public_key));
-    EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(get_evp_pkey(m_evp_key));
+    const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(get_evp_pkey(m_evp_key));
     const EC_POINT* pub = EC_KEY_get0_public_key(ec_key);
     BIGNUM* x = BN_new();
     BIGNUM* y = BN_new();
@@ -208,7 +209,7 @@ void CFGCrypto_KEY::get_public_key() {
     // RSA does not have x, y
     // It has public + 4 bytes length
     CFG_ASSERT((size_t)(m_key_info->size + 4) <= sizeof(m_public_key));
-    RSA* rsa_key = EVP_PKEY_get0_RSA(get_evp_pkey(m_evp_key));
+    const RSA* rsa_key = EVP_PKEY_get0_RSA(get_evp_pkey(m_evp_key));
     // The information is stored in DER
     uint8_t* ptr = &m_public_key[0];
     int len = i2d_RSAPublicKey(rsa_key, &ptr);
@@ -328,19 +329,20 @@ bool CFGCrypto_KEY::verify_signature(const uint8_t* digest,
   CFG_ASSERT(m_key_info != nullptr);
   if (m_is_ec) {
     CFG_ASSERT(signature_size == (size_t)(2 * m_key_info->size));
-    EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(get_evp_pkey(m_evp_key));
+    const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(get_evp_pkey(m_evp_key));
     BIGNUM* r = BN_bin2bn(signature, m_key_info->size, nullptr);
     BIGNUM* s =
         BN_bin2bn(&signature[m_key_info->size], m_key_info->size, nullptr);
     CFG_ASSERT(r != nullptr && s != nullptr);
     ECDSA_SIG* ec_sig = ECDSA_SIG_new();
     ECDSA_SIG_set0(ec_sig, r, s);
-    status = ECDSA_do_verify(digest, digest_size, ec_sig, ec_key) == 1;
+    status = ECDSA_do_verify(digest, digest_size, ec_sig,
+                             const_cast<EC_KEY*>(ec_key)) == 1;
     ECDSA_SIG_free(ec_sig);
   } else {
-    RSA* rsa_key = EVP_PKEY_get0_RSA(get_evp_pkey(m_evp_key));
+    const RSA* rsa_key = EVP_PKEY_get0_RSA(get_evp_pkey(m_evp_key));
     status = RSA_verify(m_key_info->digest_nid, digest, digest_size, signature,
-                        signature_size, rsa_key) == 1;
+                        signature_size, const_cast<RSA*>(rsa_key)) == 1;
   }
   return status;
 }
@@ -357,10 +359,12 @@ size_t CFGCrypto_KEY::sign(const uint8_t* digest, const size_t digest_size,
   if (m_is_ec) {
     signed_size = (size_t)(2 * m_key_info->size);
     CFG_ASSERT(signature_size >= signed_size);
-    EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(get_evp_pkey(m_evp_key));
-    ECDSA_SIG* signature = ECDSA_do_sign(digest, digest_size, ec_key);
+    const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(get_evp_pkey(m_evp_key));
+    ECDSA_SIG* signature =
+        ECDSA_do_sign(digest, digest_size, const_cast<EC_KEY*>(ec_key));
     CFG_ASSERT(signature != nullptr);
-    CFG_ASSERT(ECDSA_do_verify(digest, digest_size, signature, ec_key) == 1);
+    CFG_ASSERT(ECDSA_do_verify(digest, digest_size, signature,
+                               const_cast<EC_KEY*>(ec_key)) == 1);
     memset(signature_data, 0, signed_size);
     // Get RS
     const BIGNUM* r = nullptr;
@@ -380,13 +384,14 @@ size_t CFGCrypto_KEY::sign(const uint8_t* digest, const size_t digest_size,
     ECDSA_SIG_free(signature);
   } else {
     CFG_ASSERT(signature_size >= (size_t)(m_key_info->size));
-    RSA* rsa_key = EVP_PKEY_get0_RSA(get_evp_pkey(m_evp_key));
+    const RSA* rsa_key = EVP_PKEY_get0_RSA(get_evp_pkey(m_evp_key));
     CFG_ASSERT(RSA_sign(m_key_info->digest_nid, digest, digest_size,
                         signature_data, (unsigned int*)(&signed_size),
-                        rsa_key) == 1);
+                        const_cast<RSA*>(rsa_key)) == 1);
     CFG_ASSERT(signed_size == (size_t)(m_key_info->size));
     CFG_ASSERT(RSA_verify(m_key_info->digest_nid, digest, digest_size,
-                          signature_data, signed_size, rsa_key) == 1);
+                          signature_data, signed_size,
+                          const_cast<RSA*>(rsa_key)) == 1);
   }
   return signed_size;
 }

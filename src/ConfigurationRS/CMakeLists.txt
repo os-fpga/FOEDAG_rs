@@ -159,3 +159,4 @@ target_link_libraries(bitassembler INTERFACE bitgenerator)
 
 add_dependencies(bitassembler nlohmann_json)
 add_dependencies(bitgenerator nlohmann_json)
+add_dependencies(cfgcrypto openssl_build)

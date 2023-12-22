@@ -2,6 +2,11 @@
 #define CFGOpenSSL_H
 
 #include "CFGCommonRS/CFGCommonRS.h"
+#define APP_OPENSSL_MAJOR_VERSION (1)
+#define APP_OPENSSL_MINOR_VERSION (1)
+#define APP_USE_1_1_x_OPENSSL (1)
+#define OPENSSL_API_COMPAT \
+  (APP_OPENSSL_MAJOR_VERSION * 10000 + APP_OPENSSL_MINOR_VERSION * 100)
 
 struct CFGOpenSSL_KEY_INFO {
   CFGOpenSSL_KEY_INFO(int ni, int e, const std::string& n, uint32_t s, int d,

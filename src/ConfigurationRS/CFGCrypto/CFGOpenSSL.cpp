@@ -14,6 +14,7 @@
 
 #include "openssl/aes.h"
 #include "openssl/bio.h"
+#include "openssl/configuration.h"
 #include "openssl/crypto.h"
 #include "openssl/ec.h"
 #include "openssl/evp.h"
@@ -204,6 +205,7 @@ void CFGOpenSSL::ctr_encrypt(const uint8_t* plain_data, uint8_t* cipher_data,
   init_openssl();
 
   // encrypt
+#if APP_USE_1_1_x_OPENSSL
   AES_KEY aes_key;
   unsigned char ecount_buf[16] = {0};
   unsigned char internal_iv[16] = {0};
@@ -218,6 +220,38 @@ void CFGOpenSSL::ctr_encrypt(const uint8_t* plain_data, uint8_t* cipher_data,
     memcpy(returned_iv, internal_iv, iv_size);
   }
   memset(internal_iv, 0, sizeof(internal_iv));
+#else
+  // This piece of code is written (and tested working) which is compatible
+  // with 3.0
+  EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+  CFG_ASSERT(ctx != nullptr);
+  unsigned char internal_iv[16] = {0};
+  CFG_ASSERT(sizeof(internal_iv) == iv_size);
+  memcpy(internal_iv, iv, sizeof(internal_iv));
+  // Init
+  if (key_size == 16) {
+    CFG_ASSERT(EVP_EncryptInit_ex(ctx, EVP_aes_128_ctr(), NULL, key, iv));
+  } else {
+    CFG_ASSERT(EVP_EncryptInit_ex(ctx, EVP_aes_256_ctr(), NULL, key, iv));
+  }
+  // Update (should be able to check overflow if the data_size is too big
+  int cipher_data_size = 0;
+  CFG_ASSERT(EVP_EncryptUpdate(ctx, cipher_data, &cipher_data_size, plain_data,
+                               int(data_size)));
+  CFG_ASSERT((size_t)(cipher_data_size) == data_size);
+  // Finalize
+  // Pernally do not think CTR has any final size (unlike GCM)
+  // Hence make sure final_data_size == 0
+  int final_data_size = 0;
+  unsigned char final_dummy[128] = {0};
+  CFG_ASSERT(EVP_EncryptFinal_ex(ctx, final_dummy, &final_data_size));
+  CFG_ASSERT(final_data_size == 0);
+  if (returned_iv != nullptr) {
+    memcpy(returned_iv, internal_iv, iv_size);
+  }
+  memset(internal_iv, 0, sizeof(internal_iv));
+  EVP_CIPHER_CTX_free(ctx);
+#endif
 }
 
 void CFGOpenSSL::gen_private_pem(const std::string& key_type,
@@ -310,7 +344,7 @@ void CFGOpenSSL::gen_public_pem(const std::string& private_filepath,
   // Currently only support two key type
   if (is_ec) {
     CFG_POST_MSG("Detected private EC Key");
-    EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(key);
+    const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(key);
     status = PEM_write_bio_EC_PUBKEY(bio, ec_key);
     CFG_ASSERT_MSG(status > 0, "Fail to write EC Public Key to PEM BIO");
   } else {

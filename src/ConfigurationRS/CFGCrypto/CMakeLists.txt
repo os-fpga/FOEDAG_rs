@@ -30,12 +30,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (MSVC)
-  set(CRYPTO_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_crypto_1.1.1t.lib)
-  set(SSL_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_ssl_1.1.1t.lib)
+  set(CRYPTO_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_crypto_3.0.9.lib)
+  set(SSL_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_ssl_3.0.9.lib)
   set(ADDITIONAL_LIB "")
 else()
-  set(CRYPTO_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_crypto_1.1.1t.a)
-  set(SSL_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_ssl_1.1.1t.a)
+  set(CRYPTO_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_crypto_3.0.9.a)
+  set(SSL_LIB ${CFG_BUILD_ROOT_DIR}/FOEDAG/lib/libopenssl_ssl_3.0.9.a)
   list(APPEND ADDITIONAL_LIB dl pthread)
   set(CMAKE_CXX_FLAGS_DEBUG
   "${CMAKE_CXX_FLAGS_DEBUG} ${TCMALLOC_COMPILE_OPTIONS} -Werror -Wall -O0 -g ${MSYS_COMPILE_OPTIONS} ${MY_CXX_WARNING_FLAGS} ${MEM_SANITIZER_FLAGS}")
@@ -48,9 +48,9 @@ message("Openssl include ${OPENSSL_INC}")
 #
 # Two elements will be built
 #
-# 1. subsystem library (in this case cfgcommonrs) - it contains all the core code to help configuration. It will be called by other elements
+# 1. subsystem library (in this case cfgcrypto) - it contains all the core code to help configuration. It will be called by other elements
 #
-# 2. test_bin executable (in this case cfgcommonrs_test exe) - it is external command line entry which eventually call subsystem library (item 1) for unit testing
+# 2. test_bin executable (in this case cfgcrypto_test exe) - it is external command line entry which eventually call subsystem library (item 1) for unit testing
 #
 #################################################################################################################
 
@@ -59,19 +59,12 @@ message("Openssl include ${OPENSSL_INC}")
 # subsystem library
 #
 ###################
-add_custom_target(
-  openssl_debug ALL
-  COMMAND echo "*** This is for OPENSSL debug ***"
-  COMMAND cmake -E copy ${CFG_FOEDAGRS_PROJECT_ROOT_DIR}/CFGCrypto/include/openssl/opensslconf.h.in ${OPENSSL_INC}/openssl/opensslconf.h
-  COMMAND echo "*** End of OpenSSL debug ***"
-)
 add_library(
   ${subsystem} ${CFG_LIB_TYPE}
   CFGOpenSSL.cpp
   CFGCrypto_key.cpp
 )
-add_dependencies(${subsystem} openssl_debug)
-add_dependencies(openssl_debug openssl_build)
+add_dependencies(${subsystem} openssl_build)
 target_link_libraries(${subsystem} PRIVATE ${CRYPTO_LIB} ${SSL_LIB} ${ADDITIONAL_LIB})
 target_include_directories(${subsystem} PRIVATE ${OPENSSL_INC})
 
