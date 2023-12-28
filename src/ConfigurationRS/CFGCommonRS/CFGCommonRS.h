@@ -12,12 +12,6 @@ uint8_t CFG_write_variable_u64(std::vector<uint8_t>& data, uint64_t value);
 uint64_t CFG_read_variable_u64(const uint8_t* data, size_t data_size,
                                size_t& index, int max_size = -1);
 
-void CFG_read_binary_file(const std::string& filepath,
-                          std::vector<uint8_t>& data);
-
-void CFG_write_binary_file(const std::string& filepath, const uint8_t* data,
-                           const size_t data_size);
-
 std::vector<uint8_t> CFG_convert_hex_string_to_bytes(std::string string,
                                                      bool no_empty = false,
                                                      bool* status = NULL);
