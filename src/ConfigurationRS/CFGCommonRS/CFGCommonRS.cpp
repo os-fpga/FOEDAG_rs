@@ -189,37 +189,6 @@ uint64_t CFG_read_variable_u64(const uint8_t* data, size_t data_size,
   return u64;
 }
 
-void CFG_read_binary_file(const std::string& filepath,
-                          std::vector<uint8_t>& data) {
-  // File size to prepare memory
-  std::ifstream file(filepath.c_str(), std::ios::binary | std::ios::ate);
-  CFG_ASSERT_MSG(file.is_open(), "Fail to open binary file %s",
-                 filepath.c_str());
-  size_t filesize = file.tellg();
-  file.close();
-
-  // Read the binary
-  CFG_ASSERT(filesize > 0);
-  if (data.size()) {
-    memset(&data[0], 0, data.size());
-    data.clear();
-  }
-  data.resize(filesize);
-  file = std::ifstream(filepath.c_str(), std::ios::in | std::ios::binary);
-  CFG_ASSERT(file.is_open());
-  file.read((char*)(&data[0]), data.size());
-  file.close();
-}
-
-void CFG_write_binary_file(const std::string& filepath, const uint8_t* data,
-                           const size_t data_size) {
-  std::ofstream file(filepath.c_str(), std::ios::out | std::ios::binary);
-  CFG_ASSERT(file.is_open());
-  file.write((char*)(const_cast<uint8_t*>(data)), data_size);
-  file.flush();
-  file.close();
-}
-
 std::vector<uint8_t> CFG_convert_hex_string_to_bytes(std::string string,
                                                      bool no_empty,
                                                      bool* status) {
