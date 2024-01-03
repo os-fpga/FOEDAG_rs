@@ -22,7 +22,7 @@ class Ocla {
                  uint32_t sample_size);
   void configure_channel(uint32_t instance, uint32_t channel, std::string type,
                          std::string event, uint32_t value, std::string probe);
-  void start(uint32_t instance, uint32_t timeout, std::string output_filepath);
+  bool start(uint32_t instance, uint32_t timeout, std::string output_filepath);
   void start_session(std::string bitasm_filepath);
   void stop_session();
   std::string show_status(uint32_t instance);

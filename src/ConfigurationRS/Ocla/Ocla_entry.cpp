@@ -118,9 +118,10 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       return;
     }
     adapter.set_target_device(device, taplist);
-    ocla.start(parms->instance, parms->timeout, parms->output);
-    CFG_POST_MSG("Written %s successfully.", parms->output.c_str());
-    Ocla_launch_gtkwave(parms->output, cmdarg->binPath);
+    if (ocla.start(parms->instance, parms->timeout, parms->output)) {
+      CFG_POST_MSG("Written %s successfully.", parms->output.c_str());
+      Ocla_launch_gtkwave(parms->output, cmdarg->binPath);
+    }
   } else if (subcmd == "status") {
     auto parms = static_cast<const CFGArg_DEBUGGER_STATUS*>(arg->get_sub_arg());
     if (parms->instance == 0 || parms->instance > 2) {

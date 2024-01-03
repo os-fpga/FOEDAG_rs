@@ -205,11 +205,11 @@ void Ocla::configure_channel(uint32_t instance, uint32_t channel,
   ocla_ip.configure_channel(channel - 1, trig_cfg);
 }
 
-void Ocla::start(uint32_t instance, uint32_t timeout,
+bool Ocla::start(uint32_t instance, uint32_t timeout,
                  std::string output_filepath) {
   if (!validate()) {
     CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
-    return;
+    return false;
   }
 
   uint32_t countdown = timeout;
@@ -237,11 +237,12 @@ void Ocla::start(uint32_t instance, uint32_t timeout,
     if (timeout > 0) {
       if (countdown == 0) {
         CFG_POST_ERR("Timeout error");
-        break;
+        return false;
       }
       --countdown;
     }
   }
+  return true;
 }
 
 std::string Ocla::show_info() {
