@@ -6,9 +6,9 @@
 #include "Configuration/HardwareManager/HardwareManager.h"
 #include "Configuration/HardwareManager/OpenocdAdapter.h"
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
-#include "FstWaveformWriter.h"
-#include "MemorySession.h"
 #include "Ocla.h"
+#include "OclaFstWaveformWriter.h"
+#include "OclaMemorySession.h"
 #include "OclaOpenocdAdapter.h"
 
 void Ocla_print(std::string output) {

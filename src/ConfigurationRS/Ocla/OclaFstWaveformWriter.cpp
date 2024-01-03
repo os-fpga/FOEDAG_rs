@@ -1,4 +1,4 @@
-#include "FstWaveformWriter.h"
+#include "OclaFstWaveformWriter.h"
 
 #include <time.h>
 
