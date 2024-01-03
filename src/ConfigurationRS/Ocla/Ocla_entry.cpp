@@ -4,12 +4,12 @@
 #include "CFGCommonRS/CFGArgRS_auto.h"
 #include "CFGObject/CFGObject_auto.h"
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
+#include "Configuration/HardwareManager/HardwareManager.h"
+#include "Configuration/HardwareManager/OpenocdAdapter.h"
 #include "FstWaveformWriter.h"
-#include "HardwareManager.h"
 #include "MemorySession.h"
 #include "Ocla.h"
 #include "OclaOpenocdAdapter.h"
-#include "OpenocdAdapter.h"
 
 void Ocla_print(std::string output) {
   std::istringstream ss(output);
@@ -35,24 +35,19 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     return;
   }
 
-  // setup hardware manager and its depencencies
-  OpenocdAdapter jtag_adapter{cmdarg->toolPath.string(), CFG_execute_cmd};
-  HardwareManager hardware_manager{&jtag_adapter};
-
-  // setup dependencies
-  OclaOpenocdAdapter adapter{cmdarg->toolPath.string(), CFG_execute_cmd};
+  // setup hardware manager and ocla depencencies
+  OclaOpenocdAdapter adapter{cmdarg->toolPath.string()};
   MemorySession session{};
   FstWaveformWriter writer{};
-
-  // setup main Ocla Debugger class
   Ocla ocla{&adapter, &session, &writer};
+  FOEDAG::HardwareManager hardware_manager{&adapter};
 
   // dispatch commands
   std::string subcmd = arg->get_sub_arg_name();
   if (subcmd == "info") {
     auto parms = static_cast<const CFGArg_DEBUGGER_INFO*>(arg->get_sub_arg());
-    std::vector<Tap> taplist{};
-    Device device{};
+    std::vector<FOEDAG::Tap> taplist{};
+    FOEDAG::Device device{};
     if (!hardware_manager.find_device(parms->cable, parms->device, device,
                                       taplist, true)) {
       CFG_POST_ERR("Could't find device %u on cable '%s'", parms->device,
@@ -73,8 +68,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
           "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
-    std::vector<Tap> taplist{};
-    Device device{};
+    std::vector<FOEDAG::Tap> taplist{};
+    FOEDAG::Device device{};
     if (!hardware_manager.find_device(parms->cable, parms->device, device,
                                       taplist, true)) {
       CFG_POST_ERR("Could't find device %u on cable '%s'", parms->device,
@@ -96,8 +91,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       CFG_POST_ERR("Invalid channel parameter. Channel should be 1 to 4.");
       return;
     }
-    std::vector<Tap> taplist{};
-    Device device{};
+    std::vector<FOEDAG::Tap> taplist{};
+    FOEDAG::Device device{};
     if (!hardware_manager.find_device(parms->cable, parms->device, device,
                                       taplist, true)) {
       CFG_POST_ERR("Could't find device %u on cable '%s'", parms->device,
@@ -114,8 +109,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
           "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
-    std::vector<Tap> taplist{};
-    Device device{};
+    std::vector<FOEDAG::Tap> taplist{};
+    FOEDAG::Device device{};
     if (!hardware_manager.find_device(parms->cable, parms->device, device,
                                       taplist, true)) {
       CFG_POST_ERR("Could't find device %u on cable '%s'", parms->device,
@@ -133,8 +128,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
           "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
-    std::vector<Tap> taplist{};
-    Device device{};
+    std::vector<FOEDAG::Tap> taplist{};
+    FOEDAG::Device device{};
     if (!hardware_manager.find_device(parms->cable, parms->device, device,
                                       taplist, true)) {
       CFG_POST_ERR("Could't find device %u on cable '%s'", parms->device,
@@ -155,8 +150,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
           "Invalid instance parameter. Instance should be either 1 or 2.");
       return;
     }
-    std::vector<Tap> taplist{};
-    Device device{};
+    std::vector<FOEDAG::Tap> taplist{};
+    FOEDAG::Device device{};
     if (!hardware_manager.find_device(parms->cable, parms->device, device,
                                       taplist, true)) {
       CFG_POST_ERR("Could't find device %u on cable '%s'", parms->device,
@@ -192,8 +187,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
   } else if (subcmd == "list_device") {
     auto parms =
         static_cast<const CFGArg_DEBUGGER_LIST_DEVICE*>(arg->get_sub_arg());
-
-    std::vector<Device> devices{};
+    std::vector<FOEDAG::Device> devices{};
 
     if (parms->m_args.size() == 1) {
       std::string cable_name = parms->m_args[0];
