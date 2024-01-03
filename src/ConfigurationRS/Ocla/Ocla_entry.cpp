@@ -3,9 +3,9 @@
 
 #include "CFGCommonRS/CFGArgRS_auto.h"
 #include "CFGObject/CFGObject_auto.h"
-#include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 #include "Configuration/HardwareManager/HardwareManager.h"
 #include "Configuration/HardwareManager/OpenocdAdapter.h"
+#include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 #include "FstWaveformWriter.h"
 #include "MemorySession.h"
 #include "Ocla.h"

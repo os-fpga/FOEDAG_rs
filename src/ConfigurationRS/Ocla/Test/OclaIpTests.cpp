@@ -17,7 +17,8 @@ class MockOclaJtagAdapter : public OclaJtagAdapter {
   MOCK_METHOD(std::vector<uint32_t>, read,
               (uint32_t base_addr, uint32_t num_reads, uint32_t increase_by),
               (override));
-  MOCK_METHOD(void, set_target_device, (FOEDAG::Device device, std::vector<FOEDAG::Tap> taps),
+  MOCK_METHOD(void, set_target_device,
+              (FOEDAG::Device device, std::vector<FOEDAG::Tap> taps),
               (override));
 };
 

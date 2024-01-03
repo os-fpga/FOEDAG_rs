@@ -6,14 +6,11 @@
 #include <sstream>
 #include <vector>
 
-#include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 #include "Configuration/HardwareManager/OpenocdHelper.h"
+#include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 
 OclaOpenocdAdapter::OclaOpenocdAdapter(std::string openocd)
-  : FOEDAG::OpenocdAdapter(openocd), m_openocd(openocd)
-{
-
-}
+    : FOEDAG::OpenocdAdapter(openocd), m_openocd(openocd) {}
 
 OclaOpenocdAdapter::~OclaOpenocdAdapter() {}
 
@@ -84,16 +81,14 @@ int OclaOpenocdAdapter::execute_command(const std::string &cmd,
   ss << " -l /dev/stdout"  //<-- not windows friendly
      << " -d2";
 
-  ss << build_cable_config(m_device.cable)
-     << build_tap_config(m_taplist)
+  ss << build_cable_config(m_device.cable) << build_tap_config(m_taplist)
      << build_target_config(m_device);
   ss << " -c \"init\"";
   ss << " -c \"" << cmd << "\"";
   ss << " -c \"exit\"";
 
-  int res =
-      CFG_execute_cmd("OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + cmd,
-                output, nullptr, stop);
+  int res = CFG_execute_cmd("OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + cmd, output,
+                            nullptr, stop);
   return res;
 }
 

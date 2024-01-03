@@ -9,7 +9,8 @@
 #include "Configuration/HardwareManager/OpenocdAdapter.h"
 #include "OclaJtagAdapter.h"
 
-class OclaOpenocdAdapter : public OclaJtagAdapter, public FOEDAG::OpenocdAdapter {
+class OclaOpenocdAdapter : public OclaJtagAdapter,
+                           public FOEDAG::OpenocdAdapter {
  public:
   OclaOpenocdAdapter(std::string openocd);
   virtual ~OclaOpenocdAdapter();
@@ -17,7 +18,8 @@ class OclaOpenocdAdapter : public OclaJtagAdapter, public FOEDAG::OpenocdAdapter
   virtual uint32_t read(uint32_t addr);
   virtual std::vector<uint32_t> read(uint32_t base_addr, uint32_t num_reads,
                                      uint32_t increase_by = 0);
-  virtual void set_target_device(FOEDAG::Device device, std::vector<FOEDAG::Tap> taplist);
+  virtual void set_target_device(FOEDAG::Device device,
+                                 std::vector<FOEDAG::Tap> taplist);
 
  private:
   int execute_command(const std::string& cmd, std::string& output);
