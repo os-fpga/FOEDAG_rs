@@ -26,11 +26,11 @@ void OclaOpenocdAdapter::write(uint32_t addr, uint32_t data) {
   std::stringstream ss;
   uint32_t i = m_device.tap.index;
 
-  ss << " -c \"irscan ocla" << i << ".tap 0x04;"
-     << "drscan ocla" << i << ".tap 1 0x1 1 0x1 32 " << std::hex
-     << std::showbase << addr << " 32 " << data << " 2 0x0;" << std::dec
-     << std::noshowbase << "irscan ocla" << i << ".tap 0x08;"
-     << "drscan ocla" << i << ".tap 32 0x0 2 0x0;\"";
+  ss << " -c \"irscan tap" << i << ".tap 0x04;"
+     << "drscan tap" << i << ".tap 1 0x1 1 0x1 32 " << std::hex << std::showbase
+     << addr << " 32 " << data << " 2 0x0;" << std::dec << std::noshowbase
+     << "irscan tap" << i << ".tap 0x08;"
+     << "drscan tap" << i << ".tap 32 0x0 2 0x0;\"";
 
   CFG_ASSERT_MSG(execute_command(ss.str(), output) == 0, "cmdexec error: %s",
                  output.c_str());
@@ -57,11 +57,11 @@ std::vector<uint32_t> OclaOpenocdAdapter::read(uint32_t base_addr,
   uint32_t j = m_device.tap.index;
 
   for (uint32_t i = 0; i < num_reads; i++) {
-    ss << " -c \"irscan ocla" << j << ".tap 0x04;"
-       << "drscan ocla" << j << ".tap 1 0x1 1 0x0 32 " << std::hex
+    ss << " -c \"irscan tap" << j << ".tap 0x04;"
+       << "drscan tap" << j << ".tap 1 0x1 1 0x0 32 " << std::hex
        << std::showbase << base_addr << " 32 0x0 2 0x0;" << std::dec
-       << std::noshowbase << "irscan ocla" << j << ".tap 0x08;"
-       << "drscan ocla" << j << ".tap 32 0x0 2 0x0;\"";
+       << std::noshowbase << "irscan tap" << j << ".tap 0x08;"
+       << "drscan tap" << j << ".tap 32 0x0 2 0x0;\"";
     base_addr += increase_by;
   }
 
@@ -84,11 +84,11 @@ int OclaOpenocdAdapter::execute_command(const std::string &cmd,
   ss << build_cable_config(m_device.cable) << build_tap_config(m_taplist)
      << build_target_config(m_device);
   ss << " -c \"init\"";
-  ss << " -c \"" << cmd << "\"";
+  ss << cmd;
   ss << " -c \"exit\"";
 
-  int res = CFG_execute_cmd("OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + cmd, output,
-                            nullptr, stop);
+  int res = CFG_execute_cmd("OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str(),
+                            output, nullptr, stop);
   return res;
 }
 
