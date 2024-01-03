@@ -37,8 +37,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
 
   // setup hardware manager and ocla depencencies
   OclaOpenocdAdapter adapter{cmdarg->toolPath.string()};
-  MemorySession session{};
-  FstWaveformWriter writer{};
+  OclaMemorySession session{};
+  OclaFstWaveformWriter writer{};
   Ocla ocla{&adapter, &session, &writer};
   FOEDAG::HardwareManager hardware_manager{&adapter};
 

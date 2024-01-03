@@ -6,16 +6,16 @@
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 #include "nlohmann_json/json.hpp"
 
-std::map<uint32_t, Ocla_INSTANCE_INFO> MemorySession::m_instances{};
-std::map<uint32_t, std::vector<Ocla_PROBE_INFO>> MemorySession::m_probes{};
-std::string MemorySession::m_bitasm_filepath = "";
-bool MemorySession::m_loaded = false;
+std::map<uint32_t, Ocla_INSTANCE_INFO> OclaMemorySession::m_instances{};
+std::map<uint32_t, std::vector<Ocla_PROBE_INFO>> OclaMemorySession::m_probes{};
+std::string OclaMemorySession::m_bitasm_filepath = "";
+bool OclaMemorySession::m_loaded = false;
 
-MemorySession::MemorySession() {}
+OclaMemorySession::OclaMemorySession() {}
 
-MemorySession::~MemorySession() {}
+OclaMemorySession::~OclaMemorySession() {}
 
-void MemorySession::load(std::string bitasm_filepath) {
+void OclaMemorySession::load(std::string bitasm_filepath) {
   std::string ocla_json = BitAssembler_MGR::get_ocla_design(bitasm_filepath);
   CFG_ASSERT_MSG(!ocla_json.empty(), "No OCLA info");
   parse(ocla_json);
@@ -23,28 +23,31 @@ void MemorySession::load(std::string bitasm_filepath) {
   m_loaded = true;
 }
 
-void MemorySession::unload() {
+void OclaMemorySession::unload() {
   m_instances.clear();
   m_probes.clear();
   m_bitasm_filepath.clear();
   m_loaded = false;
 }
 
-uint32_t MemorySession::get_instance_count() { return m_instances.size(); }
+uint32_t OclaMemorySession::get_instance_count() { return m_instances.size(); }
 
-Ocla_INSTANCE_INFO MemorySession::get_instance_info(uint32_t instance) {
+Ocla_INSTANCE_INFO OclaMemorySession::get_instance_info(uint32_t instance) {
   CFG_ASSERT(instance < m_instances.size());
   return m_instances[instance];
 }
 
-std::vector<Ocla_PROBE_INFO> MemorySession::get_probe_info(uint32_t instance) {
+std::vector<Ocla_PROBE_INFO> OclaMemorySession::get_probe_info(
+    uint32_t instance) {
   CFG_ASSERT(instance < m_probes.size());
   return m_probes[instance];
 }
 
-std::string MemorySession::get_bitasm_filepath() { return m_bitasm_filepath; }
+std::string OclaMemorySession::get_bitasm_filepath() {
+  return m_bitasm_filepath;
+}
 
-void MemorySession::parse(std::string ocla_json) {
+void OclaMemorySession::parse(std::string ocla_json) {
   uint32_t total_bitwidth = 0;
   uint32_t idx = 0;
 
@@ -87,7 +90,7 @@ void MemorySession::parse(std::string ocla_json) {
   }
 }
 
-Ocla_PROBE_INFO MemorySession::parse_probe(std::string probe) {
+Ocla_PROBE_INFO OclaMemorySession::parse_probe(std::string probe) {
   static std::map<uint32_t, std::string> patterns = {
       {1, R"((\w+) *\[ *(\d+) *: *(\d+)\ *])"},
       {2, R"((\d+)'([01]+))"},

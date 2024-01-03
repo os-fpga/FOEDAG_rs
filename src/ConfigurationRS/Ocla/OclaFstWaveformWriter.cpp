@@ -39,8 +39,8 @@ void CFG_read_bitfield_vec32(uint32_t* data, uint32_t pos, uint32_t bitwidth,
   }
 }
 
-void FstWaveformWriter::write(std::vector<uint32_t> values,
-                              std::string filepath) {
+void OclaFstWaveformWriter::write(std::vector<uint32_t> values,
+                                  std::string filepath) {
   CFG_ASSERT_MSG(m_signals.empty() == false, "No signal info defined");
   CFG_ASSERT_MSG(m_width <= OCLA_MAX_WIDTH,
                  "Width is larger than max size of %d", OCLA_MAX_WIDTH);
@@ -96,7 +96,7 @@ void FstWaveformWriter::write(std::vector<uint32_t> values,
   fstWriterClose(fst);
 }
 
-uint32_t FstWaveformWriter::count_total_bitwidth() {
+uint32_t OclaFstWaveformWriter::count_total_bitwidth() {
   uint32_t bitwidth = 0;
   for (auto& sig : m_signals) {
     bitwidth += sig.bitwidth;
