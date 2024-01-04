@@ -554,50 +554,6 @@
       }
     },
     {
-      "counter": {
-        "option": [
-          {
-            "name": "start",
-            "short": "s",
-            "type": "flag",
-            "default" : false,
-            "optional": true,
-            "help": "To start DUT counter for test and debugging"
-          },
-          {
-            "name": "stop",
-            "short": "t",
-            "type": "flag",
-            "default" : false,
-            "optional": true,
-            "help": "To stop DUT counter for test and debugging"
-          },
-          {
-            "name": "reset",
-            "short": "e",
-            "type": "flag",
-            "default" : false,
-            "optional": true,
-            "help": "To reset DUT counter for test and debugging"
-          },
-          {
-            "name": "read",
-            "short": "r",
-            "type": "flag",
-            "default" : false,
-            "optional": true,
-            "help": "To read DUT counter 1 and 2 for test and debugging"
-          }
-        ],
-        "hidden": true,
-        "desc": "To start/stop DUT counter for test and debugging",
-        "help": [
-          "To start/stop DUT counter for test and debugging"
-        ],
-        "arg": [0, 0]
-      }
-    },
-    {
       "config": {
         "option": [
           {

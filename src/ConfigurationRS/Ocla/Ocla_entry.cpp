@@ -220,22 +220,5 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       cmdarg->tclOutput += device.cable.name + " " + device.name + "<" +
                            std::to_string(device.index) + "> ";
     }
-
-  } else if (subcmd == "counter") {
-    // for testing with IP on ocla platform only.
-    // Will be removed at final
-    auto parms =
-        static_cast<const CFGArg_DEBUGGER_COUNTER*>(arg->get_sub_arg());
-    if (parms->start ^ parms->stop) {
-      adapter.write(0x01000004, parms->start ? 0xffffffff : 0x0);
-    }
-    if (parms->reset) {
-      adapter.write(0x01000000, 0xffffffff);
-      adapter.write(0x01000000, 0);
-    }
-    if (parms->read) {
-      CFG_POST_MSG("counter1 = 0x%08x", adapter.read(0x01000008));
-      CFG_POST_MSG("counter2 = 0x%08x", adapter.read(0x0100000c));
-    }
   }
 }
