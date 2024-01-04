@@ -156,6 +156,7 @@ target_link_libraries(bitgenerator INTERFACE cfgcrypto)
 target_link_libraries(bitassembler INTERFACE cfgobject)
 target_link_libraries(bitgenerator INTERFACE cfgobject)
 target_link_libraries(bitassembler INTERFACE bitgenerator)
+target_link_libraries(ocla INTERFACE hardwaremanager)
 
 add_dependencies(bitassembler nlohmann_json)
 add_dependencies(bitgenerator nlohmann_json)

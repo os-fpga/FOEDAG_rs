@@ -49,9 +49,7 @@ endif()
 # 3. test_bin executable (in this case ocla exe) - it is external command line entry which eventually call subsystem library (item 1) for unit testing
 #
 #################################################################################################################
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../../../FOEDAG/cmake/")
-find_package(USB1 REQUIRED)
-include_directories(${LIBUSB_INCLUDE_DIR})
+
 ###################
 #
 # subsystem library
@@ -65,15 +63,13 @@ add_library(
   OclaIP.cpp
   OclaHelpers.cpp
   OclaOpenocdAdapter.cpp
-  FstWaveformWriter.cpp
-  Common/HardwareManager.cpp
-  Common/OpenocdAdapter.cpp
-  MemorySession.cpp
+  OclaFstWaveformWriter.cpp
+  OclaMemorySession.cpp
   ${LIBFST_SOURCE_DIR}/fstapi.c
   ${LIBFST_SOURCE_DIR}/lz4.c
   ${LIBFST_SOURCE_DIR}/fastlz.c
 )
-target_include_directories(${subsystem} PRIVATE ${LIBFST_SOURCE_DIR} Common)
+target_include_directories(${subsystem} PRIVATE ${LIBFST_SOURCE_DIR})
 if(MSVC)
   target_link_libraries(${subsystem} INTERFACE zlibstatic)
   target_include_directories(${subsystem} PRIVATE
@@ -114,7 +110,6 @@ add_executable(
   Test/OclaIpTests.cpp
 )
 target_link_libraries(${test_bin} ${subsystem} gtest gmock gtest_main)
-target_include_directories(${test_bin} PRIVATE Common)
 
 ###################
 #

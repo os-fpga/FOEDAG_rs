@@ -1,15 +1,15 @@
-#ifndef __MEMORYSESSION_H__
-#define __MEMORYSESSION_H__
+#ifndef __OCLAMEMORYSESSION_H__
+#define __OCLAMEMORYSESSION_H__
 
 #include <map>
 #include <vector>
 
 #include "OclaSession.h"
 
-class MemorySession : public OclaSession {
+class OclaMemorySession : public OclaSession {
  public:
-  MemorySession();
-  virtual ~MemorySession();
+  OclaMemorySession();
+  virtual ~OclaMemorySession();
   virtual bool is_loaded() const { return m_loaded; };
   virtual void load(std::string bitasm_filepath);
   virtual void unload();
@@ -27,4 +27,4 @@ class MemorySession : public OclaSession {
   static std::string m_bitasm_filepath;
 };
 
-#endif  //__MEMORYSESSION_H__
+#endif  //__OCLAMEMORYSESSION_H__
