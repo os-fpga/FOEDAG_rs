@@ -135,7 +135,7 @@ static void BitGen_JSON_parse_bitstream_bop_field(
     const nlohmann::json& json, BitGen_BITSTREAM_BOP_FIELD& field) {
   BitGen_JSON_validate_dict_key(
       "Bitstream BOP Field", json,
-      {"identifier", "version", "tool", "opn", "jtag_id", "jtag_mask", "chipid",
+      {"identifier", "version", "opn_tool", "jtag_id", "jtag_mask", "chipid",
        "checksum", "integrity", "iv"});
   BitGen_JSON_ensure_dict_key_exists("Bitstream BOP Field", json,
                                      {"identifier"});
@@ -147,15 +147,10 @@ static void BitGen_JSON_parse_bitstream_bop_field(
   if (json.contains("version")) {
     field.version = BitGen_JSON_to_u32(json["version"]);
   }
-  if (json.contains("tool")) {
-    temp = BitGen_JSON_to_string(json["tool"]);
-    CFG_ASSERT(temp.size() <= 32);
-    field.tool = temp;
-  }
-  if (json.contains("opn")) {
-    temp = BitGen_JSON_to_string(json["opn"]);
-    CFG_ASSERT(temp.size() <= 16);
-    field.opn = temp;
+  if (json.contains("opn_tool")) {
+    temp = BitGen_JSON_to_string(json["opn_tool"]);
+    CFG_ASSERT(temp.size() <= 48);
+    field.opn_tool = temp;
   }
   if (json.contains("jtag_mask")) {
     field.jtag_id = BitGen_JSON_to_u32(json["jtag_id"]);

@@ -76,6 +76,21 @@
       "exist" : false
     },
     {
+      "name" : "icb",
+      "type" : [
+        {
+          "name" : "bits",
+          "type" : "u32"
+        },
+        {
+          "name" : "data",
+          "type" : "u8s",
+          "cmp"  : true
+        }
+      ],
+      "exist" : false
+    },
+    {
       "name" : "ocla",
       "type" : "str",
       "exist" : false

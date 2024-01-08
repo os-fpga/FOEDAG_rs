@@ -155,9 +155,6 @@ static auto assembler_flow(CompilerRS *compiler, bool batchMode, int argc,
       return TCL_ERROR;
     }
   }
-  cfgcompiler->m_cmdarg.command = "assembler";
-  cfgcompiler->m_cmdarg.clean =
-      compiler->BitsOpt() == Compiler::BitstreamOpt::Clean;
 
   // Call Compile()
   if (batchMode) {
@@ -171,6 +168,12 @@ static auto assembler_flow(CompilerRS *compiler, bool batchMode, int argc,
       return TCL_ERROR;
     }
   }
+
+  // Bitstream flow might call other configuration command for example
+  // model_config Set the command last
+  cfgcompiler->m_cmdarg.command = "assembler";
+  cfgcompiler->m_cmdarg.clean =
+      compiler->BitsOpt() == Compiler::BitstreamOpt::Clean;
   return TCL_OK;
 }
 
@@ -678,7 +681,7 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
       CompilerRS *compiler = (CompilerRS *)clientData;
       CFGCompiler *cfgcompiler = compiler->GetConfiguration();
       int status = TCL_OK;
-      if ((status = assembler_flow(compiler, true, argc, argv)) != TCL_OK) {
+      if ((status = assembler_flow(compiler, true, argc, argv)) == TCL_OK) {
         return CFGCompiler::Compile(cfgcompiler, true);
       } else {
         return status;

@@ -37,8 +37,8 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
   // Should use FPGA
   bop->field.identifier = "FPGA";
   bop->field.version = 0;
-  bop->field.tool = "Raptor 1.0";
-  bop->field.opn = m_bitobj->device;
+  // ToDO: Raptor Version need to be runtime determined
+  bop->field.opn_tool = CFG_print("%s (Raptor 1.0)", m_bitobj->device.c_str());
   bop->field.jtag_id = 0;
   bop->field.jtag_mask = 0;
   bop->field.chipid = 0x10;
@@ -63,7 +63,6 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
     bop->actions.push_back(BitGen_JSON::gen_old_fcb_config_action(fcb));
     BitGen_JSON::zeroize_array_numbers(fcb["payload"]);
     memset(&payload[0], 0, payload.size());
-    data.push_back(bop);
   } else {
     CFG_ASSERT(m_bitobj->configuration.protocol == "ql_memory_bank");
     CFG_ASSERT(m_bitobj->configuration.blwl == "flatten");
@@ -95,10 +94,38 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
     bop->actions.push_back(BitGen_JSON::gen_fcb_config_action(fcb));
     BitGen_JSON::zeroize_array_numbers(fcb["payload"]);
     memset(&payload[0], 0, payload.size());
-    data.push_back(bop);
   }
   // ICB data
+  if (m_bitobj->icb.bits) {
+    CFG_ASSERT(m_bitobj->icb.data.size() ==
+               (size_t)((m_bitobj->icb.bits + 7) / 8));
+    nlohmann::json icb;
+    std::vector<uint8_t> payload;
+    payload.insert(payload.end(), m_bitobj->icb.data.begin(),
+                   m_bitobj->icb.data.end());
+    while (payload.size() % 4) {
+      payload.push_back(0);
+    }
+    icb["action"] = "icb_config";
+    icb["cfg_cmd"] = 0;
+    icb["bit_twist"] = 0;
+    icb["byte_twist"] = 0;
+    icb["is_data_or_not_cmd"] = 0;
+    icb["update"] = 0;
+    icb["capture"] = 0;
+    icb["payload"] = nlohmann::json(payload);
+    bop->actions.push_back(BitGen_JSON::gen_icb_config_action(icb));
+    BitGen_JSON::zeroize_array_numbers(icb["payload"]);
+    memset(&payload[0], 0, payload.size());
+
+  } else {
+    CFG_ASSERT(m_bitobj->icb.data.size() == 0);
+  }
+
   // PCB data
+
+  // Finalize
+  data.push_back(bop);
 }
 
 std::vector<uint8_t> BitGen_GEMINI::genbits_line_by_line(

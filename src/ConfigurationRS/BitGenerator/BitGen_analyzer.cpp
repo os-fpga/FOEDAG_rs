@@ -259,8 +259,8 @@ void BitGen_ANALYZER::parse_bop_header(std::string space,
   m_header.version = get_u32(&m_current_bop_data[0x4]);
   m_header.size = (size_t)(get_u64(&m_current_bop_data[0x8]));
   CFG_ASSERT(m_header.size == m_current_bop_size);
-  m_header.tool = CFG_get_null_terminate_string(&m_current_bop_data[0x10], 32);
-  m_header.opn = CFG_get_null_terminate_string(&m_current_bop_data[0x30], 16);
+  m_header.opn_tool =
+      CFG_get_null_terminate_string(&m_current_bop_data[0x10], 48);
   m_header.jtag_id = get_u32(&m_current_bop_data[0x40]);
   m_header.jtag_mask = get_u32(&m_current_bop_data[0x44]);
   memcpy(unobscured_data, &m_current_bop_data[0x50], sizeof(unobscured_data));
@@ -672,10 +672,7 @@ void BitGen_ANALYZER::print_header(std::string space,
                            .c_str();
           break;
         case 0x10:
-          (*m_file) << " Tool: " << m_header.tool.c_str();
-          break;
-        case 0x30:
-          (*m_file) << " OPN: " << m_header.opn.c_str();
+          (*m_file) << " OPN/Tool: " << m_header.opn_tool.c_str();
           break;
         case 0x40:
           (*m_file) << " JTAG ID: "
