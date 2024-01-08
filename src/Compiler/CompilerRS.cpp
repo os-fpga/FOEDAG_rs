@@ -170,7 +170,7 @@ static auto assembler_flow(CompilerRS *compiler, bool batchMode, int argc,
   }
 
   // Bitstream flow might call other configuration command for example
-  // model_config Set the command last
+  // model_config. Set the command last
   cfgcompiler->m_cmdarg.command = "assembler";
   cfgcompiler->m_cmdarg.clean =
       compiler->BitsOpt() == Compiler::BitstreamOpt::Clean;

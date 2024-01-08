@@ -117,7 +117,6 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
     bop->actions.push_back(BitGen_JSON::gen_icb_config_action(icb));
     BitGen_JSON::zeroize_array_numbers(icb["payload"]);
     memset(&payload[0], 0, payload.size());
-
   } else {
     CFG_ASSERT(m_bitobj->icb.data.size() == 0);
   }
