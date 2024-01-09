@@ -34,6 +34,7 @@ bool BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
   CFG_ASSERT(cmdarg->arg->m_name == "bitgen");
   auto arg = std::static_pointer_cast<CFGArg_BITGEN>(cmdarg->arg);
   std::vector<uint8_t> aes_key;
+  CFG_POST_MSG("This is BITGEN entry");
   if (arg->get_sub_arg_name() == "gen_bitstream") {
     const CFGArg_BITGEN_GEN_BITSTREAM* subarg =
         static_cast<const CFGArg_BITGEN_GEN_BITSTREAM*>(arg->get_sub_arg());
@@ -62,7 +63,8 @@ bool BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
         CFGObject_BITOBJ bitobj;
         CFG_ASSERT(bitobj.read(subarg->m_args[0]));
         // Get the family
-        if (bitobj.configuration.family == "Gemini") {
+        if (CFG_find_string_in_vector({"Gemini", "Internal-Gemini"},
+                                      bitobj.configuration.family) >= 0) {
           BitGen_GEMINI gemini(&bitobj);
           gemini.generate(bops);
         } else {

@@ -61,7 +61,8 @@ void BitAssembler_MGR::get_scan_chain_fcb(
           CFG_ASSERT(fcb->length == 0);
           line.erase(0, 20);
           CFG_get_rid_leading_whitespace(line);
-          fcb->write_u32("length", static_cast<uint32_t>(std::stoul(line)));
+          fcb->write_u32("length",
+                         (uint32_t)(CFG_convert_string_to_u64(line, true)));
           CFG_ASSERT(fcb->check_exist("length"));
           CFG_ASSERT(fcb->length);
         } else if (line.find("// Bitstream width ") == 0) {
@@ -73,7 +74,8 @@ void BitAssembler_MGR::get_scan_chain_fcb(
           CFG_ASSERT(lsb || line.find("(MSB -> LSB):") == 0);
           line.erase(0, 13);
           CFG_get_rid_leading_whitespace(line);
-          fcb->write_u32("width", static_cast<uint32_t>(std::stoul(line)));
+          fcb->write_u32("width",
+                         (uint32_t)(CFG_convert_string_to_u64(line, true)));
           CFG_ASSERT(fcb->check_exist("width"));
           CFG_ASSERT(fcb->width);
         } else {
@@ -114,6 +116,8 @@ void BitAssembler_MGR::get_ql_membank_fcb(
   size_t line_tracking = 0;
   size_t data_line = 0;
   bool lsb = false;
+  // ToDO: will need to switch to true once OpenFPGA is merged
+  const bool wl_increasing = false;
   std::vector<uint8_t> data;
   while (getline(file, line)) {
     // Only trim the trailing whitespace
@@ -129,7 +133,9 @@ void BitAssembler_MGR::get_ql_membank_fcb(
       line_tracking++;
     } else if (line_tracking == 2) {
       // This will be all data, no exception
-      get_wl_bitline_into_bytes(line, data, fcb->bl, fcb->wl, data_line, lsb);
+      get_wl_bitline_into_bytes(
+          line, data, fcb->bl, fcb->wl,
+          wl_increasing ? data_line : fcb->wl - data_line - 1, lsb);
       data_line++;
     } else {
       if (line.find("//") == 0) {
@@ -142,7 +148,8 @@ void BitAssembler_MGR::get_ql_membank_fcb(
           CFG_ASSERT(fcb->wl == 0);
           line.erase(0, 20);
           CFG_get_rid_leading_whitespace(line);
-          fcb->write_u32("wl", static_cast<uint32_t>(std::stoul(line)));
+          fcb->write_u32("wl",
+                         (uint32_t)(CFG_convert_string_to_u64(line, true)));
           CFG_ASSERT(fcb->check_exist("wl"));
           CFG_ASSERT(fcb->wl);
         } else if (line.find("// Bitstream width ") == 0) {
@@ -160,10 +167,12 @@ void BitAssembler_MGR::get_ql_membank_fcb(
           CFG_ASSERT(words[0] == "<bl_address");
           CFG_ASSERT(words[2] == "bits><wl_address");
           CFG_ASSERT(words[4] == "bits>");
-          fcb->write_u32("bl", static_cast<uint32_t>(std::stoul(words[1])));
+          fcb->write_u32("bl",
+                         (uint32_t)(CFG_convert_string_to_u64(words[1], true)));
           CFG_ASSERT(fcb->check_exist("bl"));
           CFG_ASSERT(fcb->bl);
-          CFG_ASSERT(fcb->wl == static_cast<uint32_t>(std::stoul(words[3])));
+          CFG_ASSERT(fcb->wl ==
+                     (uint32_t)(CFG_convert_string_to_u64(words[3], true)));
         } else {
           // Unknown -- put it into warning
           m_warnings.push_back(
@@ -173,7 +182,9 @@ void BitAssembler_MGR::get_ql_membank_fcb(
         // Start of data
         // Make sure BL and WL is known
         CFG_ASSERT(fcb->check_exist("wl") && fcb->check_exist("bl"));
-        get_wl_bitline_into_bytes(line, data, fcb->bl, fcb->wl, data_line, lsb);
+        get_wl_bitline_into_bytes(
+            line, data, fcb->bl, fcb->wl,
+            wl_increasing ? data_line : fcb->wl - data_line - 1, lsb);
         line_tracking++;
         data_line++;
       }
@@ -183,6 +194,98 @@ void BitAssembler_MGR::get_ql_membank_fcb(
   CFG_ASSERT(fcb->wl == data_line);
   fcb->write_u8s("data", data);
   file.close();
+}
+
+void BitAssembler_MGR::get_icb(const CFGObject_BITOBJ_ICB* icb) {
+  CFG_ASSERT(icb->get_object_count() == 0);
+
+  // Read io_bitstream.bit as text line by line, parse info out
+  std::string filepath =
+      CFG_print("%s/io_bitstream.bit", m_project_path.c_str());
+  // ToDO: For now IO is not fully ready, just post warning if it does not.
+  //       Once IO is ready, we will need to flag error
+  if (std::filesystem::exists(filepath)) {
+    std::fstream file;
+    file.open(filepath.c_str(), std::ios::in);
+    CFG_ASSERT_MSG(file.is_open(), "Fail to open %s", filepath.c_str());
+    std::string line = "";
+    size_t line_tracking = 0;
+    size_t data_line = 0;
+    std::string format = "";
+    std::vector<uint8_t> data;
+    while (getline(file, line)) {
+      // Only trim the trailing whitespace
+      CFG_get_rid_trailing_whitespace(line);
+      if (line.size() == 0) {
+        // allow blank line
+        continue;
+      }
+      // Strict checking on the format
+      if (line_tracking == 0) {
+        // First line must start with this keyword
+        CFG_ASSERT(line == "// Feature Bitstream: IO");
+        line_tracking++;
+      } else if (line_tracking == 2) {
+        // This will be all data, no exception
+        CFG_ASSERT(data_line < icb->bits);
+        if (line == "1") {
+          data[data_line >> 3] |= (1 << (data_line & 7));
+        } else {
+          CFG_ASSERT(line == "0");
+        }
+        data_line++;
+      } else {
+        if (line.find("//") == 0) {
+          if (line.find("// Model:") == 0 || line.find("// Timestamp:") == 0) {
+            // Ignore this
+            continue;
+          } else if (line.find("// Total Bits:") == 0) {
+            // Should only define once
+            CFG_ASSERT(!icb->check_exist("bits"));
+            CFG_ASSERT(icb->bits == 0);
+            line.erase(0, 14);
+            CFG_get_rid_leading_whitespace(line);
+            icb->write_u32("bits",
+                           (uint32_t)(CFG_convert_string_to_u64(line, true)));
+            CFG_ASSERT(icb->check_exist("bits"));
+            CFG_ASSERT(icb->bits);
+          } else if (line.find("// Format:") == 0) {
+            CFG_ASSERT(format.empty());
+            line.erase(0, 10);
+            CFG_get_rid_leading_whitespace(line);
+            format = line;
+            CFG_ASSERT(format == "BIT");
+          } else {
+            // Unknown -- put it into warning
+            m_warnings.push_back(
+                CFG_print("ICB Parser :: unknown :: %s", line.c_str()));
+          }
+        } else {
+          // Start of data
+          // Make sure length and width is known
+          CFG_ASSERT(icb->check_exist("bits"));
+          CFG_ASSERT(format == "BIT");
+          CFG_ASSERT(data.size() == 0);
+          data.resize((icb->bits + 7) / 8);
+          memset(&data[0], 0, data.size());
+          if (line == "1") {
+            data[data_line >> 3] |= (1 << (data_line & 7));
+          } else {
+            CFG_ASSERT(line == "0");
+          }
+          line_tracking++;
+          data_line++;
+        }
+      }
+    }
+    CFG_ASSERT(icb->check_exist("bits"));
+    CFG_ASSERT(icb->bits == data_line);
+    icb->write_u8s("data", data);
+    file.close();
+  } else {
+    CFG_POST_WARNING("IO bitstream file %s does not exist. Skip for now",
+                     filepath.c_str());
+  }
 }
 
 void BitAssembler_MGR::get_one_region_ccff_fcb(const std::string& filepath,
@@ -226,7 +329,7 @@ void BitAssembler_MGR::get_one_region_ccff_fcb(const std::string& filepath,
           CFG_ASSERT(length == 0);
           line.erase(0, 20);
           CFG_get_rid_leading_whitespace(line);
-          length = static_cast<uint32_t>(std::stoul(line));
+          length = (uint32_t)(CFG_convert_string_to_u64(line, true));
           CFG_ASSERT(length);
         } else if (line.find("// Bitstream width ") == 0) {
           // Should only define once
@@ -236,7 +339,7 @@ void BitAssembler_MGR::get_one_region_ccff_fcb(const std::string& filepath,
           CFG_ASSERT(lsb || line.find("(MSB -> LSB):") == 0);
           line.erase(0, 13);
           CFG_get_rid_leading_whitespace(line);
-          width = static_cast<uint32_t>(std::stoul(line));
+          width = (uint32_t)(CFG_convert_string_to_u64(line, true));
           CFG_ASSERT(width == 1);
         } else {
           // Unknown -- put it into warning

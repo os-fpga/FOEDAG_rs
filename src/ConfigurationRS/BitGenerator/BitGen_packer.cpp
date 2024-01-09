@@ -94,12 +94,9 @@ static void BitGen_PACKER_gen_bop_header_basic_field(
   // Version - byte [0x7:0x4]
   memcpy(&header->data[0x4], (void*)(&field.version), sizeof(field.version));
   // Size - byte [0xF:0x8]
-  // Tool - byte [0x2F:0x10]
-  CFG_ASSERT(field.tool.size() <= 32);
-  memcpy(&header->data[0x10], field.tool.c_str(), field.tool.size());
-  // OPN - byte [0x3F:0x30]
-  CFG_ASSERT(field.opn.size() <= 16);
-  memcpy(&header->data[0x30], field.opn.c_str(), field.opn.size());
+  // OPN Tool - byte [0x3F:0x10]
+  CFG_ASSERT(field.opn_tool.size() <= 48);
+  memcpy(&header->data[0x10], field.opn_tool.c_str(), field.opn_tool.size());
   // JTAG ID - byte [0x43:0x40]
   memcpy(&header->data[0x40], (void*)(&field.jtag_id), sizeof(field.jtag_id));
   // JTAG Mask - byte [0x47:0x44]

@@ -10,8 +10,7 @@ struct BitGen_BITSTREAM_BOP_FIELD {
   ~BitGen_BITSTREAM_BOP_FIELD();
   std::string identifier = "";
   uint32_t version = 0;
-  std::string tool = "";
-  std::string opn = "";
+  std::string opn_tool = "";
   uint32_t jtag_id = 0;
   uint32_t jtag_mask = 0;
   uint8_t chipid = 0;

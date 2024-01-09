@@ -11,8 +11,7 @@ struct BitGen_ANALYZER_BOP_HEADER {
     identifier = "";
     version = 0;
     size = 0;
-    tool = "";
-    opn = "";
+    opn_tool = "";
     jtag_id = 0;
     jtag_mask = 0;
     chipid = "";
@@ -31,8 +30,7 @@ struct BitGen_ANALYZER_BOP_HEADER {
   std::string identifier = "";
   uint32_t version = 0;
   size_t size = 0;
-  std::string tool = "";
-  std::string opn = "";
+  std::string opn_tool = "";
   uint32_t jtag_id = 0;
   uint32_t jtag_mask = 0;
   std::string chipid = "";
