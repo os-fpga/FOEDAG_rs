@@ -116,7 +116,6 @@ void BitAssembler_MGR::get_ql_membank_fcb(
   size_t line_tracking = 0;
   size_t data_line = 0;
   bool lsb = false;
-  // ToDO: will need to switch to true once OpenFPGA is merged
   uint32_t one_hot_wl = 0;
   bool wl_increasing = false;
   std::vector<uint8_t> data;
