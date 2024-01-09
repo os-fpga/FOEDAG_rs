@@ -117,7 +117,8 @@ void BitAssembler_MGR::get_ql_membank_fcb(
   size_t data_line = 0;
   bool lsb = false;
   // ToDO: will need to switch to true once OpenFPGA is merged
-  const bool wl_increasing = false;
+  uint32_t one_hot_wl = 0;
+  bool wl_increasing = false;
   std::vector<uint8_t> data;
   while (getline(file, line)) {
     // Only trim the trailing whitespace
@@ -182,9 +183,10 @@ void BitAssembler_MGR::get_ql_membank_fcb(
         // Start of data
         // Make sure BL and WL is known
         CFG_ASSERT(fcb->check_exist("wl") && fcb->check_exist("bl"));
-        get_wl_bitline_into_bytes(
-            line, data, fcb->bl, fcb->wl,
-            wl_increasing ? data_line : fcb->wl - data_line - 1, lsb);
+        get_wl_bitline_into_bytes(line, data, fcb->bl, fcb->wl, 0, lsb,
+                                  &one_hot_wl);
+        CFG_ASSERT(one_hot_wl == 0 || one_hot_wl == (fcb->wl - 1));
+        wl_increasing = one_hot_wl == 0;
         line_tracking++;
         data_line++;
       }
@@ -416,7 +418,7 @@ uint32_t BitAssembler_MGR::get_bitline_into_bytes(const std::string& line,
 uint32_t BitAssembler_MGR::get_wl_bitline_into_bytes(
     const std::string& line, std::vector<uint8_t>& bytes,
     const uint32_t expected_bl_bit, const uint32_t expected_wl_bit,
-    const uint32_t expected_wl, const bool lsb) {
+    const uint32_t expected_wl, const bool lsb, uint32_t* one_hot_wl) {
   CFG_ASSERT(line.size());
   CFG_ASSERT(expected_bl_bit);
   CFG_ASSERT(expected_wl_bit);
@@ -438,13 +440,26 @@ uint32_t BitAssembler_MGR::get_wl_bitline_into_bytes(
     CFG_ASSERT(bl_size == expected_bl_bit);
     CFG_ASSERT(start == end);
   }
-  CFG_ASSERT(expected_wl < expected_wl_bit);
-  for (uint32_t i = 0; i < expected_wl_bit; i++) {
-    if (wl[i >> 3] & (1 << (i & 7))) {
-      CFG_ASSERT(i == expected_wl);
-    } else {
-      CFG_ASSERT(i != expected_wl);
+  if (one_hot_wl == nullptr) {
+    CFG_ASSERT(expected_wl < expected_wl_bit);
+    for (uint32_t i = 0; i < expected_wl_bit; i++) {
+      if (wl[i >> 3] & (1 << (i & 7))) {
+        CFG_ASSERT(i == expected_wl);
+      } else {
+        CFG_ASSERT(i != expected_wl);
+      }
     }
+  } else {
+    (*one_hot_wl) = expected_wl_bit;
+    for (uint32_t i = 0; i < expected_wl_bit; i++) {
+      if (wl[i >> 3] & (1 << (i & 7))) {
+        // Can only set once
+        CFG_ASSERT((*one_hot_wl) == expected_wl_bit);
+        (*one_hot_wl) = i;
+      }
+    }
+    // Must have one-hot-bit
+    CFG_ASSERT((*one_hot_wl) < expected_wl_bit);
   }
   return bl_size;
 }
