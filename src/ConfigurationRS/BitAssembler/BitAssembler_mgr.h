@@ -46,7 +46,8 @@ class BitAssembler_MGR {
                                      const uint32_t expected_bl_bit,
                                      const uint32_t expected_wl_bit,
                                      const uint32_t expected_wl,
-                                     const bool lsb = true);
+                                     const bool lsb = true,
+                                     uint32_t* one_hot_wl = nullptr);
   const std::string m_project_path;
   const std::string m_device;
 };
