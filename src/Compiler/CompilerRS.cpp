@@ -74,7 +74,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
@@ -93,7 +93,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
@@ -111,7 +111,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
@@ -131,7 +131,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
@@ -315,6 +315,12 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
     case SynthesisIOInference::None:
       io_inference = "-no_iobuf";
   }
+  std::string keep_tribuf{};
+  if (KeepTribuf()) keep_tribuf = "-keep_tribuf";
+  std::string new_dsp19x2{};
+  if (NewDsp19x2()) new_dsp19x2 = "-new_dsp19x2";
+  std::string new_tdp36k{};
+  if (NewTdp36k()) new_tdp36k = "-new_tdp36k";
   std::string effort;
   switch (m_synthEffort) {
     case SynthesisEffort::None:
@@ -412,6 +418,9 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
     no_flatten_mode = "";
     carry_inference = "";
     io_inference = "";
+    keep_tribuf.clear();
+    new_dsp19x2.clear();
+    new_tdp36k.clear();
     if (m_synthNoAdder) {
       optimization += " -no_adder";
     }
@@ -428,6 +437,9 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   result = ReplaceAll(result, "${FSM_ENCODING}", fsm_encoding);
   result = ReplaceAll(result, "${CARRY}", carry_inference);
   result = ReplaceAll(result, "${IO}", io_inference);
+  result = ReplaceAll(result, "${KEEP_TRIBUF}", keep_tribuf);
+  result = ReplaceAll(result, "${NEW_DSP19X2}", new_dsp19x2);
+  result = ReplaceAll(result, "${NEW_TDP36K}", new_tdp36k);
   result = ReplaceAll(result, "${FAST}", fast_mode);
   result = ReplaceAll(result, "${NO_FLATTEN}", no_flatten_mode);
   result = ReplaceAll(result, "${MAX_THREADS}", max_threads);
@@ -631,6 +643,18 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
       }
       if (option == "-no_simplify") {
         compiler->SynthNoSimplify(true);
+        continue;
+      }
+      if (option == "-keep_tribuf") {
+        compiler->KeepTribuf(true);
+        continue;
+      }
+      if (option == "-new_dsp19x2") {
+        compiler->NewDsp19x2(true);
+        continue;
+      }
+      if (option == "-new_tdp36k") {
+        compiler->NewTdp36k(true);
         continue;
       }
       if (option == "-clke_strategy" && i + 1 < argc) {
@@ -855,7 +879,7 @@ ArgumentsMap FOEDAG::TclArgs_getRsSynthesisOptions() {
     // Note we are only grabbing the values that matter for the settings ui
     std::string tclOptions = compiler->FinishSynthesisScript(
         "${OPTIMIZATION} ${EFFORT} ${FSM_ENCODING} ${CARRY} ${FAST} "
-        "${NO_FLATTEN}");
+        "${NO_FLATTEN} ${KEEP_TRIBUF}");
 
     // The settings UI provides a single argument value pair for each field.
     // Optimization uses -de -goal so we convert that to the settings specific
@@ -993,6 +1017,7 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const ArgumentsMap &argsStr) {
 
   compiler->SynthFast(argsStr.hasKey("fast"));
   compiler->SynthNoFlatten(argsStr.hasKey("no_flatten"));
+  compiler->KeepTribuf(argsStr.hasKey("keep_tribuf"));
 }
 
 std::string CompilerRS::BaseStaCommand() {

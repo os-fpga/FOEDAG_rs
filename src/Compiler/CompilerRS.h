@@ -79,6 +79,15 @@ class CompilerRS : public CompilerOpenFPGA {
   bool TimingAnalysis();
   bool PowerAnalysis();
 
+  bool KeepTribuf() const { return m_keepTribuf; }
+  void KeepTribuf(bool newKeepTribuf) { m_keepTribuf = newKeepTribuf; }
+
+  bool NewDsp19x2() const { return m_new_dsp19x2; }
+  void NewDsp19x2(bool newNew_dsp19x2) { m_new_dsp19x2 = newNew_dsp19x2; }
+
+  bool NewTdp36k() const { return m_new_tdp36k; }
+  void NewTdp36k(bool newNew_tdp36k) { m_new_tdp36k = newNew_tdp36k; }
+
  protected:
   void CustomSimulatorSetup(Simulator::SimulationType action);
   bool LicenseDevice(const std::string& deviceName);
@@ -98,6 +107,9 @@ class CompilerRS : public CompilerOpenFPGA {
   bool m_synthCec = false;
   bool m_synthNoSimplify = false;
   int m_maxThreads = -1;
+  bool m_keepTribuf = false;
+  bool m_new_dsp19x2 = false;
+  bool m_new_tdp36k = false;
   std::filesystem::path m_starsExecutablePath = "stars";
   std::filesystem::path m_tclExecutablePath = "tclsh";
   std::filesystem::path m_powerExecutablePath = "get_power_data.tcl";
