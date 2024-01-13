@@ -17,7 +17,8 @@ class BitAssembler_OCLA {
  private:
   static void extract_ocla_info(CFGObject_BITOBJ& bitobj, nlohmann::json& json);
   static bool validate_ocla(nlohmann::json& ocla);
-  static bool validate_axil(nlohmann::json& axil);
+  static bool validate_ocla_debug_subsystem(
+      nlohmann::json& ocla_debug_subsystem);
 };
 
 #endif

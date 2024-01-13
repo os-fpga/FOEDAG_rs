@@ -50,7 +50,7 @@ void BitAssembler_OCLA::extract_ocla_info(CFGObject_BITOBJ& bitobj,
                                           nlohmann::json& json) {
   CFG_ASSERT(!bitobj.check_exist("ocla"));
   nlohmann::json ocla;
-  nlohmann::json axil;
+  nlohmann::json ocla_debug_subsystem;
   std::string json_string = "";
   if (!json.is_object()) {
     CFG_POST_WARNING("JSON is in invalid format");
@@ -64,23 +64,25 @@ void BitAssembler_OCLA::extract_ocla_info(CFGObject_BITOBJ& bitobj,
     CFG_POST_WARNING("Design does not contain OCLA information");
     goto EXTRACT_OCLA_INFO_END;
   }
-  if (!json.contains("axil")) {
-    CFG_POST_WARNING("Design does not contain AXIL Interconnect information");
+  if (!json.contains("ocla_debug_subsystem")) {
+    CFG_POST_WARNING(
+        "Design does not contain OCLA Debug Subsystem information");
     goto EXTRACT_OCLA_INFO_END;
   }
   if (json.size() != 3) {
     CFG_POST_WARNING(
-        "JSON contains more that three expected entires: messages, OCLA, AXIL");
+        "JSON contains more that three expected entires: messages, OCLA, OCLA "
+        "Debug Subsystem");
     goto EXTRACT_OCLA_INFO_END;
   }
   ocla = json["ocla"];
-  axil = json["axil"];
+  ocla_debug_subsystem = json["ocla_debug_subsystem"];
   if (!ocla.is_array()) {
     CFG_POST_WARNING("JSON OCLA is not an array");
     goto EXTRACT_OCLA_INFO_END;
   }
-  if (!axil.is_object()) {
-    CFG_POST_WARNING("JSON AXIL is not an object");
+  if (!ocla_debug_subsystem.is_object()) {
+    CFG_POST_WARNING("JSON OCLA Debug Subsystem is not an object");
     goto EXTRACT_OCLA_INFO_END;
   }
   // Loop through each
@@ -91,7 +93,7 @@ void BitAssembler_OCLA::extract_ocla_info(CFGObject_BITOBJ& bitobj,
       goto EXTRACT_OCLA_INFO_END;
     }
   }
-  if (!validate_axil(axil)) {
+  if (!validate_ocla_debug_subsystem(ocla_debug_subsystem)) {
     CFG_POST_WARNING("Invalidate entire OCLA design");
     goto EXTRACT_OCLA_INFO_END;
   }
@@ -119,7 +121,7 @@ bool BitAssembler_OCLA::validate_ocla(nlohmann::json& ocla) {
   const std::vector<std::string> params = {
       "IP_VERSION",     "IP_ID",        "AXI_ADDR_WIDTH",
       "AXI_DATA_WIDTH", "NO_OF_PROBES", "NO_OF_TRIGGER_INPUTS",
-      "MEM_DEPTH",      "PROBE_WIDHT"};
+      "MEM_DEPTH",      "PROBE_WIDHT",  "INDEX"};
   if (!ocla.is_object()) {
     CFG_POST_WARNING("JSON sub-OCLA is not an object");
     goto VALIDATE_OCLA_END;
@@ -161,48 +163,76 @@ bool BitAssembler_OCLA::validate_ocla(nlohmann::json& ocla) {
   }
   for (auto& probe : ocla["probes"]) {
     if (!probe.is_string()) {
-      CFG_POST_WARNING("JSON sub-PROBES is not a string");
+      CFG_POST_WARNING("JSON sub-OCLA probe signal is not a string");
       goto VALIDATE_OCLA_END;
     }
+  }
+  // Type param, params, addr (not param), probes (not param)
+  if (ocla.size() != (1 + params.size() + 2)) {
+    CFG_POST_WARNING(
+        "JSON sub-OCLA has extra object key. Expected %d count, found %d",
+        1 + params.size() + 2, ocla.size());
+    goto VALIDATE_OCLA_END;
   }
   status = true;
 VALIDATE_OCLA_END:
   return status;
 }
 
-bool BitAssembler_OCLA::validate_axil(nlohmann::json& axil) {
+bool BitAssembler_OCLA::validate_ocla_debug_subsystem(
+    nlohmann::json& ocla_debug_subsystem) {
   bool status = false;
-  std::vector<std::string> params = {"IP_VERSION", "IP_ID", "ADDR_WIDTH",
-                                     "DATA_WIDTH"};
-  for (uint32_t i = 0; i < 16; i++) {
-    params.push_back(CFG_print("M%02d_BASE_ADDR", i));
+  std::vector<std::string> params = {"IP_VERSION", "IP_ID", "CORES",
+                                     "Total_Probes"};
+  std::vector<std::string> str_params = {"MODE"};
+  for (uint32_t i = 0; i < 15; i++) {
+    params.push_back(CFG_print("Probe%d", i + 1));
+    params.push_back(CFG_print("IF%d_BaseAddress", i + 1));
+    params.push_back(CFG_print("IF%d_Probes", i + 1));
   }
-  if (!axil.is_object()) {
-    CFG_POST_WARNING("JSON sub-AXIL is not an object");
-    goto VALIDATE_AXIL_END;
-  }
-  if (!axil.contains("IP_TYPE") || !axil["IP_TYPE"].is_string()) {
+  if (!ocla_debug_subsystem.contains("IP_TYPE") ||
+      !ocla_debug_subsystem["IP_TYPE"].is_string()) {
     CFG_POST_WARNING(
-        "JSON sub-AXIL does not have parameter IP_TYPE or parameter type is "
+        "JSON OCLA Debug Subsystem does not have parameter IP_TYPE or "
+        "parameter type is "
         "not string");
-    goto VALIDATE_AXIL_END;
+    goto VALIDATE_OCLA_DEBUG_SUBSYSTEM_END;
   }
-  if (std::string(axil["IP_TYPE"]) != "AXIL_IC") {
-    CFG_POST_WARNING("JSON AXIL IP_TYPE is not \"AXIL_IC\". Found %s",
-                     std::string(axil["IP_TYPE"]).c_str());
-    goto VALIDATE_AXIL_END;
+  if (std::string(ocla_debug_subsystem["IP_TYPE"]) != "ocla") {
+    CFG_POST_WARNING(
+        "JSON OCLA Debug Subsystem IP_TYPE is not \"ocla\". Found %s",
+        std::string(ocla_debug_subsystem["IP_TYPE"]).c_str());
+    goto VALIDATE_OCLA_DEBUG_SUBSYSTEM_END;
   }
   for (auto p : params) {
-    if (!axil.contains(p) ||
-        !(axil[p].is_number_integer() || axil[p].is_number_unsigned())) {
+    if (!ocla_debug_subsystem.contains(p) ||
+        !(ocla_debug_subsystem[p].is_number_integer() ||
+          ocla_debug_subsystem[p].is_number_unsigned())) {
       CFG_POST_WARNING(
-          "JSON sub-AXIL does not have parameter %s or the parameter type is "
-          "not number",
+          "JSON OCLA Debug Subsystem does not have parameter %s or the "
+          "parameter type is not number",
           p.c_str());
-      goto VALIDATE_AXIL_END;
+      goto VALIDATE_OCLA_DEBUG_SUBSYSTEM_END;
     }
   }
+  for (auto p : str_params) {
+    if (!ocla_debug_subsystem.contains(p) ||
+        !ocla_debug_subsystem[p].is_string()) {
+      CFG_POST_WARNING(
+          "JSON OCLA Debug Subsystem does not have parameter %s or the "
+          "parameter type is not string",
+          p.c_str());
+      goto VALIDATE_OCLA_DEBUG_SUBSYSTEM_END;
+    }
+  }
+  // Type param, params, addr (not param), probes (not param)
+  if (ocla_debug_subsystem.size() != (1 + params.size() + str_params.size())) {
+    CFG_POST_WARNING(
+        "JSON sub-OCLA has extra object key. Expected %d count, found %d",
+        1 + params.size() + str_params.size(), ocla_debug_subsystem.size());
+    goto VALIDATE_OCLA_DEBUG_SUBSYSTEM_END;
+  }
   status = true;
-VALIDATE_AXIL_END:
+VALIDATE_OCLA_DEBUG_SUBSYSTEM_END:
   return status;
 }
