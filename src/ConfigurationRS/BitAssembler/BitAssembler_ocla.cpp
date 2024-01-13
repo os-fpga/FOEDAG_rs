@@ -182,7 +182,8 @@ VALIDATE_OCLA_END:
 bool BitAssembler_OCLA::validate_ocla_debug_subsystem(
     nlohmann::json& ocla_debug_subsystem) {
   bool status = false;
-  std::vector<std::string> params = {"IP_VERSION", "IP_ID", "CORES", "Total_Probes"};
+  std::vector<std::string> params = {"IP_VERSION", "IP_ID", "CORES",
+                                     "Total_Probes"};
   std::vector<std::string> str_params = {"MODE"};
   for (uint32_t i = 0; i < 15; i++) {
     params.push_back(CFG_print("Probe%d", i + 1));
