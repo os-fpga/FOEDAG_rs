@@ -243,7 +243,7 @@ std::string CompilerRS::FinishAnalyzeScript(const std::string &script) {
   std::filesystem::path primitivesBlackboxPath =
       tech_datapath / "cell_sim_blackbox.v";
   std::filesystem::path latestPrimitivesBlackboxPath =
-      tech_datapath / "RS_PRIMITIVES" / "blackbox_models" /
+      tech_datapath / "FPGA_PRIMITIVES_MODELS" / "blackbox_models" /
       "cell_sim_blackbox.v";
   if (FileUtils::FileExists(latestPrimitivesBlackboxPath)) {
     primitivesBlackboxPath = latestPrimitivesBlackboxPath;
@@ -276,7 +276,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   std::filesystem::path primitivesBlackboxPath =
       tech_datapath / "cell_sim_blackbox.v";
   std::filesystem::path latestPrimitivesBlackboxPath =
-      tech_datapath / "RS_PRIMITIVES" / "blackbox_models" /
+      tech_datapath / "FPGA_PRIMITIVES_MODELS" / "blackbox_models" /
       "cell_sim_blackbox.v";
   if (FileUtils::FileExists(latestPrimitivesBlackboxPath)) {
     primitivesBlackboxPath = latestPrimitivesBlackboxPath;
@@ -520,7 +520,7 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
                                                  "llatches_sim.v");
         }
         std::filesystem::path path =
-            tech_datapath / "RS_PRIMITIVES" / "sim_models" / "verilog";
+            tech_datapath / "FPGA_PRIMITIVES_MODELS" / "sim_models" / "verilog";
         if (!FileUtils::FileExists(path)) break;
         for (const std::filesystem::path &entry :
              std::filesystem::directory_iterator(path)) {
