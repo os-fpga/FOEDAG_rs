@@ -249,19 +249,21 @@ std::string CompilerRS::FinishAnalyzeScript(const std::string &script) {
     primitivesBlackboxPath = latestPrimitivesBlackboxPath;
   }
   std::string result;
-  switch (GetParserType()) {
-    case ParserType::Default:
-      result = "read_verilog -sv " + primitivesBlackboxPath.string() + "\n";
-      break;
-    case ParserType::GHDL:
-      result = "read_verilog -sv " + primitivesBlackboxPath.string() + "\n";
-      break;
-    case ParserType::Surelog:
-      result = "read_verilog -sv " + primitivesBlackboxPath.string() + "\n";
-      break;
-    case ParserType::Verific:
-      result = "-sv2009 " + primitivesBlackboxPath.string() + "\n";
-      break;
+  if (FileUtils::FileExists(primitivesBlackboxPath)) {
+    switch (GetParserType()) {
+      case ParserType::Default:
+        result = "read_verilog -sv " + primitivesBlackboxPath.string() + "\n";
+        break;
+      case ParserType::GHDL:
+        result = "read_verilog -sv " + primitivesBlackboxPath.string() + "\n";
+        break;
+      case ParserType::Surelog:
+        result = "read_verilog -sv " + primitivesBlackboxPath.string() + "\n";
+        break;
+      case ParserType::Verific:
+        result = "-sv2009 " + primitivesBlackboxPath.string() + "\n";
+        break;
+    }
   }
   result += script;
   return result;
@@ -280,6 +282,9 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
       "cell_sim_blackbox.v";
   if (FileUtils::FileExists(latestPrimitivesBlackboxPath)) {
     primitivesBlackboxPath = latestPrimitivesBlackboxPath;
+  }
+  if (!FileUtils::FileExists(primitivesBlackboxPath)) {
+    primitivesBlackboxPath = "";
   }
   result = ReplaceAll(result, "${PRIMITIVES_BLACKBOX}",
                       primitivesBlackboxPath.string());
@@ -510,30 +515,42 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
     case NetlistType::EBlif:
       if (action == Simulator::SimulationType::Gate ||
           action == Simulator::SimulationType::PNR) {
-        GetSimulator()->AddGateSimulationModel(tech_datapath / "simlib.v");
-        GetSimulator()->AddGateSimulationModel(tech_datapath / "brams_sim.v");
-        GetSimulator()->AddGateSimulationModel(tech_datapath / "TDP18K_FIFO.v");
-        GetSimulator()->AddGateSimulationModel(tech_datapath / "ufifo_ctl.v");
-        GetSimulator()->AddGateSimulationModel(tech_datapath / "sram1024x18.v");
-        if (FileUtils::FileExists(tech_datapath / "llatches_sim.v")) {
+        if (FileUtils::FileExists(tech_datapath / "simlib.v"))
+          GetSimulator()->AddGateSimulationModel(tech_datapath / "simlib.v");
+        if (FileUtils::FileExists(tech_datapath / "brams_sim.v"))
+          GetSimulator()->AddGateSimulationModel(tech_datapath / "brams_sim.v");
+        if (FileUtils::FileExists(tech_datapath / "TDP18K_FIFO.v"))
+          GetSimulator()->AddGateSimulationModel(tech_datapath /
+                                                 "TDP18K_FIFO.v");
+        if (FileUtils::FileExists(tech_datapath / "ufifo_ctl.v"))
+          GetSimulator()->AddGateSimulationModel(tech_datapath / "ufifo_ctl.v");
+        if (FileUtils::FileExists(tech_datapath / "sram1024x18.v"))
+          GetSimulator()->AddGateSimulationModel(tech_datapath /
+                                                 "sram1024x18.v");
+        if (FileUtils::FileExists(tech_datapath / "llatches_sim.v"))
           GetSimulator()->AddGateSimulationModel(tech_datapath /
                                                  "llatches_sim.v");
-        }
+        if (FileUtils::FileExists(tech_datapath / "cells_sim.v"))
+          GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.v");
         std::filesystem::path path =
             tech_datapath / "FPGA_PRIMITIVES_MODELS" / "sim_models" / "verilog";
-        if (!FileUtils::FileExists(path)) break;
-        for (const std::filesystem::path &entry :
-             std::filesystem::directory_iterator(path)) {
-          if (entry.filename() == "adder_carry.v") continue;
-          GetSimulator()->AddGateSimulationModel(entry);
+        if (FileUtils::FileExists(path)) {
+          for (const std::filesystem::path &entry :
+               std::filesystem::directory_iterator(path)) {
+            if (entry.filename() == "adder_carry.v") continue;
+            GetSimulator()->AddGateSimulationModel(entry);
+          }
         }
       }
       if (action == Simulator::SimulationType::PNR) {
-        GetSimulator()->AddGateSimulationModel(tech_datapath / "primitives.v");
+        if (FileUtils::FileExists(tech_datapath / "primitives.v"))
+          GetSimulator()->AddGateSimulationModel(tech_datapath /
+                                                 "primitives.v");
       }
       break;
     case NetlistType::VHDL:
-      GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.vhd");
+      if (FileUtils::FileExists(tech_datapath / "cells_sim.vhd"))
+        GetSimulator()->AddGateSimulationModel(tech_datapath / "cells_sim.vhd");
       break;
   }
 }
