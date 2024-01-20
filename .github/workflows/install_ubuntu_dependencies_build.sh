@@ -10,7 +10,7 @@ sudo apt install -y \
   lcov \
   valgrind \
   xorg \
-  qt6-base-dev libegl1-mesa-dev libx11-xcb-dev libxkbcommon-dev \
+  qt6-base-dev qt6-webengine-dev qt6-webengine* libegl1-mesa-dev libx11-xcb-dev libxkbcommon-dev \
   xvfb \
   libusb-1.0-0-dev \
   pkg-config
