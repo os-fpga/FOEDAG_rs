@@ -61,6 +61,14 @@ if (ENABLE_OPENSTA)
   set (ENABLE_OPENSTA_FLAG "-DENABLE_OPENSTA=1")
 endif(ENABLE_OPENSTA)
 
+if (MONACO_EDITOR)
+  message("Using Monaco Editor")
+  set(USE_MONACO_EDITOR ON CACHE BOOL "" FORCE)
+else(MONACO_EDITOR)
+  message("Using QScintilla Editor")
+  set(USE_MONACO_EDITOR OFF CACHE BOOL "" FORCE)
+endif(MONACO_EDITOR)
+
 if (PRODUCTION_BUILD)
   message("Production Build type set to ON")
   set (PRODUCTION_BUILD_FLAG "-DPRODUCTION_BUILD=1")
@@ -453,6 +461,23 @@ install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/FoedagConfig.cmake
   DESTINATION cmake)
 
+if (USE_MONACO_EDITOR)
+install(
+    DIRECTORY
+      ${PROJECT_SOURCE_DIR}/third_party/monaco-editor/monaco-editor
+    DESTINATION
+      ${CMAKE_INSTALL_DATAROOTDIR}/raptor/etc/monaco-editor/
+)
+
+install(
+    FILES
+      ${PROJECT_SOURCE_DIR}/FOEDAG/third_party/monaco-editor/monaco-editor.html
+      ${PROJECT_SOURCE_DIR}/FOEDAG/third_party/monaco-editor/qwebchannel.js
+    DESTINATION
+        ${CMAKE_INSTALL_DATAROOTDIR}/raptor/etc/monaco-editor/
+    PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ
+)
+endif()
 
 install(
     DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/raptor/etc/)
@@ -501,3 +526,21 @@ add_custom_command(TARGET raptor_gui-bin POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory 
         ${PROJECT_SOURCE_DIR}/tests/Arch  
         ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/Arch/)
+
+if (USE_MONACO_EDITOR)
+add_custom_command(TARGET raptor_gui-bin POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/etc/monaco-editor/
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${PROJECT_SOURCE_DIR}/third_party/monaco-editor/monaco-editor
+        ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/etc/monaco-editor/monaco-editor)
+
+add_custom_command(TARGET raptor_gui-bin POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${PROJECT_SOURCE_DIR}/FOEDAG/third_party/monaco-editor/monaco-editor.html
+        ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/etc/monaco-editor)
+
+add_custom_command(TARGET raptor_gui-bin POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${PROJECT_SOURCE_DIR}/FOEDAG/third_party/monaco-editor/qwebchannel.js
+        ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/etc/monaco-editor)
+endif()
