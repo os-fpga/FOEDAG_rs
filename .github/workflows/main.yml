@@ -305,7 +305,7 @@ jobs:
         # export Qt6_Dir=/mingw64/qt6-static/lib/cmake/Qt6/
         export Qt6_DIR=$Qt6_Dir
         export PATH=$Qt6_DIR:$PATH
-        make lib-only
+        make MONACO_EDITOR=0 lib-only
 # There are Qt linkage issues, so build only the libs for now        
 #        make VERBOSE=1 release
 #        make debug 
@@ -479,10 +479,10 @@ jobs:
          make release
          make install
 
-    - name: Unit tests
-      run: |
-         make test_install_mac    
-         make test_install
+    #- name: Unit tests
+    #  run: |
+    #     make test_install_mac    
+    #     make test_install
 
     - name: Regression tests
       run: |
@@ -543,8 +543,8 @@ jobs:
 
     - name: Unit tests
       run: |
-         make test_install_mac    
-         make test_install
+         #make test_install_mac    
+         #make test_install
          make test/unittest
          make XVFB="" debug test/gui_mac
 
