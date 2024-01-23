@@ -461,7 +461,7 @@ install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/FoedagConfig.cmake
   DESTINATION cmake)
 
-if (USE_MONACO_EDITOR)
+if (USE_MONACO_EDITOR AND NOT RAPTOR)
 install(
     DIRECTORY
       ${PROJECT_SOURCE_DIR}/third_party/monaco-editor/monaco-editor
@@ -527,7 +527,7 @@ add_custom_command(TARGET raptor_gui-bin POST_BUILD
         ${PROJECT_SOURCE_DIR}/tests/Arch  
         ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/Arch/)
 
-if (USE_MONACO_EDITOR)
+if (USE_MONACO_EDITOR AND NOT RAPTOR)
 add_custom_command(TARGET raptor_gui-bin POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/share/raptor/etc/monaco-editor/
         COMMAND ${CMAKE_COMMAND} -E copy_directory
