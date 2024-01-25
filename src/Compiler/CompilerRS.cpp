@@ -137,6 +137,11 @@ ${OUTPUT_NETLIST}
 
   )";
 
+const std::string RapidSiliconYosysPowerExtractionScript =
+    R"(plugin -i pow-extract
+read_verilog ${VERILOG_FILE}
+pow_extract -tech genesis3 -sdc ${SDC})";
+
 static auto assembler_flow(CompilerRS *compiler, bool batchMode, int argc,
                            const char *argv[]) {
   CFGCompiler *cfgcompiler = compiler->GetConfiguration();
@@ -1267,8 +1272,9 @@ bool CompilerRS::PowerAnalysis() {
     }
   }
 
+  std::string powerFile{"power.csv"};
   if (FileUtils::IsUptoDate(netlistFile,
-                            FilePath(Action::Power, "power.csv").string())) {
+                            FilePath(Action::Power, powerFile).string())) {
     Message("Design " + ProjManager()->projectName() +
             " power didn't change, skipping power analysis.");
     return true;
@@ -1282,15 +1288,24 @@ bool CompilerRS::PowerAnalysis() {
       break;
     }
   }
-  std::string command = m_raptorExecutablePath.string() + ".exe" + " ";
-  command += "--cmd \"";
-  command += "set netlist_file " + netlistFile + ";";
-  if (!sdcFile.empty()) {
-    command += "set sdc " + sdcFile + ";";
+  if (FileUtils::IsUptoDate(sdcFile,
+                            FilePath(Action::Power, powerFile).string())) {
+    Message("Design " + ProjManager()->projectName() +
+            " power didn't change, skipping power analysis.");
+    return true;
   }
-  command += "\" ";
-  command += "--batch ";
-  command += "--script " + m_powerExecutablePath.string() + " ";
+
+  std::string scriptPath = "pw_extract.ys";
+
+  std::string pw_extractScript = RapidSiliconYosysPowerExtractionScript;
+  pw_extractScript =
+      ReplaceAll(pw_extractScript, "${VERILOG_FILE}", netlistFile);
+  pw_extractScript = ReplaceAll(pw_extractScript, "${SDC}", sdcFile);
+
+  FileUtils::WriteToFile(scriptPath, pw_extractScript);
+
+  std::string command = m_yosysExecutablePath.string() + " -s " + scriptPath +
+                        " -l " + ProjManager()->projectName() + "_power.log";
 
   auto file = ProjManager()->projectName() + "_power.cmd";
   FileUtils::WriteToFile(file, command);
