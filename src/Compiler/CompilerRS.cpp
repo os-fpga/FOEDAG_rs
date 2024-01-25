@@ -1272,6 +1272,14 @@ bool CompilerRS::PowerAnalysis() {
     }
   }
 
+  std::string powerFile{"power.csv"};
+  if (FileUtils::IsUptoDate(netlistFile,
+                            FilePath(Action::Power, powerFile).string())) {
+    Message("Design " + ProjManager()->projectName() +
+            " power didn't change, skipping power analysis.");
+    return true;
+  }
+
   std::string sdcFile;
   const auto &constrFiles = ProjManager()->getConstrFiles();
   for (const auto &file : constrFiles) {
@@ -1280,15 +1288,15 @@ bool CompilerRS::PowerAnalysis() {
       break;
     }
   }
-
-  std::string scriptPath = "pw_extract.ys";
-
-  if (FileUtils::IsUptoDate(netlistFile, scriptPath) &&
-      FileUtils::IsUptoDate(sdcFile, scriptPath)) {
+  if (FileUtils::IsUptoDate(sdcFile,
+                            FilePath(Action::Power, powerFile).string())) {
     Message("Design " + ProjManager()->projectName() +
             " power didn't change, skipping power analysis.");
     return true;
   }
+
+  std::string scriptPath = "pw_extract.ys";
+
   std::string pw_extractScript = RapidSiliconYosysPowerExtractionScript;
   pw_extractScript =
       ReplaceAll(pw_extractScript, "${VERILOG_FILE}", netlistFile);
