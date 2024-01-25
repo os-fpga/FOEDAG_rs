@@ -140,7 +140,7 @@ ${OUTPUT_NETLIST}
 const std::string RapidSiliconYosysPowerExtractionScript =
     R"(plugin -i pow-extract
 read_verilog ${VERILOG_FILE}
-pow_extract -tech genesis3 -sdc ${SDC})";
+pow_extract -tech genesis3 ${SDC})";
 
 static auto assembler_flow(CompilerRS *compiler, bool batchMode, int argc,
                            const char *argv[]) {
@@ -1288,7 +1288,8 @@ bool CompilerRS::PowerAnalysis() {
       break;
     }
   }
-  if (FileUtils::IsUptoDate(sdcFile,
+  if (!sdcFile.empty() &&
+      FileUtils::IsUptoDate(sdcFile,
                             FilePath(Action::Power, powerFile).string())) {
     Message("Design " + ProjManager()->projectName() +
             " power didn't change, skipping power analysis.");
@@ -1300,7 +1301,9 @@ bool CompilerRS::PowerAnalysis() {
   std::string pw_extractScript = RapidSiliconYosysPowerExtractionScript;
   pw_extractScript =
       ReplaceAll(pw_extractScript, "${VERILOG_FILE}", netlistFile);
-  pw_extractScript = ReplaceAll(pw_extractScript, "${SDC}", sdcFile);
+  pw_extractScript =
+      ReplaceAll(pw_extractScript, "${SDC}",
+                 sdcFile.empty() ? std::string{} : "-sdc " + sdcFile);
 
   FileUtils::WriteToFile(scriptPath, pw_extractScript);
 
