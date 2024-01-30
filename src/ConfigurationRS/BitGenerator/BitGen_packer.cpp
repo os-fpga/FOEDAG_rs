@@ -232,7 +232,13 @@ static void BitGen_PACKER_gen_action(
   if (action->payload.size()) {
     if (compress) {
       CFG_compress(&action->payload[0], action->payload.size(), payload);
-      if (payload.size() >= action->payload.size()) {
+      size_t compressed_block_count =
+          (payload.size() + BitGen_BITSTREAM_BLOCK_SIZE - 1) /
+          BitGen_BITSTREAM_BLOCK_SIZE;
+      size_t original_block_count =
+          (action->payload.size() + BitGen_BITSTREAM_BLOCK_SIZE - 1) /
+          BitGen_BITSTREAM_BLOCK_SIZE;
+      if (compressed_block_count >= original_block_count) {
         memset(&payload[0], 0, payload.size());
         payload.clear();
         cmd_is_forced_to_turn_off_compress = true;
