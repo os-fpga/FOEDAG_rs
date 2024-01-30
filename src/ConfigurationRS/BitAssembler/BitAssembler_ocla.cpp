@@ -12,6 +12,7 @@ void BitAssembler_OCLA::parse(CFGObject_BITOBJ& bitobj,
     std::ifstream file(analyzeCMDPath.c_str());
     CFG_ASSERT_MSG(file.is_open(), "Fail to open %s", analyzeCMDPath.c_str());
     std::string outPath = CFG_print("%s/ocla.ys", taskPath.c_str());
+    CFG_POST_MSG("    OCLA Analyze CMD path: %s", outPath.c_str());
     std::ofstream outfile(outPath.c_str());
     CFG_ASSERT_MSG(outfile.is_open(), "Fail to open %s for writing",
                    outPath.c_str());
@@ -30,6 +31,7 @@ void BitAssembler_OCLA::parse(CFGObject_BITOBJ& bitobj,
     std::atomic<bool> stop = false;
     if (CFG_execute_cmd(cmd, cmd_output, nullptr, stop) == 0) {
       std::string ocla_json = CFG_print("%s/ocla.json", taskPath.c_str());
+      CFG_POST_MSG("    OCLA JSON: %s", ocla_json.c_str());
       if (std::filesystem::exists(ocla_json)) {
         std::ifstream jsonfile(ocla_json.c_str());
         CFG_ASSERT(jsonfile.is_open() && jsonfile.good());
@@ -119,9 +121,8 @@ EXTRACT_OCLA_INFO_END:
 bool BitAssembler_OCLA::validate_ocla(nlohmann::json& ocla) {
   bool status = false;
   const std::vector<std::string> params = {
-      "IP_VERSION",     "IP_ID",        "AXI_ADDR_WIDTH",
-      "AXI_DATA_WIDTH", "NO_OF_PROBES", "NO_OF_TRIGGER_INPUTS",
-      "MEM_DEPTH",      "PROBE_WIDHT",  "INDEX"};
+      "IP_VERSION",   "IP_ID",     "AXI_ADDR_WIDTH", "AXI_DATA_WIDTH",
+      "NO_OF_PROBES", "MEM_DEPTH", "INDEX"};
   if (!ocla.is_object()) {
     CFG_POST_WARNING("JSON sub-OCLA is not an object");
     goto VALIDATE_OCLA_END;
@@ -182,11 +183,12 @@ VALIDATE_OCLA_END:
 bool BitAssembler_OCLA::validate_ocla_debug_subsystem(
     nlohmann::json& ocla_debug_subsystem) {
   bool status = false;
-  std::vector<std::string> params = {"IP_VERSION", "IP_ID", "CORES",
-                                     "Total_Probes"};
-  std::vector<std::string> str_params = {"MODE"};
+  std::vector<std::string> params = {"IP_VERSION", "IP_ID",
+                                     "CORES",      "PROBES_SUM",
+                                     "No_AXI_Bus", "AXI_Core_BaseAddress"};
+  std::vector<std::string> str_params = {"MODE", "AXI_TYPE"};
   for (uint32_t i = 0; i < 15; i++) {
-    params.push_back(CFG_print("Probe%d", i + 1));
+    params.push_back(CFG_print("Probe%d_Width", i + 1));
     params.push_back(CFG_print("IF%d_BaseAddress", i + 1));
     params.push_back(CFG_print("IF%d_Probes", i + 1));
   }
@@ -228,7 +230,8 @@ bool BitAssembler_OCLA::validate_ocla_debug_subsystem(
   // Type param, params, addr (not param), probes (not param)
   if (ocla_debug_subsystem.size() != (1 + params.size() + str_params.size())) {
     CFG_POST_WARNING(
-        "JSON sub-OCLA has extra object key. Expected %d count, found %d",
+        "JSON OCLA Debug Subsystem has extra object key. Expected %d count, "
+        "found %d",
         1 + params.size() + str_params.size(), ocla_debug_subsystem.size());
     goto VALIDATE_OCLA_DEBUG_SUBSYSTEM_END;
   }
