@@ -112,3 +112,15 @@ foreach(file ${SRC_H_INSTALL_LIST})
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/foedag/CFGCommonRS
   )
 endforeach()
+
+if(UNIX AND CMAKE_SYSTEM_NAME MATCHES "Linux")
+install(
+     DIRECTORY
+        ${CMAKE_BINARY_DIR}/lib/openssl
+     DESTINATION
+        ${CMAKE_INSTALL_LIBDIR}
+     
+       )
+endif()
+
+
