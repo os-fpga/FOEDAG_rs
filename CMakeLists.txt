@@ -27,34 +27,46 @@ list(APPEND FOEDAG_RS_RECURSIVE_SUBSYTEMS
   FOEDAG
   )
 
-list(APPEND FOEDAG_RS_NON_RECURSIVE_SUBSYTEMS
-  Raptor_Tools
-  )
-
+list(APPEND FOEDAG_RS_PARTIAL_RECURSIVE_SUBSYTEMS
+  Raptor_Tools/OpenLM
+)
+  
 find_package(Git QUIET)
 
-function(checkout_subsystems SUBSYSTEM_LIST WORK_DIR RECURSIVE UPDATE)
-    foreach(SUBMODULE IN LISTS ${SUBSYSTEM_LIST})
-        file(GLOB README ${WORK_DIR}/${SUBMODULE}/README*)
-        if (NOT EXISTS "${README}" OR ${UPDATE})
-            message("Updating ${SUBMODULE} submodule...")
-            execute_process(
-                COMMAND ${GIT_EXECUTABLE} submodule update --init ${RECURSIVE} ${SUBMODULE}
-                WORKING_DIRECTORY ${WORK_DIR}
-                RESULT_VARIABLE GIT_SUBMOD_RESULT
-                )
-            if  (NOT GIT_SUBMOD_RESULT EQUAL "0") 
-                message(FATAL_ERROR "\"${GIT_EXECUTABLE} submodule update --init ${RECURSIVE} ${SUBMODULE}\" failed with ${GIT_SUBMOD_RESULT}, please checkout submodule manually")
-            endif()
-        endif()
-    endforeach()
+function(checkout_subsystems SUBSYSTEM_LIST WORK_DIR RECURSIVE UPDATE PARTIAL)
+    set(ORGNL_RECEV ${WORK_DIR})
+    message("###########################")
+    message(${SUBSYSTEM_LIST})
+    message("###########################")
+  foreach(GIVEN_SUBMODULE IN LISTS ${SUBSYSTEM_LIST})
+    if(PARTIAL)
+        set(WORK_DIR ${ORGNL_RECEV})
+        get_filename_component(SUBMODULE "${GIVEN_SUBMODULE}" NAME)
+        get_filename_component(extract_dir "${GIVEN_SUBMODULE}" DIRECTORY)
+        set(WORK_DIR ${WORK_DIR}/${extract_dir})
+    else()
+        set(SUBMODULE ${GIVEN_SUBMODULE})    
+    endif()
+    file(GLOB README ${WORK_DIR}/${SUBMODULE}/README*)
+    if (NOT EXISTS "${README}" OR ${UPDATE})
+      message("Updating ${SUBMODULE} submodule...")
+      execute_process(
+        COMMAND ${GIT_EXECUTABLE} submodule update --init ${RECURSIVE} ${SUBMODULE}
+        WORKING_DIRECTORY ${WORK_DIR}
+        RESULT_VARIABLE GIT_SUBMOD_RESULT
+        )
+      if  (NOT GIT_SUBMOD_RESULT EQUAL "0")
+        message(FATAL_ERROR "\"${GIT_EXECUTABLE} submodule update --init ${RECURSIVE} ${SUBMODULE}\" failed with ${GIT_SUBMOD_RESULT}, please checkout submodule manually")
+      endif()
+    endif()
+  endforeach()
 endfunction(checkout_subsystems)
 
 if (NOT UPDATE_SUBMODULES)
     set(UPDATE_SUBMODULES OFF)
 endif()
 
-checkout_subsystems(FOEDAG_RS_RECURSIVE_SUBSYTEMS ${CMAKE_CURRENT_SOURCE_DIR} "--recursive" ${UPDATE_SUBMODULES})
+checkout_subsystems(FOEDAG_RS_RECURSIVE_SUBSYTEMS ${CMAKE_CURRENT_SOURCE_DIR} "--recursive" ${UPDATE_SUBMODULES} OFF)
 
 if (ENABLE_OPENSTA)
   message("Enable OpenSTA is set to ON")
@@ -65,14 +77,15 @@ if (PRODUCTION_BUILD)
   message("Production Build type set to ON")
   set (PRODUCTION_BUILD_FLAG "-DPRODUCTION_BUILD=1")
   if (NOT RAPTOR)
-    checkout_subsystems(FOEDAG_RS_NON_RECURSIVE_SUBSYTEMS ${CMAKE_CURRENT_SOURCE_DIR} "" ${UPDATE_SUBMODULES})
+    checkout_subsystems(FOEDAG_RS_PARTIAL_RECURSIVE_SUBSYTEMS ${CMAKE_CURRENT_SOURCE_DIR} "" ${UPDATE_SUBMODULES} ON)
     # FLEX_LM_SRC_DIR should be made as required path.
-    get_filename_component(FLEX_LM_SRC_DIR "Raptor_Tools/Flex_LM"
+    #get_filename_component(FLEX_LM_SRC_DIR "Raptor_Tools/Flex_LM"
+    get_filename_component(OPENLM_DIR "Raptor_Tools/OpenLM"
       REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-    add_subdirectory(${FLEX_LM_SRC_DIR} Flex_LM)
-    # No need for else as FLEX_LM_SRC_DIR will be set by Raptor
+    add_subdirectory(${OPENLM_DIR} OPENLM_DIR)
+    # No need for else as OPENLM_DIR will be set by Raptor
   endif()
-  message("FLEX: "  ${FLEX_LM_SRC_DIR})
+  message("OPENLM_DIR: "  ${OPENLM_DIR})
 endif(PRODUCTION_BUILD)
 
 add_subdirectory(FOEDAG EXCLUDE_FROM_ALL)
@@ -156,7 +169,7 @@ else()
   )
 endif()
 
-include_directories(${FLEX_LM_SRC_DIR} ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/FOEDAG/src ${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/include/ 
+include_directories(${OPENLM_DIR} ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/FOEDAG/src ${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_CURRENT_BINARY_DIR}/FOEDAG/include/ 
   ${CMAKE_CURRENT_BINARY_DIR}/src/ConfigurationRS)
 
 set(QRC_MAIN_WINDOW
@@ -177,16 +190,20 @@ target_link_libraries(raptor_gui INTERFACE bitassembler ocla)
 
 if (PRODUCTION_BUILD)
 target_link_libraries(raptor_gui PUBLIC rs_licenseManager)
+add_dependencies(licensecc_static openssl_build)
+add_dependencies(lcc_base openssl_build)
+add_dependencies(license_generator_lib openssl_build)
 endif()
 
 add_dependencies(raptor_gui nlohmann_json)
 add_dependencies(raptor_gui scope_guard)
 add_dependencies(raptor_gui cfgcommonrs)
+
 #set_target_properties(raptor_gui PROPERTIES PUBLIC_HEADER )
 target_include_directories(raptor_gui PRIVATE
   FOEDAG/third_party/tcl8.6.12/generic/
-  ${FLEX_LM_SRC_DIR}
-  ${FLEX_LM_SRC_DIR}/machind
+  ${OPENLM_DIR}
+  #${FLEX_LM_SRC_DIR}/machind
   ${CMAKE_CURRENT_BINARY_DIR}/include
   ${CMAKE_CURRENT_BINARY_DIR}/src/ConfigurationRS
   FOEDAG/third_party/googletest/googletest/include
@@ -206,7 +223,7 @@ set_target_properties(raptor_gui-bin PROPERTIES OUTPUT_NAME raptor)
 if (PRODUCTION_BUILD)
   add_dependencies(raptor_gui rs_licenseManager)
   add_dependencies(raptor_gui-bin rs_licenseManager)
-  target_include_directories(raptor_gui-bin PUBLIC ${FLEX_LM_SRC_DIR})
+  target_include_directories(raptor_gui-bin PUBLIC ${OPENLM_DIR})
   target_link_libraries(raptor_gui-bin PUBLIC rs_licenseManager)
 endif()
 
