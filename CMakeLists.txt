@@ -33,6 +33,7 @@ list(APPEND FOEDAG_RS_NON_RECURSIVE_SUBSYTEMS
 
 list(APPEND FOEDAG_RS_PARTIAL_RECURSIVE_SUBSYTEMS
   Raptor_Tools/OpenLM
+  Raptor_Tools/OpenLM/licensecc/extern
 )
   
 find_package(Git QUIET)
