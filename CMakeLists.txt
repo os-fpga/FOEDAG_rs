@@ -27,6 +27,10 @@ list(APPEND FOEDAG_RS_RECURSIVE_SUBSYTEMS
   FOEDAG
   )
 
+list(APPEND FOEDAG_RS_NON_RECURSIVE_SUBSYTEMS
+  Raptor_Tools
+)
+
 list(APPEND FOEDAG_RS_PARTIAL_RECURSIVE_SUBSYTEMS
   Raptor_Tools/OpenLM
 )
@@ -77,6 +81,7 @@ if (PRODUCTION_BUILD)
   message("Production Build type set to ON")
   set (PRODUCTION_BUILD_FLAG "-DPRODUCTION_BUILD=1")
   if (NOT RAPTOR)
+    checkout_subsystems(FOEDAG_RS_NON_RECURSIVE_SUBSYTEMS ${CMAKE_CURRENT_SOURCE_DIR} "" ${UPDATE_SUBMODULES} OFF)
     checkout_subsystems(FOEDAG_RS_PARTIAL_RECURSIVE_SUBSYTEMS ${CMAKE_CURRENT_SOURCE_DIR} "" ${UPDATE_SUBMODULES} ON)
     # FLEX_LM_SRC_DIR should be made as required path.
     #get_filename_component(FLEX_LM_SRC_DIR "Raptor_Tools/Flex_LM"
