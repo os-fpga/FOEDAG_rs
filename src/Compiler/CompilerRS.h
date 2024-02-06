@@ -109,7 +109,7 @@ class CompilerRS : public CompilerOpenFPGA {
   int m_maxThreads = -1;
   bool m_keepTribuf = false;
   bool m_new_dsp19x2 = false;
-  bool m_new_tdp36k = false;
+  bool m_new_tdp36k = true;
   std::filesystem::path m_starsExecutablePath = "stars";
   std::filesystem::path m_tclExecutablePath = "tclsh";
   std::filesystem::path m_powerExecutablePath = "get_power_data.tcl";
