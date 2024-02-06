@@ -679,6 +679,10 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
         compiler->NewTdp36k(true);
         continue;
       }
+      if (option == "-no_tdp36k") {
+        compiler->NewTdp36k(false);
+        continue;
+      }
       if (option == "-clke_strategy" && i + 1 < argc) {
         std::string arg = argv[++i];
         if (arg == "early") {
