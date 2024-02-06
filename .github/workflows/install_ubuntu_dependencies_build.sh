@@ -13,6 +13,9 @@ sudo apt install -y \
   qt6-base-dev qt6-webengine-dev qt6-webengine* libqt6webenginecore6* libegl1-mesa-dev libx11-xcb-dev libxkbcommon-dev \
   xvfb \
   libusb-1.0-0-dev \
+  libboost-program-options-dev \
+  libboost-date-time-dev \
+  libboost-test-dev \
   pkg-config
   
 # for cmake warning, Could NOT find WrapVulkanHeaders, install the Vulkan separately by following the instruction from https://vulkan-tutorial.com/Development_environment#page_Vulkan-Packages  
