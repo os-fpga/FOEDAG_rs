@@ -203,7 +203,7 @@ else()
 endif()
 set_target_properties(raptor_gui-bin PROPERTIES OUTPUT_NAME raptor)
 
-if (PRODUCTION_BUILD NOT RAPTOR)
+if (PRODUCTION_BUILD AND NOT RAPTOR)
   add_dependencies(raptor_gui rs_licenseManager)
   add_dependencies(raptor_gui-bin rs_licenseManager)
   target_include_directories(raptor_gui-bin PUBLIC ${FLEX_LM_SRC_DIR})
