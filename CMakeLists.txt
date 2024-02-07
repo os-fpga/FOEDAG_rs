@@ -62,17 +62,17 @@ if (ENABLE_OPENSTA)
 endif(ENABLE_OPENSTA)
 
 if (PRODUCTION_BUILD)
-  message("Production Build type set to ON")
-  set (PRODUCTION_BUILD_FLAG "-DPRODUCTION_BUILD=1")
   if (NOT RAPTOR)
+    message("Production Build type set to ON")
+    set (PRODUCTION_BUILD_FLAG "-DPRODUCTION_BUILD=1")	
     checkout_subsystems(FOEDAG_RS_NON_RECURSIVE_SUBSYTEMS ${CMAKE_CURRENT_SOURCE_DIR} "" ${UPDATE_SUBMODULES})
     # FLEX_LM_SRC_DIR should be made as required path.
     get_filename_component(FLEX_LM_SRC_DIR "Raptor_Tools/Flex_LM"
       REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
     add_subdirectory(${FLEX_LM_SRC_DIR} Flex_LM)
+    message("FLEX: "  ${FLEX_LM_SRC_DIR})
     # No need for else as FLEX_LM_SRC_DIR will be set by Raptor
   endif()
-  message("FLEX: "  ${FLEX_LM_SRC_DIR})
 endif(PRODUCTION_BUILD)
 
 add_subdirectory(FOEDAG EXCLUDE_FROM_ALL)
@@ -175,7 +175,7 @@ add_library(raptor_gui STATIC ${raptor_gui_SRC})
 target_link_libraries(raptor_gui PUBLIC Qt6::Widgets Qt6::Core Qt6::Gui Qt6::Xml)
 target_link_libraries(raptor_gui INTERFACE bitassembler ocla)
 
-if (PRODUCTION_BUILD)
+if (PRODUCTION_BUILD AND NOT RAPTOR)
 target_link_libraries(raptor_gui PUBLIC rs_licenseManager)
 endif()
 
@@ -203,7 +203,7 @@ else()
 endif()
 set_target_properties(raptor_gui-bin PROPERTIES OUTPUT_NAME raptor)
 
-if (PRODUCTION_BUILD)
+if (PRODUCTION_BUILD NOT RAPTOR)
   add_dependencies(raptor_gui rs_licenseManager)
   add_dependencies(raptor_gui-bin rs_licenseManager)
   target_include_directories(raptor_gui-bin PUBLIC ${FLEX_LM_SRC_DIR})
