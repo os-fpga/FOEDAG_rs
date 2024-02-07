@@ -133,8 +133,8 @@ bool BitAssembler_OCLA::validate_ocla(nlohmann::json& ocla) {
         "not string");
     goto VALIDATE_OCLA_END;
   }
-  if (std::string(ocla["IP_TYPE"]) != "ocla") {
-    CFG_POST_WARNING("JSON sub-OCLA IP_TYPE is not \"ocla\". Found %s",
+  if (std::string(ocla["IP_TYPE"]) != "OCLA") {
+    CFG_POST_WARNING("JSON sub-OCLA IP_TYPE is not \"OCLA\". Found %s",
                      std::string(ocla["IP_TYPE"]).c_str());
     goto VALIDATE_OCLA_END;
   }
@@ -155,11 +155,16 @@ bool BitAssembler_OCLA::validate_ocla(nlohmann::json& ocla) {
         "is not number");
     goto VALIDATE_OCLA_END;
   }
+  if (!ocla.contains("probe_info") || !ocla["probe_info"].is_array()) {
+    CFG_POST_WARNING(
+        "JSON sub-OCLA does not have probe_info information or the information "
+        "type is not an array");
+    goto VALIDATE_OCLA_END;
+  }
   if (!ocla.contains("probes") || !ocla["probes"].is_array()) {
     CFG_POST_WARNING(
         "JSON sub-OCLA does not have probes information or the information "
-        "type "
-        "is not an array");
+        "type is not an array");
     goto VALIDATE_OCLA_END;
   }
   for (auto& probe : ocla["probes"]) {
@@ -168,11 +173,12 @@ bool BitAssembler_OCLA::validate_ocla(nlohmann::json& ocla) {
       goto VALIDATE_OCLA_END;
     }
   }
-  // Type param, params, addr (not param), probes (not param)
-  if (ocla.size() != (1 + params.size() + 2)) {
+  // Type param, params, addr (not param), probes (not param), probe_info (not
+  // param)
+  if (ocla.size() != (1 + params.size() + 3)) {
     CFG_POST_WARNING(
         "JSON sub-OCLA has extra object key. Expected %d count, found %d",
-        1 + params.size() + 2, ocla.size());
+        1 + params.size() + 3, ocla.size());
     goto VALIDATE_OCLA_END;
   }
   status = true;
@@ -183,14 +189,15 @@ VALIDATE_OCLA_END:
 bool BitAssembler_OCLA::validate_ocla_debug_subsystem(
     nlohmann::json& ocla_debug_subsystem) {
   bool status = false;
-  std::vector<std::string> params = {"IP_VERSION", "IP_ID",
-                                     "CORES",      "PROBES_SUM",
-                                     "No_AXI_Bus", "AXI_Core_BaseAddress"};
-  std::vector<std::string> str_params = {"MODE", "AXI_TYPE"};
+  std::vector<std::string> params = {
+      "IP_VERSION",          "IP_ID",      "Cores",
+      "No_Probes",           "Probes_Sum", "No_AXI_Bus",
+      "AXI_Core_BaseAddress"};
+  std::vector<std::string> str_params = {"Mode", "Axi_Type", "Sampling_Clk"};
   for (uint32_t i = 0; i < 15; i++) {
-    params.push_back(CFG_print("Probe%d_Width", i + 1));
-    params.push_back(CFG_print("IF%d_BaseAddress", i + 1));
-    params.push_back(CFG_print("IF%d_Probes", i + 1));
+    params.push_back(CFG_print("Probe%02d_Width", i + 1));
+    params.push_back(CFG_print("IF%02d_BaseAddress", i + 1));
+    params.push_back(CFG_print("IF%02d_Probes", i + 1));
   }
   if (!ocla_debug_subsystem.contains("IP_TYPE") ||
       !ocla_debug_subsystem["IP_TYPE"].is_string()) {
@@ -200,9 +207,9 @@ bool BitAssembler_OCLA::validate_ocla_debug_subsystem(
         "not string");
     goto VALIDATE_OCLA_DEBUG_SUBSYSTEM_END;
   }
-  if (std::string(ocla_debug_subsystem["IP_TYPE"]) != "ocla") {
+  if (std::string(ocla_debug_subsystem["IP_TYPE"]) != "OCLA") {
     CFG_POST_WARNING(
-        "JSON OCLA Debug Subsystem IP_TYPE is not \"ocla\". Found %s",
+        "JSON OCLA Debug Subsystem IP_TYPE is not \"OCLA\". Found %s",
         std::string(ocla_debug_subsystem["IP_TYPE"]).c_str());
     goto VALIDATE_OCLA_DEBUG_SUBSYSTEM_END;
   }

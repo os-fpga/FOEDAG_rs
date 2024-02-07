@@ -551,6 +551,12 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
         if (FileUtils::FileExists(tech_datapath / "primitives.v"))
           GetSimulator()->AddGateSimulationModel(tech_datapath /
                                                  "primitives.v");
+        // Temporary solution: Post PnR reverse mapping RAM model
+        std::filesystem::path reverse_map_tdp36 =
+            tech_datapath / "FPGA_PRIMITIVES_MODELS" / "sim_models_internal" /
+            "primitives_mapping" / "BRAM" / "rs_tdp36k_post_pnr_mapping.v";
+        if (FileUtils::FileExists(reverse_map_tdp36))
+          GetSimulator()->AddGateSimulationModel(reverse_map_tdp36);
       }
       break;
     case NetlistType::VHDL:
@@ -675,8 +681,16 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
         compiler->NewDsp19x2(true);
         continue;
       }
+      if (option == "-no_dsp19x2") {
+        compiler->NewDsp19x2(false);
+        continue;
+      }
       if (option == "-new_tdp36k") {
         compiler->NewTdp36k(true);
+        continue;
+      }
+      if (option == "-no_tdp36k") {
+        compiler->NewTdp36k(false);
         continue;
       }
       if (option == "-clke_strategy" && i + 1 < argc) {
