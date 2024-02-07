@@ -557,6 +557,12 @@ void CompilerRS::CustomSimulatorSetup(Simulator::SimulationType action) {
             "primitives_mapping" / "BRAM" / "rs_tdp36k_post_pnr_mapping.v";
         if (FileUtils::FileExists(reverse_map_tdp36))
           GetSimulator()->AddGateSimulationModel(reverse_map_tdp36);
+        // Temporary solution: Post PnR reverse mapping DSP model
+        std::filesystem::path reverse_map_dsp38 =
+            tech_datapath / "FPGA_PRIMITIVES_MODELS" / "sim_models_internal" /
+            "primitives_mapping" / "DSP" / "rs_dsp_multxxx_post_pnr_mapping.v";
+        if (FileUtils::FileExists(reverse_map_dsp38))
+          GetSimulator()->AddGateSimulationModel(reverse_map_dsp38);
       }
       break;
     case NetlistType::VHDL:
