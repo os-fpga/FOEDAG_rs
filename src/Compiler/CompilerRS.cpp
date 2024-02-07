@@ -681,6 +681,10 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
         compiler->NewDsp19x2(true);
         continue;
       }
+      if (option == "-no_dsp19x2") {
+        compiler->NewDsp19x2(false);
+        continue;
+      }
       if (option == "-new_tdp36k") {
         compiler->NewTdp36k(true);
         continue;
