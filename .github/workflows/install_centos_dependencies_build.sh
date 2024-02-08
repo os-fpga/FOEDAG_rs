@@ -28,6 +28,7 @@ yum install -y libusbx-devel libusb-devel
 yum install -y pkgconfig
 yum install -y perl-IPC-Cmd
 yum install -y alsa-lib
+yum install -y boost boost-devel boost-static openssl-static
 
 ln -s $PWD/cmake-3.24.4-linux-x86_64/bin/ctest /usr/bin/ctest
 echo 'QMAKE_CC=/opt/rh/devtoolset-11/root/usr/bin/gcc' >> $GITHUB_ENV
