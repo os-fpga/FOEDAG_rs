@@ -79,9 +79,9 @@ if (ENABLE_OPENSTA)
 endif(ENABLE_OPENSTA)
 
 if (PRODUCTION_BUILD)
-  message("Production Build type set to ON")
-  set (PRODUCTION_BUILD_FLAG "-DPRODUCTION_BUILD=1")
   if (NOT RAPTOR)
+    message("Production Build type set to ON")	
+    set (PRODUCTION_BUILD_FLAG "-DPRODUCTION_BUILD=1")
     checkout_subsystems(FOEDAG_RS_NON_RECURSIVE_SUBSYTEMS ${CMAKE_CURRENT_SOURCE_DIR} "" ${UPDATE_SUBMODULES} OFF)
     checkout_subsystems(FOEDAG_RS_PARTIAL_RECURSIVE_SUBSYTEMS ${CMAKE_CURRENT_SOURCE_DIR} "" ${UPDATE_SUBMODULES} ON)
     # FLEX_LM_SRC_DIR should be made as required path.
@@ -91,7 +91,7 @@ if (PRODUCTION_BUILD)
     add_subdirectory(${OPENLM_DIR} OPENLM_DIR)
     # No need for else as OPENLM_DIR will be set by Raptor
   endif()
-  message("OPENLM_DIR: "  ${OPENLM_DIR})
+  message(STATUS "FOEDAG_rs -> OPENLM_DIR: "  ${OPENLM_DIR})
 endif(PRODUCTION_BUILD)
 
 add_subdirectory(FOEDAG EXCLUDE_FROM_ALL)
