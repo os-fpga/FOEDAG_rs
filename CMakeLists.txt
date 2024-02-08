@@ -89,9 +89,9 @@ if (PRODUCTION_BUILD)
     get_filename_component(OPENLM_DIR "Raptor_Tools/OpenLM"
       REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
     add_subdirectory(${OPENLM_DIR} OPENLM_DIR)
+    message(STATUS "FOEDAG_rs -> OPENLM_DIR: "  ${OPENLM_DIR})
     # No need for else as OPENLM_DIR will be set by Raptor
   endif()
-  message(STATUS "FOEDAG_rs -> OPENLM_DIR: "  ${OPENLM_DIR})
 endif(PRODUCTION_BUILD)
 
 add_subdirectory(FOEDAG EXCLUDE_FROM_ALL)
