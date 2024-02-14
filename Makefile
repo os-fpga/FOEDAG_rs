@@ -147,7 +147,6 @@ lib-only: run-cmake-release
 	cmake --build build --target raptor_gui -j $(CPU_CORES)
 
 format:
-	tclsh .github/bin/reformat.tcl -indent 2 src/Compiler/get_power_data.tcl
 	.github/bin/run-clang-format.sh
 
 help:

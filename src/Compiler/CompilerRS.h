@@ -70,9 +70,6 @@ class CompilerRS : public CompilerOpenFPGA {
   void TclExecPath(const std::filesystem::path& path) {
     m_tclExecutablePath = path;
   }
-  void PowerExecPath(const std::filesystem::path& path) {
-    m_powerExecutablePath = path;
-  }
   void RaptorExecPath(const std::filesystem::path& path) {
     m_raptorExecutablePath = path;
   }
@@ -112,7 +109,6 @@ class CompilerRS : public CompilerOpenFPGA {
   bool m_new_tdp36k = true;
   std::filesystem::path m_starsExecutablePath = "stars";
   std::filesystem::path m_tclExecutablePath = "tclsh";
-  std::filesystem::path m_powerExecutablePath = "get_power_data.tcl";
   std::filesystem::path m_raptorExecutablePath = "raptor";
 #ifdef PRODUCTION_BUILD
   License_Manager* licensePtr = nullptr;
