@@ -901,16 +901,15 @@ bool CompilerRS::LicenseDevice(const std::string &deviceName) {
 // Should return false in Production build if the Device License Feature
 // cannot be check out.
 #ifdef PRODUCTION_BUILD
-	try {
-      License_Manager license(deviceName);
-  
-	} catch (License_Manager::LicenseFatalException const& ex){
+  try {
+    License_Manager license(deviceName);
+
+  } catch (License_Manager::LicenseFatalException const &ex) {
     return false;
-  
-	} catch (License_Manager::LicenseCorrectableException const& ex){
+
+  } catch (License_Manager::LicenseCorrectableException const &ex) {
     return false;
-  
-	}
+  }
   return true;
 
 #endif
