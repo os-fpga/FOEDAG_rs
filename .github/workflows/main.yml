@@ -44,7 +44,7 @@ jobs:
           ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
 
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -236,7 +236,7 @@ jobs:
       shell: bash
 
     - name: Git pull
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -323,7 +323,7 @@ jobs:
 #        make regression
 
   windows-msvc:
-    runs-on: windows-2022
+    runs-on: windows-latest
 
     defaults:
       run:
@@ -373,7 +373,7 @@ jobs:
     - run: git config --global core.autocrlf input
       shell: bash
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -440,7 +440,7 @@ jobs:
       with:
         python-version: 3.8
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -510,7 +510,7 @@ jobs:
         setup-python: false
         modules: 'qtwebengine qtwebchannel qtpositioning'
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -558,7 +558,7 @@ jobs:
     steps:
 
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -582,7 +582,7 @@ jobs:
         access_token: ${{ github.token }}
 
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
