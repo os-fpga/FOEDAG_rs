@@ -902,10 +902,15 @@ bool CompilerRS::LicenseDevice(const std::string &deviceName) {
 // cannot be check out.
 #ifdef PRODUCTION_BUILD
   try {
-    auto license = License_Manager(deviceName);
-  } catch (...) {
+    License_Manager license(deviceName);
+
+  } catch (License_Manager::LicenseFatalException const &ex) {
+    return false;
+
+  } catch (License_Manager::LicenseCorrectableException const &ex) {
     return false;
   }
+  return true;
 
 #endif
   return true;
