@@ -99,6 +99,21 @@ ${OUTPUT_NETLIST}
 
   )";
 
+const std::string RapidSiliconYosysGateLevelScript = R"( 
+# Yosys synthesis script for ${TOP_MODULE}
+# Read source files
+read_verilog -sv ${PRIMITIVES_BLACKBOX}
+${READ_DESIGN_FILES}
+
+# Technology mapping
+hierarchy ${TOP_MODULE_DIRECTIVE}
+
+${KEEP_NAMES}
+
+${OUTPUT_NETLIST}
+
+  )";
+
 const std::string RapidSiliconYosysSurelogScript = R"( 
 # Yosys/Surelog synthesis script for ${TOP_MODULE}
 # Read source files
@@ -200,6 +215,17 @@ static bool debugger_flow(CompilerRS *compiler, bool batchMode, int argc,
 }
 
 std::string CompilerRS::InitSynthesisScript() {
+  for (const auto &lang_file : ProjManager()->DesignFiles()) {
+    switch (lang_file.first.language) {
+      case Design::Language::VERILOG_NETLIST:
+        YosysScript(RapidSiliconYosysGateLevelScript);
+        return m_yosysScript;
+        break;
+      default:
+        break;
+    }
+  }
+
   switch (m_synthType) {
     case SynthesisType::Yosys:
       Message("Yosys Synthesis");
