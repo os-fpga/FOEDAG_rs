@@ -494,7 +494,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
       // Temporary, once pin_c works with Verilog, only output Verilog
       result =
           ReplaceAll(result, "${OUTPUT_NETLIST}",
-                     "write_verilog -noexpr -nodec -v "
+                     "write_verilog -noexpr -nodec -norename -v "
                      "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
       break;
     case NetlistType::VHDL:
@@ -514,13 +514,13 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
     case NetlistType::Blif:
       result =
           ReplaceAll(result, "${OUTPUT_NETLIST}",
-                     "write_verilog -noexpr -nodec -v "
+                     "write_verilog -noexpr -nodec -norename -v "
                      "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_BLIF}");
       break;
     case NetlistType::EBlif:
       result =
           ReplaceAll(result, "${OUTPUT_NETLIST}",
-                     "write_verilog -noexpr -nodec -v "
+                     "write_verilog -noexpr -nodec -norename -v "
                      "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
       break;
   }
