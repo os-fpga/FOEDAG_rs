@@ -96,7 +96,7 @@ plugin -i ${PLUGIN_LIB}
 ${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 plugin -i design-edit
-design_edit -tech ${MAP_TO_TECHNOLOGY} -json interface.json -w ${OUTPUT_WRAPPER_VERILOG} ${OUTPUT_WRAPPER_EBLIF}
+design_edit -tech ${MAP_TO_TECHNOLOGY} -json io_config.json -w ${OUTPUT_WRAPPER_VERILOG} ${OUTPUT_WRAPPER_EBLIF}
 ${OUTPUT_NETLIST}
 
   )";
@@ -112,6 +112,8 @@ hierarchy ${TOP_MODULE_DIRECTIVE}
 
 ${KEEP_NAMES}
 
+plugin -i design-edit
+design_edit -tech ${MAP_TO_TECHNOLOGY} -json io_config.json -w ${OUTPUT_WRAPPER_VERILOG} ${OUTPUT_WRAPPER_EBLIF}
 ${OUTPUT_NETLIST}
 
   )";
@@ -130,6 +132,8 @@ plugin -i ${PLUGIN_LIB}
 
 ${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
+plugin -i design-edit
+design_edit -tech ${MAP_TO_TECHNOLOGY} -json io_config.json -w ${OUTPUT_WRAPPER_VERILOG} ${OUTPUT_WRAPPER_EBLIF}
 ${OUTPUT_NETLIST}
 
   )";
@@ -150,6 +154,8 @@ plugin -i ${PLUGIN_LIB}
 
 ${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
+plugin -i design-edit
+design_edit -tech ${MAP_TO_TECHNOLOGY} -json io_config.json -w ${OUTPUT_WRAPPER_VERILOG} ${OUTPUT_WRAPPER_EBLIF}
 ${OUTPUT_NETLIST}
 
   )";
