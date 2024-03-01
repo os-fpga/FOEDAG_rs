@@ -55,7 +55,6 @@ plugin -i ${PLUGIN_LIB}
 
 ${PLUGIN_NAME} -family ${MAP_TO_TECHNOLOGY} -top ${TOP_MODULE} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${FSM_ENCODING} -blif ${OUTPUT_BLIF} ${FAST} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
-
 write_verilog -noattr -nohex ${OUTPUT_VERILOG}
 write_edif ${OUTPUT_EDIF}
 write_blif -param ${OUTPUT_EBLIF}
@@ -78,6 +77,10 @@ ${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${I
 
 ${OUTPUT_NETLIST}
 
+plugin -i design-edit
+design_edit -tech ${MAP_TO_TECHNOLOGY} -json io_config.json -w ${OUTPUT_WRAPPER_VERILOG} ${OUTPUT_WRAPPER_EBLIF}
+${OUTPUT_FABRIC_NETLIST}
+
   )";
 
 const std::string RapidSiliconYosysDefaultScript = R"( 
@@ -95,9 +98,11 @@ plugin -i ${PLUGIN_LIB}
 
 ${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
+${OUTPUT_NETLIST}
+
 plugin -i design-edit
 design_edit -tech ${MAP_TO_TECHNOLOGY} -json io_config.json -w ${OUTPUT_WRAPPER_VERILOG} ${OUTPUT_WRAPPER_EBLIF}
-${OUTPUT_NETLIST}
+${OUTPUT_FABRIC_NETLIST}
 
   )";
 
@@ -112,9 +117,11 @@ hierarchy ${TOP_MODULE_DIRECTIVE}
 
 ${KEEP_NAMES}
 
+${OUTPUT_NETLIST}
+
 plugin -i design-edit
 design_edit -tech ${MAP_TO_TECHNOLOGY} -json io_config.json -w ${OUTPUT_WRAPPER_VERILOG} ${OUTPUT_WRAPPER_EBLIF}
-${OUTPUT_NETLIST}
+${OUTPUT_FABRIC_NETLIST}
 
   )";
 
@@ -132,9 +139,11 @@ plugin -i ${PLUGIN_LIB}
 
 ${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
+${OUTPUT_NETLIST}
+
 plugin -i design-edit
 design_edit -tech ${MAP_TO_TECHNOLOGY} -json io_config.json -w ${OUTPUT_WRAPPER_VERILOG} ${OUTPUT_WRAPPER_EBLIF}
-${OUTPUT_NETLIST}
+${OUTPUT_FABRIC_NETLIST}
 
   )";
 
@@ -154,9 +163,11 @@ plugin -i ${PLUGIN_LIB}
 
 ${PLUGIN_NAME} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
+${OUTPUT_NETLIST}
+
 plugin -i design-edit
 design_edit -tech ${MAP_TO_TECHNOLOGY} -json io_config.json -w ${OUTPUT_WRAPPER_VERILOG} ${OUTPUT_WRAPPER_EBLIF}
-${OUTPUT_NETLIST}
+${OUTPUT_FABRIC_NETLIST}
 
   )";
 
@@ -502,6 +513,10 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
           ReplaceAll(result, "${OUTPUT_NETLIST}",
                      "write_verilog -noexpr -nodec -norename -v "
                      "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
+      result = ReplaceAll(
+          result, "${OUTPUT_FABRIC_NETLIST}",
+          "write_verilog -noexpr -nodec -norename -v "
+          "${OUTPUT_FABRIC_VERILOG}\nwrite_blif -param ${OUTPUT_FABRIC_EBLIF}");
       break;
     case NetlistType::VHDL:
       // Temporary, once pin_c and the Packer work with VHDL, replace by just
@@ -510,24 +525,39 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
           ReplaceAll(result, "${OUTPUT_NETLIST}",
                      "write_vhdl ${OUTPUT_VHDL}\nwrite_verilog "
                      "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
+      result = ReplaceAll(
+          result, "${OUTPUT_FABRIC_NETLIST}",
+          "write_vhdl ${OUTPUT_FABRIC_VHDL}\nwrite_verilog "
+          "${OUTPUT_FABRIC_VERILOG}\nwrite_blif -param ${OUTPUT_FABRIC_EBLIF}");
       break;
     case NetlistType::Edif:
       // Temporary, once pin_c works with Verilog, only output edif
       result =
           ReplaceAll(result, "${OUTPUT_NETLIST}",
                      "write_edif ${OUTPUT_EDIF}\nwrite_blif ${OUTPUT_BLIF}");
+      result = ReplaceAll(
+          result, "${OUTPUT_FABRIC_NETLIST}",
+          "write_edif ${OUTPUT_FABRIC_EDIF}\nwrite_blif ${OUTPUT_FABRIC_BLIF}");
       break;
     case NetlistType::Blif:
       result =
           ReplaceAll(result, "${OUTPUT_NETLIST}",
                      "write_verilog -noexpr -nodec -norename -v "
                      "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_BLIF}");
+      result = ReplaceAll(
+          result, "${OUTPUT_FABRIC_NETLIST}",
+          "write_verilog -noexpr -nodec -norename -v "
+          "${OUTPUT_FABRIC_VERILOG}\nwrite_blif -param ${OUTPUT_FABRIC_BLIF}");
       break;
     case NetlistType::EBlif:
       result =
           ReplaceAll(result, "${OUTPUT_NETLIST}",
                      "write_verilog -noexpr -nodec -norename -v "
                      "${OUTPUT_VERILOG}\nwrite_blif -param ${OUTPUT_EBLIF}");
+      result = ReplaceAll(
+          result, "${OUTPUT_FABRIC_NETLIST}",
+          "write_verilog -noexpr -nodec -norename -v "
+          "${OUTPUT_FABRIC_VERILOG}\nwrite_blif -param ${OUTPUT_FABRIC_EBLIF}");
       break;
   }
 
