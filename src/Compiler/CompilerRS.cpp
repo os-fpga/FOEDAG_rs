@@ -366,9 +366,16 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   switch (m_synthIO) {
     case SynthesisIOInference::Auto:
       io_inference = "";
+      if (GetNetlistType() == NetlistType::VHDL) {
+        // TODO: Synthesis does not write out IOs correctly yet in VHDL
+        // Once that is fixed, this if statement can be removed
+        io_inference = "-no_iobuf";
+        break;
+      }
       break;
     case SynthesisIOInference::None:
       io_inference = "-no_iobuf";
+      break;
   }
   std::string keep_tribuf{};
   if (KeepTribuf()) keep_tribuf = "-keep_tribuf";
@@ -925,7 +932,8 @@ std::string CompilerRS::BaseVprCommand(BaseVprDefaults defaults) {
   }
 
   auto sdcFile =
-      FilePath(Action::Pack, ProjManager()->projectName() + "_openfpga.sdc")
+      FilePath(Action::Pack,
+               "fabric_" + ProjManager()->projectName() + "_openfpga.sdc")
           .string();
   std::string command =
       m_vprExecutablePath.string() + std::string(" ") +
