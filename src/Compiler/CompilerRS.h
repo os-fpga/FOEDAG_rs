@@ -97,7 +97,7 @@ class CompilerRS : public CompilerOpenFPGA {
   SynthesisCarryInference m_synthCarry = SynthesisCarryInference::Auto;
   SynthesisFsmEncoding m_synthFsm = SynthesisFsmEncoding::Onehot;
   SynthesisClkeStrategy m_synthClke = SynthesisClkeStrategy::None;
-  SynthesisIOInference m_synthIO = SynthesisIOInference::None;
+  SynthesisIOInference m_synthIO = SynthesisIOInference::Auto;
   bool m_synthNoAdder = false;
   bool m_synthFast = false;
   bool m_synthNoFlatten = false;
