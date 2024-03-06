@@ -203,7 +203,7 @@ target_link_libraries(raptor_gui PUBLIC rs_licenseManager)
 	endif()
 endif()
 
-add_dependencies(raptor_gui nlohmann_json)
+add_dependencies(raptor_gui foedag_nlohmann_json)
 add_dependencies(raptor_gui scope_guard)
 add_dependencies(raptor_gui cfgcommonrs)
 
