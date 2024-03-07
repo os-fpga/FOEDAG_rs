@@ -5,50 +5,51 @@
 #include "OclaHelpers.h"
 
 class ConvertOclaModeToStringParamTest
-    : public ::testing::TestWithParam<std::pair<ocla_mode, std::string>> {};
+    : public ::testing::TestWithParam<
+          std::pair<ocla_trigger_mode, std::string>> {};
 
 TEST_P(ConvertOclaModeToStringParamTest, ConvertOclaMode) {
   const auto& param = GetParam();
-  const ocla_mode mode = param.first;
+  const ocla_trigger_mode mode = param.first;
   const std::string& expected_result = param.second;
 
-  std::string result = convert_ocla_mode_to_string(mode);
+  std::string result = convert_ocla_trigger_mode_to_string(mode);
   EXPECT_EQ(result, expected_result);
 }
 
 INSTANTIATE_TEST_SUITE_P(
     Default, ConvertOclaModeToStringParamTest,
-    ::testing::Values(std::make_pair(NO_TRIGGER, "disable"),
+    ::testing::Values(std::make_pair(CONTINUOUS, "disable"),
                       std::make_pair(PRE, "pre-trigger"),
                       std::make_pair(POST, "post-trigger"),
                       std::make_pair(CENTER, "center-trigger"),
-                      std::make_pair(NO_TRIGGER, "disable")));
+                      std::make_pair(CONTINUOUS, "disable")));
 
 class ConvertTriggerConditionToStringParamTest
     : public ::testing::TestWithParam<
-          std::pair<ocla_trigger_condition, std::string>> {};
+          std::pair<ocla_trigger_bool_comp, std::string>> {};
 
 TEST_P(ConvertTriggerConditionToStringParamTest, ConvertTriggerCondition) {
   const auto& param = GetParam();
-  const ocla_trigger_condition condition = param.first;
+  const ocla_trigger_bool_comp condition = param.first;
   const std::string& expected_result = param.second;
 
-  std::string result = convert_trigger_condition_to_string(condition);
+  std::string result = convert_trigger_bool_comp_to_string(condition);
   EXPECT_EQ(result, expected_result);
 }
 
 INSTANTIATE_TEST_SUITE_P(
     Default, ConvertTriggerConditionToStringParamTest,
-    ::testing::Values(std::make_pair(ocla_trigger_condition::OR, "OR"),
-                      std::make_pair(ocla_trigger_condition::AND, "AND"),
-                      std::make_pair(ocla_trigger_condition::DEFAULT, "OR"),
-                      std::make_pair(ocla_trigger_condition(99), "(unknown)"),
-                      std::make_pair(ocla_trigger_condition::XOR, "XOR")));
+    ::testing::Values(std::make_pair(ocla_trigger_bool_comp::OR, "OR"),
+                      std::make_pair(ocla_trigger_bool_comp::AND, "AND"),
+                      std::make_pair(ocla_trigger_bool_comp::DEFAULT, "OR"),
+                      std::make_pair(ocla_trigger_bool_comp(99), "(unknown)"),
+                      std::make_pair(ocla_trigger_bool_comp::XOR, "XOR")));
 
-TEST(convert_trigger_condition_to_string, DefaultModeString) {
+TEST(convert_trigger_bool_comp_to_string, DefaultModeString) {
   // Test converting with a default value
   auto result =
-      convert_trigger_condition_to_string((ocla_trigger_condition)10, "AND");
+      convert_trigger_bool_comp_to_string((ocla_trigger_bool_comp)10, "AND");
   EXPECT_EQ(result, "AND");
 }
 
@@ -103,14 +104,15 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_pair(ocla_trigger_event(99), "(unknown)")));
 
 class ConvertOclaModeParamTest
-    : public ::testing::TestWithParam<std::pair<std::string, ocla_mode>> {};
+    : public ::testing::TestWithParam<
+          std::pair<std::string, ocla_trigger_mode>> {};
 
 TEST_P(ConvertOclaModeParamTest, ConvertModeString) {
   const auto& param = GetParam();
   const std::string& mode_string = param.first;
-  ocla_mode expected_result = param.second;
+  ocla_trigger_mode expected_result = param.second;
 
-  ocla_mode result = convert_ocla_mode(mode_string);
+  ocla_trigger_mode result = convert_ocla_trigger_mode(mode_string);
   EXPECT_EQ(result, expected_result);
 }
 
@@ -118,19 +120,19 @@ INSTANTIATE_TEST_SUITE_P(
     Default, ConvertOclaModeParamTest,
     ::testing::Values(std::make_pair("pre-trigger", PRE),
                       std::make_pair("post-trigger", POST),
-                      std::make_pair("disable", NO_TRIGGER),
+                      std::make_pair("disable", CONTINUOUS),
                       std::make_pair("post-trigger", POST),
-                      std::make_pair("invalid-mode", NO_TRIGGER)));
+                      std::make_pair("invalid-mode", CONTINUOUS)));
 
 TEST(ConvertOclaModeTest, DefaultModeString) {
   // Test converting with a default value
-  ocla_mode result = convert_ocla_mode("invalid-mode", POST);
+  ocla_trigger_mode result = convert_ocla_trigger_mode("invalid-mode", POST);
   EXPECT_EQ(result, POST);
 }
 
 struct TestParam {
   std::string condition_string;
-  ocla_trigger_condition expected_result;
+  ocla_trigger_bool_comp expected_result;
 };
 
 class ConvertTriggerConditionTest : public ::testing::TestWithParam<TestParam> {
@@ -139,17 +141,17 @@ class ConvertTriggerConditionTest : public ::testing::TestWithParam<TestParam> {
 TEST_P(ConvertTriggerConditionTest, ConvertTriggerCondition) {
   const auto& param = GetParam();
   const std::string condition = param.condition_string;
-  const ocla_trigger_condition expected_result = param.expected_result;
+  const ocla_trigger_bool_comp expected_result = param.expected_result;
 
-  ocla_trigger_condition result = convert_trigger_condition(condition);
+  ocla_trigger_bool_comp result = convert_trigger_bool_comp(condition);
   EXPECT_EQ(result, expected_result);
 }
 
 INSTANTIATE_TEST_SUITE_P(
     Default, ConvertTriggerConditionTest,
-    ::testing::Values(TestParam{"OR", ocla_trigger_condition::DEFAULT},
-                      TestParam{"AND", ocla_trigger_condition::AND},
-                      TestParam{"XOR", ocla_trigger_condition::XOR}));
+    ::testing::Values(TestParam{"OR", ocla_trigger_bool_comp::DEFAULT},
+                      TestParam{"AND", ocla_trigger_bool_comp::AND},
+                      TestParam{"XOR", ocla_trigger_bool_comp::XOR}));
 
 TEST(ConvertTriggerTypeTest, ValidTriggerType) {
   std::vector<std::pair<ocla_trigger_type, std::string>> testParam{

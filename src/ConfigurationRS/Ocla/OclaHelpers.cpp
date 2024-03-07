@@ -1,13 +1,13 @@
 #include "OclaHelpers.h"
 
-static std::map<ocla_mode, std::string> ocla_mode_to_string_map = {
-    {NO_TRIGGER, "disable"},
-    {PRE, "pre-trigger"},
-    {POST, "post-trigger"},
-    {CENTER, "center-trigger"}};
+static std::map<ocla_trigger_mode, std::string>
+    ocla_trigger_mode_to_string_map = {{CONTINUOUS, "disable"},
+                                       {PRE, "pre-trigger"},
+                                       {POST, "post-trigger"},
+                                       {CENTER, "center-trigger"}};
 
-static std::map<ocla_trigger_condition, std::string>
-    trigger_condition_to_string_map = {
+static std::map<ocla_trigger_bool_comp, std::string>
+    trigger_bool_comp_to_string_map = {
         {OR, "OR"}, {AND, "AND"}, {DEFAULT, "OR"}, {XOR, "XOR"}};
 
 static std::map<ocla_trigger_type, std::string> trigger_type_to_string_map = {
@@ -23,17 +23,19 @@ static std::map<ocla_trigger_event, std::string> trigger_event_to_string_map = {
     {GREATER, "greater"}};
 
 // helpers to convert enum to string and vice versa
-std::string convert_ocla_mode_to_string(ocla_mode mode, std::string defval) {
-  if (ocla_mode_to_string_map.find(mode) != ocla_mode_to_string_map.end())
-    return ocla_mode_to_string_map[mode];
+std::string convert_ocla_trigger_mode_to_string(ocla_trigger_mode mode,
+                                                std::string defval) {
+  if (ocla_trigger_mode_to_string_map.find(mode) !=
+      ocla_trigger_mode_to_string_map.end())
+    return ocla_trigger_mode_to_string_map[mode];
   return defval;
 }
 
-std::string convert_trigger_condition_to_string(
-    ocla_trigger_condition condition, std::string defval) {
-  if (trigger_condition_to_string_map.find(condition) !=
-      trigger_condition_to_string_map.end())
-    return trigger_condition_to_string_map[condition];
+std::string convert_trigger_bool_comp_to_string(ocla_trigger_bool_comp boolcomp,
+                                                std::string defval) {
+  if (trigger_bool_comp_to_string_map.find(boolcomp) !=
+      trigger_bool_comp_to_string_map.end())
+    return trigger_bool_comp_to_string_map[boolcomp];
   return defval;
 }
 
@@ -53,17 +55,18 @@ std::string convert_trigger_event_to_string(ocla_trigger_event trig_event,
   return defval;
 }
 
-ocla_mode convert_ocla_mode(std::string mode_string, ocla_mode defval) {
-  for (auto& [mode, str] : ocla_mode_to_string_map) {
+ocla_trigger_mode convert_ocla_trigger_mode(std::string mode_string,
+                                            ocla_trigger_mode defval) {
+  for (auto& [mode, str] : ocla_trigger_mode_to_string_map) {
     if (mode_string == str) return mode;
   }
   // default if not found
   return defval;
 }
 
-ocla_trigger_condition convert_trigger_condition(
-    std::string condition_string, ocla_trigger_condition defval) {
-  for (auto& [condition, str] : trigger_condition_to_string_map) {
+ocla_trigger_bool_comp convert_trigger_bool_comp(
+    std::string condition_string, ocla_trigger_bool_comp defval) {
+  for (auto& [condition, str] : trigger_bool_comp_to_string_map) {
     if (condition_string == str) return condition;
   }
   // default if not found

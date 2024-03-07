@@ -3,15 +3,31 @@
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 #include "OclaJtagAdapter.h"
 
-#define MAX_SAMPLE (1024)
-
 uint32_t CFG_reverse_byte_order_u32(uint32_t value) {
   return (value >> 24) | ((value >> 8) & 0xff00) | ((value << 8) & 0xff0000) |
          (value << 24);
 }
 
+void CFG_set_bitfield_u32(uint32_t *value, uint8_t pos, uint8_t width,
+                          uint32_t data) {
+  uint32_t mask = (~0u >> (32 - width)) << pos;
+  *value &= ~mask;
+  *value |= (data & ((1u << width) - 1)) << pos;
+}
+
 OclaIP::OclaIP(OclaJtagAdapter *adapter, uint32_t base_addr)
-    : m_adapter(adapter), m_base_addr(base_addr) {}
+    : m_adapter(adapter),
+      m_base_addr(base_addr),
+      m_type(0),
+      m_version(0),
+      m_id(0),
+      m_uidp0(0),
+      m_uidp1(0),
+      m_ocsr(0),
+      m_tmtr(0),
+      m_chregs({}) {
+  read_registers();
+}
 
 OclaIP::OclaIP() : m_adapter(nullptr), m_base_addr(0) {}
 
@@ -23,122 +39,101 @@ ocla_status OclaIP::get_status() const {
   return (ocsr & 1) ? DATA_AVAILABLE : NA;
 }
 
+uint32_t OclaIP::get_trigger_count() const {
+  uint32_t tc = (m_ocsr >> 24) & 0x1f;
+  return tc + 1;
+}
+
+uint32_t OclaIP::get_max_compare_value_size() const {
+  uint32_t mcvs = (m_ocsr >> 29) & 0x7;
+  return (mcvs + 1) * 32;
+}
+
 uint32_t OclaIP::get_number_of_probes() const {
-  CFG_ASSERT(m_adapter != nullptr);
-  auto numprobes = (m_adapter->read(m_base_addr + OCSR) >> 1) & 0x3ff;
-  return numprobes;
+  uint32_t np = m_uidp1 & 0xffff;
+  return np;
 }
 
 uint32_t OclaIP::get_memory_depth() const {
-  CFG_ASSERT(m_adapter != nullptr);
-  auto memdepth = (m_adapter->read(m_base_addr + OCSR) >> 11) & 0x3ff;
-  return memdepth;
-}
-
-uint32_t OclaIP::get_id() const {
-  CFG_ASSERT(m_adapter != nullptr);
-  auto id = m_adapter->read(m_base_addr + IP_ID);
-  return id;
+  uint32_t md = m_uidp0 & 0xffff;
+  return md;
 }
 
 std::string OclaIP::get_type() const {
-  CFG_ASSERT(m_adapter != nullptr);
   char buffer[10];
-  uint32_t type =
-      CFG_reverse_byte_order_u32(m_adapter->read(m_base_addr + IP_TYPE));
+  uint32_t type = CFG_reverse_byte_order_u32(m_type);
   snprintf(buffer, sizeof(buffer), "%.*s", 4, (char *)&type);
   return std::string(buffer);
 }
 
-uint32_t OclaIP::get_version() const {
-  CFG_ASSERT(m_adapter != nullptr);
-  auto version = m_adapter->read(m_base_addr + IP_VERSION);
-  return version;
-}
+uint32_t OclaIP::get_version() const { return m_version; }
+
+uint32_t OclaIP::get_id() const { return m_id; }
 
 void OclaIP::configure(ocla_config &cfg) {
   CFG_ASSERT(m_adapter != nullptr);
-
-  uint32_t tmtr = (cfg.mode << 0);
-  tmtr |= (cfg.fns << 3);
-  tmtr |= ((cfg.ns & 0x7ff) << 4);
-  m_adapter->write(m_base_addr + TMTR, tmtr);
-
-  for (auto &reg : {TCUR0, TCUR1}) {
-    uint32_t tcur = m_adapter->read(m_base_addr + reg);
-    tcur &= ~(3 << 15);
-    tcur |= (cfg.condition << 15);
-    m_adapter->write(m_base_addr + reg, tcur);
-  }
+  CFG_set_bitfield_u32(&m_tmtr, 0, 2, (uint32_t)cfg.mode);
+  CFG_set_bitfield_u32(&m_tmtr, 2, 2, (uint32_t)cfg.boolcomp);
+  CFG_set_bitfield_u32(&m_tmtr, 4, 1, cfg.fns ? 1 : 0);
+  CFG_set_bitfield_u32(&m_tmtr, 12, 20, (cfg.ns - 1));
+  m_adapter->write(m_base_addr + TMTR, m_tmtr);
 }
 
-void OclaIP::configure_channel(uint32_t channel,
-                               ocla_trigger_config &trig_cfg) {
+void OclaIP::configure_channel(uint32_t channel, ocla_trigger_config &cfg) {
   CFG_ASSERT(m_adapter != nullptr);
-  configure_trigger(channel < 2 ? m_base_addr + TCUR0 : m_base_addr + TCUR1,
-                    channel % 2 ? 7 : 0, trig_cfg);
-}
+  CFG_ASSERT(channel < m_chregs.size());
 
-void OclaIP::configure_trigger(uint32_t addr, uint32_t offset,
-                               ocla_trigger_config &trig_cfg) {
-  uint32_t tcur = m_adapter->read(addr);
+  ocla_channel_register reg = m_chregs[channel];
 
-  tcur &= ~(0x3 << (1 + offset));
-  tcur |= (trig_cfg.type << (1 + offset));
-  tcur &= ~(0x7f << (17 + offset));
-  tcur |= ((trig_cfg.probe_num & 0x7f) << (17 + offset));
+  CFG_set_bitfield_u32(&reg.tcur, 0, 2, (uint32_t)cfg.type);
+  CFG_set_bitfield_u32(&reg.tssr, 0, 10, cfg.probe_num);
 
-  switch (trig_cfg.type) {
+  switch (cfg.type) {
     case EDGE:
-      tcur &= ~(0x3 << (3 + offset));
-      tcur |= ((trig_cfg.event & 0xf) << (3 + offset));
+      CFG_set_bitfield_u32(&reg.tcur, 2, 2, ((uint32_t)cfg.event & 0xf));
       break;
     case LEVEL:
-      tcur &= ~(0x1 << (5 + offset));
-      tcur |= ((trig_cfg.event & 0xf) << (5 + offset));
+      CFG_set_bitfield_u32(&reg.tcur, 4, 2, ((uint32_t)cfg.event & 0xf));
       break;
     case VALUE_COMPARE:
-      tcur &= ~(0x3 << (6 + offset));
-      tcur |= ((trig_cfg.event & 0xf) << (6 + offset));
-      m_adapter->write(m_base_addr + TDCR, trig_cfg.value);
+      CFG_ASSERT(cfg.value_bitwidth > 0);
+      CFG_ASSERT(cfg.value_bitwidth <= get_max_compare_value_size());
+      CFG_set_bitfield_u32(&reg.tcur, 6, 2, ((uint32_t)cfg.event & 0xf));
+      CFG_set_bitfield_u32(&reg.tssr, 24, 5, cfg.value_bitwidth - 1);
+      reg.tdcr = cfg.value;
       break;
     case TRIGGER_NONE:
       break;
   }
 
-  m_adapter->write(addr, tcur);
+  m_chregs[channel] = reg;
+  m_adapter->write(m_base_addr + TSSR + (channel * 0x30), reg.tssr);
+  m_adapter->write(m_base_addr + TCUR + (channel * 0x30), reg.tcur);
+  m_adapter->write(m_base_addr + TDCR + (channel * 0x30), reg.tdcr);
+}
+
+void OclaIP::reset() {
+  CFG_ASSERT(m_adapter != nullptr);
+  m_adapter->write(m_base_addr + OCCR, (1u << 1));
 }
 
 void OclaIP::start() {
   CFG_ASSERT(m_adapter != nullptr);
-  /*
-    NOTE:
-    Do a dummy read and write on TCUR register to clear the
-    internal trace buffer before starting the OCLA.
-    OCLA will not start if the buffer is not cleared
-    in the first place.
-   */
-  m_adapter->write(m_base_addr + TCUR0, m_adapter->read(m_base_addr + TCUR0));
-
-  uint32_t tmtr = m_adapter->read(m_base_addr + TMTR);
-  tmtr |= (1 << 2);
-  m_adapter->write(m_base_addr + TMTR, tmtr);
+  m_adapter->write(m_base_addr + OCCR, (1u << 0));
 }
 
 ocla_data OclaIP::get_data() const {
   CFG_ASSERT(m_adapter != nullptr);
-  uint32_t ocsr = m_adapter->read(m_base_addr + OCSR);
-  uint32_t tmtr = m_adapter->read(m_base_addr + TMTR);
 
   ocla_data data;
 
-  if ((tmtr >> 3) & 0x1) {
-    data.depth = (tmtr >> 4) & 0x7ff;
+  if (m_tmtr & (1u << 4)) {
+    data.depth = get_config().ns;
   } else {
-    data.depth = (ocsr >> 11) & 0x3ff;
+    data.depth = get_memory_depth();
   }
 
-  data.width = (ocsr >> 1) & 0x3ff;
+  data.width = get_number_of_probes();
   data.num_reads = ((data.width - 1) / 32) + 1;
   data.values =
       m_adapter->read(m_base_addr + TBDR, data.depth * data.num_reads);
@@ -146,48 +141,69 @@ ocla_data OclaIP::get_data() const {
   return data;
 }
 
-ocla_config OclaIP::get_config() const {
+void OclaIP::read_registers() {
   CFG_ASSERT(m_adapter != nullptr);
-  uint32_t tmtr = m_adapter->read(m_base_addr + TMTR);
-  ocla_config cfg;
-  cfg.mode = (ocla_mode)(tmtr & 0x3);
-  cfg.fns = (ocla_fns)((tmtr >> 3) & 0x1);
-  cfg.ns = ((tmtr >> 4) & 0x7ff);
-  cfg.st = ((tmtr >> 2) & 1);
 
-  uint32_t tcur0 = m_adapter->read(m_base_addr + TCUR0);
-  tcur0 = ((tcur0 >> 15) & 3);
-  uint32_t tcur1 = m_adapter->read(m_base_addr + TCUR1);
-  tcur1 = ((tcur1 >> 15) & 3);
-  cfg.condition = tcur0 == tcur1 ? (ocla_trigger_condition)tcur0 : DEFAULT;
+  // latch all read-only registers
+  m_type = m_adapter->read(m_base_addr + IP_TYPE);
+  m_version = m_adapter->read(m_base_addr + IP_VERSION);
+  m_id = m_adapter->read(m_base_addr + IP_ID);
+  m_uidp0 = m_adapter->read(m_base_addr + UIDP0);
+  m_uidp1 = m_adapter->read(m_base_addr + UIDP1);
+  m_ocsr = m_adapter->read(m_base_addr + OCSR);
+
+  // latch the global configuration register
+  m_tmtr = m_adapter->read(m_base_addr + TMTR);
+
+  // latch all channle configuration registers
+  for (uint32_t i = 0; i < get_trigger_count(); i++) {
+    ocla_channel_register reg{};
+    reg.tssr = m_adapter->read(m_base_addr + TSSR + (i * 0x30));
+    reg.tcur = m_adapter->read(m_base_addr + TCUR + (i * 0x30));
+    reg.tdcr = m_adapter->read(m_base_addr + TDCR + (i * 0x30));
+    reg.mask = m_adapter->read(m_base_addr + MASK + (i * 0x30));
+    m_chregs.push_back(reg);
+  }
+}
+
+ocla_config OclaIP::get_config() const {
+  ocla_config cfg;
+
+  cfg.mode = (ocla_trigger_mode)(m_tmtr & 0x3);
+  cfg.boolcomp = (ocla_trigger_bool_comp)((m_tmtr >> 2) & 0x3);
+  cfg.fns = (m_tmtr & (1u << 4)) ? true : false;
+  cfg.ns = (m_tmtr >> 12) + 1;
+
   return cfg;
 }
 
 ocla_trigger_config OclaIP::get_channel_config(uint32_t channel) const {
   CFG_ASSERT(m_adapter != nullptr);
-  uint32_t tcur = m_adapter->read(m_base_addr + (channel < 2 ? TCUR0 : TCUR1));
-  uint32_t offset = channel % 2 ? 7 : 0;
+  CFG_ASSERT(channel < m_chregs.size());
 
-  ocla_trigger_config trig_cfg;
-  trig_cfg.probe_num = (tcur >> (17 + offset)) & 0x7f;
-  trig_cfg.type = (ocla_trigger_type)((tcur >> (1 + (offset))) & 0x3);
+  ocla_channel_register reg = m_chregs[channel];
+  ocla_trigger_config cfg;
+  cfg.probe_num = reg.tssr & 0x3ff;
+  cfg.type = (ocla_trigger_type)(reg.tcur & 0x3);
+  cfg.value_bitwidth = 0;
+  cfg.value = 0;
 
-  switch (trig_cfg.type) {
+  switch (cfg.type) {
     case EDGE:
-      trig_cfg.event =
-          (ocla_trigger_event)(((tcur >> (3 + (offset))) & 0x3) | 0x10);
+      cfg.event = (ocla_trigger_event)(((reg.tcur >> 2) & 0x3) | 0x10);
       break;
     case LEVEL:
-      trig_cfg.event =
-          (ocla_trigger_event)(((tcur >> (5 + (offset))) & 0x1) | 0x20);
+      cfg.event = (ocla_trigger_event)(((reg.tcur >> 4) & 0x1) | 0x20);
       break;
     case VALUE_COMPARE:
-      trig_cfg.event =
-          (ocla_trigger_event)(((tcur >> (6 + (offset))) & 0x3) | 0x30);
-      trig_cfg.value = m_adapter->read(m_base_addr + TDCR);
+      cfg.event = (ocla_trigger_event)(((reg.tcur >> 6) & 0x3) | 0x30);
+      cfg.value = reg.tdcr;
+      cfg.value_bitwidth = ((reg.tssr >> 24) & 0x1f) + 1;
       break;
     case TRIGGER_NONE:
+      cfg.event = ocla_trigger_event::NONE;
       break;
   }
-  return trig_cfg;
+
+  return cfg;
 }

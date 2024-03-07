@@ -10,6 +10,12 @@
 #include "OclaSession.h"
 #include "OclaWaveformWriter.h"
 
+#define OCLA_MAX_INSTANCE_COUNT (15)
+#define OCLA1_ADDR (0x02000000)
+#define OCLA2_ADDR (0x03000000)
+#define OCLA_TYPE ("ocla")
+#define OCLA_MAX_PROBE (1024)
+
 static std::map<uint32_t, uint32_t> ocla_base_address = {{1, OCLA1_ADDR},
                                                          {2, OCLA2_ADDR}};
 
@@ -111,7 +117,7 @@ Ocla::Ocla(OclaJtagAdapter* adapter, OclaSession* session,
   CFG_ASSERT(m_writer != nullptr);
 }
 
-void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
+void Ocla::configure(uint32_t instance, std::string mode, std::string boolcomp,
                      uint32_t sample_size) {
   if (!validate()) {
     CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
@@ -129,12 +135,11 @@ void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
 
   ocla_config cfg;
 
-  std::transform(condition.begin(), condition.end(), condition.begin(),
-                 ::toupper);
-  cfg.fns = sample_size > 0 ? ENABLED : DISABLED;
+  std::transform(boolcomp.begin(), boolcomp.end(), boolcomp.begin(), ::toupper);
+  cfg.fns = sample_size > 0 ? true : false;
   cfg.ns = sample_size;
-  cfg.mode = convert_ocla_mode(mode);
-  cfg.condition = convert_trigger_condition(condition);
+  cfg.mode = convert_ocla_trigger_mode(mode);
+  cfg.boolcomp = convert_trigger_bool_comp(boolcomp);
 
   ocla_ip.configure(cfg);
 }
@@ -275,13 +280,13 @@ std::string Ocla::show_info() {
 
     auto cfg = ocla_ip.get_config();
 
-    uint32_t ns = cfg.fns == ENABLED ? cfg.ns : depth;
+    uint32_t ns = cfg.fns ? cfg.ns : depth;
 
     ss << "  No. of samples     : " << ns << std::endl
-       << "  Trigger mode       : " << convert_ocla_mode_to_string(cfg.mode)
-       << std::endl
-       << "  Trigger condition  : "
-       << convert_trigger_condition_to_string(cfg.condition) << std::endl
+       << "  Trigger mode       : "
+       << convert_ocla_trigger_mode_to_string(cfg.mode) << std::endl
+       << "  Trigger bool comparision  : "
+       << convert_trigger_bool_comp_to_string(cfg.boolcomp) << std::endl
        << "  Trigger " << std::endl
        << std::setfill(' ');
 
@@ -412,10 +417,10 @@ std::string Ocla::show_session_info() {
 std::string Ocla::dump_registers(uint32_t instance) {
   std::map<uint32_t, std::string> regs = {
       {OCSR, "OCSR"},
-      {TCUR0, "TCUR0"},
+      //{TCUR0, "TCUR0"},
       {TMTR, "TMTR"},
-      {TDCR, "TDCR"},
-      {TCUR1, "TCUR1"},
+      //{TDCR, "TDCR"},
+      // {TCUR1, "TCUR1"},
       {IP_TYPE, "IP_TYPE"},
       {IP_VERSION, "IP_VERSION"},
       {IP_ID, "IP_ID"},
