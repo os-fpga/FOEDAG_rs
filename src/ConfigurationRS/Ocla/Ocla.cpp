@@ -285,7 +285,7 @@ std::string Ocla::show_info() {
     ss << "  No. of samples     : " << ns << std::endl
        << "  Trigger mode       : "
        << convert_ocla_trigger_mode_to_string(cfg.mode) << std::endl
-       << "  Trigger bool comparision  : "
+       << "  Multi-trigger bool : "
        << convert_trigger_bool_comp_to_string(cfg.boolcomp) << std::endl
        << "  Trigger " << std::endl
        << std::setfill(' ');
