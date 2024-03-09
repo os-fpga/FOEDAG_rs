@@ -102,12 +102,12 @@ void OclaIP::configure_channel(uint32_t channel, ocla_trigger_config &cfg) {
                            ((uint32_t)cfg.event & 0xf));
       break;
     case VALUE_COMPARE:
-      CFG_ASSERT(cfg.value_bitwidth > 0);
-      CFG_ASSERT(cfg.value_bitwidth <= get_max_compare_value_size());
+      CFG_ASSERT(cfg.value_compare_width > 0);
+      CFG_ASSERT(cfg.value_compare_width <= get_max_compare_value_size());
       CFG_set_bitfield_u32(&reg.tcur, TCUR_VC_Pos, TCUR_VC_Width,
                            ((uint32_t)cfg.event & 0xf));
       CFG_set_bitfield_u32(&reg.tssr, TSSR_CW_Pos, TSSR_CW_Width,
-                           cfg.value_bitwidth - 1);
+                           cfg.value_compare_width - 1);
       reg.tdcr = cfg.value;
       break;
     case TRIGGER_NONE:
@@ -193,7 +193,7 @@ ocla_trigger_config OclaIP::get_channel_config(uint32_t channel) const {
   ocla_trigger_config cfg;
   cfg.probe_num = (reg.tssr & TSSR_PS_Msk) >> TSSR_PS_Pos;
   cfg.type = (ocla_trigger_type)((reg.tcur & TCUR_TT_Msk) >> TCUR_TT_Pos);
-  cfg.value_bitwidth = 0;
+  cfg.value_compare_width = 0;
   cfg.value = 0;
 
   switch (cfg.type) {
@@ -209,7 +209,7 @@ ocla_trigger_config OclaIP::get_channel_config(uint32_t channel) const {
       cfg.event = (ocla_trigger_event)(
           ((reg.tcur & TCUR_VC_Msk) >> TCUR_VC_Pos) | 0x30);
       cfg.value = reg.tdcr;
-      cfg.value_bitwidth = ((reg.tssr & TSSR_CW_Msk) >> TSSR_CW_Pos) + 1;
+      cfg.value_compare_width = ((reg.tssr & TSSR_CW_Msk) >> TSSR_CW_Pos) + 1;
       break;
     case TRIGGER_NONE:
       cfg.event = ocla_trigger_event::NONE;

@@ -583,11 +583,11 @@
             ]
           },
           {
-            "name": "trigger_condition",
+            "name": "multi_trigger_bool",
             "short": "t",
             "type": "or|and|xor",
             "optional": true,
-            "help": "Configure the global trigger boolean condition"
+            "help": "Configure the multiple trigger boolean condition"
           },
           {
             "name": "cable",
@@ -671,6 +671,14 @@
             "type": "int",
             "optional": true,
             "help": "Trigger value that associate to trigger type when it is set to equal|lesser|greater"
+          },
+          {
+            "name": "value_compare_width",
+            "short": "w",
+            "type": "int",
+            "default": 1,
+            "optional": true,
+            "help": "Trigger value compare width in bits"
           },
           {
             "name": "probe",

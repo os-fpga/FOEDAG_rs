@@ -21,7 +21,8 @@ class Ocla {
   void configure(uint32_t instance, std::string mode, std::string condition,
                  uint32_t sample_size);
   void configure_channel(uint32_t instance, uint32_t channel, std::string type,
-                         std::string event, uint32_t value, std::string probe);
+                         std::string event, uint32_t value,
+                         uint32_t value_compare_width, std::string probe);
   bool start(uint32_t instance, uint32_t timeout, std::string output_filepath);
   void start_session(std::string bitasm_filepath);
   void stop_session();

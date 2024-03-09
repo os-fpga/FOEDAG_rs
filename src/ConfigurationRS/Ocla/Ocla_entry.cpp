@@ -77,7 +77,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       return;
     }
     adapter.set_target_device(device, taplist);
-    ocla.configure(parms->instance, parms->mode, parms->trigger_condition,
+    ocla.configure(parms->instance, parms->mode, parms->multi_trigger_bool,
                    parms->sample_size);
   } else if (subcmd == "config_channel") {
     auto parms =
@@ -101,7 +101,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     }
     adapter.set_target_device(device, taplist);
     ocla.configure_channel(parms->instance, parms->channel, parms->type,
-                           parms->event, parms->value, parms->probe);
+                           parms->event, parms->value,
+                           parms->value_compare_width, parms->probe);
   } else if (subcmd == "start") {
     auto parms = static_cast<const CFGArg_DEBUGGER_START*>(arg->get_sub_arg());
     if (parms->instance == 0 || parms->instance > 2) {
