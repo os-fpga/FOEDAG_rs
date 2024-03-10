@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <functional>
 #include <iostream>
+#include <tuple>
 
 #include "Configuration/HardwareManager/OpenocdAdapter.h"
 #include "OclaJtagAdapter.h"
@@ -23,7 +24,8 @@ class OclaOpenocdAdapter : public OclaJtagAdapter,
 
  private:
   int execute_command(const std::string& cmd, std::string& output);
-  std::vector<uint32_t> parse(const std::string& output);
+  std::string build_tcl_proc(uint32_t tap_num);
+  std::vector<std::tuple<uint32_t, uint32_t>> parse(const std::string& output);
   std::string m_openocd;
   FOEDAG::Device m_device;
   std::vector<FOEDAG::Tap> m_taplist;
