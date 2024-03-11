@@ -11,13 +11,14 @@
 #include "OclaWaveformWriter.h"
 
 #define OCLA_MAX_INSTANCE_COUNT (15)
-#define OCLA1_ADDR (0x02000000)
-#define OCLA2_ADDR (0x03000000)
-#define OCLA_TYPE ("ocla")
+#define OCLA1_ADDR (0x03000000)
+#define OCLA2_ADDR (0x04000000)
+#define OCLA3_ADDR (0x05000000)
+#define OCLA_TYPE ("OCLA")
 #define OCLA_MAX_PROBE (1024)
 
-static std::map<uint32_t, uint32_t> ocla_base_address = {{1, OCLA1_ADDR},
-                                                         {2, OCLA2_ADDR}};
+static std::map<uint32_t, uint32_t> ocla_base_address = {
+    {1, OCLA1_ADDR}, {2, OCLA2_ADDR}, {3, OCLA3_ADDR}};
 
 OclaIP Ocla::get_ocla_instance(uint32_t instance) {
   CFG_ASSERT(ocla_base_address.find(instance) != ocla_base_address.end());
