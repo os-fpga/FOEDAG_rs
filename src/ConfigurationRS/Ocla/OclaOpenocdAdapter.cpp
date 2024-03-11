@@ -26,13 +26,6 @@ void OclaOpenocdAdapter::write(uint32_t addr, uint32_t data) {
   std::stringstream ss;
   uint32_t i = m_device.tap.index;
 
-  // ss << " -c \"irscan tap" << i << ".tap 0x04;"
-  //    << "drscan tap" << i << ".tap 1 0x1 1 0x1 32 " << std::hex <<
-  //    std::showbase
-  //    << addr << " 32 " << data << " 2 0x0;" << std::dec << std::noshowbase
-  //    << "irscan tap" << i << ".tap 0x08;"
-  //    << "drscan tap" << i << ".tap 32 0x0 2 0x0;\"";
-
   ss << " -c \"set addr [format 0x%08x " << addr << "];"
      << "set data [format 0x%08x " << data << "];"
      << "irscan tap" << i << ".tap 0x04;"
@@ -63,16 +56,6 @@ std::vector<uint32_t> OclaOpenocdAdapter::read(uint32_t base_addr,
 
   std::string output;
   std::stringstream ss;
-  // uint32_t j = m_device.tap.index;
-
-  // for (uint32_t i = 0; i < num_reads; i++) {
-  //   ss << " -c \"irscan tap" << j << ".tap 0x04;"
-  //      << "drscan tap" << j << ".tap 1 0x1 1 0x0 32 " << std::hex
-  //      << std::showbase << base_addr << " 32 0x0 2 0x0;" << std::dec
-  //      << std::noshowbase << "irscan tap" << j << ".tap 0x08;"
-  //      << "drscan tap" << j << ".tap 32 0x0 2 0x0;\"";
-  //   base_addr += increase_by;
-  // }
 
   ss << build_tcl_proc(m_device.index) << " -c \"ocla_read " << std::hex
      << std::showbase << base_addr << std::dec << std::noshowbase << " "
@@ -90,7 +73,6 @@ std::vector<uint32_t> OclaOpenocdAdapter::read(uint32_t base_addr,
     tmp.push_back(std::get<1>(elmt));
   }
   return tmp;
-
   // return values;
 }
 
@@ -139,7 +121,6 @@ std::vector<std::tuple<uint32_t, uint32_t>> OclaOpenocdAdapter::parse(
             std::regex("^0x([0-9A-F]{8}) ([0-9A-F]{8}) ([0-9A-F]{2})$",
                        std::regex::icase)) == true) {
       CFG_ASSERT_MSG(stoi(matches[3], nullptr, 16) == 0, "ocla error");
-      // values.push_back((uint32_t)stoul(matches[2], nullptr, 16));
       values.push_back(
           std::make_tuple((uint32_t)stoul(matches[1], nullptr, 16),
                           (uint32_t)stoul(matches[2], nullptr, 16)));
