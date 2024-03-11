@@ -322,6 +322,7 @@ std::string Ocla::show_info() {
              << "; compare_operator="
              << convert_trigger_event_to_string(trig_cfg.event)
              << "; compare_value=0x" << std::hex << trig_cfg.value << std::dec
+             << "; compare_value_width=" << trig_cfg.value_compare_width
              << std::endl;
           break;
         case TRIGGER_NONE:
