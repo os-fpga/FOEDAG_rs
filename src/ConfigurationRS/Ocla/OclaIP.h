@@ -135,7 +135,7 @@ struct ocla_trigger_config {
   ocla_trigger_type type;
   ocla_trigger_event event;
   uint32_t value;
-  uint32_t value_compare_width;
+  uint32_t compare_width;
   uint32_t probe_num;
 };
 

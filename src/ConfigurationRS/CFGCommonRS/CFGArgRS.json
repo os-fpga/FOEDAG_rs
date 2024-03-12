@@ -583,7 +583,7 @@
             ]
           },
           {
-            "name": "multi_trigger_bool",
+            "name": "trigger_condition",
             "short": "t",
             "type": "or|and|xor",
             "optional": true,
@@ -673,12 +673,12 @@
             "help": "Trigger value that associate to trigger type when it is set to equal|lesser|greater"
           },
           {
-            "name": "value_compare_width",
+            "name": "compare_width",
             "short": "w",
             "type": "int",
             "default": 1,
             "optional": true,
-            "help": "Trigger value compare width in bits"
+            "help": "Trigger compare value width in bits"
           },
           {
             "name": "probe",

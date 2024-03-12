@@ -118,7 +118,7 @@ TEST_F(OclaIPTest, configureChannelTest_Edge) {
   cfg.type = ocla_trigger_type::EDGE;
   cfg.event = ocla_trigger_event::RISING;
   cfg.probe_num = 7;
-  cfg.value_compare_width = 0;
+  cfg.compare_width = 0;
   cfg.value = 0;
 
   EXPECT_CALL(mockAdapter, write(TSSR + 0x90, 7)).Times(1);
@@ -140,7 +140,7 @@ TEST_F(OclaIPTest, configureChannelTest_Level) {
   cfg.type = ocla_trigger_type::LEVEL;
   cfg.event = ocla_trigger_event::LOW;
   cfg.probe_num = 999;
-  cfg.value_compare_width = 0;
+  cfg.compare_width = 0;
   cfg.value = 0;
 
   EXPECT_CALL(mockAdapter, write(TSSR + 0x30, 999)).Times(1);
@@ -162,7 +162,7 @@ TEST_F(OclaIPTest, configureChannelTest_ValueCompare) {
   cfg.type = ocla_trigger_type::VALUE_COMPARE;
   cfg.event = ocla_trigger_event::EQUAL;
   cfg.probe_num = 21;
-  cfg.value_compare_width = 12;
+  cfg.compare_width = 12;
   cfg.value = 1234;
 
   EXPECT_CALL(mockAdapter, write(TSSR + 0x60, (11u << 24) + 21)).Times(1);
@@ -237,7 +237,7 @@ TEST_F(OclaIPTest, getDataTest_ConfigReadback) {
   cfg.event = ocla_trigger_event::EQUAL;
   cfg.probe_num = 17;
   cfg.value = 123;
-  cfg.value_compare_width = 12;
+  cfg.compare_width = 12;
 
   OclaIP oclaIP(&mockAdapter, 0);
   oclaIP.configure_channel(5, cfg);
@@ -246,7 +246,7 @@ TEST_F(OclaIPTest, getDataTest_ConfigReadback) {
   EXPECT_EQ(cfg.event, result.event);
   EXPECT_EQ(cfg.probe_num, result.probe_num);
   EXPECT_EQ(cfg.value, result.value);
-  EXPECT_EQ(cfg.value_compare_width, result.value_compare_width);
+  EXPECT_EQ(cfg.compare_width, result.compare_width);
 }
 
 TEST_F(OclaIPTest, getConfigTest_default) {
@@ -279,7 +279,7 @@ TEST_F(OclaIPTest, getChannelConfigTest_Edge) {
   EXPECT_EQ(ocla_trigger_event::FALLING, configData.event);
   EXPECT_EQ(999, configData.probe_num);
   EXPECT_EQ(0, configData.value);
-  EXPECT_EQ(0, configData.value_compare_width);
+  EXPECT_EQ(0, configData.compare_width);
 }
 
 TEST_F(OclaIPTest, getChannelConfigTest_Level) {
@@ -293,7 +293,7 @@ TEST_F(OclaIPTest, getChannelConfigTest_Level) {
   EXPECT_EQ(ocla_trigger_event::HIGH, configData.event);
   EXPECT_EQ(123, configData.probe_num);
   EXPECT_EQ(0, configData.value);
-  EXPECT_EQ(0, configData.value_compare_width);
+  EXPECT_EQ(0, configData.compare_width);
 }
 
 TEST_F(OclaIPTest, getChannelConfigTest_ValueCompare) {
@@ -309,7 +309,7 @@ TEST_F(OclaIPTest, getChannelConfigTest_ValueCompare) {
   EXPECT_EQ(ocla_trigger_event::EQUAL, configData.event);
   EXPECT_EQ(123, configData.probe_num);
   EXPECT_EQ(99, configData.value);
-  EXPECT_EQ(8, configData.value_compare_width);
+  EXPECT_EQ(8, configData.compare_width);
 }
 
 TEST_F(OclaIPTest, getChannelConfigTest_default) {
@@ -319,5 +319,5 @@ TEST_F(OclaIPTest, getChannelConfigTest_default) {
   EXPECT_EQ(ocla_trigger_event::NONE, configData.event);
   EXPECT_EQ(0, configData.probe_num);
   EXPECT_EQ(0, configData.value);
-  EXPECT_EQ(0, configData.value_compare_width);
+  EXPECT_EQ(0, configData.compare_width);
 }

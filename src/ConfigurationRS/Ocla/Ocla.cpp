@@ -154,7 +154,7 @@ void Ocla::configure(uint32_t instance, std::string mode, std::string boolcomp,
 
 void Ocla::configure_channel(uint32_t instance, uint32_t channel,
                              std::string type, std::string event,
-                             uint32_t value, uint32_t value_compare_width,
+                             uint32_t value, uint32_t compare_width,
                              std::string probe) {
   if (!validate()) {
     CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
@@ -215,7 +215,7 @@ void Ocla::configure_channel(uint32_t instance, uint32_t channel,
   trig_cfg.type = convert_trigger_type(type);
   trig_cfg.event = convert_trigger_event(event);
   trig_cfg.value = value;
-  trig_cfg.value_compare_width = value_compare_width;
+  trig_cfg.compare_width = compare_width;
 
   ocla_ip.configure_channel(channel - 1, trig_cfg);
 }
@@ -329,8 +329,7 @@ std::string Ocla::show_info() {
              << "; compare_operator="
              << convert_trigger_event_to_string(trig_cfg.event)
              << "; compare_value=0x" << std::hex << trig_cfg.value << std::dec
-             << "; compare_value_width=" << trig_cfg.value_compare_width
-             << std::endl;
+             << "; compare_width=" << trig_cfg.compare_width << std::endl;
           break;
         case TRIGGER_NONE:
           ss << "    Channel " << ch << "        : "
