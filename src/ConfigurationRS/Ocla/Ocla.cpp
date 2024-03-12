@@ -16,6 +16,7 @@
 #define OCLA3_ADDR (0x05000000)
 #define OCLA_TYPE ("OCLA")
 #define OCLA_MAX_PROBE (1024)
+#define OCLA_MIN_TRIGGER_COUNT (4)
 
 static std::map<uint32_t, uint32_t> ocla_base_address = {
     {1, OCLA1_ADDR}, {2, OCLA2_ADDR}, {3, OCLA3_ADDR}};
@@ -33,7 +34,13 @@ std::map<uint32_t, OclaIP> Ocla::detect_ocla_instances() {
   for (auto& [i, baseaddr] : ocla_base_address) {
     OclaIP ocla_ip{m_adapter, baseaddr};
     if (ocla_ip.get_type() == OCLA_TYPE) {
-      list.insert(std::pair<uint32_t, OclaIP>(i, ocla_ip));
+      auto trigger_count = ocla_ip.get_trigger_count();
+      if (trigger_count < OCLA_MIN_TRIGGER_COUNT) {
+        CFG_POST_WARNING("Invalid trigger count %d detected for instance %d",
+                         trigger_count, i);
+      } else {
+        list.insert(std::pair<uint32_t, OclaIP>(i, ocla_ip));
+      }
     }
   }
 
