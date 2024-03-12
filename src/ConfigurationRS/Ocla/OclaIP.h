@@ -101,7 +101,7 @@ enum ocla_status { NA = 0, DATA_AVAILABLE = 1 };
 
 enum ocla_trigger_mode { CONTINUOUS = 0, PRE = 1, POST = 2, CENTER = 3 };
 
-enum ocla_trigger_bool_comp { DEFAULT = 0, AND = 1, OR = 2, XOR = 3 };
+enum ocla_trigger_condition { DEFAULT = 0, AND = 1, OR = 2, XOR = 3 };
 
 enum ocla_trigger_type {
   TRIGGER_NONE = 0,
@@ -126,7 +126,7 @@ enum ocla_trigger_event {
 
 struct ocla_config {
   ocla_trigger_mode mode;
-  ocla_trigger_bool_comp boolcomp;
+  ocla_trigger_condition condition;
   bool enable_fix_sample_size;
   uint32_t sample_size;
 };

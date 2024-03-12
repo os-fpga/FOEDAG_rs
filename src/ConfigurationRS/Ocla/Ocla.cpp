@@ -125,7 +125,7 @@ Ocla::Ocla(OclaJtagAdapter* adapter, OclaSession* session,
   CFG_ASSERT(m_writer != nullptr);
 }
 
-void Ocla::configure(uint32_t instance, std::string mode, std::string boolcomp,
+void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
                      uint32_t sample_size) {
   if (!validate()) {
     CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
@@ -143,11 +143,12 @@ void Ocla::configure(uint32_t instance, std::string mode, std::string boolcomp,
 
   ocla_config cfg;
 
-  std::transform(boolcomp.begin(), boolcomp.end(), boolcomp.begin(), ::toupper);
+  std::transform(condition.begin(), condition.end(), condition.begin(),
+                 ::toupper);
   cfg.enable_fix_sample_size = sample_size > 0 ? true : false;
   cfg.sample_size = sample_size;
   cfg.mode = convert_ocla_trigger_mode(mode);
-  cfg.boolcomp = convert_trigger_bool_comp(boolcomp);
+  cfg.condition = convert_trigger_condition(condition);
 
   ocla_ip.configure(cfg);
 }
@@ -295,8 +296,8 @@ std::string Ocla::show_info() {
     ss << "  No. of samples     : " << ns << std::endl
        << "  Trigger mode       : "
        << convert_ocla_trigger_mode_to_string(cfg.mode) << std::endl
-       << "  Multi-trigger bool : "
-       << convert_trigger_bool_comp_to_string(cfg.boolcomp) << std::endl
+       << "  Trigger condition  : "
+       << convert_trigger_condition_to_string(cfg.condition) << std::endl
        << "  Trigger " << std::endl
        << std::setfill(' ');
 
