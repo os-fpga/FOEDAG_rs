@@ -127,8 +127,8 @@ enum ocla_trigger_event {
 struct ocla_config {
   ocla_trigger_mode mode;
   ocla_trigger_bool_comp boolcomp;
-  bool fns;
-  uint32_t ns;
+  bool enable_fix_sample_size;
+  uint32_t sample_size;
 };
 
 struct ocla_trigger_config {

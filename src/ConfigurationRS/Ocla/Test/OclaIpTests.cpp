@@ -100,8 +100,8 @@ TEST_F(OclaIPTest, configureTest) {
   ocla_config cfg;
   cfg.boolcomp = ocla_trigger_bool_comp::XOR;
   cfg.mode = ocla_trigger_mode::PRE;
-  cfg.fns = true;
-  cfg.ns = 1234;
+  cfg.enable_fix_sample_size = true;
+  cfg.sample_size = 1234;
   EXPECT_CALL(mockAdapter, write(TMTR, 0x4d101d));
   OclaIP oclaIP(&mockAdapter, 0);
   oclaIP.configure(cfg);
@@ -210,8 +210,8 @@ TEST_F(OclaIPTest, getDataTest_End2End) {
 
   cfg.boolcomp = ocla_trigger_bool_comp::OR;
   cfg.mode = ocla_trigger_mode::POST;
-  cfg.fns = true;
-  cfg.ns = 988;
+  cfg.enable_fix_sample_size = true;
+  cfg.sample_size = 988;
 
   EXPECT_CALL(mockAdapter, read(TBDR, 988 * 3, 0))
       .Times(1)
@@ -254,8 +254,8 @@ TEST_F(OclaIPTest, getConfigTest_default) {
   ocla_config configData = oclaIP.get_config();
   EXPECT_EQ(ocla_trigger_bool_comp::DEFAULT, configData.boolcomp);
   EXPECT_EQ(ocla_trigger_mode::CONTINUOUS, configData.mode);
-  EXPECT_EQ(false, configData.fns);
-  EXPECT_EQ(1, configData.ns);
+  EXPECT_EQ(false, configData.enable_fix_sample_size);
+  EXPECT_EQ(1, configData.sample_size);
 }
 
 TEST_F(OclaIPTest, getConfigTest) {
@@ -264,8 +264,8 @@ TEST_F(OclaIPTest, getConfigTest) {
   ocla_config configData = oclaIP.get_config();
   EXPECT_EQ(ocla_trigger_bool_comp::OR, configData.boolcomp);
   EXPECT_EQ(ocla_trigger_mode::PRE, configData.mode);
-  EXPECT_EQ(true, configData.fns);
-  EXPECT_EQ(367302, configData.ns);
+  EXPECT_EQ(true, configData.enable_fix_sample_size);
+  EXPECT_EQ(367302, configData.sample_size);
 }
 
 TEST_F(OclaIPTest, getChannelConfigTest_Edge) {

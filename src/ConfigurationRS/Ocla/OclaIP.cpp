@@ -76,8 +76,10 @@ void OclaIP::configure(ocla_config &cfg) {
   CFG_set_bitfield_u32(m_tmtr, TMTR_TM_Pos, TMTR_B_Width, (uint32_t)cfg.mode);
   CFG_set_bitfield_u32(m_tmtr, TMTR_B_Pos, TMTR_B_Width,
                        (uint32_t)cfg.boolcomp);
-  CFG_set_bitfield_u32(m_tmtr, TMTR_FNS_Pos, TMTR_FNS_Width, cfg.fns ? 1 : 0);
-  CFG_set_bitfield_u32(m_tmtr, TMTR_NS_Pos, TMTR_NS_Width, (cfg.ns - 1));
+  CFG_set_bitfield_u32(m_tmtr, TMTR_FNS_Pos, TMTR_FNS_Width,
+                       cfg.enable_fix_sample_size ? 1 : 0);
+  CFG_set_bitfield_u32(m_tmtr, TMTR_NS_Pos, TMTR_NS_Width,
+                       (cfg.sample_size - 1));
 
   m_adapter->write(m_base_addr + TMTR, m_tmtr);
 }
@@ -136,7 +138,7 @@ ocla_data OclaIP::get_data() const {
   ocla_data data;
 
   if (m_tmtr & TMTR_FNS_Msk) {
-    data.depth = get_config().ns;
+    data.depth = get_config().sample_size;
   } else {
     data.depth = get_memory_depth();
   }
@@ -179,8 +181,8 @@ ocla_config OclaIP::get_config() const {
 
   cfg.mode = (ocla_trigger_mode)((m_tmtr & TMTR_TM_Msk) >> TMTR_TM_Pos);
   cfg.boolcomp = (ocla_trigger_bool_comp)((m_tmtr & TMTR_B_Msk) >> TMTR_B_Pos);
-  cfg.fns = ((m_tmtr & TMTR_FNS_Msk) >> TMTR_FNS_Pos);
-  cfg.ns = ((m_tmtr & TMTR_NS_Msk) >> TMTR_NS_Pos) + 1;
+  cfg.enable_fix_sample_size = ((m_tmtr & TMTR_FNS_Msk) >> TMTR_FNS_Pos);
+  cfg.sample_size = ((m_tmtr & TMTR_NS_Msk) >> TMTR_NS_Pos) + 1;
 
   return cfg;
 }

@@ -144,8 +144,8 @@ void Ocla::configure(uint32_t instance, std::string mode, std::string boolcomp,
   ocla_config cfg;
 
   std::transform(boolcomp.begin(), boolcomp.end(), boolcomp.begin(), ::toupper);
-  cfg.fns = sample_size > 0 ? true : false;
-  cfg.ns = sample_size;
+  cfg.enable_fix_sample_size = sample_size > 0 ? true : false;
+  cfg.sample_size = sample_size;
   cfg.mode = convert_ocla_trigger_mode(mode);
   cfg.boolcomp = convert_trigger_bool_comp(boolcomp);
 
@@ -290,7 +290,7 @@ std::string Ocla::show_info() {
 
     auto cfg = ocla_ip.get_config();
 
-    uint32_t ns = cfg.fns ? cfg.ns : depth;
+    uint32_t ns = cfg.enable_fix_sample_size ? cfg.sample_size : depth;
 
     ss << "  No. of samples     : " << ns << std::endl
        << "  Trigger mode       : "
