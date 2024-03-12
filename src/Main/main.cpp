@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
     opcompiler->ProgrammerToolExecPath(openOcdPath);
     opcompiler->GetSimulator()->SetSimulatorPath(
         FOEDAG::Simulator::SimulatorType::Verilator,
-        (binpath / "HDL_simulator" / "verilator" / "bin").string());
+        (binpath / "HDL_simulator" / "verilator" / "share" / "verilator" / "bin").string());
     opcompiler->GetSimulator()->SetSimulatorPath(
         FOEDAG::Simulator::SimulatorType::GHDL,
         (binpath / "HDL_simulator" / "GHDL" / "bin").string());
