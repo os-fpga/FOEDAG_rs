@@ -8,11 +8,11 @@ uint32_t CFG_reverse_byte_order_u32(uint32_t value) {
          (value << 24);
 }
 
-void CFG_set_bitfield_u32(uint32_t *value, uint8_t pos, uint8_t width,
+void CFG_set_bitfield_u32(uint32_t &value, uint8_t pos, uint8_t width,
                           uint32_t data) {
   uint32_t mask = (~0u >> (32 - width)) << pos;
-  *value &= ~mask;
-  *value |= (data & ((1u << width) - 1)) << pos;
+  value &= ~mask;
+  value |= (data & ((1u << width) - 1)) << pos;
 }
 
 OclaIP::OclaIP(OclaJtagAdapter *adapter, uint32_t base_addr)
@@ -73,11 +73,11 @@ uint32_t OclaIP::get_id() const { return m_id; }
 void OclaIP::configure(ocla_config &cfg) {
   CFG_ASSERT(m_adapter != nullptr);
 
-  CFG_set_bitfield_u32(&m_tmtr, TMTR_TM_Pos, TMTR_B_Width, (uint32_t)cfg.mode);
-  CFG_set_bitfield_u32(&m_tmtr, TMTR_B_Pos, TMTR_B_Width,
+  CFG_set_bitfield_u32(m_tmtr, TMTR_TM_Pos, TMTR_B_Width, (uint32_t)cfg.mode);
+  CFG_set_bitfield_u32(m_tmtr, TMTR_B_Pos, TMTR_B_Width,
                        (uint32_t)cfg.boolcomp);
-  CFG_set_bitfield_u32(&m_tmtr, TMTR_FNS_Pos, TMTR_FNS_Width, cfg.fns ? 1 : 0);
-  CFG_set_bitfield_u32(&m_tmtr, TMTR_NS_Pos, TMTR_NS_Width, (cfg.ns - 1));
+  CFG_set_bitfield_u32(m_tmtr, TMTR_FNS_Pos, TMTR_FNS_Width, cfg.fns ? 1 : 0);
+  CFG_set_bitfield_u32(m_tmtr, TMTR_NS_Pos, TMTR_NS_Width, (cfg.ns - 1));
 
   m_adapter->write(m_base_addr + TMTR, m_tmtr);
 }
@@ -88,25 +88,25 @@ void OclaIP::configure_channel(uint32_t channel, ocla_trigger_config &cfg) {
 
   ocla_channel_register reg = m_chregs[channel];
 
-  CFG_set_bitfield_u32(&reg.tcur, TCUR_TT_Pos, TCUR_TT_Width,
+  CFG_set_bitfield_u32(reg.tcur, TCUR_TT_Pos, TCUR_TT_Width,
                        (uint32_t)cfg.type);
-  CFG_set_bitfield_u32(&reg.tssr, TSSR_PS_Pos, TSSR_PS_Width, cfg.probe_num);
+  CFG_set_bitfield_u32(reg.tssr, TSSR_PS_Pos, TSSR_PS_Width, cfg.probe_num);
 
   switch (cfg.type) {
     case EDGE:
-      CFG_set_bitfield_u32(&reg.tcur, TCUR_ET_Pos, TCUR_ET_Width,
+      CFG_set_bitfield_u32(reg.tcur, TCUR_ET_Pos, TCUR_ET_Width,
                            ((uint32_t)cfg.event & 0xf));
       break;
     case LEVEL:
-      CFG_set_bitfield_u32(&reg.tcur, TCUR_LT_Pos, TCUR_LT_Width,
+      CFG_set_bitfield_u32(reg.tcur, TCUR_LT_Pos, TCUR_LT_Width,
                            ((uint32_t)cfg.event & 0xf));
       break;
     case VALUE_COMPARE:
       CFG_ASSERT(cfg.value_compare_width > 0);
       CFG_ASSERT(cfg.value_compare_width <= get_max_compare_value_size());
-      CFG_set_bitfield_u32(&reg.tcur, TCUR_VC_Pos, TCUR_VC_Width,
+      CFG_set_bitfield_u32(reg.tcur, TCUR_VC_Pos, TCUR_VC_Width,
                            ((uint32_t)cfg.event & 0xf));
-      CFG_set_bitfield_u32(&reg.tssr, TSSR_CW_Pos, TSSR_CW_Width,
+      CFG_set_bitfield_u32(reg.tssr, TSSR_CW_Pos, TSSR_CW_Width,
                            cfg.value_compare_width - 1);
       reg.tdcr = cfg.value;
       break;
