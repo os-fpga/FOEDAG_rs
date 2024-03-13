@@ -16,7 +16,7 @@ class MockOclaJtagAdapter : public OclaJtagAdapter {
  public:
   MOCK_METHOD(void, write, (uint32_t addr, uint32_t data), (override));
   MOCK_METHOD(uint32_t, read, (uint32_t addr), (override));
-  MOCK_METHOD((std::vector<std::tuple<uint32_t, uint32_t>>), read,
+  MOCK_METHOD(std::vector<jtag_read_result>, read,
               (uint32_t base_addr, uint32_t num_reads, uint32_t increase_by),
               (override));
   MOCK_METHOD(void, set_target_device,
@@ -193,8 +193,7 @@ TEST_F(OclaIPTest, getDataTest_FixSampleSize) {
   ON_CALL(mockAdapter, read(UIDP1)).WillByDefault(Return(33));
   EXPECT_CALL(mockAdapter, read(TBDR, 256, 0))
       .Times(1)
-      .WillOnce(Return(std::vector<std::tuple<uint32_t, uint32_t>>(
-          256, std::make_tuple(0, 0))));
+      .WillOnce(Return(std::vector<jtag_read_result>(256, {0, 0, 0})));
 
   OclaIP oclaIP(&mockAdapter, 0);
   auto result = oclaIP.get_data();
@@ -217,8 +216,7 @@ TEST_F(OclaIPTest, getDataTest_End2End) {
 
   EXPECT_CALL(mockAdapter, read(TBDR, 988 * 3, 0))
       .Times(1)
-      .WillOnce(Return(std::vector<std::tuple<uint32_t, uint32_t>>{
-          988 * 3, std::make_tuple(0, 0)}));
+      .WillOnce(Return(std::vector<jtag_read_result>{988 * 3, {0, 0, 0}}));
 
   OclaIP oclaIP(&mockAdapter, 0);
   oclaIP.configure(cfg);
