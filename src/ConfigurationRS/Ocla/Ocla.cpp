@@ -10,8 +10,16 @@
 #include "OclaSession.h"
 #include "OclaWaveformWriter.h"
 
-static std::map<uint32_t, uint32_t> ocla_base_address = {{1, OCLA1_ADDR},
-                                                         {2, OCLA2_ADDR}};
+#define OCLA_MAX_INSTANCE_COUNT (15)
+#define OCLA1_ADDR (0x03000000)
+#define OCLA2_ADDR (0x04000000)
+#define OCLA3_ADDR (0x05000000)
+#define OCLA_TYPE ("OCLA")
+#define OCLA_MAX_PROBE (1024)
+#define OCLA_MIN_TRIGGER_COUNT (4)
+
+static std::map<uint32_t, uint32_t> ocla_base_address = {
+    {1, OCLA1_ADDR}, {2, OCLA2_ADDR}, {3, OCLA3_ADDR}};
 
 OclaIP Ocla::get_ocla_instance(uint32_t instance) {
   CFG_ASSERT(ocla_base_address.find(instance) != ocla_base_address.end());
@@ -26,7 +34,13 @@ std::map<uint32_t, OclaIP> Ocla::detect_ocla_instances() {
   for (auto& [i, baseaddr] : ocla_base_address) {
     OclaIP ocla_ip{m_adapter, baseaddr};
     if (ocla_ip.get_type() == OCLA_TYPE) {
-      list.insert(std::pair<uint32_t, OclaIP>(i, ocla_ip));
+      auto trigger_count = ocla_ip.get_trigger_count();
+      if (trigger_count < OCLA_MIN_TRIGGER_COUNT) {
+        CFG_POST_WARNING("Invalid trigger count %d detected for instance %d",
+                         trigger_count, i);
+      } else {
+        list.insert(std::pair<uint32_t, OclaIP>(i, ocla_ip));
+      }
     }
   }
 
@@ -131,9 +145,9 @@ void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
 
   std::transform(condition.begin(), condition.end(), condition.begin(),
                  ::toupper);
-  cfg.fns = sample_size > 0 ? ENABLED : DISABLED;
-  cfg.ns = sample_size;
-  cfg.mode = convert_ocla_mode(mode);
+  cfg.enable_fix_sample_size = sample_size > 0 ? true : false;
+  cfg.sample_size = sample_size;
+  cfg.mode = convert_ocla_trigger_mode(mode);
   cfg.condition = convert_trigger_condition(condition);
 
   ocla_ip.configure(cfg);
@@ -141,7 +155,8 @@ void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
 
 void Ocla::configure_channel(uint32_t instance, uint32_t channel,
                              std::string type, std::string event,
-                             uint32_t value, std::string probe) {
+                             uint32_t value, uint32_t compare_width,
+                             std::string probe) {
   if (!validate()) {
     CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
     return;
@@ -201,6 +216,7 @@ void Ocla::configure_channel(uint32_t instance, uint32_t channel,
   trig_cfg.type = convert_trigger_type(type);
   trig_cfg.event = convert_trigger_event(event);
   trig_cfg.value = value;
+  trig_cfg.compare_width = compare_width;
 
   ocla_ip.configure_channel(channel - 1, trig_cfg);
 }
@@ -275,11 +291,11 @@ std::string Ocla::show_info() {
 
     auto cfg = ocla_ip.get_config();
 
-    uint32_t ns = cfg.fns == ENABLED ? cfg.ns : depth;
+    uint32_t ns = cfg.enable_fix_sample_size ? cfg.sample_size : depth;
 
     ss << "  No. of samples     : " << ns << std::endl
-       << "  Trigger mode       : " << convert_ocla_mode_to_string(cfg.mode)
-       << std::endl
+       << "  Trigger mode       : "
+       << convert_ocla_trigger_mode_to_string(cfg.mode) << std::endl
        << "  Trigger condition  : "
        << convert_trigger_condition_to_string(cfg.condition) << std::endl
        << "  Trigger " << std::endl
@@ -314,7 +330,7 @@ std::string Ocla::show_info() {
              << "; compare_operator="
              << convert_trigger_event_to_string(trig_cfg.event)
              << "; compare_value=0x" << std::hex << trig_cfg.value << std::dec
-             << std::endl;
+             << "; compare_width=" << trig_cfg.compare_width << std::endl;
           break;
         case TRIGGER_NONE:
           ss << "    Channel " << ch << "        : "
@@ -407,65 +423,6 @@ std::string Ocla::show_session_info() {
   }
 
   return ss.str();
-}
-
-std::string Ocla::dump_registers(uint32_t instance) {
-  std::map<uint32_t, std::string> regs = {
-      {OCSR, "OCSR"},
-      {TCUR0, "TCUR0"},
-      {TMTR, "TMTR"},
-      {TDCR, "TDCR"},
-      {TCUR1, "TCUR1"},
-      {IP_TYPE, "IP_TYPE"},
-      {IP_VERSION, "IP_VERSION"},
-      {IP_ID, "IP_ID"},
-  };
-
-  OclaIP ocla_ip = get_ocla_instance(instance);
-  std::ostringstream ss;
-  char buffer[100];
-
-  for (auto const& [offset, name] : regs) {
-    uint32_t regaddr = ocla_ip.get_base_addr() + offset;
-    snprintf(buffer, sizeof(buffer), "%-10s (0x%08x) = 0x%08x\n", name.c_str(),
-             regaddr, m_adapter->read(regaddr));
-    ss << buffer;
-  }
-
-  return ss.str();
-}
-
-std::string Ocla::dump_samples(uint32_t instance, bool dumpText,
-                               bool generate_waveform) {
-  OclaIP ocla_ip = get_ocla_instance(instance);
-  std::ostringstream ss;
-  char buffer[100];
-  auto data = ocla_ip.get_data();
-
-  if (dumpText) {
-    ss << "width " << data.width << " depth " << data.depth << " num_reads "
-       << data.num_reads << " length " << data.values.size() << std::endl;
-    for (auto& value : data.values) {
-      snprintf(buffer, sizeof(buffer), "0x%08x\n", value);
-      ss << buffer;
-    }
-  }
-
-  if (generate_waveform) {
-    std::string filepath = "/tmp/ocla_debug.fst";
-    m_writer->set_width(data.width);
-    m_writer->set_depth(data.depth);
-    m_writer->set_signals(generate_signal_descriptor(data.width));
-    m_writer->write(data.values, filepath.c_str());
-    ss << "Waveform written to " << filepath << std::endl;
-  }
-
-  return ss.str();
-}
-
-void Ocla::debug_start(uint32_t instance) {
-  OclaIP ocla_ip = get_ocla_instance(instance);
-  ocla_ip.start();
 }
 
 std::string Ocla::show_status(uint32_t instance) {

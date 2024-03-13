@@ -5,24 +5,25 @@
 #include "OclaHelpers.h"
 
 class ConvertOclaModeToStringParamTest
-    : public ::testing::TestWithParam<std::pair<ocla_mode, std::string>> {};
+    : public ::testing::TestWithParam<
+          std::pair<ocla_trigger_mode, std::string>> {};
 
 TEST_P(ConvertOclaModeToStringParamTest, ConvertOclaMode) {
   const auto& param = GetParam();
-  const ocla_mode mode = param.first;
+  const ocla_trigger_mode mode = param.first;
   const std::string& expected_result = param.second;
 
-  std::string result = convert_ocla_mode_to_string(mode);
+  std::string result = convert_ocla_trigger_mode_to_string(mode);
   EXPECT_EQ(result, expected_result);
 }
 
 INSTANTIATE_TEST_SUITE_P(
     Default, ConvertOclaModeToStringParamTest,
-    ::testing::Values(std::make_pair(NO_TRIGGER, "disable"),
+    ::testing::Values(std::make_pair(CONTINUOUS, "disable"),
                       std::make_pair(PRE, "pre-trigger"),
                       std::make_pair(POST, "post-trigger"),
                       std::make_pair(CENTER, "center-trigger"),
-                      std::make_pair(NO_TRIGGER, "disable")));
+                      std::make_pair(CONTINUOUS, "disable")));
 
 class ConvertTriggerConditionToStringParamTest
     : public ::testing::TestWithParam<
@@ -103,14 +104,15 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_pair(ocla_trigger_event(99), "(unknown)")));
 
 class ConvertOclaModeParamTest
-    : public ::testing::TestWithParam<std::pair<std::string, ocla_mode>> {};
+    : public ::testing::TestWithParam<
+          std::pair<std::string, ocla_trigger_mode>> {};
 
 TEST_P(ConvertOclaModeParamTest, ConvertModeString) {
   const auto& param = GetParam();
   const std::string& mode_string = param.first;
-  ocla_mode expected_result = param.second;
+  ocla_trigger_mode expected_result = param.second;
 
-  ocla_mode result = convert_ocla_mode(mode_string);
+  ocla_trigger_mode result = convert_ocla_trigger_mode(mode_string);
   EXPECT_EQ(result, expected_result);
 }
 
@@ -118,13 +120,13 @@ INSTANTIATE_TEST_SUITE_P(
     Default, ConvertOclaModeParamTest,
     ::testing::Values(std::make_pair("pre-trigger", PRE),
                       std::make_pair("post-trigger", POST),
-                      std::make_pair("disable", NO_TRIGGER),
+                      std::make_pair("disable", CONTINUOUS),
                       std::make_pair("post-trigger", POST),
-                      std::make_pair("invalid-mode", NO_TRIGGER)));
+                      std::make_pair("invalid-mode", CONTINUOUS)));
 
 TEST(ConvertOclaModeTest, DefaultModeString) {
   // Test converting with a default value
-  ocla_mode result = convert_ocla_mode("invalid-mode", POST);
+  ocla_trigger_mode result = convert_ocla_trigger_mode("invalid-mode", POST);
   EXPECT_EQ(result, POST);
 }
 
