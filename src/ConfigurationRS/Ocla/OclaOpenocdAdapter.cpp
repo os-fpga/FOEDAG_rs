@@ -113,9 +113,10 @@ std::vector<jtag_read_result> OclaOpenocdAdapter::parse(
             s.c_str(), matches,
             std::regex("^0x([0-9A-F]{8}) ([0-9A-F]{8}) ([0-9A-F]{2})$",
                        std::regex::icase)) == true) {
-      jtag_read_result res{.address = (uint32_t)stoul(matches[1], 0, 16),
-                           .data = (uint32_t)stoul(matches[2], 0, 16),
-                           .status = (uint32_t)stoul(matches[3], 0, 16)};
+      jtag_read_result res{};
+      res.address = (uint32_t)stoul(matches[1], 0, 16);
+      res.data = (uint32_t)stoul(matches[2], 0, 16);
+      res.status = (uint32_t)stoul(matches[3], 0, 16);
       values.push_back(res);
     }
   }
