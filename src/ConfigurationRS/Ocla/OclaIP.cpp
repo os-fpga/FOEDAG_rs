@@ -148,7 +148,7 @@ ocla_data OclaIP::get_data() const {
   auto result =
       m_adapter->read(m_base_addr + TBDR, data.depth * data.num_reads);
   for (auto const &value : result) {
-    data.values.push_back(std::get<1>(value));
+    data.values.push_back(value.data);
   }
   return data;
 }

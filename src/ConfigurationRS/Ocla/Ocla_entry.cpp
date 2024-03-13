@@ -159,7 +159,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     auto result = adapter.read((uint32_t)parms->addr, (uint32_t)parms->times,
                                (uint32_t)parms->increment);
     for (auto value : result) {
-      CFG_POST_MSG("0x%08x 0x%08x", std::get<0>(value), std::get<1>(value));
+      CFG_POST_MSG("0x%08x 0x%08x 0x%x", value.address, value.data,
+                   value.status);
     }
   } else if (subcmd == "write") {
     auto parms = static_cast<const CFGArg_DEBUGGER_WRITE*>(arg->get_sub_arg());
