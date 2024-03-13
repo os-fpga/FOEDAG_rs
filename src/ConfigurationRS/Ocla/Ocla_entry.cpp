@@ -145,13 +145,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     auto parms =
         static_cast<const CFGArg_DEBUGGER_SHOW_WAVEFORM*>(arg->get_sub_arg());
     Ocla_launch_gtkwave(parms->input, cmdarg->binPath);
-  } else if (subcmd == "debug") {
-    auto parms = static_cast<const CFGArg_DEBUGGER_DEBUG*>(arg->get_sub_arg());
-    if (parms->instance == 0 || parms->instance > 2) {
-      CFG_POST_ERR(
-          "Invalid instance parameter. Instance should be either 1 or 2.");
-      return;
-    }
+  } else if (subcmd == "read") {
+    auto parms = static_cast<const CFGArg_DEBUGGER_READ*>(arg->get_sub_arg());
     std::vector<FOEDAG::Tap> taplist{};
     FOEDAG::Device device{};
     if (!hardware_manager.find_device(parms->cable, parms->device, device,
@@ -161,12 +156,23 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       return;
     }
     adapter.set_target_device(device, taplist);
-    if (parms->start) ocla.debug_start(parms->instance);
-    if (parms->reg) Ocla_print(ocla.dump_registers(parms->instance));
-    if (parms->dump || parms->waveform)
-      Ocla_print(
-          ocla.dump_samples(parms->instance, parms->dump, parms->waveform));
-    if (parms->session_info) Ocla_print(ocla.show_session_info());
+    auto result = adapter.read((uint32_t)parms->addr, (uint32_t)parms->times,
+                               (uint32_t)parms->increment);
+    for (auto value : result) {
+      CFG_POST_MSG("0x%08x 0x%08x", std::get<0>(value), std::get<1>(value));
+    }
+  } else if (subcmd == "write") {
+    auto parms = static_cast<const CFGArg_DEBUGGER_WRITE*>(arg->get_sub_arg());
+    std::vector<FOEDAG::Tap> taplist{};
+    FOEDAG::Device device{};
+    if (!hardware_manager.find_device(parms->cable, parms->device, device,
+                                      taplist, true)) {
+      CFG_POST_ERR("Could't find device %u on cable '%s'", parms->device,
+                   parms->cable.c_str());
+      return;
+    }
+    adapter.set_target_device(device, taplist);
+    adapter.write((uint32_t)parms->addr, (uint32_t)parms->value);
   } else if (subcmd == "list_cable") {
     auto parms =
         static_cast<const CFGArg_DEBUGGER_LIST_CABLE*>(arg->get_sub_arg());

@@ -425,65 +425,6 @@ std::string Ocla::show_session_info() {
   return ss.str();
 }
 
-std::string Ocla::dump_registers(uint32_t instance) {
-  std::map<uint32_t, std::string> regs = {
-      {OCSR, "OCSR"},
-      //{TCUR0, "TCUR0"},
-      {TMTR, "TMTR"},
-      //{TDCR, "TDCR"},
-      // {TCUR1, "TCUR1"},
-      {IP_TYPE, "IP_TYPE"},
-      {IP_VERSION, "IP_VERSION"},
-      {IP_ID, "IP_ID"},
-  };
-
-  OclaIP ocla_ip = get_ocla_instance(instance);
-  std::ostringstream ss;
-  char buffer[100];
-
-  for (auto const& [offset, name] : regs) {
-    uint32_t regaddr = ocla_ip.get_base_addr() + offset;
-    snprintf(buffer, sizeof(buffer), "%-10s (0x%08x) = 0x%08x\n", name.c_str(),
-             regaddr, m_adapter->read(regaddr));
-    ss << buffer;
-  }
-
-  return ss.str();
-}
-
-std::string Ocla::dump_samples(uint32_t instance, bool dumpText,
-                               bool generate_waveform) {
-  OclaIP ocla_ip = get_ocla_instance(instance);
-  std::ostringstream ss;
-  char buffer[100];
-  auto data = ocla_ip.get_data();
-
-  if (dumpText) {
-    ss << "width " << data.width << " depth " << data.depth << " num_reads "
-       << data.num_reads << " length " << data.values.size() << std::endl;
-    for (auto& value : data.values) {
-      snprintf(buffer, sizeof(buffer), "0x%08x\n", value);
-      ss << buffer;
-    }
-  }
-
-  if (generate_waveform) {
-    std::string filepath = "/tmp/ocla_debug.fst";
-    m_writer->set_width(data.width);
-    m_writer->set_depth(data.depth);
-    m_writer->set_signals(generate_signal_descriptor(data.width));
-    m_writer->write(data.values, filepath.c_str());
-    ss << "Waveform written to " << filepath << std::endl;
-  }
-
-  return ss.str();
-}
-
-void Ocla::debug_start(uint32_t instance) {
-  OclaIP ocla_ip = get_ocla_instance(instance);
-  ocla_ip.start();
-}
-
 std::string Ocla::show_status(uint32_t instance) {
   OclaIP ocla_ip = get_ocla_instance(instance);
   std::ostringstream ss;

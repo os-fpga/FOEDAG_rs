@@ -41,12 +41,11 @@ void OclaOpenocdAdapter::write(uint32_t addr, uint32_t data) {
 
 uint32_t OclaOpenocdAdapter::read(uint32_t addr) {
   auto values = read(addr, 1);
-  return values[0];
+  return std::get<1>(values[0]);
 }
 
-std::vector<uint32_t> OclaOpenocdAdapter::read(uint32_t base_addr,
-                                               uint32_t num_reads,
-                                               uint32_t increase_by) {
+std::vector<std::tuple<uint32_t, uint32_t>> OclaOpenocdAdapter::read(
+    uint32_t base_addr, uint32_t num_reads, uint32_t increase_by) {
   // ocla jtag read via openocd command
   // ----------------------------------
   // irscan ocla 0x04
@@ -66,14 +65,7 @@ std::vector<uint32_t> OclaOpenocdAdapter::read(uint32_t base_addr,
   auto values = parse(output);
   CFG_ASSERT_MSG(values.size() == num_reads,
                  "values size is not equal to read requests");
-
-  // todo: temporary convert to vector of uint32_t
-  std::vector<uint32_t> tmp;
-  for (auto &elmt : values) {
-    tmp.push_back(std::get<1>(elmt));
-  }
-  return tmp;
-  // return values;
+  return values;
 }
 
 std::string OclaOpenocdAdapter::build_tcl_proc(uint32_t tap_index) {

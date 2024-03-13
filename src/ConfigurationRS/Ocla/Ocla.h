@@ -29,11 +29,6 @@ class Ocla {
   std::string show_status(uint32_t instance);
   std::string show_info();
   std::string show_session_info();
-  // debug use
-  std::string dump_registers(uint32_t instance);
-  std::string dump_samples(uint32_t instance, bool dump_text,
-                           bool generate_waveform);
-  void debug_start(uint32_t instance);
 
  private:
   OclaIP get_ocla_instance(uint32_t instance);
