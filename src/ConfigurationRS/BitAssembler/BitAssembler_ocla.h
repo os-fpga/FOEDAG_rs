@@ -15,10 +15,11 @@ class BitAssembler_OCLA {
                     const std::string& analyzeCMDPath);
 
  private:
+  static bool validate_ocla_debug_subsystem(
+      nlohmann::json& ocla_debug_subsystem, nlohmann::json& eio);
+  static bool validate_eio(nlohmann::json& eio);
   static void extract_ocla_info(CFGObject_BITOBJ& bitobj, nlohmann::json& json);
   static bool validate_ocla(nlohmann::json& ocla);
-  static bool validate_ocla_debug_subsystem(
-      nlohmann::json& ocla_debug_subsystem);
 };
 
 #endif
