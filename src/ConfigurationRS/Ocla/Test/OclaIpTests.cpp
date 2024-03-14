@@ -103,7 +103,7 @@ TEST_F(OclaIPTest, configureTest) {
   cfg.mode = ocla_trigger_mode::PRE;
   cfg.enable_fix_sample_size = true;
   cfg.sample_size = 1234;
-  EXPECT_CALL(mockAdapter, write(TMTR, 0x4d101d));
+  EXPECT_CALL(mockAdapter, write(TMTR, 0x4d201d));
   OclaIP oclaIP(&mockAdapter, 0);
   oclaIP.configure(cfg);
 }
@@ -200,7 +200,7 @@ TEST_F(OclaIPTest, resetTest) {
 
 TEST_F(OclaIPTest, getDataTest_FixSampleSize) {
   ON_CALL(mockAdapter, read(TMTR))
-      .WillByDefault(Return((127u << 12) + (1u << 4)));
+      .WillByDefault(Return((128u << 12) + (1u << 4)));
   ON_CALL(mockAdapter, read(UIDP0)).WillByDefault(Return(1000));
   ON_CALL(mockAdapter, read(UIDP1)).WillByDefault(Return(33));
   EXPECT_CALL(mockAdapter, read(TBDR, 256, 0))
@@ -268,11 +268,11 @@ TEST_F(OclaIPTest, getConfigTest_default) {
   EXPECT_EQ(ocla_trigger_condition::DEFAULT, configData.condition);
   EXPECT_EQ(ocla_trigger_mode::CONTINUOUS, configData.mode);
   EXPECT_EQ(false, configData.enable_fix_sample_size);
-  EXPECT_EQ(1, configData.sample_size);
+  EXPECT_EQ(0, configData.sample_size);
 }
 
 TEST_F(OclaIPTest, getConfigTest) {
-  ON_CALL(mockAdapter, read(TMTR)).WillByDefault(Return(0x59ac5599));
+  ON_CALL(mockAdapter, read(TMTR)).WillByDefault(Return(0x59ac6599));
   OclaIP oclaIP(&mockAdapter, 0);
   ocla_config configData = oclaIP.get_config();
   EXPECT_EQ(ocla_trigger_condition::OR, configData.condition);
