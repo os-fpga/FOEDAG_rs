@@ -133,6 +133,14 @@ void OclaIP::reset() {
 
 void OclaIP::start() {
   CFG_ASSERT(m_adapter != nullptr);
+
+  /*
+    NOTE:
+    In case of back to back activation, it requires a dummy write to the OCCR
+    register before setting ST bit for the start samplling to work.
+  */
+  m_adapter->write(m_base_addr + OCCR, 0);
+
   m_adapter->write(m_base_addr + OCCR, (1u << OCCR_ST_Pos));
 }
 

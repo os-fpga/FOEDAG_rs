@@ -186,6 +186,7 @@ TEST_F(OclaIPTest, configureChannelTest_ValueCompare) {
 }
 
 TEST_F(OclaIPTest, startTest) {
+  EXPECT_CALL(mockAdapter, write(OCCR, 0x0));
   EXPECT_CALL(mockAdapter, write(OCCR, 0x1));
   OclaIP oclaIP(&mockAdapter, 0);
   oclaIP.start();
