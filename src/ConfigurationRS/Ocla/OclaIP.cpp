@@ -78,8 +78,12 @@ void OclaIP::configure(ocla_config &cfg) {
                        (uint32_t)cfg.condition);
   CFG_set_bitfield_u32(m_tmtr, TMTR_FNS_Pos, TMTR_FNS_Width,
                        cfg.enable_fix_sample_size ? 1 : 0);
+
+  // NOTE: When FNS is 0, NS *must* be 0 as well otherwise the OCLA will stuck
+  // at sampling data forever and not setting the DA flag even internal FIFO is
+  // full
   CFG_set_bitfield_u32(m_tmtr, TMTR_NS_Pos, TMTR_NS_Width,
-                       (cfg.sample_size - 1));
+                       cfg.enable_fix_sample_size ? (cfg.sample_size - 1) : 0);
 
   m_adapter->write(m_base_addr + TMTR, m_tmtr);
 }
