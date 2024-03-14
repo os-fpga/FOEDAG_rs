@@ -108,6 +108,17 @@ TEST_F(OclaIPTest, configureTest) {
   oclaIP.configure(cfg);
 }
 
+TEST_F(OclaIPTest, configureTest_FNS_Disable) {
+  ocla_config cfg;
+  cfg.condition = ocla_trigger_condition::XOR;
+  cfg.mode = ocla_trigger_mode::PRE;
+  cfg.enable_fix_sample_size = false;
+  cfg.sample_size = 1234;
+  EXPECT_CALL(mockAdapter, write(TMTR, 0x0d));
+  OclaIP oclaIP(&mockAdapter, 0);
+  oclaIP.configure(cfg);
+}
+
 TEST_F(OclaIPTest, configureChannelTest_Edge) {
   ON_CALL(mockAdapter, read(OCSR)).WillByDefault(Return(3 << 24));
   ON_CALL(mockAdapter, read(TSSR + 0x90)).WillByDefault(Return(0x3ff));
