@@ -960,6 +960,7 @@ std::string CompilerRS::BaseVprCommand(BaseVprDefaults defaults) {
       " --place_file " + FilePath(Action::Placement, name + ".place").string();
   command +=
       " --route_file " + FilePath(Action::Routing, name + ".route").string();
+  processCustomLayout();
   return command;
 }
 
