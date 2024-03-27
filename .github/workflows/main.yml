@@ -36,13 +36,6 @@ jobs:
       with:
         python-version: 3.8
 
-    - name: ssh-agent
-      if: matrix.mode == 'production'
-      uses: webfactory/ssh-agent@v0.7.0
-      with:
-        ssh-private-key: |
-          ${{ secrets.SSH_PRIVATE_KEY_RAPTOR_TOOLS }}
-
     - name: Checkout code
       uses: actions/checkout@v4
       with:
