@@ -250,10 +250,11 @@ jobs:
           mingw-w64-x86_64-tcl
           mingw-w64-x86_64-zlib
           mingw-w64-x86_64-libusb
+          python-devel
         release: false
       env:
         MSYS2_PATH_TYPE: inherit
-          
+
     - shell: msys2 {0}
       run: |
         pacman --noconfirm -S zlib

@@ -502,6 +502,13 @@ if (NOT RAPTOR)
       file(COPY ${libusb_dll} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
       install(FILES ${libusb_dll} DESTINATION ${CMAKE_INSTALL_BINDIR})
     endif()
+    
+    if (MSVC)
+      set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/FOEDAG/cmake/")
+      find_package(CustomPython3 REQUIRED)
+      file(COPY ${Python3_LIBRARIES} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+      install(FILES ${Python3_LIBRARIES} DESTINATION ${CMAKE_INSTALL_BINDIR})
+    endif()
 endif()
 
 if ((DEFINED ENV{MSYSTEM}) AND ("$ENV{MSYSTEM}" STREQUAL "MINGW64"))
