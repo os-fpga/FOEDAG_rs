@@ -1,19 +1,8 @@
 #include "OclaIP.h"
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
+#include "OclaHelpers.h"
 #include "OclaJtagAdapter.h"
-
-uint32_t CFG_reverse_byte_order_u32(uint32_t value) {
-  return (value >> 24) | ((value >> 8) & 0xff00) | ((value << 8) & 0xff0000) |
-         (value << 24);
-}
-
-void CFG_set_bitfield_u32(uint32_t &value, uint8_t pos, uint8_t width,
-                          uint32_t data) {
-  uint32_t mask = (~0u >> (32 - width)) << pos;
-  value &= ~mask;
-  value |= (data & ((1u << width) - 1)) << pos;
-}
 
 OclaIP::OclaIP(OclaJtagAdapter *adapter, uint32_t base_addr)
     : m_adapter(adapter),
@@ -214,16 +203,19 @@ ocla_trigger_config OclaIP::get_channel_config(uint32_t channel) const {
 
   switch (cfg.type) {
     case EDGE:
-      cfg.event = (ocla_trigger_event)(
-          ((reg.tcur & TCUR_ET_Msk) >> TCUR_ET_Pos) | 0x10);
+      cfg.event =
+          (ocla_trigger_event)(((reg.tcur & TCUR_ET_Msk) >> TCUR_ET_Pos) |
+                               0x10);
       break;
     case LEVEL:
-      cfg.event = (ocla_trigger_event)(
-          ((reg.tcur & TCUR_LT_Msk) >> TCUR_LT_Pos) | 0x20);
+      cfg.event =
+          (ocla_trigger_event)(((reg.tcur & TCUR_LT_Msk) >> TCUR_LT_Pos) |
+                               0x20);
       break;
     case VALUE_COMPARE:
-      cfg.event = (ocla_trigger_event)(
-          ((reg.tcur & TCUR_VC_Msk) >> TCUR_VC_Pos) | 0x30);
+      cfg.event =
+          (ocla_trigger_event)(((reg.tcur & TCUR_VC_Msk) >> TCUR_VC_Pos) |
+                               0x30);
       cfg.value = reg.tdcr;
       cfg.compare_width = ((reg.tssr & TSSR_CW_Msk) >> TSSR_CW_Pos) + 1;
       break;

@@ -39,6 +39,11 @@ std::vector<signal_info> generate_signal_descriptor(
 
 bool CFG_type_event_sanity_check(std::string &type, std::string &event);
 
-std::string CFG_toupper(const std::string& str);
+std::string CFG_toupper(const std::string &str);
+
+uint32_t CFG_reverse_byte_order_u32(uint32_t value);
+
+void CFG_set_bitfield_u32(uint32_t &value, uint8_t pos, uint8_t width,
+                          uint32_t data);
 
 #endif  //__OCLAHELPERS_H__

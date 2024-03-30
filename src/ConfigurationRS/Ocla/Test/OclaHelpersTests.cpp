@@ -19,11 +19,11 @@ TEST_P(ConvertOclaModeToStringParamTest, ConvertOclaMode) {
 
 INSTANTIATE_TEST_SUITE_P(
     Default, ConvertOclaModeToStringParamTest,
-    ::testing::Values(std::make_pair(CONTINUOUS, "disable"),
-                      std::make_pair(PRE, "pre-trigger"),
-                      std::make_pair(POST, "post-trigger"),
-                      std::make_pair(CENTER, "center-trigger"),
-                      std::make_pair(CONTINUOUS, "disable")));
+    ::testing::Values(std::make_pair(CONTINUOUS, "DISABLE"),
+                      std::make_pair(PRE, "PRE-TRIGGER"),
+                      std::make_pair(POST, "POST-TRIGGER"),
+                      std::make_pair(CENTER, "CENTER-TRIGGER"),
+                      std::make_pair(CONTINUOUS, "DISABLE")));
 
 class ConvertTriggerConditionToStringParamTest
     : public ::testing::TestWithParam<

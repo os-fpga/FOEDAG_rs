@@ -1,12 +1,13 @@
 #include "OclaSignal.h"
 
-OclaSignal::OclaSignal(std::string name, uint32_t pos, uint32_t bitwidth, uint32_t value, oc_signal_type_t type, uint32_t idx)
-    : m_name(name)
-    , m_pos(pos)
-    , m_bitwidth(bitwidth)
-    , m_value(value)
-    , m_type(type)
-    , m_index(idx) {}
+OclaSignal::OclaSignal(std::string name, uint32_t pos, uint32_t bitwidth,
+                       uint32_t value, oc_signal_type_t type, uint32_t idx)
+    : m_name(name),
+      m_pos(pos),
+      m_bitwidth(bitwidth),
+      m_value(value),
+      m_type(type),
+      m_index(idx) {}
 
 OclaSignal::OclaSignal() : m_index(0) {}
 

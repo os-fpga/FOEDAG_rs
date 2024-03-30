@@ -8,7 +8,7 @@
 
 OclaDebugSession Ocla::m_session{};
 
-Ocla::Ocla(OclaJtagAdapter* adapter, OclaWaveformWriter* writer)
+Ocla::Ocla(OclaJtagAdapter *adapter, OclaWaveformWriter *writer)
     : m_adapter(adapter), m_writer(writer) {}
 
 void Ocla::configure(uint32_t domain, std::string mode, std::string condition,
@@ -45,14 +45,13 @@ void Ocla::configure(uint32_t domain, std::string mode, std::string condition,
   cfg.condition = convert_trigger_condition(CFG_toupper(condition));
 
   target->set_config(cfg);
-  
+
   // todo: configure ip
 }
 
-void Ocla::add_trigger(uint32_t domain, uint32_t probe, std::string signal, std::string type,
-                         std::string event, uint32_t value,
-                         uint32_t compare_width)
-{
+void Ocla::add_trigger(uint32_t domain, uint32_t probe, std::string signal,
+                       std::string type, std::string event, uint32_t value,
+                       uint32_t compare_width) {
   CFG_ASSERT(m_adapter != nullptr);
 
   if (!m_session.is_loaded()) {
@@ -62,7 +61,8 @@ void Ocla::add_trigger(uint32_t domain, uint32_t probe, std::string signal, std:
 
   // sanity check for trigger type and event pair
   if (!CFG_type_event_sanity_check(type, event)) {
-    CFG_POST_ERR("Invalid '%s' event for '%s' trigger", event.c_str(), type.c_str());
+    CFG_POST_ERR("Invalid '%s' event for '%s' trigger", event.c_str(),
+                 type.c_str());
     return;
   }
 
@@ -84,7 +84,7 @@ void Ocla::add_trigger(uint32_t domain, uint32_t probe, std::string signal, std:
   for (auto &elem : target->get_probes()) {
     if (elem.get_index() == probe) {
       target_probe = &elem;
-     }
+    }
   }
 
   if (!target_probe) {
@@ -93,7 +93,8 @@ void Ocla::add_trigger(uint32_t domain, uint32_t probe, std::string signal, std:
   }
 
   bool status = false;
-  uint32_t signal_index = (uint32_t)CFG_convert_string_to_u64(signal, false, &status);
+  uint32_t signal_index =
+      (uint32_t)CFG_convert_string_to_u64(signal, false, &status);
   OclaSignal *target_signal = nullptr;
 
   for (auto &elem : target_probe->get_signals()) {
@@ -119,7 +120,9 @@ void Ocla::add_trigger(uint32_t domain, uint32_t probe, std::string signal, std:
   oc_trigger_t trig{};
 
   trig.instance_index = target_probe->get_instance_index();
-  trig.signal = "Probe " + std::to_string(probe) + "/" + target_signal->get_name() + " (#" + std::to_string(target_signal->get_index()) + ")";
+  trig.signal = "Probe " + std::to_string(probe) + "/" +
+                target_signal->get_name() + " (#" +
+                std::to_string(target_signal->get_index()) + ")";
   trig.cfg.probe_num = target_signal->get_pos();
   trig.cfg.type = convert_trigger_type(type);
   trig.cfg.event = convert_trigger_event(event);
@@ -177,7 +180,7 @@ void Ocla::show_info() {
   }
 
   CFG_POST_MSG("User design loaded: %s", m_session.get_filepath().c_str());
-  
+
   for (auto &domain : m_session.get_clock_domains()) {
     CFG_POST_MSG("Clock Domain %d:", domain.get_index());
     for (auto &probe : domain.get_probes()) {
@@ -190,13 +193,16 @@ void Ocla::show_info() {
     ocla_config cfg = domain.get_config();
 
     CFG_POST_MSG("  OCLA Configuration");
-    CFG_POST_MSG("    Mode: %s", convert_ocla_trigger_mode_to_string(cfg.mode).c_str());
-    CFG_POST_MSG("    Trigger Condition: %s", convert_trigger_condition_to_string(cfg.condition).c_str());
-    CFG_POST_MSG("    Enable Fixed Sample Size: %s", cfg.enable_fix_sample_size ? "TRUE" : "FALSE");
+    CFG_POST_MSG("    Mode: %s",
+                 convert_ocla_trigger_mode_to_string(cfg.mode).c_str());
+    CFG_POST_MSG("    Trigger Condition: %s",
+                 convert_trigger_condition_to_string(cfg.condition).c_str());
+    CFG_POST_MSG("    Enable Fixed Sample Size: %s",
+                 cfg.enable_fix_sample_size ? "TRUE" : "FALSE");
     // todo: show mem. depth when fns is disabled
     CFG_POST_MSG("    Sample Size: %d", cfg.sample_size);
 
-    auto triggers = domain.get_triggers(); 
+    auto triggers = domain.get_triggers();
 
     CFG_POST_MSG("  OCLA Trigger Configuration");
     if (triggers.size() > 0) {
@@ -205,15 +211,19 @@ void Ocla::show_info() {
         switch (trig.cfg.type) {
           case EDGE:
           case LEVEL:
-            CFG_POST_MSG("    #%d: signal=%s; mode=%s_%s", i, trig.signal.c_str(), 
-              convert_trigger_event_to_string(trig.cfg.event).c_str(), 
-              convert_trigger_type_to_string(trig.cfg.type).c_str());
+            CFG_POST_MSG(
+                "    #%d: signal=%s; mode=%s_%s", i, trig.signal.c_str(),
+                convert_trigger_event_to_string(trig.cfg.event).c_str(),
+                convert_trigger_type_to_string(trig.cfg.type).c_str());
             break;
           case VALUE_COMPARE:
-            CFG_POST_MSG("    #%d: signal=%s; mode=%s; compare_operator=%s; compare_value=0x%x; compare_width=%d",
-              i, trig.signal.c_str(), convert_trigger_type_to_string(trig.cfg.type).c_str(), 
-              convert_trigger_event_to_string(trig.cfg.event).c_str(), 
-              trig.cfg.value, trig.cfg.compare_width);
+            CFG_POST_MSG(
+                "    #%d: signal=%s; mode=%s; compare_operator=%s; "
+                "compare_value=0x%x; compare_width=%d",
+                i, trig.signal.c_str(),
+                convert_trigger_type_to_string(trig.cfg.type).c_str(),
+                convert_trigger_event_to_string(trig.cfg.event).c_str(),
+                trig.cfg.value, trig.cfg.compare_width);
             break;
           case TRIGGER_NONE:
             break;
@@ -251,9 +261,13 @@ void Ocla::show_instance_info() {
     CFG_POST_MSG("  DA status          : %d", ocla_ip.get_status());
 
     auto cfg = ocla_ip.get_config();
-    CFG_POST_MSG("  No. of samples     : %d", (cfg.enable_fix_sample_size ? cfg.sample_size : ocla_ip.get_memory_depth()));
-    CFG_POST_MSG("  Trigger mode       : %s", convert_ocla_trigger_mode_to_string(cfg.mode).c_str());
-    CFG_POST_MSG("  Trigger condition  : %s", convert_trigger_condition_to_string(cfg.condition).c_str());
+    CFG_POST_MSG("  No. of samples     : %d",
+                 (cfg.enable_fix_sample_size ? cfg.sample_size
+                                             : ocla_ip.get_memory_depth()));
+    CFG_POST_MSG("  Trigger mode       : %s",
+                 convert_ocla_trigger_mode_to_string(cfg.mode).c_str());
+    CFG_POST_MSG("  Trigger condition  : %s",
+                 convert_trigger_condition_to_string(cfg.condition).c_str());
     CFG_POST_MSG("  Trigger");
 
     for (uint32_t ch = 0; ch < ocla_ip.get_trigger_count(); ch++) {
@@ -261,18 +275,23 @@ void Ocla::show_instance_info() {
       switch (trig_cfg.type) {
         case EDGE:
         case LEVEL:
-          CFG_POST_MSG("    Channel %d        : probe=%d; mode=%s_%s", ch + 1, trig_cfg.probe_num, 
-            convert_trigger_event_to_string(trig_cfg.event).c_str(), 
-            convert_trigger_type_to_string(trig_cfg.type).c_str());
+          CFG_POST_MSG("    Channel %d        : probe=%d; mode=%s_%s", ch + 1,
+                       trig_cfg.probe_num,
+                       convert_trigger_event_to_string(trig_cfg.event).c_str(),
+                       convert_trigger_type_to_string(trig_cfg.type).c_str());
           break;
         case VALUE_COMPARE:
-          CFG_POST_MSG("    Channel %d        : probe=%d; mode=%s; compare_operator=%s; compare_value=0x%x; compare_width=%d",
-            ch + 1, trig_cfg.probe_num, convert_trigger_type_to_string(trig_cfg.type).c_str(), 
-            convert_trigger_event_to_string(trig_cfg.event).c_str(), 
-            trig_cfg.value, trig_cfg.compare_width);
+          CFG_POST_MSG(
+              "    Channel %d        : probe=%d; mode=%s; compare_operator=%s; "
+              "compare_value=0x%x; compare_width=%d",
+              ch + 1, trig_cfg.probe_num,
+              convert_trigger_type_to_string(trig_cfg.type).c_str(),
+              convert_trigger_event_to_string(trig_cfg.event).c_str(),
+              trig_cfg.value, trig_cfg.compare_width);
           break;
         case TRIGGER_NONE:
-          CFG_POST_MSG("    Channel %d        : %s", ch + 1, convert_trigger_type_to_string(trig_cfg.type).c_str());
+          CFG_POST_MSG("    Channel %d        : %s", ch + 1,
+                       convert_trigger_type_to_string(trig_cfg.type).c_str());
           break;
       }
     }
@@ -281,17 +300,30 @@ void Ocla::show_instance_info() {
     if (probes.size() > 0) {
       // print signal table
       CFG_POST_MSG("  Signal Table");
-      CFG_POST_MSG("  +-------+-------------------------------------+--------------+--------------+");
-      CFG_POST_MSG("  | Index | Signal name                         | Bit pos      | Bitwidth     |");
-      CFG_POST_MSG("  +-------+-------------------------------------+--------------+--------------+");
+      CFG_POST_MSG(
+          "  "
+          "+-------+-------------------------------------+--------------+------"
+          "--------+");
+      CFG_POST_MSG(
+          "  | Index | Signal name                         | Bit pos      | "
+          "Bitwidth     |");
+      CFG_POST_MSG(
+          "  "
+          "+-------+-------------------------------------+--------------+------"
+          "--------+");
 
       for (auto &probe : probes) {
         for (auto &sig : probe.get_signals()) {
-          CFG_POST_MSG("  | %5d | %-35s | %-12d | %-12d |", sig.get_index(), sig.get_name().c_str(), sig.get_pos(), sig.get_bitwidth());
+          CFG_POST_MSG("  | %5d | %-35s | %-12d | %-12d |", sig.get_index(),
+                       sig.get_name().c_str(), sig.get_pos(),
+                       sig.get_bitwidth());
         }
       }
 
-      CFG_POST_MSG("  +-------+-------------------------------------+--------------+--------------+");
+      CFG_POST_MSG(
+          "  "
+          "+-------+-------------------------------------+--------------+------"
+          "--------+");
     }
 
     CFG_POST_MSG(" ");

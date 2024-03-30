@@ -1,6 +1,7 @@
 #include "OclaHelpers.h"
-#include <cctype>
+
 #include <algorithm>
+#include <cctype>
 
 static std::map<ocla_trigger_mode, std::string>
     ocla_trigger_mode_to_string_map = {{CONTINUOUS, "disable"},
@@ -25,29 +26,39 @@ static std::map<ocla_trigger_event, std::string> trigger_event_to_string_map = {
     {GREATER, "greater"}};
 
 std::string CFG_toupper(const std::string& str) {
-    std::string result = str;
-    for (char& c : result) {
-        c = std::toupper(c);
-    }
-    return result;
+  std::string result = str;
+  for (char& c : result) {
+    c = std::toupper(c);
+  }
+  return result;
 }
 
-bool CFG_type_event_sanity_check(std::string &type, std::string &event)
-{
-    static std::map<std::string, std::vector<std::string>> s_check_table{
-        {"edge", {"rising", "falling", "either"}},
-        {"level", {"high", "low"}},
-        {"value_compare", {"equal", "lesser", "greater"}}
-    };
-    
-    auto vec = s_check_table[type];
-    auto it = std::find(vec.begin(), vec.end(), event);
+bool CFG_type_event_sanity_check(std::string& type, std::string& event) {
+  static std::map<std::string, std::vector<std::string>> s_check_table{
+      {"edge", {"rising", "falling", "either"}},
+      {"level", {"high", "low"}},
+      {"value_compare", {"equal", "lesser", "greater"}}};
 
-    if (it != vec.end()) {
-        return true;
-    }
+  auto vec = s_check_table[type];
+  auto it = std::find(vec.begin(), vec.end(), event);
 
-    return false;
+  if (it != vec.end()) {
+    return true;
+  }
+
+  return false;
+}
+
+uint32_t CFG_reverse_byte_order_u32(uint32_t value) {
+  return (value >> 24) | ((value >> 8) & 0xff00) | ((value << 8) & 0xff0000) |
+         (value << 24);
+}
+
+void CFG_set_bitfield_u32(uint32_t& value, uint8_t pos, uint8_t width,
+                          uint32_t data) {
+  uint32_t mask = (~0u >> (32 - width)) << pos;
+  value &= ~mask;
+  value |= (data & ((1u << width) - 1)) << pos;
 }
 
 // helpers to convert enum to string and vice versa

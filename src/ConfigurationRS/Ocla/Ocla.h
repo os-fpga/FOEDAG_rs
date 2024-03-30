@@ -2,9 +2,9 @@
 #define __OCLA_H__
 
 #include <cstdint>
-#include <map>
 #include <string>
 #include <vector>
+
 #include "OclaDebugSession.h"
 
 class OclaJtagAdapter;
@@ -16,9 +16,9 @@ class Ocla {
   Ocla(OclaJtagAdapter *adapter, OclaWaveformWriter *writer);
   void configure(uint32_t domain, std::string mode, std::string condition,
                  uint32_t sample_size);
-  void add_trigger(uint32_t domain, uint32_t probe, std::string signal, std::string type,
-                         std::string event, uint32_t value,
-                         uint32_t compare_width);
+  void add_trigger(uint32_t domain, uint32_t probe, std::string signal,
+                   std::string type, std::string event, uint32_t value,
+                   uint32_t compare_width);
   uint32_t show_status(uint32_t domain);
 
 #if 0
