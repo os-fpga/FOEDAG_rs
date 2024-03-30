@@ -223,6 +223,7 @@ TEST(ConvertTriggerEventTest, defaultTriggerType) {
   EXPECT_EQ(result, expected);
 }
 
+#if 0
 TEST(GenerateSignalDescriptorTest, ValidWidth) {
   uint32_t width = 8;
   std::vector<signal_info> expected = {{"s0", 1}, {"s1", 1}, {"s2", 1},
@@ -241,3 +242,4 @@ TEST(GenerateSignalDescriptorTest, ZeroWidth) {
   std::vector<signal_info> result = generate_signal_descriptor(width);
   EXPECT_EQ(result.size(), expected.size());
 }
+#endif

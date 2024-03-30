@@ -333,6 +333,35 @@
       }
     },
     {
+      "show_instance": {
+        "option": [
+          {
+            "name": "cable",
+            "short": "b",
+            "type": "str",
+            "optional": true,
+            "default" : "1",
+            "help": "Specify the index of the cable"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Specify the index of the device on the selected cable"
+          }
+        ],
+        "hidden": true,
+        "desc": "For debugging. Show all of the physical OCLA instances information.",
+        "help": [
+          "To show all OCLA instances information",
+          "  debugger show_instance"
+        ],
+        "arg": [0, 0]
+      }
+    },
+    {
       "status": {
         "option": [
           {
@@ -352,18 +381,17 @@
             "help": "Specify the index of the device on the selected cable"
           },
           {
-            "name": "instance",
+            "name": "domain",
             "short": "i",
             "type": "int",
-            "default" : 1,
-            "optional": true,
-            "help": "Specify the index of the OCLA instance to configure. Valid value is 1 or 2"
+            "optional": false,
+            "help": "Specify clock domain number"
           }
         ],
-        "desc": "For Debugging. Print the OCLA IP status.",
+        "desc": "Show OCLA status.",
         "help": [
-          "To show the OCLA IP status",
-          "  debugger status -i {1 or2}"
+          "To show the OCLA status",
+          "  debugger status -i {number}"
         ],
         "arg": [0, 0]
       }
@@ -512,7 +540,7 @@
             "help": "Specify the number of time to read"
           },
           {
-            "name": "increment",
+            "name": "incr",
             "short": "i",
             "type": "int",
             "default" : 0,
@@ -574,45 +602,12 @@
       "config": {
         "option": [
           {
-            "name": "instance",
-            "short": "i",
-            "type": "int",
-            "optional": true,
-            "default" : 1,
-            "help": "OCLA instance number"
-          },
-          {
-            "name": "mode",
-            "short": "m",
-            "optional": true,
-            "type": "pre-trigger|post-trigger|center-trigger|disable",
-            "help": "Configure the trigger mode of the OCLA instance"
-          },
-          {
-            "name": "sample_size",
-            "short": "s",
-            "type": "int",
-            "optional": true,
-            "default": 0,
-            "help": [
-              "Configure the number of samples data to acquire",
-              "Set sample_size to 0 to use the design time depth parameter as sample size"
-            ]
-          },
-          {
-            "name": "trigger_condition",
-            "short": "t",
-            "type": "or|and|xor",
-            "optional": true,
-            "help": "Configure the multiple trigger boolean condition"
-          },
-          {
             "name": "cable",
             "short": "b",
             "type": "str",
             "optional": true,
             "default" : "1",
-            "help": "Specify the index of the cable"
+            "help": "Specify the index or name of the cable"
           },
           {
             "name": "device",
@@ -621,21 +616,56 @@
             "optional": true,
             "default" : 1,
             "help": "Specify the index of the device on the selected cable"
+          },
+          {
+            "name": "domain",
+            "short": "i",
+            "type": "int",
+            "optional": false,
+            "help": "Specify index of the clock domain"
+          },
+          {
+            "name": "mode",
+            "short": "m",
+            "optional": true,
+            "default": "pre-trigger",
+            "type": "pre-trigger|post-trigger|center-trigger|disable",
+            "help": "Specify the trigger mode"
+          },
+          {
+            "name": "sample_size",
+            "short": "s",
+            "type": "int",
+            "optional": true,
+            "default": 0,
+            "help": [
+              "Specify the fixed number of samples data to acquire",
+              "Set sample_size to 0 to use the design time depth parameter as sample size"
+            ]
+          },
+          {
+            "name": "trigger_condition",
+            "short": "t",
+            "type": "or|and|xor",
+            "optional": true,
+            "default": "or",
+            "help": "Specify the global multiple trigger Boolean condition"
           }
         ],
         "desc": "Configure OCLA trigger mode. Specify number of samples to capture. Configure trigger condition",
         "help": [
           "To configure triggering setting:",
           "  debugger config ",
-          "  -i {1 or 2} -m {pre-trigger|post-trigger|center-trigger|disable}",
-          "  -s {<number of samples}",
+          "  -i <n>",
+          "  -m {pre-trigger|post-trigger|center-trigger|disable}",
+          "  -s {number of samples}",
           "  -t {or|and|xor}"
         ],
         "arg": [0, 0]
       }
     },
     {
-      "config_channel": {
+      "add_trigger": {
         "option": [
           {
             "name": "cable",
@@ -654,24 +684,31 @@
             "help": "Specify the index of the device on the selected cable"
           },
           {
-            "name": "instance",
+            "name": "domain",
             "short": "i",
             "type": "int",
-            "optional": true,
-            "default" : 1,
-            "help": "OCLA instance number"
+            "optional": false,
+            "help": "Clock domain number"
           },
           {
-            "name": "channel",
-            "short": "c",
+            "name": "probe",
+            "short": "p",
             "optional": false,
             "type": "int",
-            "help": "Trigger channel"
+            "help": "Probe number"
+          },
+          {
+            "name": "signal",
+            "short": "s",
+            "type": "str",
+            "optional": false,
+            "help": "Signal name or index"
           },
           {
             "name": "type",
             "short": "t",
             "type": "edge|level|value_compare|disable",
+            "default": "edge",
             "optional": true,
             "help": "Trigger type"
           },
@@ -679,6 +716,7 @@
             "name": "event",
             "short": "e",
             "type": "rising|falling|either|high|low|equal|lesser|greater",
+            "default": "rising",
             "optional": true,
             "help": "Trigger event that associate to trigger type"
           },
@@ -686,8 +724,9 @@
             "name": "value",
             "short": "v",
             "type": "int",
+            "default": 0,
             "optional": true,
-            "help": "Trigger value that associate to trigger type when it is set to equal|lesser|greater"
+            "help": "Trigger compare value"
           },
           {
             "name": "compare_width",
@@ -696,22 +735,17 @@
             "default": 1,
             "optional": true,
             "help": "Trigger compare value width in bits"
-          },
-          {
-            "name": "probe",
-            "short": "p",
-            "type": "str",
-            "optional": false,
-            "help": "signal name"
           }
         ],
         "desc": "Configure a trigger channel, type and probe signal to monitor in a specified OCLA instance",
         "help": [
           "To configure triggering setting:",
-          "  debugger config_channel",
-          "  -i {1 or 2} -c <channel 1 to 4> -t {edge|level|value_compare|disable}",
+          "  debugger add_trigger",
+          "  -i <number> -p <number> -s <name/index>",
+          "  -t {edge|level|value_compare|disable}",
           "  -e {rising|falling|either|high|low|equal|lesser|greater}",
-          "  -v {compare value} -p <signal name>"
+          "  -v {value}",
+          "  -w {width}"
         ],
         "arg": [0, 0]
       }

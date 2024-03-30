@@ -1,4 +1,6 @@
 #include "OclaHelpers.h"
+#include <cctype>
+#include <algorithm>
 
 static std::map<ocla_trigger_mode, std::string>
     ocla_trigger_mode_to_string_map = {{CONTINUOUS, "disable"},
@@ -22,12 +24,38 @@ static std::map<ocla_trigger_event, std::string> trigger_event_to_string_map = {
     {VALUE_NONE, "value_none"}, {EQUAL, "equal"},   {LESSER, "lesser"},
     {GREATER, "greater"}};
 
+std::string CFG_toupper(const std::string& str) {
+    std::string result = str;
+    for (char& c : result) {
+        c = std::toupper(c);
+    }
+    return result;
+}
+
+bool CFG_type_event_sanity_check(std::string &type, std::string &event)
+{
+    static std::map<std::string, std::vector<std::string>> s_check_table{
+        {"edge", {"rising", "falling", "either"}},
+        {"level", {"high", "low"}},
+        {"value_compare", {"equal", "lesser", "greater"}}
+    };
+    
+    auto vec = s_check_table[type];
+    auto it = std::find(vec.begin(), vec.end(), event);
+
+    if (it != vec.end()) {
+        return true;
+    }
+
+    return false;
+}
+
 // helpers to convert enum to string and vice versa
 std::string convert_ocla_trigger_mode_to_string(ocla_trigger_mode mode,
                                                 std::string defval) {
   if (ocla_trigger_mode_to_string_map.find(mode) !=
       ocla_trigger_mode_to_string_map.end())
-    return ocla_trigger_mode_to_string_map[mode];
+    return CFG_toupper(ocla_trigger_mode_to_string_map[mode]);
   return defval;
 }
 
@@ -90,7 +118,7 @@ ocla_trigger_event convert_trigger_event(std::string event_string,
   // default if not found
   return defval;
 }
-
+#if 0
 std::vector<signal_info> generate_signal_descriptor(uint32_t width) {
   std::vector<signal_info> signals;
   for (uint32_t i = 0; i < width; i++) {
@@ -107,3 +135,4 @@ std::vector<signal_info> generate_signal_descriptor(
   }
   return signals;
 }
+#endif

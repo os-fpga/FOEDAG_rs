@@ -64,7 +64,11 @@ add_library(
   OclaHelpers.cpp
   OclaOpenocdAdapter.cpp
   OclaFstWaveformWriter.cpp
-  OclaMemorySession.cpp
+  OclaDebugSession.cpp
+  OclaInstance.cpp
+  OclaDomain.cpp
+  OclaProbe.cpp
+  OclaSignal.cpp
   ${LIBFST_SOURCE_DIR}/fstapi.c
   ${LIBFST_SOURCE_DIR}/lz4.c
   ${LIBFST_SOURCE_DIR}/fastlz.c

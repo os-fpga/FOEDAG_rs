@@ -1,233 +1,139 @@
 #include "Ocla.h"
 
-#include <algorithm>
-#include <sstream>
-
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 #include "OclaHelpers.h"
 #include "OclaIP.h"
 #include "OclaJtagAdapter.h"
-#include "OclaSession.h"
 #include "OclaWaveformWriter.h"
 
-#define OCLA_MAX_INSTANCE_COUNT (15)
-#define OCLA1_ADDR (0x03000000)
-#define OCLA2_ADDR (0x04000000)
-#define OCLA3_ADDR (0x05000000)
-#define OCLA_TYPE ("OCLA")
-#define OCLA_MAX_PROBE (1024)
-#define OCLA_MIN_TRIGGER_COUNT (4)
+OclaDebugSession Ocla::m_session{};
 
-static std::map<uint32_t, uint32_t> ocla_base_address = {
-    {1, OCLA1_ADDR}, {2, OCLA2_ADDR}, {3, OCLA3_ADDR}};
+Ocla::Ocla(OclaJtagAdapter* adapter, OclaWaveformWriter* writer)
+    : m_adapter(adapter), m_writer(writer) {}
 
-OclaIP Ocla::get_ocla_instance(uint32_t instance) {
-  CFG_ASSERT(ocla_base_address.find(instance) != ocla_base_address.end());
-  OclaIP ocla_ip{m_adapter, ocla_base_address[instance]};
-  CFG_ASSERT(ocla_ip.get_type() == OCLA_TYPE);
-  return ocla_ip;
-}
-
-std::map<uint32_t, OclaIP> Ocla::detect_ocla_instances() {
-  std::map<uint32_t, OclaIP> list;
-
-  for (auto& [i, baseaddr] : ocla_base_address) {
-    OclaIP ocla_ip{m_adapter, baseaddr};
-    if (ocla_ip.get_type() == OCLA_TYPE) {
-      auto trigger_count = ocla_ip.get_trigger_count();
-      if (trigger_count < OCLA_MIN_TRIGGER_COUNT) {
-        CFG_POST_WARNING("Invalid trigger count %d detected for instance %d",
-                         trigger_count, i);
-      } else {
-        list.insert(std::pair<uint32_t, OclaIP>(i, ocla_ip));
-      }
-    }
-  }
-
-  return list;
-}
-
-bool Ocla::get_instance_info(uint32_t base_addr,
-                             Ocla_INSTANCE_INFO& instance_info, uint32_t& idx) {
-  for (uint32_t i = 0; i < m_session->get_instance_count(); i++) {
-    auto ocla = m_session->get_instance_info(i);
-    if (ocla.base_addr == base_addr) {
-      instance_info = ocla;
-      idx = i;
-      return true;
-    }
-  }
-  return false;
-}
-
-std::vector<Ocla_PROBE_INFO> Ocla::get_probe_info(uint32_t base_addr) {
-  Ocla_INSTANCE_INFO inf{};
-  uint32_t idx;
-  if (get_instance_info(base_addr, inf, idx)) {
-    return m_session->get_probe_info(idx);
-  }
-  return {};
-}
-
-std::map<uint32_t, Ocla_PROBE_INFO> Ocla::find_probe_info_by_name(
-    uint32_t base_addr, std::string probe_name) {
-  std::map<uint32_t, Ocla_PROBE_INFO> list{};
-  uint32_t offset = 0;
-
-  for (const auto& probe_inf : get_probe_info(base_addr)) {
-    if (probe_inf.signal_name.find(probe_name) == 0) {
-      list.insert(std::make_pair(offset, probe_inf));
-    }
-    offset += probe_inf.bitwidth;
-  }
-
-  return list;
-}
-
-bool Ocla::find_probe_info_by_offset(uint32_t base_addr, uint32_t bit_offset,
-                                     Ocla_PROBE_INFO& output) {
-  uint32_t offset = 0;
-  for (const auto& probe_inf : get_probe_info(base_addr)) {
-    if (offset == bit_offset) {
-      output = probe_inf;
-      return true;
-    }
-    offset += probe_inf.bitwidth;
-  }
-  return false;
-}
-
-bool Ocla::validate() {
-  if (m_session->is_loaded()) {
-    auto instances = detect_ocla_instances();
-    if (instances.size() != m_session->get_instance_count()) return false;
-
-    for (const auto& [i, ocla_ip] : instances) {
-      Ocla_INSTANCE_INFO inf{};
-      uint32_t idx;
-      if (!get_instance_info(ocla_ip.get_base_addr(), inf, idx) ||
-          (inf.version != ocla_ip.get_version()) ||
-          (inf.type != ocla_ip.get_type()) || (inf.id != ocla_ip.get_id()) ||
-          (inf.num_probes != ocla_ip.get_number_of_probes()) ||
-          (inf.depth != ocla_ip.get_memory_depth())) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-Ocla::Ocla(OclaJtagAdapter* adapter, OclaSession* session,
-           OclaWaveformWriter* writer)
-    : m_adapter(adapter), m_session(session), m_writer(writer) {
-  CFG_ASSERT(m_adapter != nullptr);
-  CFG_ASSERT(m_session != nullptr);
-  CFG_ASSERT(m_writer != nullptr);
-}
-
-void Ocla::configure(uint32_t instance, std::string mode, std::string condition,
+void Ocla::configure(uint32_t domain, std::string mode, std::string condition,
                      uint32_t sample_size) {
-  if (!validate()) {
-    CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
+  CFG_ASSERT(m_adapter != nullptr);
+
+  if (!m_session.is_loaded()) {
+    CFG_POST_ERR("Debug session is not loaded.");
     return;
   }
 
-  auto ocla_ip = get_ocla_instance(instance);
-  auto depth = ocla_ip.get_memory_depth();
-  if (sample_size > depth) {
-    CFG_POST_ERR(
-        "Invalid sample size parameter (Sample size should be beween 0 and %d)",
-        depth);
+  OclaDomain *target = nullptr;
+
+  for (auto &elem : m_session.get_clock_domains()) {
+    if (elem.get_index() == domain) {
+      target = &elem;
+    }
+  }
+
+  if (!target) {
+    CFG_POST_ERR("Domain %d not found", domain);
     return;
   }
+
+  // todo: mem depth check for sampling size
 
   ocla_config cfg;
 
-  std::transform(condition.begin(), condition.end(), condition.begin(),
-                 ::toupper);
+  // std::transform(condition.begin(), condition.end(), condition.begin(),
+  //                ::toupper);
   cfg.enable_fix_sample_size = sample_size > 0 ? true : false;
   cfg.sample_size = sample_size;
   cfg.mode = convert_ocla_trigger_mode(mode);
-  cfg.condition = convert_trigger_condition(condition);
+  cfg.condition = convert_trigger_condition(CFG_toupper(condition));
 
-  ocla_ip.configure(cfg);
+  target->set_config(cfg);
+  
+  // todo: configure ip
 }
 
-void Ocla::configure_channel(uint32_t instance, uint32_t channel,
-                             std::string type, std::string event,
-                             uint32_t value, uint32_t compare_width,
-                             std::string probe) {
-  if (!validate()) {
-    CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
+void Ocla::add_trigger(uint32_t domain, uint32_t probe, std::string signal, std::string type,
+                         std::string event, uint32_t value,
+                         uint32_t compare_width)
+{
+  CFG_ASSERT(m_adapter != nullptr);
+
+  if (!m_session.is_loaded()) {
+    CFG_POST_MSG("Debug session is not loaded.");
     return;
   }
 
-  if (type == "edge") {
-    if (event != "rising" && event != "falling" && event != "either") {
-      CFG_POST_ERR("Invalid event parameter for edge trigger");
-      return;
-    }
-  } else if (type == "value_compare") {
-    if (event != "equal" && event != "lesser" && event != "greater") {
-      CFG_POST_ERR("Invalid event parameter for value compare trigger");
-      return;
-    }
-  } else if (type == "level") {
-    if (event != "high" && event != "low") {
-      CFG_POST_ERR("Invalid event parameter for level trigger");
-      return;
+  // sanity check for trigger type and event pair
+  if (!CFG_type_event_sanity_check(type, event)) {
+    CFG_POST_ERR("Invalid '%s' event for '%s' trigger", event.c_str(), type.c_str());
+    return;
+  }
+
+  OclaDomain *target = nullptr;
+
+  for (auto &elem : m_session.get_clock_domains()) {
+    if (elem.get_index() == domain) {
+      target = &elem;
     }
   }
 
-  auto ocla_ip = get_ocla_instance(instance);
+  if (!target) {
+    CFG_POST_ERR("clock domain %d not found", domain);
+    return;
+  }
+
+  OclaProbe *target_probe = nullptr;
+
+  for (auto &elem : target->get_probes()) {
+    if (elem.get_index() == probe) {
+      target_probe = &elem;
+     }
+  }
+
+  if (!target_probe) {
+    CFG_POST_ERR("Probe %d not found", probe);
+    return;
+  }
+
   bool status = false;
-  uint64_t probe_num = CFG_convert_string_to_u64(probe, false, &status);
-  if (!status) {
-    if (!m_session->is_loaded()) {
-      CFG_POST_ERR("Probe name cannot be used when no user design loaded");
-      return;
+  uint32_t signal_index = (uint32_t)CFG_convert_string_to_u64(signal, false, &status);
+  OclaSignal *target_signal = nullptr;
+
+  for (auto &elem : target_probe->get_signals()) {
+    if (status) {
+      if (elem.get_index() == signal_index) {
+        target_signal = &elem;
+      }
+    } else {
+      if (elem.get_name() == signal) {
+        target_signal = &elem;
+      }
     }
-    // translate probe name to probe index
-    auto probe_list = find_probe_info_by_name(ocla_ip.get_base_addr(), probe);
-    if (probe_list.empty()) {
-      CFG_POST_ERR("Invalid probe name '%s'", probe.c_str());
-      return;
-    }
-    probe_num = probe_list.begin()->first;
-    CFG_POST_MSG("Selected probe '%s' at bit pos %u",
-                 probe_list.begin()->second.signal_name.c_str(), probe_num);
   }
 
-  uint32_t max_probes = ocla_ip.get_number_of_probes();
-  if (max_probes > OCLA_MAX_PROBE) {
-    max_probes = OCLA_MAX_PROBE;
-  }
-
-  if (probe_num >= max_probes) {
-    CFG_POST_ERR(
-        "Invalid probe parameter (Probe number should be between 0 and %d)",
-        max_probes - 1);
+  if (!target_signal) {
+    CFG_POST_ERR("Signal '%s' not found", signal.c_str());
     return;
   }
 
-  ocla_trigger_config trig_cfg;
+  // todo: verify hardware trigger slot
 
-  trig_cfg.probe_num = (uint32_t)probe_num;
-  trig_cfg.type = convert_trigger_type(type);
-  trig_cfg.event = convert_trigger_event(event);
-  trig_cfg.value = value;
-  trig_cfg.compare_width = compare_width;
+  // add trigger to debug session
+  oc_trigger_t trig{};
 
-  ocla_ip.configure_channel(channel - 1, trig_cfg);
+  trig.instance_index = target_probe->get_instance_index();
+  trig.signal = "Probe " + std::to_string(probe) + "/" + target_signal->get_name() + " (#" + std::to_string(target_signal->get_index()) + ")";
+  trig.cfg.probe_num = target_signal->get_pos();
+  trig.cfg.type = convert_trigger_type(type);
+  trig.cfg.event = convert_trigger_event(event);
+  trig.cfg.value = value;
+  trig.cfg.compare_width = compare_width;
+
+  target->add_trigger(trig);
+
+  // todo: configure ip
 }
 
+#if 0
 bool Ocla::start(uint32_t instance, uint32_t timeout,
                  std::string output_filepath) {
-  if (!validate()) {
-    CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
-    return false;
-  }
-
   uint32_t countdown = timeout;
   auto ocla_ip = get_ocla_instance(instance);
   ocla_ip.start();
@@ -260,204 +166,169 @@ bool Ocla::start(uint32_t instance, uint32_t timeout,
   }
   return true;
 }
+#endif
 
-std::string Ocla::show_info() {
-  std::ostringstream ss;
-  int count = 0;
-  bool is_valid = false;
+void Ocla::show_info() {
+  CFG_ASSERT(m_adapter != nullptr);
 
-  if (m_session->is_loaded()) {
-    is_valid = validate();
-    if (!is_valid)
-      CFG_POST_ERR("OCLA info not matched with the detected OCLA IP");
-    ss << "User design loaded   : " << m_session->get_bitasm_filepath()
-       << std::endl;
+  if (!m_session.is_loaded()) {
+    CFG_POST_MSG("Debug session is not loaded.");
+    return;
   }
 
-  for (auto& [idx, ocla_ip] : detect_ocla_instances()) {
-    uint32_t depth = ocla_ip.get_memory_depth();
-    uint32_t base_addr = ocla_ip.get_base_addr();
-    ss << "OCLA " << idx << std::setfill('0') << std::hex << std::endl
-       << "  Base address       : 0x" << std::setw(8) << base_addr << std::endl
-       << "  ID                 : 0x" << std::setw(8) << ocla_ip.get_id()
-       << std::endl
-       << "  Type               : '" << ocla_ip.get_type() << "'" << std::endl
-       << "  Version            : 0x" << std::setw(8) << ocla_ip.get_version()
-       << std::endl
-       << "  Probes             : " << std::dec
-       << ocla_ip.get_number_of_probes() << std::endl
-       << "  Memory depth       : " << depth << std::endl
-       << "  DA status          : " << ocla_ip.get_status() << std::endl;
+  CFG_POST_MSG("User design loaded: %s", m_session.get_filepath().c_str());
+  
+  for (auto &domain : m_session.get_clock_domains()) {
+    CFG_POST_MSG("Clock Domain %d:", domain.get_index());
+    for (auto &probe : domain.get_probes()) {
+      CFG_POST_MSG("  Probe %d", probe.get_index());
+      for (auto &sig : probe.get_signals()) {
+        CFG_POST_MSG("    #%d: %s", sig.get_index(), sig.get_name().c_str());
+      }
+    }
+
+    ocla_config cfg = domain.get_config();
+
+    CFG_POST_MSG("  OCLA Configuration");
+    CFG_POST_MSG("    Mode: %s", convert_ocla_trigger_mode_to_string(cfg.mode).c_str());
+    CFG_POST_MSG("    Trigger Condition: %s", convert_trigger_condition_to_string(cfg.condition).c_str());
+    CFG_POST_MSG("    Enable Fixed Sample Size: %s", cfg.enable_fix_sample_size ? "TRUE" : "FALSE");
+    // todo: show mem. depth when fns is disabled
+    CFG_POST_MSG("    Sample Size: %d", cfg.sample_size);
+
+    auto triggers = domain.get_triggers(); 
+
+    CFG_POST_MSG("  OCLA Trigger Configuration");
+    if (triggers.size() > 0) {
+      uint32_t i = 1;
+      for (auto &trig : triggers) {
+        switch (trig.cfg.type) {
+          case EDGE:
+          case LEVEL:
+            CFG_POST_MSG("    #%d: signal=%s; mode=%s_%s", i, trig.signal.c_str(), 
+              convert_trigger_event_to_string(trig.cfg.event).c_str(), 
+              convert_trigger_type_to_string(trig.cfg.type).c_str());
+            break;
+          case VALUE_COMPARE:
+            CFG_POST_MSG("    #%d: signal=%s; mode=%s; compare_operator=%s; compare_value=0x%x; compare_width=%d",
+              i, trig.signal.c_str(), convert_trigger_type_to_string(trig.cfg.type).c_str(), 
+              convert_trigger_event_to_string(trig.cfg.event).c_str(), 
+              trig.cfg.value, trig.cfg.compare_width);
+            break;
+          case TRIGGER_NONE:
+            break;
+        }
+        ++i;
+      }
+    } else {
+      CFG_POST_MSG("    (n/a)");
+    }
+
+    CFG_POST_MSG(" ");
+  }
+}
+
+void Ocla::show_instance_info() {
+  CFG_ASSERT(m_adapter != nullptr);
+
+  if (!m_session.is_loaded()) {
+    CFG_POST_MSG("Debug session is not loaded.");
+    return;
+  }
+
+  CFG_POST_MSG("User design loaded   : %s", m_session.get_filepath().c_str());
+
+  for (auto const &instance : m_session.get_instances()) {
+    OclaIP ocla_ip{m_adapter, instance.get_baseaddr()};
+
+    CFG_POST_MSG("OCLA %d", instance.get_index() + 1);
+    CFG_POST_MSG("  Base address       : 0x%08x", instance.get_baseaddr());
+    CFG_POST_MSG("  ID                 : 0x%08x", ocla_ip.get_id());
+    CFG_POST_MSG("  Type               : '%s'", ocla_ip.get_type().c_str());
+    CFG_POST_MSG("  Version            : 0x%08x", ocla_ip.get_version());
+    CFG_POST_MSG("  No. of probes      : %d", ocla_ip.get_number_of_probes());
+    CFG_POST_MSG("  Memory depth       : %d", ocla_ip.get_memory_depth());
+    CFG_POST_MSG("  DA status          : %d", ocla_ip.get_status());
 
     auto cfg = ocla_ip.get_config();
+    CFG_POST_MSG("  No. of samples     : %d", (cfg.enable_fix_sample_size ? cfg.sample_size : ocla_ip.get_memory_depth()));
+    CFG_POST_MSG("  Trigger mode       : %s", convert_ocla_trigger_mode_to_string(cfg.mode).c_str());
+    CFG_POST_MSG("  Trigger condition  : %s", convert_trigger_condition_to_string(cfg.condition).c_str());
+    CFG_POST_MSG("  Trigger");
 
-    uint32_t ns = cfg.enable_fix_sample_size ? cfg.sample_size : depth;
-
-    ss << "  No. of samples     : " << ns << std::endl
-       << "  Trigger mode       : "
-       << convert_ocla_trigger_mode_to_string(cfg.mode) << std::endl
-       << "  Trigger condition  : "
-       << convert_trigger_condition_to_string(cfg.condition) << std::endl
-       << "  Trigger " << std::endl
-       << std::setfill(' ');
-
-    for (uint32_t ch = 1; ch < 5; ch++) {
-      auto trig_cfg = ocla_ip.get_channel_config(ch - 1);
-
-      std::string probe_name = std::to_string(trig_cfg.probe_num);
-      if (m_session->is_loaded()) {
-        // try translate probe index to probe name
-        Ocla_PROBE_INFO probe_inf{};
-        if (find_probe_info_by_offset(ocla_ip.get_base_addr(),
-                                      trig_cfg.probe_num, probe_inf)) {
-          probe_name += "(" + probe_inf.signal_name + ")";
-        }
-      }
-
+    for (uint32_t ch = 0; ch < ocla_ip.get_trigger_count(); ch++) {
+      auto trig_cfg = ocla_ip.get_channel_config(ch);
       switch (trig_cfg.type) {
         case EDGE:
         case LEVEL:
-          ss << "    Channel " << ch << "        : "
-             << "probe=" << probe_name << "; "
-             << "mode=" << convert_trigger_event_to_string(trig_cfg.event)
-             << "_" << convert_trigger_type_to_string(trig_cfg.type)
-             << std::endl;
+          CFG_POST_MSG("    Channel %d        : probe=%d; mode=%s_%s", ch + 1, trig_cfg.probe_num, 
+            convert_trigger_event_to_string(trig_cfg.event).c_str(), 
+            convert_trigger_type_to_string(trig_cfg.type).c_str());
           break;
         case VALUE_COMPARE:
-          ss << "    Channel " << ch << "        : "
-             << "probe=" << probe_name << "; "
-             << "mode=" << convert_trigger_type_to_string(trig_cfg.type)
-             << "; compare_operator="
-             << convert_trigger_event_to_string(trig_cfg.event)
-             << "; compare_value=0x" << std::hex << trig_cfg.value << std::dec
-             << "; compare_width=" << trig_cfg.compare_width << std::endl;
+          CFG_POST_MSG("    Channel %d        : probe=%d; mode=%s; compare_operator=%s; compare_value=0x%x; compare_width=%d",
+            ch + 1, trig_cfg.probe_num, convert_trigger_type_to_string(trig_cfg.type).c_str(), 
+            convert_trigger_event_to_string(trig_cfg.event).c_str(), 
+            trig_cfg.value, trig_cfg.compare_width);
           break;
         case TRIGGER_NONE:
-          ss << "    Channel " << ch << "        : "
-             << convert_trigger_type_to_string(trig_cfg.type) << std::endl;
+          CFG_POST_MSG("    Channel %d        : %s", ch + 1, convert_trigger_type_to_string(trig_cfg.type).c_str());
           break;
       }
     }
 
-    if (m_session->is_loaded() && is_valid) {
-      ss << "  Probe Table" << std::endl;
+    auto probes = m_session.get_probes(instance.get_index());
+    if (probes.size() > 0) {
+      // print signal table
+      CFG_POST_MSG("  Signal Table");
+      CFG_POST_MSG("  +-------+-------------------------------------+--------------+--------------+");
+      CFG_POST_MSG("  | Index | Signal name                         | Bit pos      | Bitwidth     |");
+      CFG_POST_MSG("  +-------+-------------------------------------+--------------+--------------+");
 
-      auto probes = get_probe_info(base_addr);
-      if (!probes.empty()) {
-        ss << "  "
-              "+-------+-------------------------------------+--------------+--"
-              "------------+"
-           << std::endl
-           << "  | Index | Probe name                          | Bit pos      "
-              "| No. of bits  |"
-           << std::endl
-           << "  "
-              "+-------+-------------------------------------+--------------+--"
-              "------------+"
-           << std::endl;
-
-        uint32_t i = 1;
-        uint32_t bitoffset = 0;
-
-        for (auto p : probes) {
-          ss << "  | " << std::left << std::setw(5) << i << " | "
-             << std::setw(35) << p.signal_name << " | " << std::setw(12)
-             << bitoffset << " | " << std::setw(12) << p.bitwidth << " | "
-             << std::right << std::endl;
-          ++i;
-          bitoffset += p.bitwidth;
+      for (auto &probe : probes) {
+        for (auto &sig : probe.get_signals()) {
+          CFG_POST_MSG("  | %5d | %-35s | %-12d | %-12d |", sig.get_index(), sig.get_name().c_str(), sig.get_pos(), sig.get_bitwidth());
         }
-
-        ss << "  "
-              "+-------+-------------------------------------+--------------+--"
-              "------------+"
-           << std::endl;
-      } else {
-        ss << "   No probe info" << std::endl;
       }
+
+      CFG_POST_MSG("  +-------+-------------------------------------+--------------+--------------+");
     }
-    ++count;
-  }
 
-  if (count == 0) ss << "No OCLA IP detected" << std::endl;
-  return ss.str();
+    CFG_POST_MSG(" ");
+  }
 }
 
-std::string Ocla::show_session_info() {
-  std::ostringstream ss;
-
-  if (!m_session->is_loaded()) {
-    CFG_POST_ERR("No session is loaded");
-    return "";
-  }
-
-  ss << "Session Info" << std::endl;
-
-  for (uint32_t i = 0; i < m_session->get_instance_count(); i++) {
-    auto ocla = m_session->get_instance_info(i);
-    ss << "  OCLA " << (i + 1) << std::endl
-       << "    base_addr " << std::hex << std::showbase << ocla.base_addr
-       << std::endl
-       << "    type '" << ocla.type << "'" << std::endl
-       << "    version " << std::hex << std::showbase << ocla.version
-       << std::endl
-       << "    id " << std::hex << std::showbase << ocla.id << std::endl
-       << "    depth " << std::dec << ocla.depth << std::endl
-       << "    num_probes " << std::dec << ocla.num_probes << std::endl
-       << "    num_trigger_inputs " << std::dec << ocla.num_trigger_inputs
-       << std::endl
-       << "    num_probe_width " << std::dec << ocla.probe_width << std::endl
-       << "    axi_data_width " << std::dec << ocla.axi_addr_width << std::endl
-       << "    axi_data_width " << std::dec << ocla.axi_addr_width << std::endl
-       << "    Probes" << std::endl;
-    auto probes = m_session->get_probe_info(i);
-    uint32_t n = 1;
-    for (const auto& p : probes) {
-      ss << "      Probe " << n << std::endl
-         << "        name = '" << p.signal_name << "'" << std::endl
-         << "        bitwidth = " << p.bitwidth << std::endl
-         << "        value = " << p.value << std::endl
-         << "        type = " << p.type << std::endl;
-      ++n;
-    }
-  }
-
-  return ss.str();
+uint32_t Ocla::show_status(uint32_t instance) {
+  CFG_ASSERT(m_adapter != nullptr);
+  // OclaIP ocla_ip = get_ocla_instance(instance);
+  // std::ostringstream ss;
+  // ss << (uint32_t)ocla_ip.get_status();
+  // return ss.str();
+  return 0;
 }
 
-std::string Ocla::show_status(uint32_t instance) {
-  OclaIP ocla_ip = get_ocla_instance(instance);
-  std::ostringstream ss;
-  ss << (uint32_t)ocla_ip.get_status();
-  return ss.str();
-}
+void Ocla::start_session(std::string filepath) {
+  CFG_ASSERT(m_adapter != nullptr);
 
-void Ocla::start_session(std::string bitasm_filepath) {
-  if (m_session->is_loaded()) {
-    CFG_POST_ERR("Session is already loaded");
+  if (m_session.is_loaded()) {
+    CFG_POST_ERR("Debug session is already loaded");
     return;
   }
 
-  if (!std::filesystem::exists(bitasm_filepath)) {
-    CFG_POST_ERR("File %s not found", bitasm_filepath.c_str());
+  if (!std::filesystem::exists(filepath)) {
+    CFG_POST_ERR("File '%s' not found", filepath.c_str());
     return;
   }
 
-  m_session->load(bitasm_filepath);
-  uint32_t count = m_session->get_instance_count();
-  if (count > OCLA_MAX_INSTANCE_COUNT) {
-    CFG_POST_ERR(
-        "Found %u OCLA instances in bit assember file but expect max of 2 "
-        "instances",
-        count);
-    m_session->unload();
-  }
+  m_session.load(filepath);
+  // todo: show loading debug info warning/error
 }
 
 void Ocla::stop_session() {
-  if (!m_session->is_loaded()) {
-    CFG_POST_ERR("No session is loaded");
+  CFG_ASSERT(m_adapter != nullptr);
+  if (!m_session.is_loaded()) {
+    CFG_POST_ERR("No debug session is loaded");
     return;
   }
-  m_session->unload();
+  m_session.unload();
 }
