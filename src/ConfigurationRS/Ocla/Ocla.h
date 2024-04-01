@@ -41,12 +41,11 @@ class Ocla {
 
   void program_ip(OclaIP &ocla_ip, ocla_config &config,
                   std::vector<ocla_trigger_config> &triggers);
-  bool get_domain(uint32_t domain_id, OclaDomain *&domain);
-  bool get_domain_probe_signal(uint32_t domain_id, uint32_t probe_id,
-                               std::string signal_name, OclaDomain *&domain,
-                               OclaProbe *&probe, OclaSignal *&signal);
-  bool get_session(uint32_t session_id, OclaDebugSession *&session);
-  bool get_instance(uint32_t domain_id, OclaInstance *&instance);
+  bool get_hier_objects(uint32_t session_id, OclaDebugSession *&session,
+                        uint32_t domain_id = 0, OclaDomain **domain = nullptr,
+                        uint32_t probe_id = 0, OclaProbe **probe = nullptr,
+                        std::string signal_name = "",
+                        OclaSignal **signal = nullptr);
 };
 
 void Ocla_entry(CFGCommon_ARG *cmdarg);
