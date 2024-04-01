@@ -34,4 +34,4 @@ void OclaDomain::set_config(ocla_config& config) { m_config = config; }
 
 void OclaDomain::add_trigger(oc_trigger_t& trig) { m_triggers.push_back(trig); }
 
-std::vector<oc_trigger_t> OclaDomain::get_triggers() { return m_triggers; }
+std::vector<oc_trigger_t>& OclaDomain::get_triggers() { return m_triggers; }

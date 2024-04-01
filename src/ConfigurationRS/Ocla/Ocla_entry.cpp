@@ -72,20 +72,39 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       ocla.add_trigger(parms->domain, parms->probe, parms->signal, parms->type,
                        parms->event, parms->value, parms->compare_width);
     }
+  } else if (subcmd == "edit_trigger") {
+    auto parms =
+        static_cast<const CFGArg_DEBUGGER_EDIT_TRIGGER*>(arg->get_sub_arg());
+    if (Ocla_select_device(adapter, hardware_manager, parms->cable,
+                           parms->device)) {
+      ocla.edit_trigger(parms->domain, parms->index, parms->probe,
+                        parms->signal, parms->type, parms->event, parms->value,
+                        parms->compare_width);
+    }
+  } else if (subcmd == "remove_trigger") {
+    auto parms =
+        static_cast<const CFGArg_DEBUGGER_REMOVE_TRIGGER*>(arg->get_sub_arg());
+    if (Ocla_select_device(adapter, hardware_manager, parms->cable,
+                           parms->device)) {
+      ocla.remove_trigger(parms->domain, parms->index);
+    }
   } else if (subcmd == "start") {
     auto parms = static_cast<const CFGArg_DEBUGGER_START*>(arg->get_sub_arg());
     if (Ocla_select_device(adapter, hardware_manager, parms->cable,
                            parms->device)) {
-      // if (ocla.start(parms->instance, parms->timeout, parms->output)) {
-      //   CFG_POST_MSG("Written %s successfully.", parms->output.c_str());
-      //   Ocla_launch_gtkwave(parms->output, cmdarg->binPath);
-      // }
+      if (ocla.start(parms->domain)) {
+        // CFG_POST_MSG("Written %s successfully.", parms->output.c_str());
+        // Ocla_launch_gtkwave(parms->output, cmdarg->binPath);
+      }
     }
   } else if (subcmd == "status") {
     auto parms = static_cast<const CFGArg_DEBUGGER_STATUS*>(arg->get_sub_arg());
     if (Ocla_select_device(adapter, hardware_manager, parms->cable,
                            parms->device)) {
-      cmdarg->tclOutput = std::to_string(ocla.show_status(parms->domain));
+      uint32_t status = 0;
+      if (ocla.get_status(parms->domain, status)) {
+        cmdarg->tclOutput = std::to_string(status);
+      }
     }
   } else if (subcmd == "show_waveform") {
     auto parms =

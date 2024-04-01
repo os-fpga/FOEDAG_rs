@@ -17,7 +17,7 @@ class OclaDebugSession {
   std::string m_filepath;
   bool m_loaded;
   OclaSignal parse_signal(std::string signal_str);
-  void parse(std::string ocla_str);
+  bool parse(std::string ocla_str);
 
  public:
   OclaDebugSession();
@@ -27,7 +27,7 @@ class OclaDebugSession {
   std::vector<OclaProbe> get_probes(uint32_t instance_index);
   std::string get_filepath() const;
   bool is_loaded() const;
-  void load(std::string filepath);
+  bool load(std::string filepath, std::vector<std::string>& error_messages);
   void unload();
 };
 

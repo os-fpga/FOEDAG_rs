@@ -12,9 +12,11 @@
 enum oc_domain_type_t { NATIVE, AXI };
 
 struct oc_trigger_t {
-  uint32_t instance_index;
-  std::string signal;
   ocla_trigger_config cfg;
+  uint32_t instance_index;
+  uint32_t probe_id;
+  uint32_t signal_id;
+  std::string signal_name;
 };
 
 class OclaDomain {
@@ -39,7 +41,7 @@ class OclaDomain {
   ocla_config get_config() const;
   void set_config(ocla_config& config);
   void add_trigger(oc_trigger_t& trig);
-  std::vector<oc_trigger_t> get_triggers();
+  std::vector<oc_trigger_t>& get_triggers();
 };
 
 #endif  //__OCLADOMAIN_H__

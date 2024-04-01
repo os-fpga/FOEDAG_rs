@@ -44,17 +44,27 @@ std::vector<OclaProbe> OclaDebugSession::get_probes(uint32_t instance_index) {
   return probes;
 }
 
-void OclaDebugSession::load(std::string filepath) {
+bool OclaDebugSession::load(std::string filepath,
+                            std::vector<std::string> &error_messages) {
   if (m_loaded) {
     // force unload
     unload();
   }
 
   std::string ocla_str = BitAssembler_MGR::get_ocla_design(filepath);
-  CFG_ASSERT_MSG(!ocla_str.empty(), "No OCLA info found");
-  parse(ocla_str);
+  if (ocla_str.empty()) {
+    error_messages.push_back("OCLA debug information not found");
+    return false;
+  }
+
+  if (!parse(ocla_str)) {
+    error_messages.push_back("Parsing OCLA debug information failed");
+    return false;
+  }
+
   m_filepath = filepath;
   m_loaded = true;
+  return true;
 }
 
 void OclaDebugSession::unload() {
@@ -63,7 +73,8 @@ void OclaDebugSession::unload() {
   m_loaded = false;
 }
 
-void OclaDebugSession::parse(std::string ocla_str) {
+bool OclaDebugSession::parse(std::string ocla_str) {
+  bool res = false;
   try {
     nlohmann::json json = nlohmann::json::parse(ocla_str);
     nlohmann::json ocla_debug_subsystem = json.at("ocla_debug_subsystem");
@@ -150,9 +161,12 @@ void OclaDebugSession::parse(std::string ocla_str) {
         m_clock_domains.push_back(elem);
       }
     }
+    res = true;
   } catch (const nlohmann::detail::exception &e) {
     CFG_ASSERT_MSG(false, e.what());
   }
+
+  return res;
 }
 
 OclaSignal OclaDebugSession::parse_signal(std::string signal_str) {

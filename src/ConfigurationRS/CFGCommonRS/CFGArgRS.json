@@ -341,7 +341,7 @@
             "type": "str",
             "optional": true,
             "default" : "1",
-            "help": "Specify the index of the cable"
+            "help": "Cable name or index"
           },
           {
             "name": "device",
@@ -349,14 +349,14 @@
             "type": "int",
             "optional": true,
             "default" : 1,
-            "help": "Specify the index of the device on the selected cable"
+            "help": "Device index"
           }
         ],
         "hidden": true,
-        "desc": "For debugging. Show all of the physical OCLA instances information.",
+        "desc": "For debugging. Show the physical OCLA instance information.",
         "help": [
-          "To show all OCLA instances information",
-          "  debugger show_instance"
+          "To show OCLA instance information:",
+          "  debugger show_instance -b {cable name/index} -d {device index}"
         ],
         "arg": [0, 0]
       }
@@ -370,7 +370,7 @@
             "type": "str",
             "optional": true,
             "default" : "1",
-            "help": "Specify the index of the cable"
+            "help": "Cable name or index"
           },
           {
             "name": "device",
@@ -378,20 +378,20 @@
             "type": "int",
             "optional": true,
             "default" : 1,
-            "help": "Specify the index of the device on the selected cable"
+            "help": "Device index"
           },
           {
             "name": "domain",
-            "short": "i",
+            "short": "n",
             "type": "int",
             "optional": false,
-            "help": "Specify clock domain number"
+            "help": "Clock domain ID"
           }
         ],
-        "desc": "Show OCLA status.",
+        "desc": "To query the clock domain sampling status.",
         "help": [
-          "To show the OCLA status",
-          "  debugger status -i {number}"
+          "To query the clock domain:",
+          "  debugger status -n <clock domain id>"
         ],
         "arg": [0, 0]
       }
@@ -405,7 +405,7 @@
             "type": "str",
             "optional": true,
             "default" : "1",
-            "help": "Specify the index of the cable"
+            "help": "Cable name or index"
           },
           {
             "name": "device",
@@ -413,37 +413,20 @@
             "type": "int",
             "optional": true,
             "default" : 1,
-            "help": "Specify the index of the device on the selected cable"
+            "help": "Device index"
           },
           {
-            "name": "instance",
-            "short": "i",
+            "name": "domain",
+            "short": "n",
             "type": "int",
-            "default" : 1,
-            "optional": true,
-            "help": "Specify the index of the OCLA instance to configure. Valid value is 1 or 2"
-          },
-          {
-            "name": "timeout",
-            "short": "t",
-            "type": "int",
-            "default" : 0,
-            "optional": true,
-            "help": "Command timeout in second. Default is 0 seconds which disables command timeout"
-          },
-          {
-            "name": "output",
-            "short": "o",
-            "type": "str",
-            "default" : "/tmp/output.fst",
-            "optional": true,
-            "help": "Specific the filepath to write the output to. If not specified, a default filepath will be chosen"
+            "optional": false,
+            "help": "Clock domain ID"
           }
         ],
-        "desc": "Arm the OCLA. It will begin sampling when trigger condition is met.",
+        "desc": "To start the OCLA debug subsystem of a clock domain to capture signal samples.",
         "help": [
-          "Arm the OCLA/debugger",
-          "  debugger start -i {1 or 2} -t {timeout in second} -o {output filepath}"
+          "To start the debug subsystem:",
+          "  debugger start -n <clock domain id>"
         ],
         "arg": [0, 0]
       }
@@ -514,7 +497,7 @@
             "type": "str",
             "optional": true,
             "default" : "1",
-            "help": "Specify the index of the cable"
+            "help": "Cable name or index"
           },
           {
             "name": "device",
@@ -522,14 +505,14 @@
             "type": "int",
             "optional": true,
             "default" : 1,
-            "help": "Specify the index of the device on the selected cable"
+            "help": "Device index"
           },
           {
             "name": "addr",
             "short": "a",
             "type": "int",
             "optional": false,
-            "help": "Specify address to read"
+            "help": "Register address to read"
           },
           {
             "name": "times",
@@ -537,7 +520,7 @@
             "type": "int",
             "default" : 1,
             "optional": true,
-            "help": "Specify the number of time to read"
+            "help": "Number of times to read"
           },
           {
             "name": "incr",
@@ -545,13 +528,14 @@
             "type": "int",
             "default" : 0,
             "optional": true,
-            "help": "Specify the number to advance the address after each read"
+            "help": "Number to advance the address after each read"
           }
         ],
         "hidden": true,
-        "desc": "For software and IP debugging.",
+        "desc": "For software and IP debugging. To read the OCLA instance registers.",
         "help": [
-          "For software and IP debugging"
+          "To read a register:-",
+          "  debugger read -b {cable name/index} -d {device index} -a <regaddr> -t <times> -i <incr. by>"
         ],
         "arg": [0, 0]
       }
@@ -565,7 +549,7 @@
             "type": "str",
             "optional": true,
             "default" : "1",
-            "help": "Specify the index of the cable"
+            "help": "Cable name or index"
           },
           {
             "name": "device",
@@ -573,27 +557,28 @@
             "type": "int",
             "optional": true,
             "default" : 1,
-            "help": "Specify the index of the device on the selected cable"
+            "help": "Device index"
           },
           {
             "name": "addr",
             "short": "a",
             "type": "int",
             "optional": false,
-            "help": "Specify address to write"
+            "help": "Register address to write"
           },
           {
             "name": "value",
             "short": "v",
             "type": "int",
             "optional": false,
-            "help": "Specify the value write"
+            "help": "Value to write"
           }
         ],
         "hidden": true,
-        "desc": "For software and IP debugging.",
+        "desc": "For software and IP debugging. To write the OCLA instance registers.",
         "help": [
-          "For software and IP debugging"
+          "To write a register:-",
+          "  debugger write -b {cable name/index} -d {device index} -a <regaddr> -v <value>"
         ],
         "arg": [0, 0]
       }
@@ -607,7 +592,7 @@
             "type": "str",
             "optional": true,
             "default" : "1",
-            "help": "Specify the index or name of the cable"
+            "help": "Cable name or index"
           },
           {
             "name": "device",
@@ -615,14 +600,14 @@
             "type": "int",
             "optional": true,
             "default" : 1,
-            "help": "Specify the index of the device on the selected cable"
+            "help": "Device index"
           },
           {
             "name": "domain",
-            "short": "i",
+            "short": "n",
             "type": "int",
             "optional": false,
-            "help": "Specify index of the clock domain"
+            "help": "Clock domain ID"
           },
           {
             "name": "mode",
@@ -630,7 +615,7 @@
             "optional": true,
             "default": "pre-trigger",
             "type": "pre-trigger|post-trigger|center-trigger|disable",
-            "help": "Specify the trigger mode"
+            "help": "Trigger mode"
           },
           {
             "name": "sample_size",
@@ -638,10 +623,7 @@
             "type": "int",
             "optional": true,
             "default": 0,
-            "help": [
-              "Specify the fixed number of samples data to acquire",
-              "Set sample_size to 0 to use the design time depth parameter as sample size"
-            ]
+            "help": "Sample size to acquire (set to 0 to use memory depth as sample size)"
           },
           {
             "name": "trigger_condition",
@@ -649,16 +631,16 @@
             "type": "or|and|xor",
             "optional": true,
             "default": "or",
-            "help": "Specify the global multiple trigger Boolean condition"
+            "help": "Multiple trigger Boolean condition"
           }
         ],
-        "desc": "Configure OCLA trigger mode. Specify number of samples to capture. Configure trigger condition",
+        "desc": "To configure the global operation modes of a clock domain.",
         "help": [
-          "To configure triggering setting:",
+          "To configure a clock domain:",
           "  debugger config ",
-          "  -i <n>",
+          "  -n <clock domain id>",
           "  -m {pre-trigger|post-trigger|center-trigger|disable}",
-          "  -s {number of samples}",
+          "  -s {size}",
           "  -t {or|and|xor}"
         ],
         "arg": [0, 0]
@@ -673,7 +655,7 @@
             "type": "str",
             "optional": true,
             "default" : "1",
-            "help": "Specify the index of the cable"
+            "help": "Cable name or index"
           },
           {
             "name": "device",
@@ -681,21 +663,21 @@
             "type": "int",
             "optional": true,
             "default" : 1,
-            "help": "Specify the index of the device on the selected cable"
+            "help": "Device index"
           },
           {
             "name": "domain",
-            "short": "i",
+            "short": "n",
             "type": "int",
             "optional": false,
-            "help": "Clock domain number"
+            "help": "Clock domain ID"
           },
           {
             "name": "probe",
             "short": "p",
             "optional": false,
             "type": "int",
-            "help": "Probe number"
+            "help": "Probe ID"
           },
           {
             "name": "signal",
@@ -718,7 +700,7 @@
             "type": "rising|falling|either|high|low|equal|lesser|greater",
             "default": "rising",
             "optional": true,
-            "help": "Trigger event that associate to trigger type"
+            "help": "Trigger event associated with the trigger type"
           },
           {
             "name": "value",
@@ -726,7 +708,7 @@
             "type": "int",
             "default": 0,
             "optional": true,
-            "help": "Trigger compare value"
+            "help": "Compare value"
           },
           {
             "name": "compare_width",
@@ -734,20 +716,160 @@
             "type": "int",
             "default": 1,
             "optional": true,
-            "help": "Trigger compare value width in bits"
+            "help": "Compare value width (no. of bits)"
           }
         ],
-        "desc": "Configure a trigger channel, type and probe signal to monitor in a specified OCLA instance",
+        "desc": "To add a trigger configuration into a clock domain.",
         "help": [
-          "To configure triggering setting:",
+          "To add a trigger configuration:",
           "  debugger add_trigger",
-          "  -i <number> -p <number> -s <name/index>",
+          "  -n <clock domain id>",
+          "  -p <probe id>",
+          "  -s <signal name/index>",
           "  -t {edge|level|value_compare|disable}",
           "  -e {rising|falling|either|high|low|equal|lesser|greater}",
           "  -v {value}",
           "  -w {width}"
         ],
         "arg": [0, 0]
+      }
+    },
+    {
+      "edit_trigger": {
+        "option": [
+          {
+            "name": "cable",
+            "short": "b",
+            "type": "str",
+            "optional": true,
+            "default" : "1",
+            "help": "Cable name or index"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Device index"
+          },
+          {
+            "name": "domain",
+            "short": "n",
+            "type": "int",
+            "optional": false,
+            "help": "Clock domain ID"
+          },
+          {
+            "name": "index",
+            "short": "i",
+            "type": "int",
+            "optional": false,
+            "help": "Trigger entry index to modify"
+          },
+          {
+            "name": "probe",
+            "short": "p",
+            "optional": false,
+            "type": "int",
+            "help": "Probe ID"
+          },
+          {
+            "name": "signal",
+            "short": "s",
+            "type": "str",
+            "optional": false,
+            "help": "Signal name or index"
+          },
+          {
+            "name": "type",
+            "short": "t",
+            "type": "edge|level|value_compare|disable",
+            "default": "edge",
+            "optional": true,
+            "help": "Trigger type"
+          },
+          {
+            "name": "event",
+            "short": "e",
+            "type": "rising|falling|either|high|low|equal|lesser|greater",
+            "default": "rising",
+            "optional": true,
+            "help": "Trigger event associated with the trigger type"
+          },
+          {
+            "name": "value",
+            "short": "v",
+            "type": "int",
+            "default": 0,
+            "optional": true,
+            "help": "Compare value"
+          },
+          {
+            "name": "compare_width",
+            "short": "w",
+            "type": "int",
+            "default": 1,
+            "optional": true,
+            "help": "Compare value width (no. of bits)"
+          }
+        ],
+        "desc": "To edit an existing trigger configuration of a clock domain.",
+        "help": [
+          "To edit a trigger configuration:",
+          "  debugger edit_trigger",
+          "  -n <clock domain id>",
+          "  -i <trigger index>",
+          "  -p <probe id>",
+          "  -s <signal name/index>",
+          "  -t {edge|level|value_compare|disable}",
+          "  -e {rising|falling|either|high|low|equal|lesser|greater}",
+          "  -v {value}",
+          "  -w {width}"
+        ]
+      }
+    },
+    {
+      "remove_trigger": {
+        "option": [
+          {
+            "name": "cable",
+            "short": "b",
+            "type": "str",
+            "optional": true,
+            "default" : "1",
+            "help": "Cable name or index"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Device index"
+          },
+          {
+            "name": "domain",
+            "short": "n",
+            "type": "int",
+            "optional": false,
+            "help": "Clock domain ID"
+          },
+          {
+            "name": "index",
+            "short": "i",
+            "type": "int",
+            "optional": false,
+            "help": "Trigger entry index to remove"
+          }
+        ],
+        "desc": "To remove an existing trigger configuration from a clock domain.",
+        "help": [
+          "To remove a trigger configuration:",
+          "  debugger remove_trigger",
+          "  -n <clock domain id>",
+          "  -i <trigger index>"
+        ]
       }
     },
     {
