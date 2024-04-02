@@ -14,12 +14,6 @@ Tcl commands (Available in GUI or Batch console or Batch script):
 --- General ---
 ---------------
    help                       : Help
-   chatgpt <command> "<message>" ?-c <path>?: Send message to ChatGPT
-       send                   : Command to send message
-       reset                  : Command to reset history
-       -c <path>              : Specify ini file path with API key. The key needs to be set only once for a session
-                                [OpenAI]
-                                API_KEY: <api key>
 
 ---------------
 --- Project ---
@@ -109,7 +103,6 @@ Tcl commands (Available in GUI or Batch console or Batch script):
 -----------------
 --- Synthesis ---
 -----------------
-   parser_type <type>         : Parser <type> in: verific, yosys, surelog, ghdl
    synth_options <option list>:
      -effort <level>          : Optimization effort level (high, medium, low)
        high                   : Most compute, generally impacting runtime (default)
@@ -154,7 +147,7 @@ Tcl commands (Available in GUI or Batch console or Batch script):
 ---------------
 --- Packing ---
 ---------------
-   pnr_netlist_lang <format>  : Chooses post-synthesis netlist format, (blif, edif, verilog, vhdl)
+   pnr_netlist_lang <format>  : Chooses post-synthesis netlist format, (blif, eblif, edif, verilog, vhdl)
    packing_options <option list>: Packing options
      -clb_packing <directive> : Performance optimization flags (auto, dense, timing_driven)
        auto                   : CLB packing automatically determined (default)
@@ -195,6 +188,12 @@ Tcl commands (Available in GUI or Batch console or Batch script):
 ------------------------------
    power ?clean?              : Statistical Power Analysis
      clean                    : Deletes files generated from this task
+     
+------------------------------
+--- Power Analysis -----------
+------------------------------
+   power ?clean?              : Statistical Power Analysis
+     clean                    : Deletes files generated from this task
 
 -----------------
 --- Bitstream ---
@@ -216,10 +215,11 @@ timing_flow <"default" | "analytic"> : Timing driven compilation flow. This proc
   "analytic"                   : Use timing-driven analytic placement as initial placement. The result is then passed through the simulated annealing (SA) placer.
   "default"                    : Uses VPR's default initial placer (default)
 
-routability_flow <number_of_molecules_in_partition, hmetisPath> : Routability driven compilation flow. This proc accepts two optional arguments:
-  number_of_molecules_in_partition <int>: Average number of molecules in each cluster (default is 200).
-  hmetisPath <file>            : The path to the hmetis executable (default is "~/bin/hmetis")
-  
+routability_flow <number_of_molecules_in_partition "200"> <congestion "medium | high"> <vpr_constraints_file ""> : Routability driven compilation flow. This proc accepts three optional arguments: 
+  - number_of_molecules_in_partition: Average number of molecules in each cluster (default is 200).
+  - congestion: medium, high
+  - initial VPR placement constraints file
+
 congestion_flow <congestion_type> : Congestion driven compilation flow
   "uniform"                    : For uniformely congested high utilization designs
   "hotspot"                    : For hotspots of congestion in moderately utilized designs
@@ -229,7 +229,6 @@ congestion_flow <congestion_type> : Congestion driven compilation flow
 --------------
    diagnostic <type>          : Debug mode. Types: packer
 </engineering>
-
 
 ------------------
 --- Programmer ---
