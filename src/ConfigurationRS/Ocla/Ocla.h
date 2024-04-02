@@ -46,6 +46,7 @@ class Ocla {
                         uint32_t probe_id = 0, OclaProbe **probe = nullptr,
                         std::string signal_name = "",
                         OclaSignal **signal = nullptr);
+  void show_signal_table(std::vector<OclaSignal> signals_list);
 };
 
 void Ocla_entry(CFGCommon_ARG *cmdarg);

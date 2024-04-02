@@ -19,12 +19,31 @@ void Ocla::configure(uint32_t domain_id, std::string mode,
 
   OclaDebugSession *session = nullptr;
   OclaDomain *domain = nullptr;
+  OclaInstance *instance = nullptr;
 
   if (!get_hier_objects(1, session, domain_id, &domain)) {
     return;
   }
 
-  // todo: mem depth check for sampling size
+  for (auto &elem : domain->get_instances()) {
+    instance = &elem;
+    break;
+  }
+
+  if (!instance) {
+    CFG_POST_ERR("No instance found for clock domain %d", domain_id);
+    return;
+  }
+
+  // NOTE:
+  // Use the first instance available to check the memory depth since all will
+  // have same memory depth in a clock domain.
+  // Ensure sampling size is lesser than memory depth
+  if (sample_size > instance->get_memory_depth()) {
+    CFG_POST_ERR("Sampling size is larger than maximum of %d",
+                 instance->get_memory_depth());
+    return;
+  }
 
   ocla_config cfg;
 
@@ -208,6 +227,30 @@ bool Ocla::get_hier_objects(uint32_t session_id, OclaDebugSession *&session,
   return true;
 }
 
+void Ocla::show_signal_table(std::vector<OclaSignal> signals_list) {
+  CFG_POST_MSG(
+      "  "
+      "+-------+-------------------------------------+--------------+------"
+      "--------+");
+  CFG_POST_MSG(
+      "  | Index | Signal name                         | Bit pos      | "
+      "Bitwidth     |");
+  CFG_POST_MSG(
+      "  "
+      "+-------+-------------------------------------+--------------+------"
+      "--------+");
+
+  for (auto &sig : signals_list) {
+    CFG_POST_MSG("  | %5d | %-35s | %-12d | %-12d |", sig.get_index(),
+                 sig.get_name().c_str(), sig.get_pos(), sig.get_bitwidth());
+  }
+
+  CFG_POST_MSG(
+      "  "
+      "+-------+-------------------------------------+--------------+------"
+      "--------+");
+}
+
 void Ocla::show_info() {
   CFG_ASSERT(m_adapter != nullptr);
 
@@ -222,10 +265,7 @@ void Ocla::show_info() {
     CFG_POST_MSG("Clock Domain %d:", domain.get_index());
     for (auto &probe : domain.get_probes()) {
       CFG_POST_MSG("  Probe %d", probe.get_index());
-      for (auto &signal : probe.get_signals()) {
-        CFG_POST_MSG("    #%d: %s", signal.get_index(),
-                     signal.get_name().c_str());
-      }
+      show_signal_table(probe.get_signals());
     }
 
     ocla_config cfg = domain.get_config();
@@ -302,9 +342,9 @@ void Ocla::show_instance_info() {
 
     CFG_POST_MSG("OCLA %d", instance.get_index() + 1);
     CFG_POST_MSG("  Base address       : 0x%08x", instance.get_baseaddr());
-    CFG_POST_MSG("  ID                 : 0x%08x", ocla_ip.get_id());
     CFG_POST_MSG("  Type               : '%s'", ocla_ip.get_type().c_str());
     CFG_POST_MSG("  Version            : 0x%08x", ocla_ip.get_version());
+    CFG_POST_MSG("  ID                 : 0x%08x", ocla_ip.get_id());
     CFG_POST_MSG("  No. of probes      : %d", ocla_ip.get_number_of_probes());
     CFG_POST_MSG("  Memory depth       : %d", ocla_ip.get_memory_depth());
     CFG_POST_MSG("  DA status          : %d", ocla_ip.get_status());
@@ -347,32 +387,13 @@ void Ocla::show_instance_info() {
 
     auto probes = session->get_probes(instance.get_index());
     if (probes.size() > 0) {
-      // print signal table
       CFG_POST_MSG("  Signal Table");
-      CFG_POST_MSG(
-          "  "
-          "+-------+-------------------------------------+--------------+------"
-          "--------+");
-      CFG_POST_MSG(
-          "  | Index | Signal name                         | Bit pos      | "
-          "Bitwidth     |");
-      CFG_POST_MSG(
-          "  "
-          "+-------+-------------------------------------+--------------+------"
-          "--------+");
-
+      std::vector<OclaSignal> signal_list{};
       for (auto &probe : probes) {
-        for (auto &sig : probe.get_signals()) {
-          CFG_POST_MSG("  | %5d | %-35s | %-12d | %-12d |", sig.get_index(),
-                       sig.get_name().c_str(), sig.get_pos(),
-                       sig.get_bitwidth());
-        }
+        auto list = probe.get_signals();
+        signal_list.insert(signal_list.end(), list.begin(), list.end());
       }
-
-      CFG_POST_MSG(
-          "  "
-          "+-------+-------------------------------------+--------------+------"
-          "--------+");
+      show_signal_table(signal_list);
     }
 
     CFG_POST_MSG(" ");
@@ -441,18 +462,22 @@ bool Ocla::start(uint32_t domain_id) {
   // Assuming multiple instances for SINGLE clock domain will be daisy chained.
   // So only start the first instance.
   if (get_hier_objects(1, session, domain_id, &domain)) {
-    for (auto &elem : domain->get_instances()) {
-      instance = &elem;
-      break;
-    }
+    if (!domain->get_triggers().empty()) {
+      for (auto &elem : domain->get_instances()) {
+        instance = &elem;
+        break;
+      }
 
-    if (instance) {
-      OclaIP ocla_ip{m_adapter, instance->get_baseaddr()};
-      // todo: program ocla ip before start
-      ocla_ip.start();
-      return true;
+      if (instance) {
+        OclaIP ocla_ip{m_adapter, instance->get_baseaddr()};
+        // todo: program ocla ip before start
+        ocla_ip.start();
+        return true;
+      } else {
+        CFG_POST_ERR("No instance found for clock domain %d", domain_id);
+      }
     } else {
-      CFG_POST_MSG("No instance found for clock domain %d", domain_id);
+      CFG_POST_ERR("No trigger configuration setup");
     }
   }
 
