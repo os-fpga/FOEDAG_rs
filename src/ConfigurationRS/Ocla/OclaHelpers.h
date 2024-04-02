@@ -29,7 +29,7 @@ ocla_trigger_type convert_trigger_type(std::string type_string,
                                        ocla_trigger_type defval = TRIGGER_NONE);
 
 ocla_trigger_event convert_trigger_event(std::string event_string,
-                                         ocla_trigger_event defval = NONE);
+                                         ocla_trigger_event defval = NO_EVENT);
 #if 0
 std::vector<signal_info> generate_signal_descriptor(uint32_t width);
 

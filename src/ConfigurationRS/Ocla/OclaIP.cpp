@@ -220,7 +220,7 @@ ocla_trigger_config OclaIP::get_channel_config(uint32_t channel) const {
       cfg.compare_width = ((reg.tssr & TSSR_CW_Msk) >> TSSR_CW_Pos) + 1;
       break;
     case TRIGGER_NONE:
-      cfg.event = ocla_trigger_event::NONE;
+      cfg.event = ocla_trigger_event::NO_EVENT;
       break;
   }
 

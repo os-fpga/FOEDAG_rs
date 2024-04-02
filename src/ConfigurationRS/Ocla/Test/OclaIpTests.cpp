@@ -329,7 +329,7 @@ TEST_F(OclaIPTest, getChannelConfigTest_default) {
   OclaIP oclaIP(&mockAdapter, 0);
   ocla_trigger_config configData = oclaIP.get_channel_config(0);
   EXPECT_EQ(ocla_trigger_type::TRIGGER_NONE, configData.type);
-  EXPECT_EQ(ocla_trigger_event::NONE, configData.event);
+  EXPECT_EQ(ocla_trigger_event::NO_EVENT, configData.event);
   EXPECT_EQ(0, configData.probe_num);
   EXPECT_EQ(0, configData.value);
   EXPECT_EQ(0, configData.compare_width);

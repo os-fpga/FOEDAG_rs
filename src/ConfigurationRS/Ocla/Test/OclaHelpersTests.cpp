@@ -204,22 +204,22 @@ TEST(ConvertTriggerEventTest, ValidTriggerType) {
 
 TEST(ConvertTriggerEventTest, InvalidTriggerType) {
   std::string type_string = "dummyTestString";
-  ocla_trigger_event expected = NONE;
+  ocla_trigger_event expected = NO_EVENT;
   ocla_trigger_event result = convert_trigger_event(type_string);
   EXPECT_EQ(result, expected);
 }
 
 TEST(ConvertTriggerEventTest, EmptyTriggerType) {
   std::string type_string = "";
-  ocla_trigger_event expected = NONE;
+  ocla_trigger_event expected = NO_EVENT;
   ocla_trigger_event result = convert_trigger_event(type_string);
   EXPECT_EQ(result, expected);
 }
 
 TEST(ConvertTriggerEventTest, defaultTriggerType) {
   std::string type_string = "my default";
-  ocla_trigger_event expected = NONE;
-  ocla_trigger_event result = convert_trigger_event(type_string, NONE);
+  ocla_trigger_event expected = NO_EVENT;
+  ocla_trigger_event result = convert_trigger_event(type_string, NO_EVENT);
   EXPECT_EQ(result, expected);
 }
 

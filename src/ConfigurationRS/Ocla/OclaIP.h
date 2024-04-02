@@ -111,7 +111,7 @@ enum ocla_trigger_type {
 };
 
 enum ocla_trigger_event {
-  NONE = 0,
+  NO_EVENT = 0,
   EDGE_NONE = 0x10,
   RISING = 0x11,
   FALLING = 0x12,
