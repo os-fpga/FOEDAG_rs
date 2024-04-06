@@ -421,6 +421,30 @@
             "type": "int",
             "optional": false,
             "help": "Clock domain ID"
+          },
+          {
+            "name": "show_waveform",
+            "short": "s",
+            "type": "flag",
+            "optional": true,
+            "default": false,
+            "help": "Wait for sampling complete and show the waveform in GtkWave app or timeout"
+          },
+          {
+            "name": "timeout",
+            "short": "t",
+            "type": "int",
+            "optional": true,
+            "default": 60,
+            "help": "Command timeout in seconds"
+          },
+          {
+            "name": "output",
+            "short": "o",
+            "type": "str",
+            "optional": true,
+            "default" : "",
+            "help": "Output waveform filepath"
           }
         ],
         "desc": "To start the OCLA debug subsystem of a clock domain to capture signal samples.",

@@ -27,7 +27,7 @@ bool OclaFstWaveformWriter::write(oc_waveform_t& waveform,
 
   void* fst = fstWriterCreate(filepath.c_str(), /* use_compressed_hier */ 1);
   if (!fst) {
-    CFG_POST_MSG("Fail to create output file '%s'", filepath.c_str());
+    CFG_POST_ERR("Fail to create output file '%s'", filepath.c_str());
     return false;
   }
 

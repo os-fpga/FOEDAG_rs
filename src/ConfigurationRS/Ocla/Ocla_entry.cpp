@@ -10,6 +10,12 @@
 #include "OclaFstWaveformWriter.h"
 #include "OclaOpenocdAdapter.h"
 
+#if _WIN32
+#define DEF_FST_OUTPUT "C:\\Windows\\Temp\\output.fst"
+#else
+#define DEF_FST_OUTPUT "/tmp/output.fst"
+#endif
+
 bool Ocla_select_device(OclaJtagAdapter& adapter,
                         FOEDAG::HardwareManager& hardware_manager,
                         std::string cable_name, uint32_t device_index) {
@@ -32,8 +38,45 @@ void Ocla_launch_gtkwave(oc_waveform_t& waveform, std::filesystem::path binpath,
   if (fst_writer.write(waveform, output_filepath)) {
     auto exepath = binpath / "gtkwave" / "bin" / "gtkwave";
     auto cmd = exepath.string() + " " + output_filepath;
+    CFG_POST_MSG("Output file written at '%s' successfully.",
+                 output_filepath.c_str());
     CFG_compiler_execute_cmd(cmd);
   }
+}
+
+void Ocla_wait_n_show_waveform(Ocla& ocla, uint32_t domain_id,
+                               uint32_t timeout_sec,
+                               std::string output_filepath,
+                               std::filesystem::path binpath) {
+  uint32_t status = 0;
+
+  // query the status of the ocla ip for max of 'timeout_sec' times
+  // if status is set, break the loop
+  for (uint32_t i = 0; i < timeout_sec; i++) {
+    CFG_sleep_ms(1000);  // wait for 1 sec
+    if (!ocla.get_status(domain_id, status)) {
+      CFG_POST_ERR("Failed to read ocla status");
+      return;
+    }
+    if (status) {
+      break;
+    }
+  }
+
+  if (!status) {
+    CFG_POST_ERR("Timeout");
+    return;
+  }
+
+  // download the waveform from ocla ip
+  oc_waveform_t output_waveform{};
+  if (!ocla.get_waveform(domain_id, output_waveform)) {
+    CFG_POST_ERR("Failed to read waveform data");
+    return;
+  }
+
+  // display the wave from on gtkwave
+  Ocla_launch_gtkwave(output_waveform, binpath, output_filepath);
 }
 
 void Ocla_entry(CFGCommon_ARG* cmdarg) {
@@ -98,8 +141,12 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     if (Ocla_select_device(adapter, hardware_manager, parms->cable,
                            parms->device)) {
       if (ocla.start(parms->domain)) {
-        // CFG_POST_MSG("Written %s successfully.", parms->output.c_str());
-        // Ocla_launch_gtkwave(parms->output, cmdarg->binPath);
+        if (parms->show_waveform) {
+          Ocla_wait_n_show_waveform(
+              ocla, parms->domain, (uint32_t)parms->timeout,
+              parms->output.empty() ? DEF_FST_OUTPUT : parms->output,
+              cmdarg->binPath);
+        }
       }
     }
   } else if (subcmd == "status") {
@@ -120,7 +167,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
       if (ocla.get_waveform(parms->domain, output_waveform)) {
         Ocla_launch_gtkwave(
             output_waveform, cmdarg->binPath,
-            parms->output.empty() ? "/tmp/output.fst" : parms->output);
+            parms->output.empty() ? DEF_FST_OUTPUT : parms->output);
       }
     }
   } else if (subcmd == "show_instance") {
