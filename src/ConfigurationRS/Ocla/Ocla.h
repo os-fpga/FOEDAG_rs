@@ -55,14 +55,13 @@ class Ocla {
   static std::vector<OclaDebugSession> m_sessions;
   OclaJtagAdapter *m_adapter;
 
-  void program_ip(OclaIP &ocla_ip, ocla_config &config,
-                  std::vector<ocla_trigger_config> &triggers);
   bool get_hier_objects(uint32_t session_id, OclaDebugSession *&session,
                         uint32_t domain_id = 0, OclaDomain **domain = nullptr,
                         uint32_t probe_id = 0, OclaProbe **probe = nullptr,
                         std::string signal_name = "",
                         OclaSignal **signal = nullptr);
   void show_signal_table(std::vector<OclaSignal> signals_list);
+  void program(OclaDomain *domain);
 };
 
 void Ocla_entry(CFGCommon_ARG *cmdarg);

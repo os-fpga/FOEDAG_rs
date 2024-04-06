@@ -78,6 +78,12 @@ void Ocla::add_trigger(uint32_t domain_id, uint32_t probe_id,
     return;
   }
 
+  if (signal->get_type() == oc_signal_type_t::PLACEHOLDER) {
+    CFG_POST_ERR("Cannot setup trigger on constant signal '%s'",
+                 signal->get_name().c_str());
+    return;
+  }
+
   // todo: verify hardware trigger slot
 
   // add trigger to debug session
@@ -121,6 +127,12 @@ void Ocla::edit_trigger(uint32_t domain_id, uint32_t trigger_id,
   if (!CFG_type_event_sanity_check(type, event)) {
     CFG_POST_ERR("Invalid '%s' event for '%s' trigger", event.c_str(),
                  type.c_str());
+    return;
+  }
+
+  if (signal->get_type() == oc_signal_type_t::PLACEHOLDER) {
+    CFG_POST_ERR("Cannot setup trigger on constant signal '%s'",
+                 signal->get_name().c_str());
     return;
   }
 
@@ -486,6 +498,41 @@ bool Ocla::get_status(uint32_t domain_id, uint32_t &status) {
   return false;
 }
 
+void Ocla::program(OclaDomain *domain) {
+  CFG_ASSERT(m_adapter != nullptr);
+  CFG_ASSERT(domain != nullptr);
+
+  ocla_config cfg = domain->get_config();
+  ocla_trigger_config trig_cfg{};
+
+  // default values used to clear the ocla channels
+  trig_cfg.type = ocla_trigger_type::TRIGGER_NONE;
+  trig_cfg.event = ocla_trigger_event::NO_EVENT;
+  trig_cfg.value = 0;
+  trig_cfg.compare_width = 0;
+  trig_cfg.probe_num = 0;
+
+  for (auto instance : domain->get_instances()) {
+    OclaIP ocla_ip{m_adapter, instance.get_baseaddr()};
+    uint32_t ch = 0;
+
+    // program ip operation modes
+    ocla_ip.configure(cfg);
+
+    // clear all channel config on the ip
+    for (uint32_t i = 0; i < ocla_ip.get_trigger_count(); i++) {
+      ocla_ip.configure_channel(i, trig_cfg);
+    }
+
+    // program trigger config
+    for (auto trig : domain->get_triggers()) {
+      if (instance.get_index() == trig.instance_index) {
+        ocla_ip.configure_channel(ch++, trig.cfg);
+      }
+    }
+  }
+}
+
 bool Ocla::start(uint32_t domain_id) {
   CFG_ASSERT(m_adapter != nullptr);
 
@@ -493,30 +540,36 @@ bool Ocla::start(uint32_t domain_id) {
   OclaDomain *domain = nullptr;
   OclaInstance *instance = nullptr;
 
+  if (!get_hier_objects(1, session, domain_id, &domain)) {
+    return false;
+  }
+
+  if (domain->get_triggers().empty()) {
+    CFG_POST_ERR("No trigger configuration setup");
+    return false;
+  }
+
+  for (auto &elem : domain->get_instances()) {
+    instance = &elem;  // first instance
+    break;
+  }
+
+  if (!instance) {
+    CFG_POST_ERR("No instance found for clock domain %d", domain_id);
+    return false;
+  }
+
+  // program the ocla ip operation modes and trigger channel configuration
+  // before start
+  program(domain);
+
   // NOTE:
   // Assuming multiple instances for SINGLE clock domain will be daisy chained.
   // So only start the first instance.
-  if (get_hier_objects(1, session, domain_id, &domain)) {
-    if (!domain->get_triggers().empty()) {
-      for (auto &elem : domain->get_instances()) {
-        instance = &elem;
-        break;
-      }
+  OclaIP ocla_ip{m_adapter, instance->get_baseaddr()};
+  ocla_ip.start();
 
-      if (instance) {
-        OclaIP ocla_ip{m_adapter, instance->get_baseaddr()};
-        // todo: program ocla ip before start
-        ocla_ip.start();
-        return true;
-      } else {
-        CFG_POST_ERR("No instance found for clock domain %d", domain_id);
-      }
-    } else {
-      CFG_POST_ERR("No trigger configuration setup");
-    }
-  }
-
-  return false;
+  return true;
 }
 
 void Ocla::start_session(std::string filepath) {

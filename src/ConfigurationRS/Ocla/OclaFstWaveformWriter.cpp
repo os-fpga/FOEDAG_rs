@@ -3,6 +3,7 @@
 #include <time.h>
 
 #include <iostream>
+#include <map>
 #include <string>
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
@@ -47,9 +48,25 @@ bool OclaFstWaveformWriter::write(oc_waveform_t& waveform,
     std::string probe_name =
         std::string("Probe ") + std::to_string(probe.probe_id);
     fstWriterSetScope(fst, FST_ST_VCD_FUNCTION, probe_name.c_str(), NULL);
+
+    // used to detect duplicate signal names
+    std::map<std::string, uint32_t> names{};
+
     for (auto& signal : probe.signal_list) {
       max_depth = std::max(max_depth, signal.depth);
-      std::string signal_name = signal.name;
+      std::string signal_name = "";
+
+      // NOTE: the gtkwave app doesn't show the duplicated named signals in the
+      // list So, for each duplicated names, append a number suffix
+      auto it = names.find(signal.name);
+      if (it != names.end()) {
+        signal_name = signal.name + "_" + std::to_string(it->second);
+        it->second += 1;
+      } else {
+        signal_name = signal.name;
+        names[signal.name] = 1;
+      }
+
       fstHandle var = fstWriterCreateVar(fst, FST_VT_VCD_WIRE, FST_VD_INPUT,
                                          signal.bitwidth, signal_name.c_str(),
                                          /* alias */ 0);
