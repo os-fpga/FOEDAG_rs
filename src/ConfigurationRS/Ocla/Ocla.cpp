@@ -65,6 +65,7 @@ void Ocla::add_trigger(uint32_t domain_id, uint32_t probe_id,
   OclaDomain *domain = nullptr;
   OclaSignal *signal = nullptr;
   OclaProbe *probe = nullptr;
+  OclaInstance *instance = nullptr;
 
   if (!get_hier_objects(1, session, domain_id, &domain, probe_id, &probe,
                         signal_name, &signal)) {
@@ -84,7 +85,33 @@ void Ocla::add_trigger(uint32_t domain_id, uint32_t probe_id,
     return;
   }
 
-  // todo: verify hardware trigger slot
+  // count the number of triggers configured this instance index
+  uint32_t trigger_count = 0;
+  for (auto trig : domain->get_triggers()) {
+    if (probe->get_instance_index() == trig.instance_index) {
+      ++trigger_count;
+    }
+  }
+
+  for (auto &elem : domain->get_instances()) {
+    if (elem.get_index() == probe->get_instance_index()) {
+      instance = &elem;
+      break;
+    }
+  }
+
+  if (!instance) {
+    CFG_POST_ERR("Instance %d not found", probe->get_instance_index());
+    return;
+  }
+
+  // check hardware trigger slot is enuf (ocla debug info doesn't have this
+  // data)
+  OclaIP ocla_ip{m_adapter, instance->get_baseaddr()};
+  if (trigger_count >= ocla_ip.get_trigger_count()) {
+    CFG_POST_ERR("Maximum triggers reached");
+    return;
+  }
 
   // add trigger to debug session
   oc_trigger_t trig{};
