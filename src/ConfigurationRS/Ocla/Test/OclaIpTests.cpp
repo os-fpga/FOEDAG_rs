@@ -211,7 +211,7 @@ TEST_F(OclaIPTest, getDataTest_FixSampleSize) {
   auto result = oclaIP.get_data();
   EXPECT_EQ(128, result.depth);
   EXPECT_EQ(33, result.width);
-  EXPECT_EQ(2, result.num_reads);
+  EXPECT_EQ(2, result.words_per_line);
   EXPECT_EQ(256, result.values.size());
 }
 
@@ -235,7 +235,7 @@ TEST_F(OclaIPTest, getDataTest_End2End) {
   auto result = oclaIP.get_data();
   EXPECT_EQ(988, result.depth);
   EXPECT_EQ(65, result.width);
-  EXPECT_EQ(3, result.num_reads);
+  EXPECT_EQ(3, result.words_per_line);
   EXPECT_EQ(988 * 3, result.values.size());
 }
 

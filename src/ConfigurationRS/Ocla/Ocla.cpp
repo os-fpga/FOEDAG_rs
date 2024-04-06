@@ -1,15 +1,15 @@
 #include "Ocla.h"
 
+#include <map>
+
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 #include "OclaHelpers.h"
 #include "OclaIP.h"
 #include "OclaJtagAdapter.h"
-#include "OclaWaveformWriter.h"
 
 std::vector<OclaDebugSession> Ocla::m_sessions{};
 
-Ocla::Ocla(OclaJtagAdapter *adapter, OclaWaveformWriter *writer)
-    : m_adapter(adapter), m_writer(writer) {}
+Ocla::Ocla(OclaJtagAdapter *adapter) : m_adapter(adapter) {}
 
 Ocla::~Ocla() {}
 
@@ -87,7 +87,7 @@ void Ocla::add_trigger(uint32_t domain_id, uint32_t probe_id,
   trig.probe_id = probe_id;
   trig.signal_id = signal->get_index();
   trig.signal_name = signal->get_name();
-  trig.cfg.probe_num = signal->get_pos();
+  trig.cfg.probe_num = signal->get_bitpos();
   trig.cfg.type = convert_trigger_type(type);
   trig.cfg.event = convert_trigger_event(event);
   trig.cfg.value = value;
@@ -131,7 +131,7 @@ void Ocla::edit_trigger(uint32_t domain_id, uint32_t trigger_id,
   trig.probe_id = probe_id;
   trig.signal_id = signal->get_index();
   trig.signal_name = signal->get_name();
-  trig.cfg.probe_num = signal->get_pos();
+  trig.cfg.probe_num = signal->get_bitpos();
   trig.cfg.type = convert_trigger_type(type);
   trig.cfg.event = convert_trigger_event(event);
   trig.cfg.value = value;
@@ -242,7 +242,7 @@ void Ocla::show_signal_table(std::vector<OclaSignal> signals_list) {
 
   for (auto &sig : signals_list) {
     CFG_POST_MSG("  | %5d | %-35s | %-12d | %-12d |", sig.get_index(),
-                 sig.get_name().c_str(), sig.get_pos(), sig.get_bitwidth());
+                 sig.get_name().c_str(), sig.get_bitpos(), sig.get_bitwidth());
   }
 
   CFG_POST_MSG(
@@ -400,8 +400,7 @@ void Ocla::show_instance_info() {
   }
 }
 
-bool Ocla::get_waveform(uint32_t domain_id,
-                        std::map<uint32_t, std::vector<uint32_t>> &output) {
+bool Ocla::get_waveform(uint32_t domain_id, oc_waveform_t &output) {
   CFG_ASSERT(m_adapter != nullptr);
 
   OclaDebugSession *session = nullptr;
@@ -411,14 +410,50 @@ bool Ocla::get_waveform(uint32_t domain_id,
     return false;
   }
 
-  // todo: map instance raw waveform to logical waveform by probes
+  // retrieve samples from all OCLA instances of the clock domain
+  std::map<uint32_t, ocla_data> sample_data{};
+
   for (auto &instance : domain->get_instances()) {
     OclaIP ocla_ip{m_adapter, instance.get_baseaddr()};
-    auto data = ocla_ip.get_data();
-    for (auto &v : data.values) {
-      output[instance.get_index()].push_back(v);
-    }
+    sample_data[instance.get_index()] = ocla_ip.get_data();
   }
+
+  // transform flat sample data into logical format by probes and signals
+  std::vector<oc_probe_t> probes{};
+
+  for (auto &probe : domain->get_probes()) {
+    oc_probe_t probe_data{};
+
+    auto &data = sample_data[probe.get_instance_index()];
+
+    for (auto &signal : probe.get_signals()) {
+      oc_signal_t signal_data{};
+
+      signal_data.name = signal.get_name();
+      signal_data.bitwidth = signal.get_bitwidth();
+      signal_data.bitpos = signal.get_bitpos();
+      signal_data.words_per_line = ((signal.get_bitwidth() - 1) / 32) + 1;
+      signal_data.depth = data.depth;
+      signal_data.values.assign(signal_data.words_per_line * signal_data.depth,
+                                0);
+
+      // copy sample
+      for (uint32_t i = 0; i < data.depth; i++) {
+        CFG_copy_bits_vec32(
+            &data.values.at(i * data.words_per_line), signal_data.bitpos,
+            &signal_data.values.at(i * signal_data.words_per_line), 0,
+            signal_data.bitwidth);
+      }
+
+      probe_data.signal_list.push_back(signal_data);
+    }
+
+    probe_data.probe_id = probe.get_index();
+    probes.push_back(probe_data);
+  }
+
+  output.domain_id = domain->get_index();
+  output.probes = probes;
 
   return true;
 }

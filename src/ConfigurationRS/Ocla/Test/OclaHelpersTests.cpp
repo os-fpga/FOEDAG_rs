@@ -222,24 +222,3 @@ TEST(ConvertTriggerEventTest, defaultTriggerType) {
   ocla_trigger_event result = convert_trigger_event(type_string, NO_EVENT);
   EXPECT_EQ(result, expected);
 }
-
-#if 0
-TEST(GenerateSignalDescriptorTest, ValidWidth) {
-  uint32_t width = 8;
-  std::vector<signal_info> expected = {{"s0", 1}, {"s1", 1}, {"s2", 1},
-                                       {"s3", 1}, {"s4", 1}, {"s5", 1},
-                                       {"s6", 1}, {"s7", 1}};
-  auto result = generate_signal_descriptor(width);
-  for (size_t i = 0; i < width; i++) {
-    EXPECT_EQ(result[i].name, expected[i].name);
-    EXPECT_EQ(result[i].bitwidth, expected[i].bitwidth);
-  }
-}
-
-TEST(GenerateSignalDescriptorTest, ZeroWidth) {
-  uint32_t width = 0;
-  std::vector<signal_info> expected = {};
-  std::vector<signal_info> result = generate_signal_descriptor(width);
-  EXPECT_EQ(result.size(), expected.size());
-}
-#endif

@@ -313,7 +313,7 @@
             "type": "str",
             "optional": true,
             "default" : "1",
-            "help": "Specify the index of the cable"
+            "help": "Cable name or index"
           },
           {
             "name": "device",
@@ -321,13 +321,13 @@
             "type": "int",
             "optional": true,
             "default" : 1,
-            "help": "Specify the index of the device on the selected cable"
+            "help": "Device index"
           }
         ],
-        "desc": "Show all OCLA probe and information that parsed from .bitasm file during session start",
+        "desc": "Command to display all probe information in the user design parsed from the .bitasm file. And also, the current OCLA global and trigger configuration.",
         "help": [
-          "To show all OCLA probe and information",
-          "  debugger info"
+          "To show all information:",
+          "  debugger info -c {cable name/index} -b {device index}"
         ],
         "arg": [0, 0]
       }
@@ -435,18 +435,44 @@
       "show_waveform": {
         "option": [
           {
-            "name": "input",
-            "short": "i",
+            "name": "cable",
+            "short": "b",
             "type": "str",
-            "default" : "/tmp/output.fst",
             "optional": true,
-            "help": "To display waveform in GTKWave using the specificed file"
+            "default" : "1",
+            "help": "Cable name or index"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Device index"
+          },
+          {
+            "name": "domain",
+            "short": "n",
+            "type": "int",
+            "optional": false,
+            "help": "Clock domain ID"
+          },
+          {
+            "name": "output",
+            "short": "o",
+            "type": "str",
+            "default" : "",
+            "optional": true,
+            "help": "Output waveform filepath"
           }
         ],
-        "desc": "To display waveform in GTKWave using the specificed file.",
+        "desc": "To generate waveform file and display the signal waveform of a clock domain in GtkWave UI app.",
         "help": [
           "To display the waveform in GTKWave",
-          "  debugger show_waveform -i {filepath}"
+          "  debugger show_waveform",
+          "  -b {cable name/index}",
+          "  -d {device index}",
+          "  -o {filepath}"
         ],
         "arg": [0, 0]
       }

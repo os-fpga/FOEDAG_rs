@@ -1,5 +1,4 @@
 #include <filesystem>
-#include <sstream>
 
 #include "CFGCommonRS/CFGArgRS_auto.h"
 #include "CFGObject/CFGObject_auto.h"
@@ -26,12 +25,15 @@ bool Ocla_select_device(OclaJtagAdapter& adapter,
   return true;
 }
 
-void Ocla_launch_gtkwave(std::string filepath, std::filesystem::path binpath) {
-  CFG_ASSERT_MSG(std::filesystem::exists(filepath), "File not found %s",
-                 filepath.c_str());
-  auto exepath = binpath / "gtkwave" / "bin" / "gtkwave";
-  auto cmd = exepath.string() + " " + filepath;
-  CFG_compiler_execute_cmd(cmd);
+void Ocla_launch_gtkwave(oc_waveform_t& waveform, std::filesystem::path binpath,
+                         std::string output_filepath) {
+  OclaFstWaveformWriter fst_writer{};
+
+  if (fst_writer.write(waveform, output_filepath)) {
+    auto exepath = binpath / "gtkwave" / "bin" / "gtkwave";
+    auto cmd = exepath.string() + " " + output_filepath;
+    CFG_compiler_execute_cmd(cmd);
+  }
 }
 
 void Ocla_entry(CFGCommon_ARG* cmdarg) {
@@ -44,14 +46,17 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
 
   // setup hardware manager and ocla depencencies
   OclaOpenocdAdapter adapter{cmdarg->toolPath.string()};
-  OclaFstWaveformWriter writer{};
-  Ocla ocla{&adapter, &writer};
+  Ocla ocla{&adapter};
   FOEDAG::HardwareManager hardware_manager{&adapter};
 
   // dispatch commands
   std::string subcmd = arg->get_sub_arg_name();
   if (subcmd == "info") {
-    ocla.show_info();
+    auto parms = static_cast<const CFGArg_DEBUGGER_INFO*>(arg->get_sub_arg());
+    if (Ocla_select_device(adapter, hardware_manager, parms->cable,
+                           parms->device)) {
+      ocla.show_info();
+    }
   } else if (subcmd == "load") {
     auto parms = static_cast<const CFGArg_DEBUGGER_LOAD*>(arg->get_sub_arg());
     ocla.start_session(parms->file);
@@ -109,7 +114,15 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
   } else if (subcmd == "show_waveform") {
     auto parms =
         static_cast<const CFGArg_DEBUGGER_SHOW_WAVEFORM*>(arg->get_sub_arg());
-    Ocla_launch_gtkwave(parms->input, cmdarg->binPath);
+    if (Ocla_select_device(adapter, hardware_manager, parms->cable,
+                           parms->device)) {
+      oc_waveform_t output_waveform{};
+      if (ocla.get_waveform(parms->domain, output_waveform)) {
+        Ocla_launch_gtkwave(
+            output_waveform, cmdarg->binPath,
+            parms->output.empty() ? "/tmp/output.fst" : parms->output);
+      }
+    }
   } else if (subcmd == "show_instance") {
     auto parms =
         static_cast<const CFGArg_DEBUGGER_SHOW_INSTANCE*>(arg->get_sub_arg());

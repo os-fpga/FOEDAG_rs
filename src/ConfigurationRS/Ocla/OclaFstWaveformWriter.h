@@ -1,14 +1,11 @@
 #ifndef __OCLAFSTWAVEFORMWRITER_H__
 #define __OCLAFSTWAVEFORMWRITER_H__
 
-#include "OclaWaveformWriter.h"
+#include "Ocla.h"
 
-class OclaFstWaveformWriter : public OclaWaveformWriter {
+class OclaFstWaveformWriter {
  public:
-  virtual void write(std::vector<uint32_t> values, std::string filepath);
-
- private:
-  uint32_t count_total_bitwidth();
+  bool write(oc_waveform_t &waveform, std::string filepath);
 };
 
 #endif  //__OCLAFSTWAVEFORMWRITER_H__

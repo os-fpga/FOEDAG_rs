@@ -96,11 +96,11 @@ bool OclaDebugSession::parse(std::string ocla_str) {
 
       // parse signal info
       std::vector<OclaSignal> signals{};
-      uint32_t sig_pos = 0;
+      uint32_t bitpos = 0;
       for (auto const &elem : ocla.at("probes")) {
         auto sig = parse_signal(elem);
-        sig.set_pos(sig_pos);
-        sig_pos += sig.get_bitwidth();
+        sig.set_bitpos(bitpos);
+        bitpos += sig.get_bitwidth();
         signals.push_back(sig);
       }
 
@@ -128,7 +128,8 @@ bool OclaDebugSession::parse(std::string ocla_str) {
           probe.set_instance_index(instance.get_index());
           for (auto &sig : signals) {
             // add signals
-            if (sig.get_pos() >= offset && sig.get_pos() < (offset + width)) {
+            if (sig.get_bitpos() >= offset &&
+                sig.get_bitpos() < (offset + width)) {
               sig.set_index(signal_index++);
               probe.add_signal(sig);
             }
@@ -198,7 +199,8 @@ OclaSignal OclaDebugSession::parse_signal(std::string signal_str) {
       uint64_t bit_end = CFG_convert_string_to_u64(m[2].str());
       CFG_ASSERT_MSG(bit_end >= bit_start, "Invalid bit position '%s'",
                      signal_str.c_str());
-      sig.set_name(m[0].str());
+      sig.set_orig_name(m[0].str());
+      sig.set_name(m[1].str());
       sig.set_type(oc_signal_type_t::SIGNAL);
       sig.set_value(0);
       sig.set_bitwidth(static_cast<uint32_t>(bit_end - bit_start) + 1);
@@ -206,6 +208,7 @@ OclaSignal OclaDebugSession::parse_signal(std::string signal_str) {
     }
     case 2U:  // pattern 2: 4'0000
     {
+      sig.set_orig_name(m[0].str());
       sig.set_name(m[0].str());
       sig.set_type(oc_signal_type_t::PLACEHOLDER);
       sig.set_value(
@@ -215,8 +218,17 @@ OclaSignal OclaDebugSession::parse_signal(std::string signal_str) {
       break;
     }
     case 3U:  // pattern 3: s_axil_awprot[0]
+    {
+      sig.set_orig_name(m[0].str());
+      sig.set_name(m[1].str());
+      sig.set_type(oc_signal_type_t::SIGNAL);
+      sig.set_value(0);
+      sig.set_bitwidth(1);
+      break;
+    }
     case 4U:  // pattern 4: s_axil_bready
     {
+      sig.set_orig_name(m[0].str());
       sig.set_name(m[0].str());
       sig.set_type(oc_signal_type_t::SIGNAL);
       sig.set_value(0);

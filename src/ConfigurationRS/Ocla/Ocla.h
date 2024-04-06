@@ -2,7 +2,6 @@
 #define __OCLA_H__
 
 #include <cstdint>
-#include <map>
 #include <string>
 #include <vector>
 
@@ -12,9 +11,28 @@ class OclaJtagAdapter;
 class OclaWaveformWriter;
 struct CFGCommon_ARG;
 
+struct oc_signal_t {
+  std::string name;
+  std::vector<uint32_t> values;
+  uint32_t bitwidth;
+  uint32_t bitpos;
+  uint32_t words_per_line;
+  uint32_t depth;
+};
+
+struct oc_probe_t {
+  std::vector<oc_signal_t> signal_list;
+  uint32_t probe_id;
+};
+
+struct oc_waveform_t {
+  std::vector<oc_probe_t> probes;
+  uint32_t domain_id;
+};
+
 class Ocla {
  public:
-  Ocla(OclaJtagAdapter *adapter, OclaWaveformWriter *writer);
+  Ocla(OclaJtagAdapter *adapter);
   ~Ocla();
   void configure(uint32_t domain_id, std::string mode, std::string condition,
                  uint32_t sample_size);
@@ -25,8 +43,7 @@ class Ocla {
                     std::string signal_name, std::string type,
                     std::string event, uint32_t value, uint32_t compare_width);
   void remove_trigger(uint32_t domain_id, uint32_t trigger_id);
-  bool get_waveform(uint32_t domain_id,
-                    std::map<uint32_t, std::vector<uint32_t>> &output);
+  bool get_waveform(uint32_t domain_id, oc_waveform_t &output);
   bool get_status(uint32_t domain_id, uint32_t &status);
   bool start(uint32_t domain_id);
   void start_session(std::string filepath);
@@ -37,7 +54,6 @@ class Ocla {
  private:
   static std::vector<OclaDebugSession> m_sessions;
   OclaJtagAdapter *m_adapter;
-  OclaWaveformWriter *m_writer;
 
   void program_ip(OclaIP &ocla_ip, ocla_config &config,
                   std::vector<ocla_trigger_config> &triggers);

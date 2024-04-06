@@ -1,9 +1,9 @@
 #include "OclaSignal.h"
 
-OclaSignal::OclaSignal(std::string name, uint32_t pos, uint32_t bitwidth,
+OclaSignal::OclaSignal(std::string name, uint32_t bitpos, uint32_t bitwidth,
                        uint32_t value, oc_signal_type_t type, uint32_t idx)
     : m_name(name),
-      m_pos(pos),
+      m_bitpos(bitpos),
       m_bitwidth(bitwidth),
       m_value(value),
       m_type(type),
@@ -13,13 +13,17 @@ OclaSignal::OclaSignal() : m_index(0) {}
 
 OclaSignal::~OclaSignal() {}
 
+std::string OclaSignal::get_orig_name() const { return m_orig_name; }
+
+void OclaSignal::set_orig_name(std::string orig_name) { m_name = orig_name; }
+
 std::string OclaSignal::get_name() const { return m_name; }
 
 void OclaSignal::set_name(std::string name) { m_name = name; }
 
-uint32_t OclaSignal::get_pos() const { return m_pos; }
+uint32_t OclaSignal::get_bitpos() const { return m_bitpos; }
 
-void OclaSignal::set_pos(uint32_t pos) { m_pos = pos; }
+void OclaSignal::set_bitpos(uint32_t bitpos) { m_bitpos = bitpos; }
 
 uint32_t OclaSignal::get_bitwidth() const { return m_bitwidth; }
 
