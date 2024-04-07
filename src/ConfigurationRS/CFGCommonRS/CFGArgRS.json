@@ -425,10 +425,10 @@
           {
             "name": "show_waveform",
             "short": "s",
-            "type": "flag",
+            "type": "true|false",
             "optional": true,
-            "default": false,
-            "help": "Wait for sampling complete and show the waveform in GtkWave app or timeout"
+            "default": "true",
+            "help": "True to wait for sampling complete and show waveform in GtkWave or timeout otherwise return immediately (default true)"
           },
           {
             "name": "timeout",
@@ -436,7 +436,7 @@
             "type": "int",
             "optional": true,
             "default": 60,
-            "help": "Command timeout in seconds"
+            "help": "Command timeout in seconds (default 60)"
           },
           {
             "name": "output",

@@ -141,7 +141,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     if (Ocla_select_device(adapter, hardware_manager, parms->cable,
                            parms->device)) {
       if (ocla.start(parms->domain)) {
-        if (parms->show_waveform) {
+        if (parms->show_waveform == "true") {
           Ocla_wait_n_show_waveform(
               ocla, parms->domain, (uint32_t)parms->timeout,
               parms->output.empty() ? DEF_FST_OUTPUT : parms->output,
