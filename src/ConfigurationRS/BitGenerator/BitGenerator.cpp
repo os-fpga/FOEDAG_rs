@@ -64,7 +64,7 @@ bool BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
         CFG_ASSERT(bitobj.read(subarg->m_args[0]));
         // Get the family
         if (CFG_find_string_in_vector(
-                {"Gemini", "Internal-Gemini", "Internal-Virgo"},
+                {"Gemini", "Internal-Gemini", "Virgo", "Internal-Virgo"},
                 bitobj.configuration.family) >= 0) {
           BitGen_GEMINI gemini(&bitobj);
           gemini.generate(bops);
