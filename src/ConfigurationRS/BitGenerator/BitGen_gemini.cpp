@@ -116,7 +116,7 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
     icb["bit_twist"] = 0;
     icb["byte_twist"] = 0;
     icb["is_data_or_not_cmd"] = 0;
-    icb["update"] = 0;
+    icb["update"] = 1;
     icb["capture"] = 0;
     icb["payload"] = nlohmann::json(payload);
     bop->actions.push_back(BitGen_JSON::gen_icb_config_action(icb));
