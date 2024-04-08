@@ -91,6 +91,30 @@
       "exist" : false
     },
     {
+      "name" : "pcb",
+      "type" : [
+        {
+          "name" : "x",
+          "type" : "u32"
+        },
+        {
+          "name" : "y",
+          "type" : "u32"
+        },
+        {
+          "name" : "bits",
+          "type" : "u32"
+        },
+        {
+          "name" : "data",
+          "type" : "u8s",
+          "cmp"  : true
+        }
+      ],
+      "exist" : false,
+      "list" : true
+    },
+    {
       "name" : "ocla",
       "type" : "str",
       "exist" : false

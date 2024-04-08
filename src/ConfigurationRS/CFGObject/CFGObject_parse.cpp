@@ -39,8 +39,8 @@ static void CFGObject_parse_list_object(std::ofstream& file,
   CFG_ASSERT(list_length);
   for (uint64_t i = 0; i < list_length; i++) {
     file << space.c_str() << "#" << i << "\n";
-    CFGObject_parse_object(file, data, data_size, index, object_count,
-                           space + "  ", detail);
+    CFGObject_parse_class_object(file, data, data_size, index, object_count,
+                                 space + "  ", detail);
   }
 }
 
@@ -66,7 +66,7 @@ static void CFGObject_parse_object(std::ofstream& file, const uint8_t* data,
   index++;
   CFG_ASSERT(index < data_size);
   std::string object_name =
-      CFG_get_string_from_bytes(data, data_size, index, 16, 2);
+      CFG_get_string_from_bytes(data, data_size, index, 16, 1);
   file << space.c_str() << object_name.c_str()
        << " (type: " << object_type.c_str() << ")";
   file.flush();
@@ -132,6 +132,7 @@ static void CFGObject_parse_object(std::ofstream& file, const uint8_t* data,
                                  space + "  ", detail);
   } else {
     CFG_ASSERT(object_type == "list");
+    file << "\n";
     CFGObject_parse_list_object(file, data, data_size, index, object_count,
                                 space + "  ", detail);
   }
@@ -160,7 +161,7 @@ void CFGObject::parse(const std::string& input_filepath,
 
   size_t index = 0;
   std::string object_name = CFG_get_string_from_bytes(
-      &input_data[0], input_data.size(), index, 8, 2, 8);
+      &input_data[0], input_data.size(), index, 8, 1, 8);
   file << "CFGObject: " << object_name.c_str() << "\n";
 
   uint64_t object_count =

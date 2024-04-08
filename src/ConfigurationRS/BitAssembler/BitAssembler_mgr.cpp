@@ -4,6 +4,9 @@
 #include <iostream>
 
 #include "CFGCommonRS/CFGCommonRS.h"
+#include "nlohmann_json/json.hpp"
+
+#define PCB_BIT_SIZE (36 * 1024)
 
 BitAssembler_MGR::BitAssembler_MGR() {
   CFG_INTERNAL_ERROR("This constructor is not supported");
@@ -283,6 +286,73 @@ void BitAssembler_MGR::get_icb(const CFGObject_BITOBJ_ICB* icb) {
     CFG_ASSERT(icb->bits == data_line);
     icb->write_u8s("data", data);
     file.close();
+  } else {
+    CFG_POST_WARNING("IO bitstream file %s does not exist. Skip for now",
+                     filepath.c_str());
+  }
+}
+
+void BitAssembler_MGR::get_pcb(CFGObject_BITOBJ& bitobj) {
+  CFG_ASSERT(bitobj.pcb.size() == 0);
+
+  // Read bram_bitstream.json as a JSON file
+  std::string filepath =
+      CFG_print("%s/bram_bitstream.json", m_project_path.c_str());
+  // ToDO: For now IO is not fully ready, just post warning if it does not.
+  //       Once IO is ready, we will need to flag error
+  if (std::filesystem::exists(filepath)) {
+    std::fstream jsonfile(filepath.c_str());
+    CFG_ASSERT_MSG(jsonfile.is_open() && jsonfile.good(), "Fail to open %s",
+                   filepath.c_str());
+    nlohmann::json json = nlohmann::json::parse(jsonfile);
+    jsonfile.close();
+    CFG_ASSERT(json.is_object());
+    CFG_ASSERT(json.contains("bram"));
+    nlohmann::json& bram_json = json["bram"];
+    CFG_ASSERT(bram_json.is_array());
+    bool found = false;
+    for (nlohmann::json& pb : bram_json) {
+      CFG_ASSERT(pb.is_object());
+      CFG_ASSERT(pb.contains("pb"));
+      nlohmann::json& pb_name = pb["pb"];
+      CFG_ASSERT(pb_name.is_string());
+      if (std::string(pb_name) == "bram.bram_lr[mem_36K_tdp].mem_36K") {
+        CFG_ASSERT(pb.contains("grid"));
+        CFG_ASSERT(pb["grid"].is_array());
+        for (nlohmann::json& grid : pb["grid"]) {
+          CFG_ASSERT(grid.contains("x"));
+          CFG_ASSERT(grid.contains("y"));
+          CFG_ASSERT(grid["x"].is_number_integer() ||
+                     grid["x"].is_number_unsigned());
+          CFG_ASSERT(grid["y"].is_number_integer() ||
+                     grid["y"].is_number_unsigned());
+          uint32_t x = (uint32_t)(grid["x"]);
+          uint32_t y = (uint32_t)(grid["y"]);
+          bitobj.create_child("pcb");
+          bitobj.pcb.back()->write_u32("x", x);
+          bitobj.pcb.back()->write_u32("y", y);
+          bitobj.pcb.back()->write_u32("bits", PCB_BIT_SIZE);
+          std::vector<uint8_t> data((PCB_BIT_SIZE + 7) / 8, 0);
+          if (grid.contains("data")) {
+            CFG_ASSERT(grid["data"].is_string());
+            std::string bram = std::string(grid["data"]);
+            CFG_ASSERT(bram.size() == PCB_BIT_SIZE);
+            size_t index = 0;
+            for (auto iter = bram.rbegin(); iter != bram.rend(); iter++) {
+              CFG_ASSERT(*iter == '0' || *iter == '1');
+              if (*iter == '1') {
+                data[index >> 3] |= (1 << (index & 7));
+              }
+              index++;
+            }
+          }
+          bitobj.pcb.back()->write_u8s("data", data);
+        }
+        found = true;
+        break;
+      }
+    }
+    CFG_ASSERT(found);
   } else {
     CFG_POST_WARNING("IO bitstream file %s does not exist. Skip for now",
                      filepath.c_str());

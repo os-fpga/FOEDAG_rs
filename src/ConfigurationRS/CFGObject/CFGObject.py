@@ -28,7 +28,7 @@ CLASS_CREATOR = []
 def check_case(name, upper) :
 
   assert isinstance(upper, bool)
-  assert len(name) >= 2, "Name must be at least two characters, but found %s" % name
+  assert len(name) >= 1, "Name must be at least one character, but found %s" % name
   for i, c in enumerate(name) :
     assert ((upper and c >= 'A' and c <= 'Z') or \
         (not upper and c >= 'a' and c <= 'z') or \

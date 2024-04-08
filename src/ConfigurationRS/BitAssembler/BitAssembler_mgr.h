@@ -14,6 +14,7 @@ class BitAssembler_MGR {
   void get_scan_chain_fcb(const CFGObject_BITOBJ_SCAN_CHAIN_FCB* fcb);
   void get_ql_membank_fcb(const CFGObject_BITOBJ_QL_MEMBANK_FCB* fcb);
   void get_icb(const CFGObject_BITOBJ_ICB* icb);
+  void get_pcb(CFGObject_BITOBJ& bitobj);
   std::vector<std::string> m_warnings;
 
   // public static

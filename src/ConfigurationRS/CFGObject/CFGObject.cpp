@@ -150,7 +150,7 @@ bool CFGObject::write(const std::string& filepath,
                       std::vector<std::string>* errors) {
   // Only allow writing data at top level
   CFG_ASSERT(parent_ptr == nullptr);
-  CFG_ASSERT(name.size() >= 2 && name.size() <= 8);
+  CFG_ASSERT(name.size() >= 1 && name.size() <= 8);
 
   // Make sure all the rule meet
   bool status = check_rule(errors);
@@ -186,7 +186,7 @@ bool CFGObject::read(std::vector<uint8_t>& data,
                      std::vector<std::string>* errors) {
   // Only allow reading data at top level
   CFG_ASSERT(parent_ptr == nullptr);
-  CFG_ASSERT(name.size() >= 2 && name.size() <= 8);
+  CFG_ASSERT(name.size() >= 1 && name.size() <= 8);
 
   // The class should be started from a blank one
   uint64_t object_count = get_object_count();
@@ -229,7 +229,7 @@ bool CFGObject::read(const std::string& filepath,
                      std::vector<std::string>* errors) {
   // Only allow reading data at top level
   CFG_ASSERT(parent_ptr == nullptr);
-  CFG_ASSERT(name.size() >= 2 && name.size() <= 8);
+  CFG_ASSERT(name.size() >= 1 && name.size() <= 8);
 
   // The class should be started from a blank one
   uint64_t object_count = get_object_count();
@@ -404,7 +404,7 @@ void CFGObject::serialize(std::vector<uint8_t>& data) const {
 void CFGObject::serialize_type_and_name(std::vector<uint8_t>& data,
                                         const CFGObject_RULE* rule) const {
   CFG_ASSERT(rule != nullptr);
-  CFG_ASSERT(rule->name.size() >= 2 && rule->name.size() <= 16);
+  CFG_ASSERT(rule->name.size() >= 1 && rule->name.size() <= 16);
   uint8_t type_enum = get_type_enum(rule->type);
   data.push_back(type_enum);
   for (auto c : rule->name) {
@@ -483,7 +483,7 @@ void CFGObject::parse_object(const uint8_t* data, size_t data_size,
   index++;
   CFG_ASSERT(index < data_size);
   std::string object_name =
-      CFG_get_string_from_bytes(data, data_size, index, 16, 2);
+      CFG_get_string_from_bytes(data, data_size, index, 16, 1);
   const CFGObject_RULE* rule = get_rule(object_name);
   CFG_ASSERT(rule->type == object_type);
   if (object_type == "bool") {
