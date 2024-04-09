@@ -17,7 +17,7 @@ struct CFGObject_RULE {
   CFGObject_RULE(std::string n, bool e, bool c, void* p, const std::string& t)
       : name(n), exist(e), compress(c), ptr(p), type(t) {
     // name
-    CFG_ASSERT(name.size() >= 2 && name.size() <= 16);
+    CFG_ASSERT(name.size() >= 1 && name.size() <= 16);
     // ptr  must not be nullptr
     CFG_ASSERT(ptr != nullptr);
     // type must be supported

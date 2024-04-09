@@ -63,6 +63,9 @@ void BitAssembler_entry(CFGCommon_ARG* cmdarg) {
     // ICB
     mgr.get_icb(&bitobj.icb);
 
+    // PCB
+    mgr.get_pcb(bitobj);
+
     // OCLA
     std::string yosysBin = CFG_print("%s/yosys", cmdarg->binPath.c_str());
     std::string analyzeCMDPath =
