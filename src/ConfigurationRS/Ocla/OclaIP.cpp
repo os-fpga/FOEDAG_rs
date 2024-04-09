@@ -1,19 +1,8 @@
 #include "OclaIP.h"
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
+#include "OclaHelpers.h"
 #include "OclaJtagAdapter.h"
-
-uint32_t CFG_reverse_byte_order_u32(uint32_t value) {
-  return (value >> 24) | ((value >> 8) & 0xff00) | ((value << 8) & 0xff0000) |
-         (value << 24);
-}
-
-void CFG_set_bitfield_u32(uint32_t &value, uint8_t pos, uint8_t width,
-                          uint32_t data) {
-  uint32_t mask = (~0u >> (32 - width)) << pos;
-  value &= ~mask;
-  value |= (data & ((1u << width) - 1)) << pos;
-}
 
 OclaIP::OclaIP(OclaJtagAdapter *adapter, uint32_t base_addr)
     : m_adapter(adapter),
@@ -78,8 +67,12 @@ void OclaIP::configure(ocla_config &cfg) {
                        (uint32_t)cfg.condition);
   CFG_set_bitfield_u32(m_tmtr, TMTR_FNS_Pos, TMTR_FNS_Width,
                        cfg.enable_fix_sample_size ? 1 : 0);
+
+  // NOTE: When FNS is 0, NS *must* be 0 as well otherwise the OCLA will stuck
+  // at sampling data forever and not setting the DA flag even internal FIFO is
+  // full
   CFG_set_bitfield_u32(m_tmtr, TMTR_NS_Pos, TMTR_NS_Width,
-                       (cfg.sample_size - 1));
+                       cfg.enable_fix_sample_size ? cfg.sample_size : 0);
 
   m_adapter->write(m_base_addr + TMTR, m_tmtr);
 }
@@ -129,6 +122,14 @@ void OclaIP::reset() {
 
 void OclaIP::start() {
   CFG_ASSERT(m_adapter != nullptr);
+
+  /*
+    NOTE:
+    In case of back to back activation, it requires a dummy write to the OCCR
+    register before setting ST bit for the start samplling to work.
+  */
+  m_adapter->write(m_base_addr + OCCR, 0);
+
   m_adapter->write(m_base_addr + OCCR, (1u << OCCR_ST_Pos));
 }
 
@@ -144,11 +145,11 @@ ocla_data OclaIP::get_data() const {
   }
 
   data.width = get_number_of_probes();
-  data.num_reads = ((data.width - 1) / 32) + 1;
+  data.words_per_line = ((data.width - 1) / 32) + 1;
   auto result =
-      m_adapter->read(m_base_addr + TBDR, data.depth * data.num_reads);
+      m_adapter->read(m_base_addr + TBDR, data.depth * data.words_per_line);
   for (auto const &value : result) {
-    data.values.push_back(std::get<1>(value));
+    data.values.push_back(value.data);
   }
   return data;
 }
@@ -184,7 +185,7 @@ ocla_config OclaIP::get_config() const {
   cfg.mode = (ocla_trigger_mode)((m_tmtr & TMTR_TM_Msk) >> TMTR_TM_Pos);
   cfg.condition = (ocla_trigger_condition)((m_tmtr & TMTR_B_Msk) >> TMTR_B_Pos);
   cfg.enable_fix_sample_size = ((m_tmtr & TMTR_FNS_Msk) >> TMTR_FNS_Pos);
-  cfg.sample_size = ((m_tmtr & TMTR_NS_Msk) >> TMTR_NS_Pos) + 1;
+  cfg.sample_size = ((m_tmtr & TMTR_NS_Msk) >> TMTR_NS_Pos);
 
   return cfg;
 }
@@ -216,7 +217,7 @@ ocla_trigger_config OclaIP::get_channel_config(uint32_t channel) const {
       cfg.compare_width = ((reg.tssr & TSSR_CW_Msk) >> TSSR_CW_Pos) + 1;
       break;
     case TRIGGER_NONE:
-      cfg.event = ocla_trigger_event::NONE;
+      cfg.event = ocla_trigger_event::NO_EVENT;
       break;
   }
 

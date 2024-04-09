@@ -1,5 +1,10 @@
 #include "OclaHelpers.h"
 
+#include <algorithm>
+#include <cctype>
+
+#include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
+
 static std::map<ocla_trigger_mode, std::string>
     ocla_trigger_mode_to_string_map = {{CONTINUOUS, "disable"},
                                        {PRE, "pre-trigger"},
@@ -22,12 +27,73 @@ static std::map<ocla_trigger_event, std::string> trigger_event_to_string_map = {
     {VALUE_NONE, "value_none"}, {EQUAL, "equal"},   {LESSER, "lesser"},
     {GREATER, "greater"}};
 
+std::string CFG_toupper(const std::string& str) {
+  std::string result = str;
+  for (char& c : result) {
+    c = std::toupper(c);
+  }
+  return result;
+}
+
+bool CFG_type_event_sanity_check(std::string& type, std::string& event) {
+  static std::map<std::string, std::vector<std::string>> s_check_table{
+      {"edge", {"rising", "falling", "either"}},
+      {"level", {"high", "low"}},
+      {"value_compare", {"equal", "lesser", "greater"}}};
+
+  auto vec = s_check_table[type];
+  auto it = std::find(vec.begin(), vec.end(), event);
+
+  if (it != vec.end()) {
+    return true;
+  }
+
+  return false;
+}
+
+uint32_t CFG_reverse_byte_order_u32(uint32_t value) {
+  return (value >> 24) | ((value >> 8) & 0xff00) | ((value << 8) & 0xff0000) |
+         (value << 24);
+}
+
+void CFG_set_bitfield_u32(uint32_t& value, uint8_t pos, uint8_t width,
+                          uint32_t data) {
+  uint32_t mask = (~0u >> (32 - width)) << pos;
+  value &= ~mask;
+  value |= (data & ((1u << width) - 1)) << pos;
+}
+
+uint32_t CFG_read_bit_vec32(uint32_t* data, uint32_t pos) {
+  // callee should make sure data ptr not out of bound
+  CFG_ASSERT(data != nullptr);
+  return data[pos / 32] >> (pos % 32) & 1;
+}
+
+void CFG_write_bit_vec32(uint32_t* data, uint32_t pos, uint32_t value) {
+  // callee should make sure data ptr not out of bound
+  CFG_ASSERT(data != nullptr);
+  data[pos / 32] |= value << (pos % 32);
+}
+
+void CFG_copy_bits_vec32(uint32_t* data, uint32_t pos, uint32_t* output,
+                         uint32_t output_pos, uint32_t nbits) {
+  // callee should make sure data ptr not out of bound
+  CFG_ASSERT(data != nullptr);
+  CFG_ASSERT(output != nullptr);
+  // naive implementation that does the copying bit by bit.
+  // this is till ok for small dataset.
+  for (uint32_t i = 0; i < nbits; i++) {
+    CFG_write_bit_vec32(output, output_pos + i,
+                        CFG_read_bit_vec32(data, pos + i));
+  }
+}
+
 // helpers to convert enum to string and vice versa
 std::string convert_ocla_trigger_mode_to_string(ocla_trigger_mode mode,
                                                 std::string defval) {
   if (ocla_trigger_mode_to_string_map.find(mode) !=
       ocla_trigger_mode_to_string_map.end())
-    return ocla_trigger_mode_to_string_map[mode];
+    return CFG_toupper(ocla_trigger_mode_to_string_map[mode]);
   return defval;
 }
 
@@ -89,21 +155,4 @@ ocla_trigger_event convert_trigger_event(std::string event_string,
   }
   // default if not found
   return defval;
-}
-
-std::vector<signal_info> generate_signal_descriptor(uint32_t width) {
-  std::vector<signal_info> signals;
-  for (uint32_t i = 0; i < width; i++) {
-    signals.push_back({"s" + std::to_string(i), 1});
-  }
-  return signals;
-}
-
-std::vector<signal_info> generate_signal_descriptor(
-    std::vector<Ocla_PROBE_INFO> probes) {
-  std::vector<signal_info> signals;
-  for (const auto& p : probes) {
-    signals.push_back({p.signal_name, p.bitwidth});
-  }
-  return signals;
 }

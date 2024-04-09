@@ -16,7 +16,7 @@ class MockOclaJtagAdapter : public OclaJtagAdapter {
  public:
   MOCK_METHOD(void, write, (uint32_t addr, uint32_t data), (override));
   MOCK_METHOD(uint32_t, read, (uint32_t addr), (override));
-  MOCK_METHOD((std::vector<std::tuple<uint32_t, uint32_t>>), read,
+  MOCK_METHOD(std::vector<jtag_read_result>, read,
               (uint32_t base_addr, uint32_t num_reads, uint32_t increase_by),
               (override));
   MOCK_METHOD(void, set_target_device,
@@ -103,7 +103,18 @@ TEST_F(OclaIPTest, configureTest) {
   cfg.mode = ocla_trigger_mode::PRE;
   cfg.enable_fix_sample_size = true;
   cfg.sample_size = 1234;
-  EXPECT_CALL(mockAdapter, write(TMTR, 0x4d101d));
+  EXPECT_CALL(mockAdapter, write(TMTR, 0x4d201d));
+  OclaIP oclaIP(&mockAdapter, 0);
+  oclaIP.configure(cfg);
+}
+
+TEST_F(OclaIPTest, configureTest_FNS_Disable) {
+  ocla_config cfg;
+  cfg.condition = ocla_trigger_condition::XOR;
+  cfg.mode = ocla_trigger_mode::PRE;
+  cfg.enable_fix_sample_size = false;
+  cfg.sample_size = 1234;
+  EXPECT_CALL(mockAdapter, write(TMTR, 0x0d));
   OclaIP oclaIP(&mockAdapter, 0);
   oclaIP.configure(cfg);
 }
@@ -175,6 +186,7 @@ TEST_F(OclaIPTest, configureChannelTest_ValueCompare) {
 }
 
 TEST_F(OclaIPTest, startTest) {
+  EXPECT_CALL(mockAdapter, write(OCCR, 0x0));
   EXPECT_CALL(mockAdapter, write(OCCR, 0x1));
   OclaIP oclaIP(&mockAdapter, 0);
   oclaIP.start();
@@ -188,19 +200,18 @@ TEST_F(OclaIPTest, resetTest) {
 
 TEST_F(OclaIPTest, getDataTest_FixSampleSize) {
   ON_CALL(mockAdapter, read(TMTR))
-      .WillByDefault(Return((127u << 12) + (1u << 4)));
+      .WillByDefault(Return((128u << 12) + (1u << 4)));
   ON_CALL(mockAdapter, read(UIDP0)).WillByDefault(Return(1000));
   ON_CALL(mockAdapter, read(UIDP1)).WillByDefault(Return(33));
   EXPECT_CALL(mockAdapter, read(TBDR, 256, 0))
       .Times(1)
-      .WillOnce(Return(std::vector<std::tuple<uint32_t, uint32_t>>(
-          256, std::make_tuple(0, 0))));
+      .WillOnce(Return(std::vector<jtag_read_result>(256, {0, 0, 0})));
 
   OclaIP oclaIP(&mockAdapter, 0);
   auto result = oclaIP.get_data();
   EXPECT_EQ(128, result.depth);
   EXPECT_EQ(33, result.width);
-  EXPECT_EQ(2, result.num_reads);
+  EXPECT_EQ(2, result.words_per_line);
   EXPECT_EQ(256, result.values.size());
 }
 
@@ -217,15 +228,14 @@ TEST_F(OclaIPTest, getDataTest_End2End) {
 
   EXPECT_CALL(mockAdapter, read(TBDR, 988 * 3, 0))
       .Times(1)
-      .WillOnce(Return(std::vector<std::tuple<uint32_t, uint32_t>>{
-          988 * 3, std::make_tuple(0, 0)}));
+      .WillOnce(Return(std::vector<jtag_read_result>{988 * 3, {0, 0, 0}}));
 
   OclaIP oclaIP(&mockAdapter, 0);
   oclaIP.configure(cfg);
   auto result = oclaIP.get_data();
   EXPECT_EQ(988, result.depth);
   EXPECT_EQ(65, result.width);
-  EXPECT_EQ(3, result.num_reads);
+  EXPECT_EQ(3, result.words_per_line);
   EXPECT_EQ(988 * 3, result.values.size());
 }
 
@@ -258,11 +268,11 @@ TEST_F(OclaIPTest, getConfigTest_default) {
   EXPECT_EQ(ocla_trigger_condition::DEFAULT, configData.condition);
   EXPECT_EQ(ocla_trigger_mode::CONTINUOUS, configData.mode);
   EXPECT_EQ(false, configData.enable_fix_sample_size);
-  EXPECT_EQ(1, configData.sample_size);
+  EXPECT_EQ(0, configData.sample_size);
 }
 
 TEST_F(OclaIPTest, getConfigTest) {
-  ON_CALL(mockAdapter, read(TMTR)).WillByDefault(Return(0x59ac5599));
+  ON_CALL(mockAdapter, read(TMTR)).WillByDefault(Return(0x59ac6599));
   OclaIP oclaIP(&mockAdapter, 0);
   ocla_config configData = oclaIP.get_config();
   EXPECT_EQ(ocla_trigger_condition::OR, configData.condition);
@@ -319,7 +329,7 @@ TEST_F(OclaIPTest, getChannelConfigTest_default) {
   OclaIP oclaIP(&mockAdapter, 0);
   ocla_trigger_config configData = oclaIP.get_channel_config(0);
   EXPECT_EQ(ocla_trigger_type::TRIGGER_NONE, configData.type);
-  EXPECT_EQ(ocla_trigger_event::NONE, configData.event);
+  EXPECT_EQ(ocla_trigger_event::NO_EVENT, configData.event);
   EXPECT_EQ(0, configData.probe_num);
   EXPECT_EQ(0, configData.value);
   EXPECT_EQ(0, configData.compare_width);

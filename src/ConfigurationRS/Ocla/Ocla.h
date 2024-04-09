@@ -2,48 +2,66 @@
 #define __OCLA_H__
 
 #include <cstdint>
-#include <map>
 #include <string>
 #include <vector>
 
-class OclaIP;
+#include "OclaDebugSession.h"
+
 class OclaJtagAdapter;
 class OclaWaveformWriter;
-class OclaSession;
 struct CFGCommon_ARG;
-struct Ocla_INSTANCE_INFO;
-struct Ocla_PROBE_INFO;
+
+struct oc_signal_t {
+  std::string name;
+  std::vector<uint32_t> values;
+  uint32_t bitwidth;
+  uint32_t bitpos;
+  uint32_t words_per_line;
+  uint32_t depth;
+};
+
+struct oc_probe_t {
+  std::vector<oc_signal_t> signal_list;
+  uint32_t probe_id;
+};
+
+struct oc_waveform_t {
+  std::vector<oc_probe_t> probes;
+  uint32_t domain_id;
+};
 
 class Ocla {
  public:
-  Ocla(OclaJtagAdapter *adapter, OclaSession *session,
-       OclaWaveformWriter *writer);
-  void configure(uint32_t instance, std::string mode, std::string condition,
+  Ocla(OclaJtagAdapter *adapter);
+  ~Ocla();
+  void configure(uint32_t domain_id, std::string mode, std::string condition,
                  uint32_t sample_size);
-  void configure_channel(uint32_t instance, uint32_t channel, std::string type,
-                         std::string event, uint32_t value,
-                         uint32_t compare_width, std::string probe);
-  bool start(uint32_t instance, uint32_t timeout, std::string output_filepath);
-  void start_session(std::string bitasm_filepath);
+  void add_trigger(uint32_t domain_id, uint32_t probe_id,
+                   std::string signal_name, std::string type, std::string event,
+                   uint32_t value, uint32_t compare_width);
+  void edit_trigger(uint32_t domain_id, uint32_t trigger_id, uint32_t probe_id,
+                    std::string signal_name, std::string type,
+                    std::string event, uint32_t value, uint32_t compare_width);
+  void remove_trigger(uint32_t domain_id, uint32_t trigger_id);
+  bool get_waveform(uint32_t domain_id, oc_waveform_t &output);
+  bool get_status(uint32_t domain_id, uint32_t &status);
+  bool start(uint32_t domain_id);
+  void start_session(std::string filepath);
   void stop_session();
-  std::string show_status(uint32_t instance);
-  std::string show_info();
-  std::string show_session_info();
+  void show_info();
+  void show_instance_info();
 
  private:
-  OclaIP get_ocla_instance(uint32_t instance);
-  std::map<uint32_t, OclaIP> detect_ocla_instances();
-  bool get_instance_info(uint32_t base_addr, Ocla_INSTANCE_INFO &instance_info,
-                         uint32_t &idx);
-  std::vector<Ocla_PROBE_INFO> get_probe_info(uint32_t base_addr);
-  std::map<uint32_t, Ocla_PROBE_INFO> find_probe_info_by_name(
-      uint32_t base_addr, std::string probe_name);
-  bool find_probe_info_by_offset(uint32_t base_addr, uint32_t bit_offset,
-                                 Ocla_PROBE_INFO &output);
-  bool validate();
+  static std::vector<OclaDebugSession> m_sessions;
   OclaJtagAdapter *m_adapter;
-  OclaSession *m_session;
-  OclaWaveformWriter *m_writer;
+
+  bool get_hier_objects(uint32_t session_id, OclaDebugSession *&session,
+                        uint32_t domain_id = 0, OclaDomain **domain = nullptr,
+                        uint32_t probe_id = 0, OclaProbe **probe = nullptr,
+                        std::string signal_name = "",
+                        OclaSignal **signal = nullptr);
+  void show_signal_table(std::vector<OclaSignal> signals_list);
+  void program(OclaDomain *domain);
 };
 
 void Ocla_entry(CFGCommon_ARG *cmdarg);

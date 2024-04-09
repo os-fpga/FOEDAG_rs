@@ -19,11 +19,11 @@ TEST_P(ConvertOclaModeToStringParamTest, ConvertOclaMode) {
 
 INSTANTIATE_TEST_SUITE_P(
     Default, ConvertOclaModeToStringParamTest,
-    ::testing::Values(std::make_pair(CONTINUOUS, "disable"),
-                      std::make_pair(PRE, "pre-trigger"),
-                      std::make_pair(POST, "post-trigger"),
-                      std::make_pair(CENTER, "center-trigger"),
-                      std::make_pair(CONTINUOUS, "disable")));
+    ::testing::Values(std::make_pair(CONTINUOUS, "DISABLE"),
+                      std::make_pair(PRE, "PRE-TRIGGER"),
+                      std::make_pair(POST, "POST-TRIGGER"),
+                      std::make_pair(CENTER, "CENTER-TRIGGER"),
+                      std::make_pair(CONTINUOUS, "DISABLE")));
 
 class ConvertTriggerConditionToStringParamTest
     : public ::testing::TestWithParam<
@@ -204,40 +204,21 @@ TEST(ConvertTriggerEventTest, ValidTriggerType) {
 
 TEST(ConvertTriggerEventTest, InvalidTriggerType) {
   std::string type_string = "dummyTestString";
-  ocla_trigger_event expected = NONE;
+  ocla_trigger_event expected = NO_EVENT;
   ocla_trigger_event result = convert_trigger_event(type_string);
   EXPECT_EQ(result, expected);
 }
 
 TEST(ConvertTriggerEventTest, EmptyTriggerType) {
   std::string type_string = "";
-  ocla_trigger_event expected = NONE;
+  ocla_trigger_event expected = NO_EVENT;
   ocla_trigger_event result = convert_trigger_event(type_string);
   EXPECT_EQ(result, expected);
 }
 
 TEST(ConvertTriggerEventTest, defaultTriggerType) {
   std::string type_string = "my default";
-  ocla_trigger_event expected = NONE;
-  ocla_trigger_event result = convert_trigger_event(type_string, NONE);
+  ocla_trigger_event expected = NO_EVENT;
+  ocla_trigger_event result = convert_trigger_event(type_string, NO_EVENT);
   EXPECT_EQ(result, expected);
-}
-
-TEST(GenerateSignalDescriptorTest, ValidWidth) {
-  uint32_t width = 8;
-  std::vector<signal_info> expected = {{"s0", 1}, {"s1", 1}, {"s2", 1},
-                                       {"s3", 1}, {"s4", 1}, {"s5", 1},
-                                       {"s6", 1}, {"s7", 1}};
-  auto result = generate_signal_descriptor(width);
-  for (size_t i = 0; i < width; i++) {
-    EXPECT_EQ(result[i].name, expected[i].name);
-    EXPECT_EQ(result[i].bitwidth, expected[i].bitwidth);
-  }
-}
-
-TEST(GenerateSignalDescriptorTest, ZeroWidth) {
-  uint32_t width = 0;
-  std::vector<signal_info> expected = {};
-  std::vector<signal_info> result = generate_signal_descriptor(width);
-  EXPECT_EQ(result.size(), expected.size());
 }

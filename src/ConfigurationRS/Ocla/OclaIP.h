@@ -111,7 +111,7 @@ enum ocla_trigger_type {
 };
 
 enum ocla_trigger_event {
-  NONE = 0,
+  NO_EVENT = 0,
   EDGE_NONE = 0x10,
   RISING = 0x11,
   FALLING = 0x12,
@@ -142,7 +142,7 @@ struct ocla_trigger_config {
 struct ocla_data {
   uint32_t depth;
   uint32_t width;
-  uint32_t num_reads;
+  uint32_t words_per_line;
   std::vector<uint32_t> values;
 };
 

@@ -40,12 +40,13 @@ void OclaOpenocdAdapter::write(uint32_t addr, uint32_t data) {
 }
 
 uint32_t OclaOpenocdAdapter::read(uint32_t addr) {
-  auto values = read(addr, 1);
-  return std::get<1>(values[0]);
+  auto result = read(addr, 1);
+  return result[0].data;
 }
 
-std::vector<std::tuple<uint32_t, uint32_t>> OclaOpenocdAdapter::read(
-    uint32_t base_addr, uint32_t num_reads, uint32_t increase_by) {
+std::vector<jtag_read_result> OclaOpenocdAdapter::read(uint32_t base_addr,
+                                                       uint32_t num_reads,
+                                                       uint32_t increase_by) {
   // ocla jtag read via openocd command
   // ----------------------------------
   // irscan ocla 0x04
@@ -99,12 +100,12 @@ int OclaOpenocdAdapter::execute_command(const std::string &cmd,
   return res;
 }
 
-std::vector<std::tuple<uint32_t, uint32_t>> OclaOpenocdAdapter::parse(
+std::vector<jtag_read_result> OclaOpenocdAdapter::parse(
     const std::string &output) {
   std::stringstream ss(output);
   std::string s;
   std::cmatch matches;
-  std::vector<std::tuple<uint32_t, uint32_t>> values;
+  std::vector<jtag_read_result> values;
 
   while (std::getline(ss, s)) {
     // look for text format (in hex): 0xNNNNNNNN xxxxxxxx yy
@@ -112,10 +113,11 @@ std::vector<std::tuple<uint32_t, uint32_t>> OclaOpenocdAdapter::parse(
             s.c_str(), matches,
             std::regex("^0x([0-9A-F]{8}) ([0-9A-F]{8}) ([0-9A-F]{2})$",
                        std::regex::icase)) == true) {
-      CFG_ASSERT_MSG(stoi(matches[3], nullptr, 16) == 0, "ocla error");
-      values.push_back(
-          std::make_tuple((uint32_t)stoul(matches[1], nullptr, 16),
-                          (uint32_t)stoul(matches[2], nullptr, 16)));
+      jtag_read_result res{};
+      res.address = (uint32_t)stoul(matches[1], 0, 16);
+      res.data = (uint32_t)stoul(matches[2], 0, 16);
+      res.status = (uint32_t)stoul(matches[3], 0, 16);
+      values.push_back(res);
     }
   }
 
