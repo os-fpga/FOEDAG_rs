@@ -25,6 +25,11 @@ void Ocla::configure(uint32_t domain_id, std::string mode,
     return;
   }
 
+  // verify if the ip matches the ocla debug info
+  if (!verify(session)) {
+    return;
+  }
+
   for (auto &elem : domain->get_instances()) {
     instance = &elem;
     break;
@@ -69,6 +74,11 @@ void Ocla::add_trigger(uint32_t domain_id, uint32_t probe_id,
 
   if (!get_hier_objects(1, session, domain_id, &domain, probe_id, &probe,
                         signal_name, &signal)) {
+    return;
+  }
+
+  // verify if the ip matches the ocla debug info
+  if (!verify(session)) {
     return;
   }
 
@@ -145,6 +155,11 @@ void Ocla::edit_trigger(uint32_t domain_id, uint32_t trigger_id,
     return;
   }
 
+  // verify if the ip matches the ocla debug info
+  if (!verify(session)) {
+    return;
+  }
+
   if (trigger_id == 0 || domain->get_triggers().size() < trigger_id) {
     CFG_POST_ERR("Trigger %d not found", trigger_id);
     return;
@@ -184,6 +199,11 @@ void Ocla::remove_trigger(uint32_t domain_id, uint32_t trigger_id) {
   OclaDomain *domain = nullptr;
 
   if (!get_hier_objects(1, session, domain_id, &domain)) {
+    return;
+  }
+
+  // verify if the ip matches the ocla debug info
+  if (!verify(session)) {
     return;
   }
 
@@ -298,6 +318,11 @@ void Ocla::show_info() {
     return;
   }
 
+  // verify if the ip matches the ocla debug info
+  if (!verify(session)) {
+    return;
+  }
+
   CFG_POST_MSG("User design loaded: %s", session->get_filepath().c_str());
 
   for (auto &domain : session->get_clock_domains()) {
@@ -371,6 +396,11 @@ void Ocla::show_instance_info() {
 
   OclaDebugSession *session = nullptr;
   if (!get_hier_objects(1, session)) {
+    return;
+  }
+
+  // verify if the ip matches the ocla debug info
+  if (!verify(session)) {
     return;
   }
 
@@ -504,25 +534,32 @@ bool Ocla::get_status(uint32_t domain_id, uint32_t &status) {
   OclaDomain *domain = nullptr;
   OclaInstance *instance = nullptr;
 
+  if (!get_hier_objects(1, session, domain_id, &domain)) {
+    return false;
+  }
+
+  // verify if the ip matches the ocla debug info
+  if (!verify(session)) {
+    return false;
+  }
+
+  for (auto &elem : domain->get_instances()) {
+    instance = &elem;
+    break;
+  }
+
+  if (!instance) {
+    CFG_POST_MSG("No instance found for clock domain %d", domain_id);
+    return false;
+  }
+
   // NOTE:
   // Assuming multiple instances for SINGLE clock domain will be daisy chained.
   // So only query the status of the first instance.
-  if (get_hier_objects(1, session, domain_id, &domain)) {
-    for (auto &elem : domain->get_instances()) {
-      instance = &elem;
-      break;
-    }
+  OclaIP ocla_ip{m_adapter, instance->get_baseaddr()};
+  status = (uint32_t)ocla_ip.get_status();
 
-    if (instance) {
-      OclaIP ocla_ip{m_adapter, instance->get_baseaddr()};
-      status = (uint32_t)ocla_ip.get_status();
-      return true;
-    } else {
-      CFG_POST_MSG("No instance found for clock domain %d", domain_id);
-    }
-  }
-
-  return false;
+  return true;
 }
 
 void Ocla::program(OclaDomain *domain) {
@@ -560,6 +597,64 @@ void Ocla::program(OclaDomain *domain) {
   }
 }
 
+bool Ocla::verify(OclaDebugSession *session) {
+  CFG_ASSERT(m_adapter != nullptr);
+  CFG_ASSERT(session != nullptr);
+
+  // check probe sum (in json parser)
+  uint32_t error_count = 0;
+
+  for (auto &domain : session->get_clock_domains()) {
+    for (auto &instance : domain.get_instances()) {
+      OclaIP ocla_ip{m_adapter, instance.get_baseaddr()};
+
+      if (ocla_ip.get_type() != instance.get_type()) {
+        CFG_POST_ERR("Could not detect instance %d at 0x%08x",
+                     instance.get_index(), instance.get_baseaddr());
+        ++error_count;
+        continue;
+      }
+
+      if (ocla_ip.get_version() != instance.get_version()) {
+        CFG_POST_ERR(
+            "Instance %d version mismatched (expected=0x%x, actual=0x%x)",
+            instance.get_index(), instance.get_version(),
+            ocla_ip.get_version());
+        ++error_count;
+      }
+
+      if (ocla_ip.get_id() != instance.get_id()) {
+        CFG_POST_ERR("Instance %d ID mismatched (expected=0x%x, actual=0x%x)",
+                     instance.get_index(), instance.get_id(), ocla_ip.get_id());
+        ++error_count;
+      }
+
+      if (ocla_ip.get_memory_depth() != instance.get_memory_depth()) {
+        CFG_POST_ERR(
+            "Instance %d memory depth mismatched (expected=%d, actual=%d)",
+            instance.get_index(), instance.get_memory_depth(),
+            ocla_ip.get_memory_depth());
+        ++error_count;
+      }
+
+      if (ocla_ip.get_number_of_probes() != instance.get_num_of_probes()) {
+        CFG_POST_ERR(
+            "Instance %d no. of probes mismatched (expected=%d, actual=%d)",
+            instance.get_index(), instance.get_num_of_probes(),
+            ocla_ip.get_number_of_probes());
+        ++error_count;
+      }
+    }
+  }
+
+  if (error_count > 0) {
+    CFG_POST_ERR("IP Verification failed");
+    return false;
+  }
+
+  return true;
+}
+
 bool Ocla::start(uint32_t domain_id) {
   CFG_ASSERT(m_adapter != nullptr);
 
@@ -568,6 +663,11 @@ bool Ocla::start(uint32_t domain_id) {
   OclaInstance *instance = nullptr;
 
   if (!get_hier_objects(1, session, domain_id, &domain)) {
+    return false;
+  }
+
+  // verify if the ip matches the ocla debug info
+  if (!verify(session)) {
     return false;
   }
 

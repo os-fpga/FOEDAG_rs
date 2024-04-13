@@ -155,6 +155,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
                            parms->device)) {
       uint32_t status = 0;
       if (ocla.get_status(parms->domain, status)) {
+        CFG_POST_MSG("%d - %s", status,
+                     (status ? "Data Available" : "Data Not Available"));
         cmdarg->tclOutput = std::to_string(status);
       }
     }
