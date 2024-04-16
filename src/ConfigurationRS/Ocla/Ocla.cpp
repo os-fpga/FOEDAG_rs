@@ -52,7 +52,6 @@ void Ocla::configure(uint32_t domain_id, std::string mode,
 
   ocla_config cfg;
 
-  cfg.enable_fix_sample_size = sample_size > 0 ? true : false;
   cfg.sample_size = sample_size;
   cfg.mode = convert_ocla_trigger_mode(mode);
   cfg.condition = convert_trigger_condition(CFG_toupper(condition));
@@ -89,13 +88,14 @@ void Ocla::add_trigger(uint32_t domain_id, uint32_t probe_id,
     return;
   }
 
-  if (signal->get_type() == oc_signal_type_t::PLACEHOLDER) {
+  if (signal->get_type() == oc_signal_type_t::CONSTANT) {
     CFG_POST_ERR("Cannot setup trigger on constant signal '%s'",
                  signal->get_name().c_str());
     return;
   }
 
-  // count the number of triggers configured this instance index
+  // get the number of triggers *already* configured on the instance of the
+  // selected probe
   uint32_t trigger_count = 0;
   for (auto trig : domain->get_triggers()) {
     if (probe->get_instance_index() == trig.instance_index) {
@@ -115,15 +115,25 @@ void Ocla::add_trigger(uint32_t domain_id, uint32_t probe_id,
     return;
   }
 
-  // check hardware trigger slot is enuf (ocla debug info doesn't have this
-  // data)
+  // Check to see if the 'existing' number of trigger configurations has
+  // *already* reached the IP max number of triggers limit.
+  // For example:
+  //   If user has already added 4 triggers previously and try to add another
+  //   one where the max no. of triggers the IP supports is 4, the software does
+  //   not allow the 5th trigger to be added. This is because all trigger
+  //   resources has been used up on the instance. In this case, the command
+  //   will fail with a message telling the user that all trigger resources has
+  //   been used up.
   OclaIP ocla_ip{m_adapter, instance->get_baseaddr()};
   if (trigger_count >= ocla_ip.get_trigger_count()) {
-    CFG_POST_ERR("Maximum triggers reached");
+    CFG_POST_ERR(
+        "Existing setup has used all the available trigger (%d) resource, fail "
+        "to add another one",
+        trigger_count);
     return;
   }
 
-  // add trigger to debug session
+  // add a new trigger to the instance
   oc_trigger_t trig{};
 
   trig.instance_index = probe->get_instance_index();
@@ -172,7 +182,7 @@ void Ocla::edit_trigger(uint32_t domain_id, uint32_t trigger_id,
     return;
   }
 
-  if (signal->get_type() == oc_signal_type_t::PLACEHOLDER) {
+  if (signal->get_type() == oc_signal_type_t::CONSTANT) {
     CFG_POST_ERR("Cannot setup trigger on constant signal '%s'",
                  signal->get_name().c_str());
     return;
@@ -231,28 +241,32 @@ bool Ocla::get_hier_objects(uint32_t session_id, OclaDebugSession *&session,
   }
 
   if (domain != nullptr) {
+    bool found = false;
     for (auto &elem : session->get_clock_domains()) {
       if (elem.get_index() == domain_id) {
         *domain = &elem;
+        found = true;
         break;
       }
     }
 
-    if (!(*domain)) {
+    if (!found) {
       CFG_POST_ERR("Clock domain %d not found", domain_id);
       return false;
     }
   }
 
   if (probe != nullptr) {
+    bool found = false;
     for (auto &elem : (*domain)->get_probes()) {
       if (elem.get_index() == probe_id) {
         *probe = &elem;
+        found = true;
         break;
       }
     }
 
-    if (!(*probe)) {
+    if (!found) {
       CFG_POST_ERR("Probe %d not found", probe_id);
       return false;
     }
@@ -262,22 +276,24 @@ bool Ocla::get_hier_objects(uint32_t session_id, OclaDebugSession *&session,
     bool status = false;
     uint32_t signal_id =
         (uint32_t)CFG_convert_string_to_u64(signal_name, false, &status);
-
+    bool found = false;
     for (auto &elem : (*probe)->get_signals()) {
       if (status) {
         if (elem.get_index() == signal_id) {
           *signal = &elem;
+          found = true;
           break;
         }
       } else {
         if (elem.get_name() == signal_name) {
           *signal = &elem;
+          found = true;
           break;
         }
       }
     }
 
-    if (!(*signal)) {
+    if (!found) {
       CFG_POST_ERR("Signal '%s' not found", signal_name.c_str());
       return false;
     }
@@ -340,10 +356,10 @@ void Ocla::show_info() {
     CFG_POST_MSG("    Trigger Condition: %s",
                  convert_trigger_condition_to_string(cfg.condition).c_str());
     CFG_POST_MSG("    Enable Fixed Sample Size: %s",
-                 cfg.enable_fix_sample_size ? "TRUE" : "FALSE");
+                 cfg.sample_size > 0 ? "TRUE" : "FALSE");
 
     uint32_t sample_size = cfg.sample_size;
-    if (!cfg.enable_fix_sample_size) {
+    if (sample_size == 0) {
       // show memory depth when fns is disabled. use first instance available
       // since all will have same memory depth
       for (auto &inst : domain.get_instances()) {
@@ -419,9 +435,9 @@ void Ocla::show_instance_info() {
     CFG_POST_MSG("  DA status          : %d", ocla_ip.get_status());
 
     auto cfg = ocla_ip.get_config();
-    CFG_POST_MSG("  No. of samples     : %d",
-                 (cfg.enable_fix_sample_size ? cfg.sample_size
-                                             : ocla_ip.get_memory_depth()));
+    CFG_POST_MSG(
+        "  No. of samples     : %d",
+        (cfg.sample_size > 0 ? cfg.sample_size : ocla_ip.get_memory_depth()));
     CFG_POST_MSG("  Trigger mode       : %s",
                  convert_ocla_trigger_mode_to_string(cfg.mode).c_str());
     CFG_POST_MSG("  Trigger condition  : %s",

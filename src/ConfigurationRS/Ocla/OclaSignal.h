@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string>
 
-enum oc_signal_type_t { SIGNAL, PLACEHOLDER };
+enum oc_signal_type_t { SIGNAL, CONSTANT };
 
 class OclaSignal {
  private:

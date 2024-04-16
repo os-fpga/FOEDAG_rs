@@ -271,7 +271,7 @@ OclaSignal OclaDebugSession::parse_signal(std::string signal_str) {
     {
       sig.set_orig_name(m[0].str());
       sig.set_name(m[0].str());
-      sig.set_type(oc_signal_type_t::PLACEHOLDER);
+      sig.set_type(oc_signal_type_t::CONSTANT);
       sig.set_value(
           static_cast<uint32_t>(CFG_convert_string_to_u64("b" + m[2].str())));
       sig.set_bitwidth(
@@ -297,6 +297,8 @@ OclaSignal OclaDebugSession::parse_signal(std::string signal_str) {
       break;
     }
     default:
+      // assert when unknown format encountered
+      CFG_ASSERT_MSG(false, "Invalid signal format '%s'", signal_str.c_str());
       break;
   }
 
