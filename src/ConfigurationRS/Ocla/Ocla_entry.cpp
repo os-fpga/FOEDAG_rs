@@ -16,6 +16,8 @@
 #define DEF_FST_OUTPUT "/tmp/output.fst"
 #endif
 
+#define OCLA_WAIT_TIME_MS (1000)
+
 bool Ocla_select_device(OclaJtagAdapter& adapter,
                         FOEDAG::HardwareManager& hardware_manager,
                         std::string cable_name, uint32_t device_index) {
@@ -53,7 +55,7 @@ void Ocla_wait_n_show_waveform(Ocla& ocla, uint32_t domain_id,
   // query the status of the ocla ip for max of 'timeout_sec' times
   // if status is set, break the loop
   for (uint32_t i = 0; i < timeout_sec; i++) {
-    CFG_sleep_ms(1000);  // wait for 1 sec
+    CFG_sleep_ms(OCLA_WAIT_TIME_MS);  // wait for 1 sec
     if (!ocla.get_status(domain_id, status)) {
       CFG_POST_ERR("Failed to read ocla status");
       return;
@@ -155,6 +157,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
                            parms->device)) {
       uint32_t status = 0;
       if (ocla.get_status(parms->domain, status)) {
+        CFG_POST_MSG("%d - %s", status,
+                     (status ? "Data Available" : "Data Not Available"));
         cmdarg->tclOutput = std::to_string(status);
       }
     }
