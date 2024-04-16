@@ -52,4 +52,4 @@ wget https://github.com/os-fpga/post_build_artifacts/releases/download/v0.1/pyth
 tar -xzf python.tar.gz
 mv python3.8 /opt
 rm /opt/python3.8/bin/python3 && ln -sf /opt/python3.8/bin/python3.8 /opt/python3.8/bin/python3
-
+echo 'PATH=/opt/python3.8/bin:'"$PATH" >> $GITHUB_ENV
