@@ -4,7 +4,6 @@ OclaDomain::OclaDomain(oc_domain_type_t type, uint32_t idx)
     : m_type(type), m_index(idx) {
   m_config.mode = ocla_trigger_mode::CONTINUOUS;
   m_config.condition = ocla_trigger_condition::DEFAULT;
-  m_config.enable_fix_sample_size = false;
   m_config.sample_size = 0;
 }
 

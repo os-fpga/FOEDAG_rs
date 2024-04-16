@@ -62,6 +62,7 @@ class Ocla {
                         OclaSignal **signal = nullptr);
   void show_signal_table(std::vector<OclaSignal> signals_list);
   void program(OclaDomain *domain);
+  bool verify(OclaDebugSession *session);
 };
 
 void Ocla_entry(CFGCommon_ARG *cmdarg);

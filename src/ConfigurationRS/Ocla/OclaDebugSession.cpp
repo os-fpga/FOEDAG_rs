@@ -53,12 +53,11 @@ bool OclaDebugSession::load(std::string filepath,
 
   std::string ocla_str = BitAssembler_MGR::get_ocla_design(filepath);
   if (ocla_str.empty()) {
-    error_messages.push_back("OCLA debug information not found");
+    error_messages.push_back("No OCLA debug information found");
     return false;
   }
 
-  if (!parse(ocla_str)) {
-    error_messages.push_back("Parsing OCLA debug information failed");
+  if (!parse(ocla_str, error_messages)) {
     return false;
   }
 
@@ -73,35 +72,68 @@ void OclaDebugSession::unload() {
   m_loaded = false;
 }
 
-bool OclaDebugSession::parse(std::string ocla_str) {
-  bool res = false;
+bool OclaDebugSession::parse(std::string ocla_str,
+                             std::vector<std::string> &error_messages) {
+  bool res = true;
   try {
     nlohmann::json json = nlohmann::json::parse(ocla_str);
     nlohmann::json ocla_debug_subsystem = json.at("ocla_debug_subsystem");
     nlohmann::json ocla_list = json.at("ocla");
     std::vector<OclaDomain> deferred_list{};
+    std::map<uint32_t, int> indexes{};
+    uint32_t probes_sum = 0;
     bool single = false;
 
     if (ocla_debug_subsystem.at("Sampling_Clk") == "SINGLE") {
+      // create one single domain object for all ocla instances for single
+      // sampling clock setting
       m_clock_domains.push_back(OclaDomain{oc_domain_type_t::NATIVE, 1});
       single = true;
     }
 
     for (const auto &ocla : ocla_list) {
+      // sanity check: duplicate instance index
+      if (indexes.find(ocla.at("INDEX")) != indexes.end()) {
+        error_messages.push_back("Duplicate instance index " +
+                                 std::to_string((uint32_t)ocla.at("INDEX")));
+        res = false;
+        break;
+      }
+
       // parse instance info
       OclaInstance instance{ocla.at("IP_TYPE"),      ocla.at("IP_VERSION"),
                             ocla.at("IP_ID"),        ocla.at("MEM_DEPTH"),
                             ocla.at("NO_OF_PROBES"), ocla.at("addr"),
                             ocla.at("INDEX")};
 
+      // insert into index map for duplicate check
+      indexes[instance.get_index()] = 1;
+
+      // accumulate no of probes for all instances
+      probes_sum += instance.get_num_of_probes();
+
       // parse signal info
       std::vector<OclaSignal> signals{};
       uint32_t bitpos = 0;
+      uint32_t total_bitwidth = 0;
       for (auto const &elem : ocla.at("probes")) {
         auto sig = parse_signal(elem);
         sig.set_bitpos(bitpos);
         bitpos += sig.get_bitwidth();
+        total_bitwidth += sig.get_bitwidth();
         signals.push_back(sig);
+      }
+
+      // sanity check: total width of probes equals to no. of probes of the
+      // instance
+      if (total_bitwidth != instance.get_num_of_probes()) {
+        error_messages.push_back(
+            "Instance " + std::to_string(instance.get_index()) +
+            " total probes width mismatched (expect=" +
+            std::to_string(instance.get_num_of_probes()) +
+            ", actual=" + std::to_string(total_bitwidth) + ")");
+        res = false;
+        break;
       }
 
       // parse probe info
@@ -109,8 +141,9 @@ bool OclaDebugSession::parse(std::string ocla_str) {
         // native probe
         uint32_t signal_index = 1;
 
-        // create domain object for multiple clock domain ocla
         if (!single) {
+          // create a domain object for each ocla instance for multiple sampling
+          // clock setting
           m_clock_domains.push_back(OclaDomain{
               oc_domain_type_t::NATIVE, (uint32_t)m_clock_domains.size() + 1});
         }
@@ -120,10 +153,12 @@ bool OclaDebugSession::parse(std::string ocla_str) {
         domain.add_instance(instance);
 
         // create probes
+        uint32_t total_probe_width = 0;
         for (auto const &elem : ocla.at("probe_info")) {
           uint32_t probe_index = elem.at("index");
           uint32_t offset = elem.at("offset");
           uint32_t width = elem.at("width");
+          total_probe_width += width;
           OclaProbe probe{probe_index + 1};
           probe.set_instance_index(instance.get_index());
           for (auto &sig : signals) {
@@ -135,6 +170,18 @@ bool OclaDebugSession::parse(std::string ocla_str) {
             }
           }
           domain.add_probe(probe);
+        }
+
+        // sanity check: total width of probe_info equals to no. of probes of
+        // the instance
+        if (total_probe_width != instance.get_num_of_probes()) {
+          error_messages.push_back(
+              "Instance " + std::to_string(instance.get_index()) +
+              " total probe_info width mismatched (expect=" +
+              std::to_string(instance.get_num_of_probes()) +
+              ", actual=" + std::to_string(total_probe_width) + ")");
+          res = false;
+          break;
         }
       } else {
         // axi probe
@@ -155,14 +202,28 @@ bool OclaDebugSession::parse(std::string ocla_str) {
       }
     }
 
-    // insert deferred clock domains (axi domain)
-    if (!deferred_list.empty()) {
-      for (auto &elem : deferred_list) {
-        elem.set_index((uint32_t)m_clock_domains.size() + 1);
-        m_clock_domains.push_back(elem);
+    if (res) {
+      // sanity check: total no. of probes equals to Probes_Sum in debug info
+      if (probes_sum != ocla_debug_subsystem.at("Probes_Sum")) {
+        error_messages.push_back(
+            "Total sum of all probes mismatched (expect=" +
+            std::to_string((uint32_t)ocla_debug_subsystem.at("Probes_Sum")) +
+            ", actual=" + std::to_string(probes_sum) + ")");
+        res = false;
       }
     }
-    res = true;
+
+    if (res) {
+      // insert deferred clock domains (axi domain)
+      if (!deferred_list.empty()) {
+        for (auto &elem : deferred_list) {
+          elem.set_index((uint32_t)m_clock_domains.size() + 1);
+          m_clock_domains.push_back(elem);
+        }
+      }
+    } else {
+      m_clock_domains.clear();
+    }
   } catch (const nlohmann::detail::exception &e) {
     CFG_ASSERT_MSG(false, e.what());
   }
@@ -210,7 +271,7 @@ OclaSignal OclaDebugSession::parse_signal(std::string signal_str) {
     {
       sig.set_orig_name(m[0].str());
       sig.set_name(m[0].str());
-      sig.set_type(oc_signal_type_t::PLACEHOLDER);
+      sig.set_type(oc_signal_type_t::CONSTANT);
       sig.set_value(
           static_cast<uint32_t>(CFG_convert_string_to_u64("b" + m[2].str())));
       sig.set_bitwidth(
@@ -236,6 +297,8 @@ OclaSignal OclaDebugSession::parse_signal(std::string signal_str) {
       break;
     }
     default:
+      // assert when unknown format encountered
+      CFG_ASSERT_MSG(false, "Invalid signal format '%s'", signal_str.c_str());
       break;
   }
 
