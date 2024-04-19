@@ -169,8 +169,13 @@ void Ocla::add_trigger(uint32_t domain_id, uint32_t probe_id,
   // unless overrided by compare width param
   if (trig.cfg.type == ocla_trigger_type::VALUE_COMPARE) {
     if (compare_width == 0) {
-      trig.cfg.compare_width =
-          trig.bitrange_enable ? trig.width : signal->get_bitwidth();
+      if (trig.bitrange_enable) {
+        trig.cfg.compare_width =
+            std::min(trig.width, ocla_ip.get_max_compare_value_size());
+      } else {
+        trig.cfg.compare_width = std::min(signal->get_bitwidth(),
+                                          ocla_ip.get_max_compare_value_size());
+      }
     }
   }
 
@@ -288,8 +293,13 @@ void Ocla::edit_trigger(uint32_t domain_id, uint32_t trigger_index,
   // unless overrided by compare width param
   if (trig->cfg.type == ocla_trigger_type::VALUE_COMPARE) {
     if (compare_width == 0) {
-      trig->cfg.compare_width =
-          trig->bitrange_enable ? trig->width : signal->get_bitwidth();
+      if (trig->bitrange_enable) {
+        trig->cfg.compare_width =
+            std::min(trig->width, ocla_ip.get_max_compare_value_size());
+      } else {
+        trig->cfg.compare_width = std::min(
+            signal->get_bitwidth(), ocla_ip.get_max_compare_value_size());
+      }
     }
   }
 }
