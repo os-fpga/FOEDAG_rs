@@ -68,7 +68,7 @@ class element :
     assert isinstance(self.compress, bool), "Element %s compress paramter must be boolean, but found %s" % type(self.compress)
     assert self.type in SUPPORTED_TYPES, "Element %s type %s is not supported (%s)" % (self.name, self.type, SUPPORTED_TYPES)
     if self.type != None :
-      assert not self.list, "None-clasee element %s (%s) does not support list parameter" % (self.name, self.type)
+      assert not self.list, "None-class element %s (%s) does not support list parameter" % (self.name, self.type)
 
 def check_element(values, name, siblings, level=0) :
 

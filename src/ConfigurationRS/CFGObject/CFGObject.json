@@ -71,6 +71,11 @@
           "name" : "data",
           "type" : "u8s",
           "cmp"  : true
+        },
+        {
+          "name" : "mask",
+          "type" : "u8s",
+          "cmp"  : true
         }
       ],
       "exist" : false

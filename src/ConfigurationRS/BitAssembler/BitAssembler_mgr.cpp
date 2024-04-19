@@ -122,6 +122,7 @@ void BitAssembler_MGR::get_ql_membank_fcb(
   uint32_t one_hot_wl = 0;
   bool wl_increasing = false;
   std::vector<uint8_t> data;
+  std::vector<uint8_t> mask;
   while (getline(file, line)) {
     // Only trim the trailing whitespace
     CFG_get_rid_trailing_whitespace(line);
@@ -137,7 +138,7 @@ void BitAssembler_MGR::get_ql_membank_fcb(
     } else if (line_tracking == 2) {
       // This will be all data, no exception
       get_wl_bitline_into_bytes(
-          line, data, fcb->bl, fcb->wl,
+          line, data, mask, fcb->bl, fcb->wl,
           wl_increasing ? data_line : fcb->wl - data_line - 1, lsb);
       data_line++;
     } else {
@@ -185,7 +186,7 @@ void BitAssembler_MGR::get_ql_membank_fcb(
         // Start of data
         // Make sure BL and WL is known
         CFG_ASSERT(fcb->check_exist("wl") && fcb->check_exist("bl"));
-        get_wl_bitline_into_bytes(line, data, fcb->bl, fcb->wl, 0, lsb,
+        get_wl_bitline_into_bytes(line, data, mask, fcb->bl, fcb->wl, 0, lsb,
                                   &one_hot_wl);
         CFG_ASSERT(one_hot_wl == 0 || one_hot_wl == (fcb->wl - 1));
         wl_increasing = one_hot_wl == 0;
@@ -196,7 +197,9 @@ void BitAssembler_MGR::get_ql_membank_fcb(
   }
   CFG_ASSERT(fcb->check_exist("wl") && fcb->check_exist("bl"));
   CFG_ASSERT(fcb->wl == data_line);
+  CFG_ASSERT(data.size() == mask.size());
   fcb->write_u8s("data", data);
+  fcb->write_u8s("mask", mask);
   file.close();
 }
 
@@ -440,19 +443,25 @@ std::string BitAssembler_MGR::get_ocla_design(const std::string& filepath) {
 }
 
 template <typename T>
-uint32_t BitAssembler_MGR::get_bitline_into_bytes(T& start, T& end,
-                                                  std::vector<uint8_t>& bytes,
-                                                  uint32_t size) {
+uint32_t BitAssembler_MGR::get_bitline_into_bytes(
+    T& start, T& end, std::vector<uint8_t>& bytes,
+    std::vector<uint8_t>* mask_bytes, uint32_t size) {
   CFG_ASSERT(start != end);
   uint32_t index = 0;
   while (start != end) {
     if ((index % 8) == 0) {
       bytes.push_back(0);
     }
+    if (mask_bytes != nullptr && (index % 8) == 0) {
+      mask_bytes->push_back(0);
+    }
     if (*start == '1') {
       bytes.back() |= (1 << (index & 7));
     } else {
       CFG_ASSERT(*start == '0' || *start == 'x');
+    }
+    if (mask_bytes != nullptr && (*start == '0' || *start == '1')) {
+      mask_bytes->back() |= (1 << (index & 7));
     }
     start++;
     index++;
@@ -473,12 +482,12 @@ uint32_t BitAssembler_MGR::get_bitline_into_bytes(const std::string& line,
   if (lsb) {
     auto start = line.begin();
     auto end = line.end();
-    bits = get_bitline_into_bytes(start, end, bytes);
+    bits = get_bitline_into_bytes(start, end, bytes, nullptr);
     CFG_ASSERT(start == end);
   } else {
     auto start = line.rbegin();
     auto end = line.rend();
-    bits = get_bitline_into_bytes(start, end, bytes);
+    bits = get_bitline_into_bytes(start, end, bytes, nullptr);
     CFG_ASSERT(start == end);
   }
   return bits;
@@ -486,8 +495,9 @@ uint32_t BitAssembler_MGR::get_bitline_into_bytes(const std::string& line,
 
 uint32_t BitAssembler_MGR::get_wl_bitline_into_bytes(
     const std::string& line, std::vector<uint8_t>& bytes,
-    const uint32_t expected_bl_bit, const uint32_t expected_wl_bit,
-    const uint32_t expected_wl, const bool lsb, uint32_t* one_hot_wl) {
+    std::vector<uint8_t>& mask_bytes, const uint32_t expected_bl_bit,
+    const uint32_t expected_wl_bit, const uint32_t expected_wl, const bool lsb,
+    uint32_t* one_hot_wl) {
   CFG_ASSERT(line.size());
   CFG_ASSERT(expected_bl_bit);
   CFG_ASSERT(expected_wl_bit);
@@ -497,15 +507,17 @@ uint32_t BitAssembler_MGR::get_wl_bitline_into_bytes(
   if (lsb) {
     auto start = line.begin();
     auto end = line.end();
-    bl_size = get_bitline_into_bytes(start, end, bytes, expected_bl_bit);
+    bl_size =
+        get_bitline_into_bytes(start, end, bytes, &mask_bytes, expected_bl_bit);
     CFG_ASSERT(bl_size == expected_bl_bit);
-    get_bitline_into_bytes(start, end, wl, expected_wl_bit);
+    get_bitline_into_bytes(start, end, wl, nullptr, expected_wl_bit);
     CFG_ASSERT(start == end);
   } else {
     auto start = line.rbegin();
     auto end = line.rend();
-    get_bitline_into_bytes(start, end, wl, expected_wl_bit);
-    bl_size = get_bitline_into_bytes(start, end, bytes, expected_bl_bit);
+    get_bitline_into_bytes(start, end, wl, nullptr, expected_wl_bit);
+    bl_size =
+        get_bitline_into_bytes(start, end, bytes, &mask_bytes, expected_bl_bit);
     CFG_ASSERT(bl_size == expected_bl_bit);
     CFG_ASSERT(start == end);
   }

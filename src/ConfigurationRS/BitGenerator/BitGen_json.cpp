@@ -279,7 +279,21 @@ const std::map<const std::string, const BitGen_JSON_ACTION_FIELD>
           {"pl_extra_w32", std::make_pair(128, 1)},
           {"pl_extra_w33", std::make_pair(129, 1)},
           {"pl_extra_w34", std::make_pair(130, 1)},
-          {"pl_extra_w35", std::make_pair(131, 1)}}}};
+          {"pl_extra_w35", std::make_pair(131, 1)}}},
+        {"pcb_config_with_parity",
+         {{"ram_block_count", std::make_pair(0, 16)},
+          {"pl_ctl_skew", std::make_pair(16, 2)},
+          {"pl_ctl_parity", std::make_pair(18, 1)},
+          {"pl_ctl_even", std::make_pair(19, 1)},
+          {"pl_ctl_split", std::make_pair(20, 2)},
+          {"pl_select_offset", std::make_pair(32, 12)},
+          {"pl_select_row", std::make_pair(44, 10)},
+          {"pl_select_col", std::make_pair(54, 10)},
+          {"pl_row_offset", std::make_pair(64, 10)},
+          {"pl_row_stride", std::make_pair(80, 10)},
+          {"pl_col_offset", std::make_pair(96, 10)},
+          {"pl_col_stride", std::make_pair(112, 10)},
+          {"reversed", std::make_pair(128, 32)}}}};
 
 static const BitGen_JSON_ACTION_FIELD* BitGen_JSON_get_action_database(
     const std::string& action) {
@@ -516,6 +530,13 @@ BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_pcb_config_action(
     const nlohmann::json& json) {
   return gen_standard_action(json, "Bitstream PCB Config Action", "pcb_config",
                              0x004, true, false, false);
+}
+
+BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_pcb_config_with_parity_action(
+    const nlohmann::json& json) {
+  return gen_standard_action(json, "Bitstream PCB Config With Parity Action",
+                             "pcb_config_with_parity", 0x005, true, false,
+                             false);
 }
 
 BitGen_BITSTREAM_ACTION* BitGen_JSON::gen_auth_key_otp_programming_action(

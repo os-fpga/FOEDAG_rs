@@ -20,6 +20,8 @@ class BitGen_JSON {
       const nlohmann::json& json);
   static BitGen_BITSTREAM_ACTION* gen_pcb_config_action(
       const nlohmann::json& json);
+  static BitGen_BITSTREAM_ACTION* gen_pcb_config_with_parity_action(
+      const nlohmann::json& json);
   static BitGen_BITSTREAM_ACTION* gen_auth_key_otp_programming_action(
       const nlohmann::json& json);
   static BitGen_BITSTREAM_ACTION* gen_aes_key_otp_programming_action(

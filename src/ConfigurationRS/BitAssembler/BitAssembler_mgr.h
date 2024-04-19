@@ -37,18 +37,17 @@ class BitAssembler_MGR {
  private:
   template <typename T>
   uint32_t get_bitline_into_bytes(T& start, T& end, std::vector<uint8_t>& bytes,
+                                  std::vector<uint8_t>* mask_bytes,
                                   uint32_t size = 0);
   uint32_t get_bitline_into_bytes(const std::string& line,
                                   std::vector<uint8_t>& bytes,
                                   const uint32_t expected_bit = 0,
                                   const bool lsb = true);
-  uint32_t get_wl_bitline_into_bytes(const std::string& line,
-                                     std::vector<uint8_t>& bytes,
-                                     const uint32_t expected_bl_bit,
-                                     const uint32_t expected_wl_bit,
-                                     const uint32_t expected_wl,
-                                     const bool lsb = true,
-                                     uint32_t* one_hot_wl = nullptr);
+  uint32_t get_wl_bitline_into_bytes(
+      const std::string& line, std::vector<uint8_t>& bytes,
+      std::vector<uint8_t>& mask_bytes, const uint32_t expected_bl_bit,
+      const uint32_t expected_wl_bit, const uint32_t expected_wl,
+      const bool lsb = true, uint32_t* one_hot_wl = nullptr);
   const std::string m_project_path;
   const std::string m_device;
 };
