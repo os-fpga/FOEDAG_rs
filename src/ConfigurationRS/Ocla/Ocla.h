@@ -39,10 +39,11 @@ class Ocla {
   void add_trigger(uint32_t domain_id, uint32_t probe_id,
                    std::string signal_name, std::string type, std::string event,
                    uint32_t value, uint32_t compare_width);
-  void edit_trigger(uint32_t domain_id, uint32_t trigger_id, uint32_t probe_id,
-                    std::string signal_name, std::string type,
-                    std::string event, uint32_t value, uint32_t compare_width);
-  void remove_trigger(uint32_t domain_id, uint32_t trigger_id);
+  void edit_trigger(uint32_t domain_id, uint32_t trigger_index,
+                    uint32_t probe_id, std::string signal_name,
+                    std::string type, std::string event, uint32_t value,
+                    uint32_t compare_width);
+  void remove_trigger(uint32_t domain_id, uint32_t trigger_index);
   bool get_waveform(uint32_t domain_id, oc_waveform_t &output);
   bool get_status(uint32_t domain_id, uint32_t &status);
   bool start(uint32_t domain_id);

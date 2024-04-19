@@ -70,7 +70,7 @@
 #define TSSR_PS_Width (10)
 #define TSSR_PS_Msk (((1u << TSSR_PS_Width) - 1) << TSSR_PS_Pos)
 #define TSSR_CW_Pos (24)
-#define TSSR_CW_Width (5)
+#define TSSR_CW_Width (6)
 #define TSSR_CW_Msk (((1u << TSSR_CW_Width) - 1) << TSSR_CW_Pos)
 
 // TCUR (Trigger Control Unit Register) bitfield definitions
