@@ -2,9 +2,15 @@
 
 #include "BitGen_json.h"
 
-#define PCB_BIT_SIZE (36 * 1024)
-#define PCB_PAYLOAD_BIT_SIZE (32 * 1024)
-#define PCB_PARITY_BIT_SIZE (4 * 1024)
+#define PCB_UNIT_SIZE (1024)
+#define PCB_UNIT_USER_DATA_BIT (32)
+#define PCB_UNIT_PARITY_BIT (4)
+#define PCB_BIT_SIZE \
+  ((PCB_UNIT_USER_DATA_BIT + PCB_UNIT_PARITY_BIT) * PCB_UNIT_SIZE)
+#define PCB_USER_DATA_BIT_SIZE (PCB_UNIT_USER_DATA_BIT * PCB_UNIT_SIZE)
+#define PCB_PARITY_BIT_SIZE (PCB_UNIT_PARITY_BIT * PCB_UNIT_SIZE)
+#define PCB_CONFIG_ALL_BLOCK_AT_ONCE (1)
+#define PCB_CONFIG_INCLUDE_PARITY (1)
 
 BitGen_GEMINI::BitGen_GEMINI(const CFGObject_BITOBJ* bitobj)
     : m_bitobj(bitobj) {
@@ -135,13 +141,25 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
     uint32_t col_stride = 0;
     get_pcb_xy_offset_stride(m_bitobj->pcb, row_offset, row_stride, col_offset,
                              col_stride);
-#if 1
+#if PCB_CONFIG_ALL_BLOCK_AT_ONCE
     // Send all block data in one action
     nlohmann::json pcb;
+    // clang-format off
+  #if PCB_CONFIG_INCLUDE_PARITY
+    pcb["action"] = "pcb_config_with_parity";
+  #else
     pcb["action"] = "pcb_config";
+  #endif
+    // clang-format on
     pcb["ram_block_count"] = (uint32_t)(m_bitobj->pcb.size());
     pcb["pl_ctl_skew"] = 3;
+    // clang-format off
+  #if PCB_CONFIG_INCLUDE_PARITY
     pcb["pl_ctl_parity"] = 0;
+  #else
+    pcb["pl_ctl_parity"] = 1;
+  #endif
+    // clang-format on
     pcb["pl_ctl_even"] = 0;
     pcb["pl_ctl_split"] = 0;
     pcb["pl_select_offset"] = 0;
@@ -151,25 +169,50 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
     pcb["pl_row_stride"] = row_stride;
     pcb["pl_col_offset"] = col_offset;
     pcb["pl_col_stride"] = col_stride;
+    // clang-format off
+  #if PCB_CONFIG_INCLUDE_PARITY
+    pcb["reversed"] = 0;
+  #else
     pcb["pl_extra_w32"] = 0;
     pcb["pl_extra_w33"] = 0;
     pcb["pl_extra_w34"] = 0;
     pcb["pl_extra_w35"] = 0;
+  #endif
+    // clang-format on
     std::vector<uint8_t> payload;
     for (auto& pcbobj : m_bitobj->pcb) {
       CFG_ASSERT(pcbobj->bits == PCB_BIT_SIZE);
       CFG_ASSERT(pcbobj->data.size() == (PCB_BIT_SIZE + 7) / 8);
-      std::vector<uint8_t> block_payload;
-      std::vector<uint8_t> block_parity;
-      get_pcb_payload_and_parity(pcbobj->data, block_payload, block_parity);
-      payload.insert(payload.end(), block_payload.begin(), block_payload.end());
-      memset(&block_payload[0], 0, block_payload.size());
-      memset(&block_parity[0], 0, block_parity.size());
-      block_payload.clear();
-      block_parity.clear();
+      std::vector<uint8_t> user_data;
+      std::vector<uint8_t> parity;
+      get_pcb_user_data_and_parity(pcbobj->data, user_data, parity);
+      CFG_ASSERT(user_data.size() == ((PCB_USER_DATA_BIT_SIZE + 7) / 8));
+      CFG_ASSERT(parity.size() == ((PCB_PARITY_BIT_SIZE + 7) / 8));
+      // clang-format off
+  #if PCB_CONFIG_INCLUDE_PARITY
+      adjust_data_bit_size(parity, PCB_UNIT_PARITY_BIT,
+                           PCB_UNIT_USER_DATA_BIT, PCB_UNIT_SIZE);
+      CFG_ASSERT(user_data.size() == parity.size());
+      append_alternate_data(payload, user_data, parity,
+                            PCB_UNIT_USER_DATA_BIT, PCB_UNIT_SIZE, 
+                            payload.size() * 8, true);
+  #else
+      payload.insert(payload.end(), user_data.begin(), user_data.end());
+  #endif
+      // clang-format on
+      memset(&user_data[0], 0, user_data.size());
+      memset(&parity[0], 0, parity.size());
+      user_data.clear();
+      parity.clear();
     }
     pcb["payload"] = nlohmann::json(payload);
+    // clang-format off
+  #if PCB_CONFIG_INCLUDE_PARITY
+    bop->actions.push_back(BitGen_JSON::gen_pcb_config_with_parity_action(pcb));
+  #else
     bop->actions.push_back(BitGen_JSON::gen_pcb_config_action(pcb));
+  #endif
+    // clang-format on
     BitGen_JSON::zeroize_array_numbers(pcb["payload"]);
     memset(&payload[0], 0, payload.size());
     payload.clear();
@@ -179,14 +222,38 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
       CFG_ASSERT(pcbobj->bits == PCB_BIT_SIZE);
       CFG_ASSERT(pcbobj->data.size() == (PCB_BIT_SIZE + 7) / 8);
       std::vector<uint8_t> payload;
+      std::vector<uint8_t> user_data;
       std::vector<uint8_t> parity;
-      get_pcb_payload_and_parity(pcbobj->data, payload, parity);
+      get_pcb_user_data_and_parity(pcbobj->data, user_data, parity);
+      // clang-format off
+  #if PCB_CONFIG_INCLUDE_PARITY
+      adjust_data_bit_size(parity, PCB_UNIT_PARITY_BIT, PCB_UNIT_USER_DATA_BIT,
+                           PCB_UNIT_SIZE);
+      CFG_ASSERT(user_data.size() == parity.size());
+      append_alternate_data(payload, user_data, parity, PCB_UNIT_USER_DATA_BIT,
+                            PCB_UNIT_SIZE, payload.size() * 8, true);
+  #else
+      payload.insert(payload.end(), user_data.begin(), user_data.end());
+  #endif
+      // clang-format on
       nlohmann::json pcb;
+      // clang-format off
+  #if PCB_CONFIG_INCLUDE_PARITY
+      pcb["action"] = "pcb_config_with_parity";
+  #else
       pcb["action"] = "pcb_config";
+  #endif
+      // clang-format on
       pcb["ram_block_count"] = 1;
       // https://github.com/RapidSilicon/virgo/blob/060ab0e60de9d0f45fb875cc09c04bec0781861e/DV/virgo_verif_env/bcpu_real_core_c_tests/IPs/PCB/bcpu_real_pcb_a_inc_test/program.c#L20-L21
       pcb["pl_ctl_skew"] = 3;
+      // clang-format off
+  #if PCB_CONFIG_INCLUDE_PARITY
       pcb["pl_ctl_parity"] = 0;
+  #else
+      pcb["pl_ctl_parity"] = 1;
+  #endif
+      // clang-format on
       pcb["pl_ctl_even"] = 0;
       pcb["pl_ctl_split"] = 0;
       pcb["pl_select_offset"] = 0;
@@ -197,16 +264,31 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
       pcb["pl_row_stride"] = row_stride;
       pcb["pl_col_offset"] = col_offset;
       pcb["pl_col_stride"] = col_stride;
+      // clang-format off
+  #if PCB_CONFIG_INCLUDE_PARITY
+      pcb["reversed"] = 0;
+  #else
       pcb["pl_extra_w32"] = 0;
       pcb["pl_extra_w33"] = 0;
       pcb["pl_extra_w34"] = 0;
       pcb["pl_extra_w35"] = 0;
+  #endif
+      // clang-format on
       pcb["payload"] = nlohmann::json(payload);
+      // clang-format off
+  #if PCB_CONFIG_INCLUDE_PARITY
+      bop->actions.push_back(
+          BitGen_JSON::gen_pcb_config_with_parity_action(pcb));
+  #else
       bop->actions.push_back(BitGen_JSON::gen_pcb_config_action(pcb));
+  #endif
+      // clang-format on
       BitGen_JSON::zeroize_array_numbers(pcb["payload"]);
       memset(&payload[0], 0, payload.size());
+      memset(&user_data[0], 0, user_data.size());
       memset(&parity[0], 0, parity.size());
       payload.clear();
+      user_data.clear();
       parity.clear();
     }
 #endif
@@ -261,34 +343,38 @@ std::vector<uint8_t> BitGen_GEMINI::genbits_line_by_line(
   return dest_data;
 }
 
-void BitGen_GEMINI::get_pcb_payload_and_parity(std::vector<uint8_t>& data,
-                                               std::vector<uint8_t>& payload,
-                                               std::vector<uint8_t>& parity) {
+void BitGen_GEMINI::get_pcb_user_data_and_parity(
+    std::vector<uint8_t>& data, std::vector<uint8_t>& user_data,
+    std::vector<uint8_t>& parity) {
   CFG_ASSERT(data.size() == (PCB_BIT_SIZE + 7) / 8);
-  if (parity.size()) {
-    memset(&payload[0], 0, payload.size());
-    payload.clear();
+  if (user_data.size()) {
+    memset(&user_data[0], 0, user_data.size());
+    user_data.clear();
   }
   if (parity.size()) {
     memset(&parity[0], 0, parity.size());
     parity.clear();
   }
-  payload.resize((PCB_PAYLOAD_BIT_SIZE + 7) / 8);
+  CFG_ASSERT(user_data.size() == 0);
+  CFG_ASSERT(parity.size() == 0);
+  user_data.resize((PCB_USER_DATA_BIT_SIZE + 7) / 8);
   parity.resize((PCB_PARITY_BIT_SIZE + 7) / 8);
-  memset(&payload[0], 0, payload.size());
+  memset(&user_data[0], 0, user_data.size());
   memset(&parity[0], 0, parity.size());
   uint8_t* data0 = &data[0];
-  uint8_t* data1 = &data[((PCB_PAYLOAD_BIT_SIZE + 7) / 8) / 2];
+  uint8_t* data1 = &data[((PCB_BIT_SIZE + 7) / 8) / 2];
   uint32_t index = 0;
   uint32_t half_index = 0;
   uint32_t payload_index = 0;
   uint32_t parity_index = 0;
-  for (uint32_t i = 0; i < 1024; i++) {
+  for (uint32_t i = 0; i < PCB_UNIT_SIZE; i++) {
     uint32_t temp = half_index;
-    for (uint32_t j = 0; j < 18; j++, index++, temp++) {
-      if (j < 16) {
+    for (uint32_t j = 0;
+         j < ((PCB_UNIT_USER_DATA_BIT + PCB_UNIT_PARITY_BIT) / 2);
+         j++, index++, temp++) {
+      if (j < (PCB_UNIT_USER_DATA_BIT / 2)) {
         if (data0[temp >> 3] & (1 << (temp & 7))) {
-          payload[payload_index >> 3] |= (1 << (payload_index & 7));
+          user_data[payload_index >> 3] |= (1 << (payload_index & 7));
         }
         payload_index++;
       } else {
@@ -299,10 +385,12 @@ void BitGen_GEMINI::get_pcb_payload_and_parity(std::vector<uint8_t>& data,
       }
     }
     temp = half_index;
-    for (uint32_t j = 0; j < 18; j++, index++, temp++, half_index++) {
-      if (j < 16) {
+    for (uint32_t j = 0;
+         j < ((PCB_UNIT_USER_DATA_BIT + PCB_UNIT_PARITY_BIT) / 2);
+         j++, index++, temp++, half_index++) {
+      if (j < (PCB_UNIT_USER_DATA_BIT / 2)) {
         if (data1[temp >> 3] & (1 << (temp & 7))) {
-          payload[payload_index >> 3] |= (1 << (payload_index & 7));
+          user_data[payload_index >> 3] |= (1 << (payload_index & 7));
         }
         payload_index++;
       } else {
@@ -315,7 +403,7 @@ void BitGen_GEMINI::get_pcb_payload_and_parity(std::vector<uint8_t>& data,
   }
   CFG_ASSERT(index == PCB_BIT_SIZE);
   CFG_ASSERT(half_index == (PCB_BIT_SIZE / 2));
-  CFG_ASSERT(payload_index == PCB_PAYLOAD_BIT_SIZE);
+  CFG_ASSERT(payload_index == PCB_USER_DATA_BIT_SIZE);
   CFG_ASSERT(parity_index == PCB_PARITY_BIT_SIZE);
 }
 
@@ -390,5 +478,93 @@ void BitGen_GEMINI::get_pcb_xy_offset_stride(
       }
     }
     col_stride = cols[1] - cols[0];
+  }
+}
+
+void BitGen_GEMINI::append_assign_data_bit(std::vector<uint8_t>& data,
+                                           bool value, size_t index) {
+  while (index >= (data.size() * 8)) {
+    data.push_back(0);
+  }
+  CFG_ASSERT(index < (data.size() * 8));
+  if (value) {
+    data[index >> 3] |= (1 << (index & 7));
+  } else {
+    data[index >> 3] &= (uint8_t)(~(1 << (index & 7)));
+  }
+}
+
+bool BitGen_GEMINI::get_data_bit(std::vector<uint8_t>& data, size_t index) {
+  CFG_ASSERT(index < (data.size() * 8));
+  return (data[index >> 3] & (1 << (index & 7))) != 0;
+}
+
+void BitGen_GEMINI::adjust_data_bit_size(std::vector<uint8_t>& data,
+                                         size_t original_size, size_t new_size,
+                                         size_t count, bool value_to_adjust,
+                                         bool include_remaining) {
+  CFG_ASSERT(original_size);
+  CFG_ASSERT(new_size);
+  CFG_ASSERT(original_size != new_size);
+  CFG_ASSERT(count);
+  size_t original_total_bits = original_size * count;
+  CFG_ASSERT(original_total_bits <= (data.size() * 8));
+  std::vector<uint8_t> new_data;
+  for (size_t src = 0, dest = 0; src < (data.size() * 8); src++) {
+    if (src < original_total_bits) {
+      size_t src_unit_index = src % original_size;
+      if (src_unit_index < new_size) {
+        // get data from src
+        append_assign_data_bit(new_data, get_data_bit(data, src), dest);
+        dest++;
+      }
+      if (src_unit_index == (original_size - 1)) {
+        // hit the src unit boundary
+        if (new_size > original_size) {
+          // Start to append
+          for (uint32_t temp = original_size; temp < new_size; temp++, dest++) {
+            append_assign_data_bit(new_data, value_to_adjust, dest);
+          }
+        }
+      }
+    } else {
+      if (include_remaining) {
+        append_assign_data_bit(new_data, get_data_bit(data, src), dest);
+        dest++;
+      } else {
+        break;
+      }
+    }
+  }
+  memset(&data[0], 0, data.size());
+  data.clear();
+  data.insert(data.end(), new_data.begin(), new_data.end());
+  memset(&new_data[0], 0, new_data.size());
+  new_data.clear();
+}
+
+void BitGen_GEMINI::append_alternate_data(std::vector<uint8_t>& data,
+                                          std::vector<uint8_t>& data0,
+                                          std::vector<uint8_t>& data1,
+                                          size_t bit_size, size_t count,
+                                          size_t dest_index,
+                                          bool check_byte_alignment) {
+  CFG_ASSERT(bit_size);
+  CFG_ASSERT(count);
+  CFG_ASSERT(data0.size() == data1.size());
+  size_t total_bits = bit_size * count;
+  CFG_ASSERT(total_bits <= (data0.size() * 8));
+  size_t src_index = 0;
+  for (size_t i = 0; i < count; i++) {
+    for (size_t j = 0, k = src_index; j < bit_size; j++, k++, dest_index++) {
+      append_assign_data_bit(data, get_data_bit(data0, k), dest_index);
+    }
+    for (size_t j = 0, k = src_index; j < bit_size; j++, k++, dest_index++) {
+      append_assign_data_bit(data, get_data_bit(data1, k), dest_index);
+    }
+    src_index += bit_size;
+  }
+  if (check_byte_alignment) {
+    CFG_ASSERT((dest_index % 8) == 0);
   }
 }
