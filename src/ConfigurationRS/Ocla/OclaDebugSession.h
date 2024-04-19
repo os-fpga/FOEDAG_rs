@@ -16,7 +16,8 @@ class OclaDebugSession {
   std::vector<OclaDomain> m_clock_domains;
   std::string m_filepath;
   bool m_loaded;
-  OclaSignal parse_signal(std::string signal_str);
+  bool parse_signal(std::string signal_str, OclaSignal& signal,
+                    std::vector<std::string>& error_messages);
   bool parse(std::string ocla_str, std::vector<std::string>& error_messages);
 
  public:

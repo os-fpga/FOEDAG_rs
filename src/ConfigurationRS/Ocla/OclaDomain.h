@@ -17,6 +17,10 @@ struct oc_trigger_t {
   uint32_t probe_id;
   uint32_t signal_id;
   std::string signal_name;
+  // fields to support sub bit range selection in the selected signal
+  bool bitrange_enable;
+  uint32_t pos;
+  uint32_t width;
 };
 
 class OclaDomain {

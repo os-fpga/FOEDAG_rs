@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <regex>
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 
@@ -86,6 +87,87 @@ void CFG_copy_bits_vec32(uint32_t* data, uint32_t pos, uint32_t* output,
     CFG_write_bit_vec32(output, output_pos + i,
                         CFG_read_bit_vec32(data, pos + i));
   }
+}
+
+uint32_t CFG_parse_signal(std::string& signal_str, std::string& name,
+                          uint32_t& bit_start, uint32_t& bit_end,
+                          uint32_t& bit_width, uint32_t& value) {
+  static std::map<uint32_t, std::string> patterns = {
+      {OCLA_SIGNAL_PATTERN_1, R"((\w+) *\[ *(\d+) *: *(\d+)\ *])"},
+      {OCLA_SIGNAL_PATTERN_2, R"((\d+)'([01]+))"},
+      {OCLA_SIGNAL_PATTERN_3, R"((\w+) *\[ *(\d+)\ *])"},
+      {OCLA_SIGNAL_PATTERN_4, R"(^(\d+)$)"},
+      {OCLA_SIGNAL_PATTERN_5, R"(^(\w+)$)"}};
+
+  uint32_t patid = 0;
+  std::cmatch m;
+
+  for (const auto& [i, pat] : patterns) {
+    if (std::regex_search(signal_str.c_str(), m,
+                          std::regex(pat, std::regex::icase)) == true) {
+      patid = i;
+      break;
+    }
+  }
+
+  switch (patid) {
+    case OCLA_SIGNAL_PATTERN_1:  // pattern 1: counter[13:2]
+    {
+      name = m[1];
+      bit_start = (uint32_t)std::stoul(m[3]);
+      bit_end = (uint32_t)std::stoul(m[2]);
+      bit_width = 0;
+      value = 0;
+      break;
+    }
+    case OCLA_SIGNAL_PATTERN_2:  // pattern 2: 4'0000
+    {
+      name = signal_str;
+      bit_start = 0;
+      bit_end = 0;
+      bit_width = (uint32_t)std::stoul(m[1]);
+      value = (uint32_t)CFG_convert_string_to_u64("b" + (std::string)m[2]);
+      break;
+    }
+    case OCLA_SIGNAL_PATTERN_3:  // pattern 3: s_axil_awprot[0]
+    {
+      name = m[1];
+      bit_start = (uint32_t)std::stoul(m[2]);
+      bit_end = (uint32_t)std::stoul(m[2]);
+      bit_width = 0;
+      value = 0;
+      break;
+    }
+    case OCLA_SIGNAL_PATTERN_4:  // pattern 5: 3
+    {
+      name = m[0];
+      bit_start = 0;
+      bit_end = 0;
+      bit_width = 0;
+      value = (uint32_t)std::stoul(m[0]);
+      break;
+    }
+    case OCLA_SIGNAL_PATTERN_5:  // pattern 5: s_axil_bready
+    {
+      name = m[0];
+      bit_start = 0;
+      bit_end = 0;
+      bit_width = 0;
+      value = 0;
+      break;
+    }
+    default:  // unknown pattern
+    {
+      name = "";
+      bit_start = 0;
+      bit_end = 0;
+      bit_width = 0;
+      value = 0;
+      break;
+    }
+  }
+
+  return patid;
 }
 
 // helpers to convert enum to string and vice versa
