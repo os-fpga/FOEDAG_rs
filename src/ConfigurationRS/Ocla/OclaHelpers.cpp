@@ -59,9 +59,11 @@ uint32_t CFG_reverse_byte_order_u32(uint32_t value) {
 
 void CFG_set_bitfield_u32(uint32_t& value, uint8_t pos, uint8_t width,
                           uint32_t data) {
+  CFG_ASSERT(width > 0);
+  CFG_ASSERT(width + pos <= 32);
   uint32_t mask = (~0u >> (32 - width)) << pos;
   value &= ~mask;
-  value |= (data & ((1u << width) - 1)) << pos;
+  value |= (data << pos) & mask;
 }
 
 uint32_t CFG_read_bit_vec32(uint32_t* data, uint32_t pos) {
@@ -73,7 +75,11 @@ uint32_t CFG_read_bit_vec32(uint32_t* data, uint32_t pos) {
 void CFG_write_bit_vec32(uint32_t* data, uint32_t pos, uint32_t value) {
   // callee should make sure data ptr not out of bound
   CFG_ASSERT(data != nullptr);
-  data[pos / 32] |= value << (pos % 32);
+  uint32_t mask = 1u << (pos % 32);
+  data[pos / 32] &= ~mask;
+  if (value) {
+    data[pos / 32] |= mask;
+  }
 }
 
 void CFG_copy_bits_vec32(uint32_t* data, uint32_t pos, uint32_t* output,
@@ -82,7 +88,7 @@ void CFG_copy_bits_vec32(uint32_t* data, uint32_t pos, uint32_t* output,
   CFG_ASSERT(data != nullptr);
   CFG_ASSERT(output != nullptr);
   // naive implementation that does the copying bit by bit.
-  // this is till ok for small dataset.
+  // this is still ok for small dataset.
   for (uint32_t i = 0; i < nbits; i++) {
     CFG_write_bit_vec32(output, output_pos + i,
                         CFG_read_bit_vec32(data, pos + i));
