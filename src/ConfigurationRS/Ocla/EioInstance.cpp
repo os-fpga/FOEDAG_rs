@@ -8,11 +8,11 @@ EioInstance::EioInstance(uint32_t baseaddr) : m_baseaddr(baseaddr) {}
 EioInstance::~EioInstance() {}
 
 std::vector<eio_probe_t> EioInstance::get_input_probes() const {
-  return get_probes(eio_probe_type_t::INPUT);
+  return get_probes(eio_probe_type_t::IO_INPUT);
 }
 
 std::vector<eio_probe_t> EioInstance::get_output_probes() const {
-  return get_probes(eio_probe_type_t::OUTPUT);
+  return get_probes(eio_probe_type_t::IO_OUTPUT);
 }
 
 void EioInstance::add_probe(eio_probe_t &probe) { m_probes.push_back(probe); }

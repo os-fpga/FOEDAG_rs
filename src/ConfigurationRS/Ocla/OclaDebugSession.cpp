@@ -106,7 +106,7 @@ bool OclaDebugSession::parse_eio(nlohmann::json json,
     // NOTE: create one input probe. only 1 input probe is supported at current
     // version. multiple input probes will be supported in the future.
     eio_probe_t probe{};
-    probe.type = eio_probe_type_t::INPUT;
+    probe.type = eio_probe_type_t::IO_INPUT;
     probe.probe_width = 0;
     probe.idx = 1;
     signal_index = 1;
@@ -138,7 +138,7 @@ bool OclaDebugSession::parse_eio(nlohmann::json json,
     // NOTE: create one output probe. only 1 output probe is supported at
     // current version. multiple output probes will be supported in the future.
     eio_probe_t probe{};
-    probe.type = eio_probe_type_t::OUTPUT;
+    probe.type = eio_probe_type_t::IO_OUTPUT;
     probe.probe_width = 0;
     probe.idx = 1;
     signal_index = 1;

@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-enum eio_probe_type_t { INPUT, OUTPUT };
+enum eio_probe_type_t { IO_INPUT, IO_OUTPUT };
 
 struct eio_signal_t {
   std::string orig_name;
