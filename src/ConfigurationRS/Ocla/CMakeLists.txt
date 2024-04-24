@@ -69,6 +69,8 @@ add_library(
   OclaDomain.cpp
   OclaProbe.cpp
   OclaSignal.cpp
+  EioIP.cpp
+  EioInstance.cpp
   ${LIBFST_SOURCE_DIR}/fstapi.c
   ${LIBFST_SOURCE_DIR}/lz4.c
   ${LIBFST_SOURCE_DIR}/fastlz.c
@@ -112,6 +114,7 @@ add_executable(
   Test/Ocla_test.cpp
   Test/OclaHelpersTests.cpp
   Test/OclaIpTests.cpp
+  Test/EioIpTests.cpp
 )
 target_link_libraries(${test_bin} ${subsystem} gtest gmock gtest_main)
 
