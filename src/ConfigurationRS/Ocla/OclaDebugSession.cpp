@@ -59,7 +59,8 @@ bool OclaDebugSession::load(std::string filepath,
   try {
     nlohmann::json json = nlohmann::json::parse(json_str);
     if (!json.contains("eio") && !json.contains("ocla")) {
-      error_messages.push_back("Debug information contains no OCLA nor EIO information");
+      error_messages.push_back(
+          "Debug information contains no OCLA nor EIO information");
       return false;
     }
     if (json.contains("ocla")) {
@@ -71,7 +72,7 @@ bool OclaDebugSession::load(std::string filepath,
       if (!parse_eio(json, error_messages)) {
         return false;
       }
-    }   
+    }
   } catch (const nlohmann::detail::exception &e) {
     CFG_ASSERT_MSG(false, e.what());
   }
@@ -91,7 +92,8 @@ std::vector<EioInstance> OclaDebugSession::get_eio_instances() {
   return m_eio_instances;
 }
 
-bool OclaDebugSession::parse_eio(nlohmann::json json, std::vector<std::string>& error_messages) {
+bool OclaDebugSession::parse_eio(nlohmann::json json,
+                                 std::vector<std::string> &error_messages) {
   nlohmann::json eio = json.at("eio");
   uint32_t input_probe_width = eio.at("Input_Probe_Width");
   uint32_t output_probe_width = eio.at("Output_Probe_Width");
@@ -101,14 +103,14 @@ bool OclaDebugSession::parse_eio(nlohmann::json json, std::vector<std::string>& 
   EioInstance instance{eio.at("addr")};
 
   if (eio.contains("probes_in")) {
-    // NOTE: create one input probe. only 1 input probe is supported at current version.
-    // multiple input probes will be supported in the future.
+    // NOTE: create one input probe. only 1 input probe is supported at current
+    // version. multiple input probes will be supported in the future.
     eio_probe_t probe{};
     probe.type = eio_probe_type_t::INPUT;
     probe.probe_width = 0;
     probe.idx = 1;
     signal_index = 1;
-        
+
     // parse probe signals
     for (auto &p : eio.at("probes_in")) {
       eio_signal_t sig{};
@@ -120,9 +122,12 @@ bool OclaDebugSession::parse_eio(nlohmann::json json, std::vector<std::string>& 
       probe.signal_list.push_back(sig);
     }
 
-    // sanity check to see if parsed total signal width matches Input_Probe_Width
+    // sanity check to see if parsed total signal width matches
+    // Input_Probe_Width
     if (probe.probe_width != input_probe_width) {
-      error_messages.push_back("EIO: Input probe width mismatched (expect=" + std::to_string(input_probe_width) + ", actual=" + std::to_string(probe.probe_width) + ")");
+      error_messages.push_back("EIO: Input probe width mismatched (expect=" +
+                               std::to_string(input_probe_width) + ", actual=" +
+                               std::to_string(probe.probe_width) + ")");
       return false;
     }
 
@@ -130,14 +135,14 @@ bool OclaDebugSession::parse_eio(nlohmann::json json, std::vector<std::string>& 
   }
 
   if (eio.contains("probes_out")) {
-    // NOTE: create one output probe. only 1 output probe is supported at current version.
-    // multiple output probes will be supported in the future.
+    // NOTE: create one output probe. only 1 output probe is supported at
+    // current version. multiple output probes will be supported in the future.
     eio_probe_t probe{};
     probe.type = eio_probe_type_t::OUTPUT;
     probe.probe_width = 0;
     probe.idx = 1;
     signal_index = 1;
-        
+
     // parse probe signals
     for (auto &p : eio.at("probes_out")) {
       eio_signal_t sig{};
@@ -149,9 +154,13 @@ bool OclaDebugSession::parse_eio(nlohmann::json json, std::vector<std::string>& 
       probe.signal_list.push_back(sig);
     }
 
-    // sanity check to see if parsed total signal width matches Output_Probe_Width
+    // sanity check to see if parsed total signal width matches
+    // Output_Probe_Width
     if (probe.probe_width != output_probe_width) {
-      error_messages.push_back("EIO: Output probe width mismatched (expect=" + std::to_string(output_probe_width) + ", actual=" + std::to_string(probe.probe_width) + ")");
+      error_messages.push_back("EIO: Output probe width mismatched (expect=" +
+                               std::to_string(output_probe_width) +
+                               ", actual=" + std::to_string(probe.probe_width) +
+                               ")");
       return false;
     }
 
@@ -163,7 +172,7 @@ bool OclaDebugSession::parse_eio(nlohmann::json json, std::vector<std::string>& 
 }
 
 bool OclaDebugSession::parse_ocla(nlohmann::json json,
-                             std::vector<std::string> &error_messages) {
+                                  std::vector<std::string> &error_messages) {
   nlohmann::json ocla_debug_subsystem = json.at("ocla_debug_subsystem");
   nlohmann::json ocla_list = json.at("ocla");
   std::vector<OclaDomain> deferred_list{};
@@ -183,7 +192,7 @@ bool OclaDebugSession::parse_ocla(nlohmann::json json,
     // sanity check: duplicate instance index
     if (indexes.find(ocla.at("INDEX")) != indexes.end()) {
       error_messages.push_back("Duplicate instance index " +
-                                std::to_string((uint32_t)ocla.at("INDEX")));
+                               std::to_string((uint32_t)ocla.at("INDEX")));
       res = false;
       break;
     }
@@ -325,8 +334,9 @@ bool OclaDebugSession::parse_ocla(nlohmann::json json,
   return res;
 }
 
-bool OclaDebugSession::parse_eio_signal(std::string signal_str, eio_signal_t &signal,
-                                    std::vector<std::string> &error_messages) {
+bool OclaDebugSession::parse_eio_signal(
+    std::string signal_str, eio_signal_t &signal,
+    std::vector<std::string> &error_messages) {
   std::string signal_name = "";
   uint32_t bit_start = 0;
   uint32_t bit_end = 0;
@@ -336,11 +346,12 @@ bool OclaDebugSession::parse_eio_signal(std::string signal_str, eio_signal_t &si
   auto patid = CFG_parse_signal(signal_str, signal_name, bit_start, bit_end,
                                 bit_width, bit_value);
   switch (patid) {
-    case OCLA_SIGNAL_PATTERN_1: // pattern 1: count[13:2]
-    case OCLA_SIGNAL_PATTERN_3: // pattern 3: s_axil_awprot[0]
-    case OCLA_SIGNAL_PATTERN_5: // pattern 5: s_axil_bready
+    case OCLA_SIGNAL_PATTERN_1:  // pattern 1: count[13:2]
+    case OCLA_SIGNAL_PATTERN_3:  // pattern 3: s_axil_awprot[0]
+    case OCLA_SIGNAL_PATTERN_5:  // pattern 5: s_axil_bready
       if (bit_end < bit_start) {
-        error_messages.push_back("EIO: Invalid bit position '" + signal_str + "'");
+        error_messages.push_back("EIO: Invalid bit position '" + signal_str +
+                                 "'");
         return false;
       }
       signal.orig_name = signal_str;
@@ -349,16 +360,17 @@ bool OclaDebugSession::parse_eio_signal(std::string signal_str, eio_signal_t &si
       signal.bitwidth = bit_end - bit_start + 1;
       break;
     default:
-      error_messages.push_back("EIO: Invalid signal name format '" + signal_str +
-                               "'");
-      return false;                               
-  }                                    
-                                      
+      error_messages.push_back("EIO: Invalid signal name format '" +
+                               signal_str + "'");
+      return false;
+  }
+
   return true;
 }
 
-bool OclaDebugSession::parse_ocla_signal(std::string signal_str, OclaSignal &signal,
-                                    std::vector<std::string> &error_messages) {
+bool OclaDebugSession::parse_ocla_signal(
+    std::string signal_str, OclaSignal &signal,
+    std::vector<std::string> &error_messages) {
   std::string signal_name = "";
   uint32_t bit_start = 0;
   uint32_t bit_end = 0;

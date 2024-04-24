@@ -520,25 +520,37 @@ void Ocla::show_info() {
   for (auto &eio : session->get_eio_instances()) {
     CFG_POST_MSG("EIO:");
     for (auto &probe : eio.get_input_probes()) {
-      CFG_POST_MSG("  In Probe %d", probe.idx);
+      CFG_POST_MSG("  In-Probe %d", probe.idx);
       show_eio_signal_table(probe.signal_list);
     }
     for (auto &probe : eio.get_output_probes()) {
-      CFG_POST_MSG("  Out Probe %d", probe.idx);
+      CFG_POST_MSG("  Out-Probe %d", probe.idx);
       show_eio_signal_table(probe.signal_list);
     }
+    CFG_POST_MSG(" ");
+    // print usage informat requested by IP team
+    CFG_POST_MSG("  NOTES");
+    CFG_POST_MSG(
+        "    Use 'loop' & 'duration' options to repeatedly read the state of "
+        "the input signal");
+    CFG_POST_MSG("    for specific number of times.");
     CFG_POST_MSG(" ");
   }
 }
 
 void Ocla::show_eio_signal_table(std::vector<eio_signal_t> &signal_list) {
-  CFG_POST_MSG("  +-------+-----------------------+--------------+");
-  CFG_POST_MSG("  | Index | Signal Name           | Bitwidth     |");
-  CFG_POST_MSG("  +-------+-----------------------+--------------+");
+  CFG_POST_MSG(
+      "  +-------+-------------------------------------+--------------+");
+  CFG_POST_MSG(
+      "  | Index | Signal Name                         | Bitwidth     |");
+  CFG_POST_MSG(
+      "  +-------+-------------------------------------+--------------+");
   for (auto &s : signal_list) {
-    CFG_POST_MSG("  | %5d | %-21s | %-12d |", s.idx, s.name.c_str(), s.bitwidth);
+    CFG_POST_MSG("  | %5d | %-35s | %-12d |", s.idx, s.name.c_str(),
+                 s.bitwidth);
   }
-  CFG_POST_MSG("  +-------+-----------------------+--------------+");
+  CFG_POST_MSG(
+      "  +-------+-------------------------------------+--------------+");
 }
 
 void Ocla::show_instance_info() {

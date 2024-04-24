@@ -20,10 +20,11 @@ class OclaDebugSession {
   std::string m_filepath;
   bool m_loaded;
   bool parse_ocla_signal(std::string signal_str, OclaSignal& signal,
-                    std::vector<std::string>& error_messages);
-  bool parse_ocla(nlohmann::json json, std::vector<std::string>& error_messages);
+                         std::vector<std::string>& error_messages);
+  bool parse_ocla(nlohmann::json json,
+                  std::vector<std::string>& error_messages);
   bool parse_eio_signal(std::string signal_str, eio_signal_t& signal,
-                    std::vector<std::string>& error_messages);
+                        std::vector<std::string>& error_messages);
   bool parse_eio(nlohmann::json json, std::vector<std::string>& error_messages);
 
  public:

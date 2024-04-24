@@ -18,7 +18,7 @@ EioIP::~EioIP() {}
 
 std::string EioIP::get_type() const {
   char buffer[10];
-  uint32_t type = CFG_reverse_byte_order_u32(m_type<<8);
+  uint32_t type = CFG_reverse_byte_order_u32(m_type << 8);
   snprintf(buffer, sizeof(buffer), "%.*s", 4, (char *)&type);
   return std::string(buffer);
 }

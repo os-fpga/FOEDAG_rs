@@ -39,7 +39,8 @@ TEST_F(EioIPTest, read_lower_test) {
 }
 
 TEST_F(EioIPTest, read_upper_test) {
-  ON_CALL(mockAdapter, read(EIO_AXI_DAT_IN + 4)).WillByDefault(Return(0x87654321));
+  ON_CALL(mockAdapter, read(EIO_AXI_DAT_IN + 4))
+      .WillByDefault(Return(0x87654321));
   EioIP eio(&mockAdapter, 0);
   auto result = eio.read(eio_probe_register_t::UPPER);
   ASSERT_EQ(result, 0x87654321);
