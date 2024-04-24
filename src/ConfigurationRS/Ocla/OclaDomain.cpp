@@ -34,3 +34,39 @@ void OclaDomain::set_config(ocla_config& config) { m_config = config; }
 void OclaDomain::add_trigger(oc_trigger_t& trig) { m_triggers.push_back(trig); }
 
 std::vector<oc_trigger_t>& OclaDomain::get_triggers() { return m_triggers; }
+
+bool OclaDomain::get_instance(uint32_t instance_index, OclaInstance*& output) {
+  for (auto& instance : m_instances) {
+    if (instance.get_index() == instance_index) {
+      output = &instance;
+      return true;
+    }
+  }
+  return false;
+}
+
+uint32_t OclaDomain::get_number_of_triggers(uint32_t instance_index) {
+  uint32_t count = 0;
+  for (auto& trig : m_triggers) {
+    if (trig.instance_index == instance_index) {
+      ++count;
+    }
+  }
+  return count;
+}
+
+bool OclaDomain::get_trigger(uint32_t trigger_index, oc_trigger_t*& output) {
+  if (trigger_index > 0 && trigger_index <= m_triggers.size()) {
+    output = &m_triggers[trigger_index - 1];
+    return true;
+  }
+  return false;
+}
+
+bool OclaDomain::remove_trigger(uint32_t trigger_index) {
+  if (trigger_index > 0 && trigger_index <= m_triggers.size()) {
+    m_triggers.erase(m_triggers.begin() + (trigger_index - 1));
+    return true;
+  }
+  return false;
+}

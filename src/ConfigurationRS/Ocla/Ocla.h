@@ -39,10 +39,11 @@ class Ocla {
   void add_trigger(uint32_t domain_id, uint32_t probe_id,
                    std::string signal_name, std::string type, std::string event,
                    uint32_t value, uint32_t compare_width);
-  void edit_trigger(uint32_t domain_id, uint32_t trigger_id, uint32_t probe_id,
-                    std::string signal_name, std::string type,
-                    std::string event, uint32_t value, uint32_t compare_width);
-  void remove_trigger(uint32_t domain_id, uint32_t trigger_id);
+  void edit_trigger(uint32_t domain_id, uint32_t trigger_index,
+                    uint32_t probe_id, std::string signal_name,
+                    std::string type, std::string event, uint32_t value,
+                    uint32_t compare_width);
+  void remove_trigger(uint32_t domain_id, uint32_t trigger_index);
   bool get_waveform(uint32_t domain_id, oc_waveform_t &output);
   bool get_status(uint32_t domain_id, uint32_t &status);
   bool start(uint32_t domain_id);
@@ -63,6 +64,7 @@ class Ocla {
   void show_signal_table(std::vector<OclaSignal> signals_list);
   void program(OclaDomain *domain);
   bool verify(OclaDebugSession *session);
+  std::string format_signal_name(oc_trigger_t &trig);
 };
 
 void Ocla_entry(CFGCommon_ARG *cmdarg);

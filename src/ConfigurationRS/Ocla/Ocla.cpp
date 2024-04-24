@@ -70,9 +70,19 @@ void Ocla::add_trigger(uint32_t domain_id, uint32_t probe_id,
   OclaSignal *signal = nullptr;
   OclaProbe *probe = nullptr;
   OclaInstance *instance = nullptr;
+  uint32_t bit_start = 0, bit_end = 0, bit_width = 0, bit_value = 0;
+  std::string name = "";
 
-  if (!get_hier_objects(1, session, domain_id, &domain, probe_id, &probe,
-                        signal_name, &signal)) {
+  // parse signal selection string
+  auto patid = CFG_parse_signal(signal_name, name, bit_start, bit_end,
+                                bit_width, bit_value);
+  if (!patid || bit_start > bit_end) {
+    CFG_POST_ERR("Invalid signal name format '%s'", signal_name.c_str());
+    return;
+  }
+
+  if (!get_hier_objects(1, session, domain_id, &domain, probe_id, &probe, name,
+                        &signal)) {
     return;
   }
 
@@ -94,24 +104,17 @@ void Ocla::add_trigger(uint32_t domain_id, uint32_t probe_id,
     return;
   }
 
-  // get the number of triggers *already* configured on the instance of the
-  // selected probe
-  uint32_t trigger_count = 0;
-  for (auto trig : domain->get_triggers()) {
-    if (probe->get_instance_index() == trig.instance_index) {
-      ++trigger_count;
-    }
-  }
-
-  for (auto &elem : domain->get_instances()) {
-    if (elem.get_index() == probe->get_instance_index()) {
-      instance = &elem;
-      break;
-    }
-  }
-
-  if (!instance) {
+  // get the instance of the selected probe
+  if (!domain->get_instance(probe->get_instance_index(), instance)) {
     CFG_POST_ERR("Instance %d not found", probe->get_instance_index());
+    return;
+  }
+
+  // check compare width limit
+  OclaIP ocla_ip{m_adapter, instance->get_baseaddr()};
+  if (compare_width > ocla_ip.get_max_compare_value_size()) {
+    CFG_POST_ERR("Compare width exceeded the width limit (%d)",
+                 ocla_ip.get_max_compare_value_size());
     return;
   }
 
@@ -124,32 +127,62 @@ void Ocla::add_trigger(uint32_t domain_id, uint32_t probe_id,
   //   resources has been used up on the instance. In this case, the command
   //   will fail with a message telling the user that all trigger resources has
   //   been used up.
-  OclaIP ocla_ip{m_adapter, instance->get_baseaddr()};
-  if (trigger_count >= ocla_ip.get_trigger_count()) {
+  if (domain->get_number_of_triggers(instance->get_index()) >=
+      ocla_ip.get_trigger_count()) {
     CFG_POST_ERR(
         "Existing setup has used all the available trigger (%d) resource, fail "
         "to add another one",
-        trigger_count);
+        ocla_ip.get_trigger_count());
     return;
   }
 
   // add a new trigger to the instance
   oc_trigger_t trig{};
 
+  trig.bitrange_enable = false;
+  trig.width = 0;
+  trig.pos = 0;
+
+  // setup bitrange signal selection config
+  if (patid == OCLA_SIGNAL_PATTERN_1 || patid == OCLA_SIGNAL_PATTERN_3) {
+    trig.bitrange_enable = true;
+    trig.width = bit_end - bit_start + 1;
+    trig.pos = bit_start;
+    if ((trig.pos + trig.width) > signal->get_bitwidth()) {
+      CFG_POST_ERR("Invalid signal bitrange selection '%s' on probe %d",
+                   signal_name.c_str(), probe_id);
+      return;
+    }
+  }
+
   trig.instance_index = probe->get_instance_index();
   trig.probe_id = probe_id;
   trig.signal_id = signal->get_index();
   trig.signal_name = signal->get_name();
-  trig.cfg.probe_num = signal->get_bitpos();
+  trig.cfg.probe_num = signal->get_bitpos() + trig.pos;
   trig.cfg.type = convert_trigger_type(type);
   trig.cfg.event = convert_trigger_event(event);
   trig.cfg.value = value;
   trig.cfg.compare_width = compare_width;
 
+  // for value compare, use selected signal bitwidth or sub bitwidth by default
+  // unless overrided by compare width param
+  if (trig.cfg.type == ocla_trigger_type::VALUE_COMPARE) {
+    if (compare_width == 0) {
+      if (trig.bitrange_enable) {
+        trig.cfg.compare_width =
+            std::min(trig.width, ocla_ip.get_max_compare_value_size());
+      } else {
+        trig.cfg.compare_width = std::min(signal->get_bitwidth(),
+                                          ocla_ip.get_max_compare_value_size());
+      }
+    }
+  }
+
   domain->add_trigger(trig);
 }
 
-void Ocla::edit_trigger(uint32_t domain_id, uint32_t trigger_id,
+void Ocla::edit_trigger(uint32_t domain_id, uint32_t trigger_index,
                         uint32_t probe_id, std::string signal_name,
                         std::string type, std::string event, uint32_t value,
                         uint32_t compare_width) {
@@ -159,19 +192,32 @@ void Ocla::edit_trigger(uint32_t domain_id, uint32_t trigger_id,
   OclaDomain *domain = nullptr;
   OclaSignal *signal = nullptr;
   OclaProbe *probe = nullptr;
+  OclaInstance *instance = nullptr;
+  uint32_t bit_start = 0, bit_end = 0, bit_width = 0, bit_value = 0;
+  std::string name = "";
 
-  if (!get_hier_objects(1, session, domain_id, &domain, probe_id, &probe,
-                        signal_name, &signal)) {
+  // parse signal selection string
+  auto patid = CFG_parse_signal(signal_name, name, bit_start, bit_end,
+                                bit_width, bit_value);
+  if (!patid || bit_start > bit_end) {
+    CFG_POST_ERR("Invalid signal name format '%s'", signal_name.c_str());
+    return;
+  }
+
+  if (!get_hier_objects(1, session, domain_id, &domain, probe_id, &probe, name,
+                        &signal)) {
+    return;
+  }
+
+  oc_trigger_t *trig = nullptr;
+
+  if (!domain->get_trigger(trigger_index, trig)) {
+    CFG_POST_ERR("Trigger %d not found", trigger_index);
     return;
   }
 
   // verify if the ip matches the ocla debug info
   if (!verify(session)) {
-    return;
-  }
-
-  if (trigger_id == 0 || domain->get_triggers().size() < trigger_id) {
-    CFG_POST_ERR("Trigger %d not found", trigger_id);
     return;
   }
 
@@ -188,21 +234,77 @@ void Ocla::edit_trigger(uint32_t domain_id, uint32_t trigger_id,
     return;
   }
 
-  // modify trigger in debug session
-  oc_trigger_t &trig = domain->get_triggers()[trigger_id - 1];
+  // get the instance of the selected probe
+  if (!domain->get_instance(probe->get_instance_index(), instance)) {
+    CFG_POST_ERR("Instance %d not found", probe->get_instance_index());
+    return;
+  }
 
-  trig.instance_index = probe->get_instance_index();
-  trig.probe_id = probe_id;
-  trig.signal_id = signal->get_index();
-  trig.signal_name = signal->get_name();
-  trig.cfg.probe_num = signal->get_bitpos();
-  trig.cfg.type = convert_trigger_type(type);
-  trig.cfg.event = convert_trigger_event(event);
-  trig.cfg.value = value;
-  trig.cfg.compare_width = compare_width;
+  // check compare width limit
+  OclaIP ocla_ip{m_adapter, instance->get_baseaddr()};
+  if (compare_width > ocla_ip.get_max_compare_value_size()) {
+    CFG_POST_ERR("Compare width exceeded the width limit (%d)",
+                 ocla_ip.get_max_compare_value_size());
+    return;
+  }
+
+  if (trig->probe_id != probe_id) {
+    // check trigger limit when changed to another probe
+    if (domain->get_number_of_triggers(instance->get_index()) >=
+        ocla_ip.get_trigger_count()) {
+      CFG_POST_ERR(
+          "Existing setup has used all the available trigger (%d) resource, "
+          "fail "
+          "to add another one",
+          ocla_ip.get_trigger_count());
+      return;
+    }
+  }
+
+  // setup bitrange signal selection config
+  if (patid == OCLA_SIGNAL_PATTERN_1 || patid == OCLA_SIGNAL_PATTERN_3) {
+    uint32_t width = bit_end - bit_start + 1;
+    uint32_t pos = bit_start;
+    if ((pos + width) > signal->get_bitwidth()) {
+      CFG_POST_ERR("Invalid signal bitrange selection '%s' on probe %d",
+                   signal_name.c_str(), probe_id);
+      return;
+    }
+    trig->bitrange_enable = true;
+    trig->width = width;
+    trig->pos = pos;
+  } else {
+    trig->bitrange_enable = false;
+    trig->width = 0;
+    trig->pos = 0;
+  }
+
+  trig->instance_index = probe->get_instance_index();
+  trig->probe_id = probe_id;
+  trig->signal_id = signal->get_index();
+  trig->signal_name = signal->get_name();
+  trig->cfg.probe_num = signal->get_bitpos() + trig->pos;
+  trig->cfg.type = convert_trigger_type(type);
+  trig->cfg.event = convert_trigger_event(event);
+  trig->cfg.value = value;
+  trig->cfg.compare_width = compare_width;
+
+  // for value compare, use selected signal bitwidth or sub bitwidth by default
+  // unless overrided by compare width param
+  if (trig->cfg.type == ocla_trigger_type::VALUE_COMPARE) {
+    if (compare_width == 0) {
+      if (trig->bitrange_enable) {
+        trig->cfg.compare_width =
+            std::min(trig->width, ocla_ip.get_max_compare_value_size());
+      } else {
+        trig->cfg.compare_width = std::min(
+            signal->get_bitwidth(), ocla_ip.get_max_compare_value_size());
+      }
+    }
+  }
 }
 
-void Ocla::remove_trigger(uint32_t domain_id, uint32_t trigger_id) {
+void Ocla::remove_trigger(uint32_t domain_id, uint32_t trigger_index) {
   CFG_ASSERT(m_adapter != nullptr);
 
   OclaDebugSession *session = nullptr;
@@ -217,14 +319,9 @@ void Ocla::remove_trigger(uint32_t domain_id, uint32_t trigger_id) {
     return;
   }
 
-  if (trigger_id == 0 || domain->get_triggers().size() < trigger_id) {
-    CFG_POST_ERR("Trigger %d not found", trigger_id);
-    return;
+  if (!domain->remove_trigger(trigger_index)) {
+    CFG_POST_ERR("Trigger %d not found", trigger_index);
   }
-
-  // remove trigger
-  auto &triggers = domain->get_triggers();
-  triggers.erase(triggers.begin() + (trigger_id - 1));
 }
 
 bool Ocla::get_hier_objects(uint32_t session_id, OclaDebugSession *&session,
@@ -326,6 +423,19 @@ void Ocla::show_signal_table(std::vector<OclaSignal> signals_list) {
       "--------+");
 }
 
+std::string Ocla::format_signal_name(oc_trigger_t &trig) {
+  if (trig.bitrange_enable) {
+    if (trig.width > 1) {
+      return trig.signal_name + "[" +
+             std::to_string(trig.pos + trig.width - 1) + ":" +
+             std::to_string(trig.pos) + "]";
+    } else {
+      return trig.signal_name + "[" + std::to_string(trig.pos) + "]";
+    }
+  }
+  return trig.signal_name;
+}
+
 void Ocla::show_info() {
   CFG_ASSERT(m_adapter != nullptr);
 
@@ -351,7 +461,7 @@ void Ocla::show_info() {
     ocla_config cfg = domain.get_config();
 
     CFG_POST_MSG("  OCLA Configuration");
-    CFG_POST_MSG("    Mode: %s",
+    CFG_POST_MSG("    Trigger Mode: %s",
                  convert_ocla_trigger_mode_to_string(cfg.mode).c_str());
     CFG_POST_MSG("    Trigger Condition: %s",
                  convert_trigger_condition_to_string(cfg.condition).c_str());
@@ -382,7 +492,7 @@ void Ocla::show_info() {
           case EDGE:
           case LEVEL:
             CFG_POST_MSG("    #%d: signal=Probe %d/%s (#%d); mode=%s_%s", i,
-                         trig.probe_id, trig.signal_name.c_str(),
+                         trig.probe_id, format_signal_name(trig).c_str(),
                          trig.signal_id, event_name.c_str(), type_name.c_str());
             break;
           case VALUE_COMPARE:
@@ -390,9 +500,9 @@ void Ocla::show_info() {
                 "    #%d: signal=Probe %d/%s (#%d); mode=%s; "
                 "compare_operator=%s; "
                 "compare_value=0x%x; compare_width=%d",
-                i, trig.probe_id, trig.signal_name.c_str(), trig.signal_id,
-                type_name.c_str(), event_name.c_str(), trig.cfg.value,
-                trig.cfg.compare_width);
+                i, trig.probe_id, format_signal_name(trig).c_str(),
+                trig.signal_id, type_name.c_str(), event_name.c_str(),
+                trig.cfg.value, trig.cfg.compare_width);
             break;
           case TRIGGER_NONE:
             break;
@@ -617,7 +727,6 @@ bool Ocla::verify(OclaDebugSession *session) {
   CFG_ASSERT(m_adapter != nullptr);
   CFG_ASSERT(session != nullptr);
 
-  // check probe sum (in json parser)
   uint32_t error_count = 0;
 
   for (auto &domain : session->get_clock_domains()) {
@@ -741,7 +850,7 @@ void Ocla::start_session(std::string filepath) {
     for (auto &msg : error_messages) {
       CFG_POST_ERR("%s", msg.c_str());
     }
-    CFG_POST_ERR("Failed load user design");
+    CFG_POST_ERR("Failed to load user design");
   }
 }
 

@@ -1,10 +1,10 @@
 #include "OclaDebugSession.h"
 
-#include <regex>
 #include <string>
 
 #include "BitAssembler/BitAssembler_mgr.h"
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
+#include "OclaHelpers.h"
 #include "nlohmann_json/json.hpp"
 
 OclaDebugSession::OclaDebugSession() : m_loaded(false) {}
@@ -117,11 +117,20 @@ bool OclaDebugSession::parse(std::string ocla_str,
       uint32_t bitpos = 0;
       uint32_t total_bitwidth = 0;
       for (auto const &elem : ocla.at("probes")) {
-        auto sig = parse_signal(elem);
+        OclaSignal sig{};
+        if (!parse_signal(elem, sig, error_messages)) {
+          res = false;
+          break;
+        }
         sig.set_bitpos(bitpos);
         bitpos += sig.get_bitwidth();
         total_bitwidth += sig.get_bitwidth();
         signals.push_back(sig);
+      }
+
+      // break the loop in case probes parsing failed above
+      if (!res) {
+        break;
       }
 
       // sanity check: total width of probes equals to no. of probes of the
@@ -231,76 +240,59 @@ bool OclaDebugSession::parse(std::string ocla_str,
   return res;
 }
 
-OclaSignal OclaDebugSession::parse_signal(std::string signal_str) {
-  static std::map<uint32_t, std::string> patterns = {
-      {1, R"((\w+) *\[ *(\d+) *: *(\d+)\ *])"},
-      {2, R"((\d+)'([01]+))"},
-      {3, R"((\w+) *\[ *(\d+)\ *])"},
-      {4, R"(^(\w+)$)"}};
+bool OclaDebugSession::parse_signal(std::string signal_str, OclaSignal &signal,
+                                    std::vector<std::string> &error_messages) {
+  std::string signal_name = "";
+  uint32_t bit_start = 0;
+  uint32_t bit_end = 0;
+  uint32_t bit_width = 0;
+  uint32_t bit_value = 0;
 
-  uint32_t patid = 0;
-  std::cmatch m;
-
-  for (const auto &[i, pat] : patterns) {
-    if (std::regex_search(signal_str.c_str(), m,
-                          std::regex(pat, std::regex::icase)) == true) {
-      patid = i;
-      break;
-    }
-  }
-
-  CFG_ASSERT_MSG(patid > 0, "Invalid signal '%s'", signal_str.c_str());
-
-  OclaSignal sig{};
-
+  auto patid = CFG_parse_signal(signal_str, signal_name, bit_start, bit_end,
+                                bit_width, bit_value);
   switch (patid) {
-    case 1U:  // pattern 1: count[13:2]
+    case OCLA_SIGNAL_PATTERN_1:  // pattern 1: count[13:2]
     {
-      uint64_t bit_start = CFG_convert_string_to_u64(m[3].str());
-      uint64_t bit_end = CFG_convert_string_to_u64(m[2].str());
-      CFG_ASSERT_MSG(bit_end >= bit_start, "Invalid bit position '%s'",
-                     signal_str.c_str());
-      sig.set_orig_name(m[0].str());
-      sig.set_name(m[1].str());
-      sig.set_type(oc_signal_type_t::SIGNAL);
-      sig.set_value(0);
-      sig.set_bitwidth(static_cast<uint32_t>(bit_end - bit_start) + 1);
+      if (bit_end < bit_start) {
+        error_messages.push_back("Invalid bit position '" + signal_str + "'");
+        return false;
+      }
+      signal.set_orig_name(signal_str);
+      signal.set_name(signal_name);
+      signal.set_type(oc_signal_type_t::SIGNAL);
+      signal.set_value(0);
+      signal.set_bitwidth(static_cast<uint32_t>(bit_end - bit_start) + 1);
       break;
     }
-    case 2U:  // pattern 2: 4'0000
+    case OCLA_SIGNAL_PATTERN_2:  // pattern 2: 4'0000
     {
-      sig.set_orig_name(m[0].str());
-      sig.set_name(m[0].str());
-      sig.set_type(oc_signal_type_t::CONSTANT);
-      sig.set_value(
-          static_cast<uint32_t>(CFG_convert_string_to_u64("b" + m[2].str())));
-      sig.set_bitwidth(
-          static_cast<uint32_t>(CFG_convert_string_to_u64(m[1].str())));
+      if (bit_width == 0) {
+        error_messages.push_back("Invalid signal name format '" + signal_str +
+                                 "'");
+        return false;
+      }
+      signal.set_orig_name(signal_str);
+      signal.set_name(signal_name);
+      signal.set_type(oc_signal_type_t::CONSTANT);
+      signal.set_value(bit_value);
+      signal.set_bitwidth(bit_width);
       break;
     }
-    case 3U:  // pattern 3: s_axil_awprot[0]
+    case OCLA_SIGNAL_PATTERN_3:  // pattern 3: s_axil_awprot[0]
+    case OCLA_SIGNAL_PATTERN_5:  // pattern 5: s_axil_bready
     {
-      sig.set_orig_name(m[0].str());
-      sig.set_name(m[1].str());
-      sig.set_type(oc_signal_type_t::SIGNAL);
-      sig.set_value(0);
-      sig.set_bitwidth(1);
-      break;
-    }
-    case 4U:  // pattern 4: s_axil_bready
-    {
-      sig.set_orig_name(m[0].str());
-      sig.set_name(m[0].str());
-      sig.set_type(oc_signal_type_t::SIGNAL);
-      sig.set_value(0);
-      sig.set_bitwidth(1);
+      signal.set_orig_name(signal_str);
+      signal.set_name(signal_name);
+      signal.set_type(oc_signal_type_t::SIGNAL);
+      signal.set_value(0);
+      signal.set_bitwidth(1);
       break;
     }
     default:
-      // assert when unknown format encountered
-      CFG_ASSERT_MSG(false, "Invalid signal format '%s'", signal_str.c_str());
-      break;
+      error_messages.push_back("Invalid signal name format '" + signal_str +
+                               "'");
+      return false;
   }
 
-  return sig;
+  return true;
 }
