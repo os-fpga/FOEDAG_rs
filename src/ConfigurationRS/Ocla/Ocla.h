@@ -61,7 +61,8 @@ class Ocla {
                         uint32_t probe_id = 0, OclaProbe **probe = nullptr,
                         std::string signal_name = "",
                         OclaSignal **signal = nullptr);
-  void show_signal_table(std::vector<OclaSignal> signals_list);
+  void show_signal_table(std::vector<OclaSignal> signal_list);
+  void show_eio_signal_table(std::vector<eio_signal_t> &signal_list);
   void program(OclaDomain *domain);
   bool verify(OclaDebugSession *session);
   std::string format_signal_name(oc_trigger_t &trig);

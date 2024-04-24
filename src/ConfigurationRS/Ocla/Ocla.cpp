@@ -399,7 +399,7 @@ bool Ocla::get_hier_objects(uint32_t session_id, OclaDebugSession *&session,
   return true;
 }
 
-void Ocla::show_signal_table(std::vector<OclaSignal> signals_list) {
+void Ocla::show_signal_table(std::vector<OclaSignal> signal_list) {
   CFG_POST_MSG(
       "  "
       "+-------+-------------------------------------+--------------+------"
@@ -412,7 +412,7 @@ void Ocla::show_signal_table(std::vector<OclaSignal> signals_list) {
       "+-------+-------------------------------------+--------------+------"
       "--------+");
 
-  for (auto &sig : signals_list) {
+  for (auto &sig : signal_list) {
     CFG_POST_MSG("  | %5d | %-35s | %-12d | %-12d |", sig.get_index(),
                  sig.get_name().c_str(), sig.get_bitpos(), sig.get_bitwidth());
   }
@@ -515,6 +515,30 @@ void Ocla::show_info() {
 
     CFG_POST_MSG(" ");
   }
+
+  // show eio info
+  for (auto &eio : session->get_eio_instances()) {
+    CFG_POST_MSG("EIO:");
+    for (auto &probe : eio.get_input_probes()) {
+      CFG_POST_MSG("  In Probe %d", probe.idx);
+      show_eio_signal_table(probe.signal_list);
+    }
+    for (auto &probe : eio.get_output_probes()) {
+      CFG_POST_MSG("  Out Probe %d", probe.idx);
+      show_eio_signal_table(probe.signal_list);
+    }
+    CFG_POST_MSG(" ");
+  }
+}
+
+void Ocla::show_eio_signal_table(std::vector<eio_signal_t> &signal_list) {
+  CFG_POST_MSG("  +-------+-----------------------+--------------+");
+  CFG_POST_MSG("  | Index | Signal Name           | Bitwidth     |");
+  CFG_POST_MSG("  +-------+-----------------------+--------------+");
+  for (auto &s : signal_list) {
+    CFG_POST_MSG("  | %5d | %-21s | %-12d |", s.idx, s.name.c_str(), s.bitwidth);
+  }
+  CFG_POST_MSG("  +-------+-----------------------+--------------+");
 }
 
 void Ocla::show_instance_info() {
