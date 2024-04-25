@@ -421,7 +421,7 @@ jobs:
           ${{ github.workspace }}/build/tests/
 
   macos-gcc:
-    runs-on: macos-latest
+    runs-on: macos-12
 
     steps:
 
@@ -483,7 +483,7 @@ jobs:
          make regression
 
   macos-clang:
-    runs-on: macos-latest
+    runs-on: macos-12
 
     steps:
 
