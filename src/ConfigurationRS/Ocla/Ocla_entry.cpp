@@ -181,6 +181,18 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
                            parms->device)) {
       ocla.show_instance_info();
     }
+  } else if (subcmd == "set_io") {
+    auto parms = static_cast<const CFGArg_DEBUGGER_SET_IO*>(arg->get_sub_arg());
+    if (Ocla_select_device(adapter, hardware_manager, parms->cable,
+                           parms->device)) {
+      CFG_POST_MSG("Not implemented");
+    }
+  } else if (subcmd == "get_io") {
+    auto parms = static_cast<const CFGArg_DEBUGGER_GET_IO*>(arg->get_sub_arg());
+    if (Ocla_select_device(adapter, hardware_manager, parms->cable,
+                           parms->device)) {
+      CFG_POST_MSG("Not implemented");
+    }
   } else if (subcmd == "read") {
     auto parms = static_cast<const CFGArg_DEBUGGER_READ*>(arg->get_sub_arg());
     if (Ocla_select_device(adapter, hardware_manager, parms->cable,

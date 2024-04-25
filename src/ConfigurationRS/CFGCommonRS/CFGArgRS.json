@@ -923,6 +923,103 @@
       }
     },
     {
+      "set_io": {
+        "option": [
+          {
+            "name": "cable",
+            "short": "b",
+            "type": "str",
+            "optional": true,
+            "default" : "1",
+            "help": "Cable name or index"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Device index"
+          },
+          {
+            "name": "signal",
+            "short": "s",
+            "type": "str",
+            "optional": false,
+            "help": "Signal name or index"
+          },
+          {
+            "name": "value",
+            "short": "v",
+            "type": "int",
+            "optional": false,
+            "help": "IO value/state"
+          }
+        ],
+        "desc": "To configure the state/value of an IO signal.",
+        "help": [
+          "To configure a IO value/state:",
+          "  debugger set_io",
+          "  -s <name/index>",
+          "  -v <value>"
+        ]
+      }
+    },
+    {
+      "get_io": {
+        "option": [
+          {
+            "name": "cable",
+            "short": "b",
+            "type": "str",
+            "optional": true,
+            "default" : "1",
+            "help": "Cable name or index"
+          },
+          {
+            "name": "device",
+            "short": "d",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Device index"
+          },
+          {
+            "name": "signal",
+            "short": "s",
+            "type": "str",
+            "multi": true,
+            "optional": false,
+            "help": "Signal name or index"
+          },
+          {
+            "name": "loop",
+            "short": "l",
+            "type": "int",
+            "optional": true,
+            "default" : 1,
+            "help": "Read for a specified number of times (default 1)"
+          },
+          {
+            "name": "duration",
+            "short": "t",
+            "type": "int",
+            "optional": true,
+            "default" : 100,
+            "help": "Time interval between reads in millisecond (default 100ms)"
+          }
+        ],
+        "desc": "To read the state/value of an IO signal.",
+        "help": [
+          "To read a IO value/state:",
+          "  debugger get_io",
+          "  -s <name/index>",
+          "  -l {times}",
+          "  -t {milliseconds}"
+        ]
+      }
+    },
+    {
       "help": "Configuration File Generation Internal Tool"
     }
   ]
