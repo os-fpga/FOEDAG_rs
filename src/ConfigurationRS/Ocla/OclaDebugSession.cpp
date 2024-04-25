@@ -88,7 +88,7 @@ void OclaDebugSession::unload() {
   m_loaded = false;
 }
 
-std::vector<EioInstance> OclaDebugSession::get_eio_instances() {
+std::vector<EioInstance> &OclaDebugSession::get_eio_instances() {
   return m_eio_instances;
 }
 

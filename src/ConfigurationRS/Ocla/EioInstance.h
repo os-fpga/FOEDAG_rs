@@ -26,8 +26,8 @@ class EioInstance {
  public:
   EioInstance(uint32_t baseaddr, uint32_t index);
   ~EioInstance();
-  std::vector<eio_probe_t> get_probes(eio_probe_type_t type) const;
-  void add_probe(eio_probe_t &probe);
+  std::vector<eio_probe_t>& get_probes();
+  void add_probe(eio_probe_t& probe);
   uint32_t get_baseaddr() const;
   uint32_t get_index() const;
 

@@ -32,7 +32,7 @@ class OclaDebugSession {
   ~OclaDebugSession();
   std::vector<OclaDomain>& get_clock_domains();
   std::vector<OclaInstance> get_instances();
-  std::vector<EioInstance> get_eio_instances();
+  std::vector<EioInstance>& get_eio_instances();
   std::vector<OclaProbe> get_probes(uint32_t instance_index);
   std::string get_filepath() const;
   bool is_loaded() const;

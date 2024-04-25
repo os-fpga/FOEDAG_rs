@@ -65,19 +65,25 @@ class Ocla {
   static std::vector<OclaDebugSession> m_sessions;
   OclaJtagAdapter *m_adapter;
 
+  bool get_session(uint32_t session_id, OclaDebugSession *&session);
   bool get_hier_objects(uint32_t session_id, OclaDebugSession *&session,
                         uint32_t domain_id = 0, OclaDomain **domain = nullptr,
                         uint32_t probe_id = 0, OclaProbe **probe = nullptr,
                         std::string signal_name = "",
                         OclaSignal **signal = nullptr);
-  bool get_eio_signals(OclaDebugSession &session,
-                       std::vector<std::string> signal_names,
-                       eio_probe_type_t probe_type,
-                       std::vector<eio_signal_t> &output_signals);
+  bool get_eio_hier_objects(uint32_t session_id, OclaDebugSession *&session,
+                            uint32_t instance_index = 0,
+                            EioInstance **instance = nullptr,
+                            uint32_t probe_id = 0,
+                            eio_probe_type_t probe_type = IO_INPUT,
+                            eio_probe_t **probe = nullptr);
   void show_signal_table(std::vector<OclaSignal> &signal_list);
   void show_eio_signal_table(std::vector<eio_signal_t> &signal_list);
   void program(OclaDomain *domain);
   bool verify(OclaDebugSession *session);
+  bool find_eio_signals(std::vector<eio_signal_t> &signal_list,
+                        std::vector<std::string> signal_names,
+                        std::vector<eio_signal_t> &output_list);
   std::string format_signal_name(oc_trigger_t &trig);
 };
 
