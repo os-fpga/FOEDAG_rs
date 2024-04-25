@@ -30,6 +30,11 @@ struct oc_waveform_t {
   uint32_t domain_id;
 };
 
+struct eio_value_t {
+  std::string signal_name;
+  uint64_t value;
+};
+
 class Ocla {
  public:
   Ocla(OclaJtagAdapter *adapter);
@@ -48,6 +53,10 @@ class Ocla {
   bool get_status(uint32_t domain_id, uint32_t &status);
   bool start(uint32_t domain_id);
   void start_session(std::string filepath);
+  bool set_io(std::vector<std::string> signal_names,
+              std::vector<uint64_t> values);
+  bool get_io(std::vector<std::string> signal_names,
+              std::vector<eio_value_t> &values);
   void stop_session();
   void show_info();
   void show_instance_info();
@@ -61,7 +70,11 @@ class Ocla {
                         uint32_t probe_id = 0, OclaProbe **probe = nullptr,
                         std::string signal_name = "",
                         OclaSignal **signal = nullptr);
-  void show_signal_table(std::vector<OclaSignal> signal_list);
+  bool get_eio_signals(OclaDebugSession &session,
+                       std::vector<std::string> signal_names,
+                       eio_probe_type_t probe_type,
+                       std::vector<eio_signal_t> &output_signals);
+  void show_signal_table(std::vector<OclaSignal> &signal_list);
   void show_eio_signal_table(std::vector<eio_signal_t> &signal_list);
   void program(OclaDomain *domain);
   bool verify(OclaDebugSession *session);

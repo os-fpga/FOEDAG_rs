@@ -3,9 +3,12 @@
 #include <map>
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
+#include "EioIP.h"
 #include "OclaHelpers.h"
 #include "OclaIP.h"
 #include "OclaJtagAdapter.h"
+
+#define EIO_IP_TYPE_STRING "EIO"
 
 std::vector<OclaDebugSession> Ocla::m_sessions{};
 
@@ -399,7 +402,7 @@ bool Ocla::get_hier_objects(uint32_t session_id, OclaDebugSession *&session,
   return true;
 }
 
-void Ocla::show_signal_table(std::vector<OclaSignal> signal_list) {
+void Ocla::show_signal_table(std::vector<OclaSignal> &signal_list) {
   CFG_POST_MSG(
       "  "
       "+-------+-------------------------------------+--------------+------"
@@ -519,11 +522,13 @@ void Ocla::show_info() {
   // show eio info
   for (auto &eio : session->get_eio_instances()) {
     CFG_POST_MSG("EIO:");
-    for (auto &probe : eio.get_input_probes()) {
+    auto probes_in = eio.get_probes(eio_probe_type_t::IO_INPUT);
+    for (auto &probe : probes_in) {
       CFG_POST_MSG("  In-Probe %d", probe.idx);
       show_eio_signal_table(probe.signal_list);
     }
-    for (auto &probe : eio.get_output_probes()) {
+    auto probes_out = eio.get_probes(eio_probe_type_t::IO_OUTPUT);
+    for (auto &probe : probes_out) {
       CFG_POST_MSG("  Out-Probe %d", probe.idx);
       show_eio_signal_table(probe.signal_list);
     }
@@ -808,6 +813,17 @@ bool Ocla::verify(OclaDebugSession *session) {
     }
   }
 
+  // eio
+  for (auto &instance : session->get_eio_instances()) {
+    EioIP eio{m_adapter, instance.get_baseaddr()};
+    if (eio.get_type() != EIO_IP_TYPE_STRING) {
+      CFG_POST_ERR("Could not detect EIO instance %d at 0x%08x",
+                   instance.get_index(), instance.get_baseaddr());
+      ++error_count;
+      continue;
+    }
+  }
+
   if (error_count > 0) {
     CFG_POST_ERR("IP Verification failed");
     return false;
@@ -897,4 +913,98 @@ void Ocla::stop_session() {
     return;
   }
   m_sessions.clear();
+}
+
+bool Ocla::get_eio_signals(OclaDebugSession &session,
+                           std::vector<std::string> signal_names,
+                           eio_probe_type_t probe_type,
+                           std::vector<eio_signal_t> &output_signals) {
+  EioInstance *instance = nullptr;
+  eio_probe_t *probe = nullptr;
+
+  auto instances = session.get_eio_instances();
+  for (auto &elem : instances) {
+    instance = &elem;
+    break;
+  }
+
+  if (!instance) {
+    CFG_POST_ERR("EIO information not found");
+    return false;
+  }
+
+  auto probes = instance->get_probes(probe_type);
+  for (auto &elem : probes) {
+    probe = &elem;
+    break;
+  }
+
+  if (!probe) {
+    CFG_POST_ERR("EIO input probe information not found");
+    return false;
+  }
+
+  for (auto &name : signal_names) {
+    auto it = std::find_if(probe->signal_list.begin(), probe->signal_list.end(),
+                           [&](eio_signal_t s) { return s.name == name; });
+    if (it != probe->signal_list.end()) {
+      output_signals.push_back(*it);
+    } else {
+      CFG_POST_ERR("EIO signal '%s' not found", name.c_str());
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool Ocla::set_io(std::vector<std::string> signal_names,
+                  std::vector<uint64_t> values) {
+  CFG_ASSERT(m_adapter != nullptr);
+
+  if (!m_sessions.size()) {
+    CFG_POST_ERR("Debug session is not loaded.");
+    return false;
+  }
+
+  if (signal_names.size() != values.size()) {
+    CFG_POST_ERR("Number of signal names and values not match");
+    return false;
+  }
+
+  std::vector<eio_signal_t> signal_list{};
+  if (!get_eio_signals(m_sessions[0], signal_names, eio_probe_type_t::IO_OUTPUT,
+                       signal_list)) {
+    return false;
+  }
+
+  if (!verify(&m_sessions[0])) {
+    return false;
+  }
+
+  // todo: write
+  return true;
+}
+
+bool Ocla::get_io(std::vector<std::string> signal_names,
+                  std::vector<eio_value_t> &values) {
+  CFG_ASSERT(m_adapter != nullptr);
+
+  if (!m_sessions.size()) {
+    CFG_POST_ERR("Debug session is not loaded.");
+    return false;
+  }
+
+  std::vector<eio_signal_t> signal_list{};
+  if (!get_eio_signals(m_sessions[0], signal_names, eio_probe_type_t::IO_INPUT,
+                       signal_list)) {
+    return false;
+  }
+
+  if (!verify(&m_sessions[0])) {
+    return false;
+  }
+
+  // todo: read
+  return true;
 }

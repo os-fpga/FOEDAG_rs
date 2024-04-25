@@ -100,7 +100,7 @@ bool OclaDebugSession::parse_eio(nlohmann::json json,
   uint32_t signal_index;
 
   // create one eio instance. only 1 instance is supported at current version
-  EioInstance instance{eio.at("addr")};
+  EioInstance instance{eio.at("addr"), 1};
 
   if (eio.contains("probes_in")) {
     // NOTE: create one input probe. only 1 input probe is supported at current

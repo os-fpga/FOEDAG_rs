@@ -24,16 +24,17 @@ struct eio_probe_t {
 
 class EioInstance {
  public:
-  EioInstance(uint32_t baseaddr);
+  EioInstance(uint32_t baseaddr, uint32_t index);
   ~EioInstance();
-  std::vector<eio_probe_t> get_input_probes() const;
-  std::vector<eio_probe_t> get_output_probes() const;
+  std::vector<eio_probe_t> get_probes(eio_probe_type_t type) const;
   void add_probe(eio_probe_t &probe);
+  uint32_t get_baseaddr() const;
+  uint32_t get_index() const;
 
  private:
   uint32_t m_baseaddr;
+  uint32_t m_index;
   std::vector<eio_probe_t> m_probes;
-  std::vector<eio_probe_t> get_probes(eio_probe_type_t type) const;
 };
 
 #endif  //__EIOINSTANCE_H__

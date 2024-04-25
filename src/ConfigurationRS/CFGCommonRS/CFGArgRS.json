@@ -945,6 +945,7 @@
             "name": "signal",
             "short": "s",
             "type": "str",
+            "multi": true,
             "optional": false,
             "help": "Signal name or index"
           },
@@ -952,6 +953,7 @@
             "name": "value",
             "short": "v",
             "type": "int",
+            "multi": true,
             "optional": false,
             "help": "IO value/state"
           }

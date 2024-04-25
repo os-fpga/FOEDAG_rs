@@ -3,17 +3,14 @@
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
 #include "OclaHelpers.h"
 
-EioInstance::EioInstance(uint32_t baseaddr) : m_baseaddr(baseaddr) {}
+EioInstance::EioInstance(uint32_t baseaddr, uint32_t idx)
+    : m_baseaddr(baseaddr), m_index(idx) {}
 
 EioInstance::~EioInstance() {}
 
-std::vector<eio_probe_t> EioInstance::get_input_probes() const {
-  return get_probes(eio_probe_type_t::IO_INPUT);
-}
+uint32_t EioInstance::get_baseaddr() const { return m_baseaddr; }
 
-std::vector<eio_probe_t> EioInstance::get_output_probes() const {
-  return get_probes(eio_probe_type_t::IO_OUTPUT);
-}
+uint32_t EioInstance::get_index() const { return m_index; };
 
 void EioInstance::add_probe(eio_probe_t &probe) { m_probes.push_back(probe); }
 
