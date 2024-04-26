@@ -1068,7 +1068,7 @@ bool Ocla::get_io(std::vector<std::string> signal_names,
   EioIP eio{m_adapter, instance->get_baseaddr()};
   auto result = eio.read((msb_pos / 32) + 1);
   for (auto &s : output_list) {
-    std::vector<uint32_t> buf{0, 0};
+    std::vector<uint32_t> buf(((s.bitwidth - 1) / 32) + 1, 0);
     eio_value_t value{};
     CFG_copy_bits_vec32(result.data(), s.bitpos, buf.data(), 0, s.bitwidth);
     value.signal_name = s.name;

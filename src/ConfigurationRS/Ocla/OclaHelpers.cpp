@@ -100,8 +100,11 @@ std::vector<uint32_t> CFG_convert_u64_to_vec_u32(uint64_t value) {
 }
 
 uint64_t CFG_convert_vec_u32_to_u64(std::vector<uint32_t> values) {
-  CFG_ASSERT(values.size() >= 2);
-  return uint64_t(values[0]) | (uint64_t(values[1]) << 32);
+  CFG_ASSERT(values.size() >= 1);
+  if (values.size() > 1) {
+    return uint64_t(values[0]) | (uint64_t(values[1]) << 32);
+  }
+  return uint64_t(values[0]);
 }
 
 uint32_t CFG_parse_signal(std::string& signal_str, std::string& name,
