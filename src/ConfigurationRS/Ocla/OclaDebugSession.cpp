@@ -95,21 +95,19 @@ std::vector<EioInstance> &OclaDebugSession::get_eio_instances() {
 bool OclaDebugSession::parse_eio(nlohmann::json json,
                                  std::vector<std::string> &error_messages) {
   nlohmann::json eio = json.at("eio");
-  uint32_t input_probe_width = eio.at("Input_Probe_Width");
-  uint32_t output_probe_width = eio.at("Output_Probe_Width");
-  uint32_t signal_index;
 
   // create one eio instance. only 1 instance is supported at current version
   EioInstance instance{eio.at("addr"), 1};
 
   if (eio.contains("probes_in")) {
+    uint32_t input_probe_width = eio.at("Input_Probe_Width");
+    uint32_t idx = 1;
+    uint32_t probe_width = 0;
+    uint32_t bitpos = 0;
+
     // NOTE: create one input probe. only 1 input probe is supported at current
     // version. multiple input probes will be supported in the future.
     eio_probe_t probe{};
-    probe.type = eio_probe_type_t::IO_INPUT;
-    probe.probe_width = 0;
-    probe.idx = 1;
-    signal_index = 1;
 
     // parse probe signals
     for (auto &p : eio.at("probes_in")) {
@@ -117,10 +115,16 @@ bool OclaDebugSession::parse_eio(nlohmann::json json,
       if (!parse_eio_signal(p, sig, error_messages)) {
         return false;
       }
-      sig.idx = signal_index++;
-      probe.probe_width += sig.bitwidth;
+      sig.idx = idx++;
+      sig.bitpos = bitpos;
+      probe_width += sig.bitwidth;
+      bitpos += sig.bitwidth;
       probe.signal_list.push_back(sig);
     }
+
+    probe.type = eio_probe_type_t::IO_INPUT;
+    probe.probe_width = probe_width;
+    probe.idx = 1;
 
     // sanity check to see if parsed total signal width matches
     // Input_Probe_Width
@@ -135,13 +139,14 @@ bool OclaDebugSession::parse_eio(nlohmann::json json,
   }
 
   if (eio.contains("probes_out")) {
+    uint32_t output_probe_width = eio.at("Output_Probe_Width");
+    uint32_t idx = 1;
+    uint32_t probe_width = 0;
+    uint32_t bitpos = 0;
+
     // NOTE: create one output probe. only 1 output probe is supported at
     // current version. multiple output probes will be supported in the future.
     eio_probe_t probe{};
-    probe.type = eio_probe_type_t::IO_OUTPUT;
-    probe.probe_width = 0;
-    probe.idx = 1;
-    signal_index = 1;
 
     // parse probe signals
     for (auto &p : eio.at("probes_out")) {
@@ -149,10 +154,23 @@ bool OclaDebugSession::parse_eio(nlohmann::json json,
       if (!parse_eio_signal(p, sig, error_messages)) {
         return false;
       }
-      sig.idx = signal_index++;
-      probe.probe_width += sig.bitwidth;
+      sig.idx = idx++;
+      sig.bitpos = bitpos;
+      probe_width += sig.bitwidth;
+      bitpos += sig.bitwidth;
       probe.signal_list.push_back(sig);
     }
+
+    probe.type = eio_probe_type_t::IO_OUTPUT;
+    probe.probe_width = probe_width;
+    probe.idx = 1;
+
+    // NOTE: setup the io state to keep track the state of the output io since
+    // current version of IP doesn't provide the capability to readback the
+    // output io state. One caveat, since no way to read the initial state of
+    // the io when software starts, the sw always start with 0's for the output
+    // io state.
+    probe.state.assign((probe_width / 32) + 1, 0);
 
     // sanity check to see if parsed total signal width matches
     // Output_Probe_Width

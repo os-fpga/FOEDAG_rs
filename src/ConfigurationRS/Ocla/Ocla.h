@@ -56,7 +56,7 @@ class Ocla {
   bool set_io(std::vector<std::string> signal_names,
               std::vector<uint64_t> values);
   bool get_io(std::vector<std::string> signal_names,
-              std::vector<eio_value_t> &values);
+              std::vector<eio_value_t> &output);
   void stop_session();
   void show_info();
   void show_instance_info();

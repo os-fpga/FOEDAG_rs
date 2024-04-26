@@ -27,13 +27,22 @@ uint32_t EioIP::get_version() const { return m_version; }
 
 uint32_t EioIP::get_id() const { return m_id; }
 
-void EioIP::write(uint32_t value, eio_probe_register_t reg) {
+void EioIP::write(std::vector<uint32_t> values, uint32_t length) {
   CFG_ASSERT(m_adapter != nullptr);
-  m_adapter->write(m_baseaddr + EIO_AXI_DAT_OUT + uint32_t(reg), value);
+  CFG_ASSERT(length > 0 && length <= 2);
+  for (uint32_t i = 0; i < length; i++) {
+    m_adapter->write(m_baseaddr + EIO_AXI_DAT_OUT + (i << 2), values[i]);
+  }
 }
 
-uint32_t EioIP::read(eio_probe_register_t reg) {
-  return m_adapter->read(m_baseaddr + EIO_AXI_DAT_IN + uint32_t(reg));
+std::vector<uint32_t> EioIP::read(uint32_t length) {
+  CFG_ASSERT(m_adapter != nullptr);
+  std::vector<uint32_t> values{};
+  auto result = m_adapter->read(m_baseaddr + EIO_AXI_DAT_IN, length, 4);
+  for (auto &r : result) {
+    values.push_back(r.data);
+  }
+  return values;
 }
 
 void EioIP::read_registers() {

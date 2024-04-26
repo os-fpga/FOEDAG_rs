@@ -17,6 +17,7 @@ struct eio_signal_t {
 
 struct eio_probe_t {
   std::vector<eio_signal_t> signal_list;
+  std::vector<uint32_t> state;
   eio_probe_type_t type;
   uint32_t probe_width;
   uint32_t idx;

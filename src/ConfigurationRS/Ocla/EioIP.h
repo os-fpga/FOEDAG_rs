@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #define EIO_CTRL (0x00)        // [RW] Control register (Reserved)
 #define EIO_IP_TYPE (0x04)     // [RO] IP Type Register ("EIO")
@@ -13,8 +14,6 @@
 #define EIO_AXI_DAT_OUT \
   (0x10)  // [WO] Data at the output probes of EIO (sent to the DUT)
 
-enum eio_probe_register_t { LOWER = 0, UPPER = 4 };
-
 class OclaJtagAdapter;
 
 class EioIP {
@@ -24,8 +23,8 @@ class EioIP {
   std::string get_type() const;
   uint32_t get_version() const;
   uint32_t get_id() const;
-  void write(uint32_t value, eio_probe_register_t reg);
-  uint32_t read(eio_probe_register_t reg);
+  void write(std::vector<uint32_t> values, uint32_t length);
+  std::vector<uint32_t> read(uint32_t length);
 
  private:
   void read_registers();

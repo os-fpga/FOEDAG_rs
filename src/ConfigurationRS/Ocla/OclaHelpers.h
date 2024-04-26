@@ -52,6 +52,10 @@ void CFG_write_bit_vec32(uint32_t *data, uint32_t pos, uint32_t value);
 void CFG_copy_bits_vec32(uint32_t *src, uint32_t pos, uint32_t *dest,
                          uint32_t dest_pos, uint32_t nbits);
 
+std::vector<uint32_t> CFG_convert_u64_to_vec_u32(uint64_t value);
+
+uint64_t CFG_convert_vec_u32_to_u64(std::vector<uint32_t> values);
+
 uint32_t CFG_parse_signal(std::string &signal_str, std::string &name,
                           uint32_t &bit_start, uint32_t &bit_end,
                           uint32_t &bit_width, uint32_t &value);

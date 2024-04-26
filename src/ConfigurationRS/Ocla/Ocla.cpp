@@ -912,8 +912,14 @@ bool Ocla::find_eio_signals(std::vector<eio_signal_t> &signal_list,
                             std::vector<std::string> signal_names,
                             std::vector<eio_signal_t> &output_list) {
   for (auto &name : signal_names) {
-    auto it = std::find_if(signal_list.begin(), signal_list.end(),
-                           [&](eio_signal_t s) { return s.name == name; });
+    // todo: search by index
+    bool status = false;
+    uint32_t signal_idx =
+        (uint32_t)CFG_convert_string_to_u64(name, false, &status);
+    auto it = std::find_if(
+        signal_list.begin(), signal_list.end(), [&](eio_signal_t s) {
+          return status ? s.idx == signal_idx : s.name == name;
+        });
     if (it != signal_list.end()) {
       output_list.push_back(*it);
     } else {
@@ -1009,12 +1015,26 @@ bool Ocla::set_io(std::vector<std::string> signal_names,
     return false;
   }
 
-  // todo: write io
+  uint32_t msb_pos = 0;
+  uint32_t i = 0;
+
+  // update io state
+  for (auto &s : output_list) {
+    auto value = CFG_convert_u64_to_vec_u32(values[i++]);
+    CFG_copy_bits_vec32(value.data(), 0, probe->state.data(), s.bitpos,
+                        s.bitwidth);
+    msb_pos = std::max(s.bitpos + s.bitwidth - 1, msb_pos);
+  }
+
+  // write io
+  EioIP eio{m_adapter, instance->get_baseaddr()};
+  eio.write(probe->state, ((msb_pos / 32) + 1));
+
   return true;
 }
 
 bool Ocla::get_io(std::vector<std::string> signal_names,
-                  std::vector<eio_value_t> &values) {
+                  std::vector<eio_value_t> &output) {
   CFG_ASSERT(m_adapter != nullptr);
 
   OclaDebugSession *session = nullptr;
@@ -1037,6 +1057,24 @@ bool Ocla::get_io(std::vector<std::string> signal_names,
     return false;
   }
 
-  // todo: read io
+  uint32_t msb_pos = 0;
+
+  // find max msb pos from the requested signals
+  for (auto &s : output_list) {
+    msb_pos = std::max(s.bitpos + s.bitwidth - 1, msb_pos);
+  }
+
+  // read io
+  EioIP eio{m_adapter, instance->get_baseaddr()};
+  auto result = eio.read((msb_pos / 32) + 1);
+  for (auto &s : output_list) {
+    std::vector<uint32_t> buf{0, 0};
+    eio_value_t value{};
+    CFG_copy_bits_vec32(result.data(), s.bitpos, buf.data(), 0, s.bitwidth);
+    value.signal_name = s.name;
+    value.value = CFG_convert_vec_u32_to_u64(buf);
+    output.push_back(value);
+  }
+
   return true;
 }

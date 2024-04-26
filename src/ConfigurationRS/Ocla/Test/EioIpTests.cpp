@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <tuple>
+#include <vector>
 
 #include "EioIP.h"
 #include "OclaJtagAdapter.h"
@@ -32,30 +33,36 @@ class EioIPTest : public ::testing::Test {
 };
 
 TEST_F(EioIPTest, read_lower_test) {
-  ON_CALL(mockAdapter, read(EIO_AXI_DAT_IN)).WillByDefault(Return(0x12345678));
+  ON_CALL(mockAdapter, read(EIO_AXI_DAT_IN, 1, 4))
+      .WillByDefault(Return(std::vector<jtag_read_result>{{0, 0x12345678, 0}}));
   EioIP eio(&mockAdapter, 0);
-  auto result = eio.read(eio_probe_register_t::LOWER);
-  ASSERT_EQ(result, 0x12345678);
+  auto result = eio.read(1);
+  ASSERT_EQ(result.size(), 1);
+  ASSERT_EQ(result[0], 0x12345678);
 }
 
-TEST_F(EioIPTest, read_upper_test) {
-  ON_CALL(mockAdapter, read(EIO_AXI_DAT_IN + 4))
-      .WillByDefault(Return(0x87654321));
+TEST_F(EioIPTest, read_both_test) {
+  ON_CALL(mockAdapter, read(EIO_AXI_DAT_IN, 2, 4))
+      .WillByDefault(Return(std::vector<jtag_read_result>{{0, 0x87654321, 0},
+                                                          {0, 0x12345678, 0}}));
   EioIP eio(&mockAdapter, 0);
-  auto result = eio.read(eio_probe_register_t::UPPER);
-  ASSERT_EQ(result, 0x87654321);
+  auto result = eio.read(2);
+  ASSERT_EQ(result.size(), 2);
+  ASSERT_EQ(result[0], 0x87654321);
+  ASSERT_EQ(result[1], 0x12345678);
 }
 
 TEST_F(EioIPTest, write_lower_test) {
   EXPECT_CALL(mockAdapter, write(EIO_AXI_DAT_IN, 0xa55aa5a5));
   EioIP eio(&mockAdapter, 0);
-  eio.write(0xa55aa5a5, eio_probe_register_t::LOWER);
+  eio.write({0xa55aa5a5}, 1);
 }
 
-TEST_F(EioIPTest, write_upper_test) {
-  EXPECT_CALL(mockAdapter, write(EIO_AXI_DAT_IN + 4, 0xdeadbeef));
+TEST_F(EioIPTest, write_both_test) {
+  EXPECT_CALL(mockAdapter, write(EIO_AXI_DAT_IN, 0xdeadbeef));
+  EXPECT_CALL(mockAdapter, write(EIO_AXI_DAT_IN + 4, 0xa55aa5a5));
   EioIP eio(&mockAdapter, 0);
-  eio.write(0xdeadbeef, eio_probe_register_t::UPPER);
+  eio.write({0xdeadbeef, 0xa55aa5a5}, 2);
 }
 
 TEST_F(EioIPTest, get_type_test) {

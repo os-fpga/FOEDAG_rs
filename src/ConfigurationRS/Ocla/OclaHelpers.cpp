@@ -95,6 +95,15 @@ void CFG_copy_bits_vec32(uint32_t* data, uint32_t pos, uint32_t* output,
   }
 }
 
+std::vector<uint32_t> CFG_convert_u64_to_vec_u32(uint64_t value) {
+  return {uint32_t(value), uint32_t(value >> 32)};
+}
+
+uint64_t CFG_convert_vec_u32_to_u64(std::vector<uint32_t> values) {
+  CFG_ASSERT(values.size() >= 2);
+  return uint64_t(values[0]) | (uint64_t(values[1]) << 32);
+}
+
 uint32_t CFG_parse_signal(std::string& signal_str, std::string& name,
                           uint32_t& bit_start, uint32_t& bit_end,
                           uint32_t& bit_width, uint32_t& value) {
