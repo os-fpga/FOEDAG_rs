@@ -159,7 +159,6 @@ TEST(ConvertTriggerTypeTest, ValidTriggerType) {
       {EDGE, "edge"},
       {LEVEL, "level"},
       {VALUE_COMPARE, "value_compare"}};
-  // ocla_trigger_type expected = ocla_trigger_type::TRIGGER_NONE;
   for (const auto& [expected, param] : testParam) {
     std::string type_string = param;
     ocla_trigger_type result = convert_trigger_type(type_string);
@@ -194,7 +193,6 @@ TEST(ConvertTriggerEventTest, ValidTriggerType) {
       {EITHER, "either"},         {LOW, "low"},       {HIGH, "high"},
       {VALUE_NONE, "value_none"}, {EQUAL, "equal"},   {LESSER, "lesser"},
       {GREATER, "greater"}};
-  // ocla_trigger_type expected = ocla_trigger_type::TRIGGER_NONE;
   for (const auto& [expected, param] : testParam) {
     std::string type_string = param;
     ocla_trigger_event result = convert_trigger_event(type_string);
@@ -221,4 +219,143 @@ TEST(ConvertTriggerEventTest, defaultTriggerType) {
   ocla_trigger_event expected = NO_EVENT;
   ocla_trigger_event result = convert_trigger_event(type_string, NO_EVENT);
   EXPECT_EQ(result, expected);
+}
+
+TEST(CFG_toupperTest, CFG_toupper_test) {
+  std::string test_string = "helloworld!!!";
+  auto result = CFG_toupper(test_string);
+  EXPECT_EQ(result, "HELLOWORLD!!!");
+}
+
+TEST(ReadWriteBitsVectorUint32Test, CFG_read_bit_vec32_test) {
+  std::vector<uint32_t> test_vector{0xa5a55a5a, 0xdeadbeef, 0xffff0000,
+                                    0xabcd1234, 0x76543210};
+  std::vector<uint32_t> vector(5, 0);
+
+  for (int i = 0; i < (32 * int(test_vector.size())); i++) {
+    uint32_t bit = CFG_read_bit_vec32(test_vector.data(), i);
+    if (bit) {
+      vector[i / 32] |= (1u << (i % 32));
+    }
+  }
+
+  EXPECT_EQ(vector, test_vector);
+}
+
+TEST(ReadWriteBitsVectorUint32Test, CFG_write_bit_vec32) {
+  std::vector<uint32_t> test_vector{0xa5a55a5a, 0xdeadbeef, 0xffff0000,
+                                    0xabcd1234, 0x76543210};
+  std::vector<uint32_t> vector(5, -1);
+
+  for (int i = 0; i < (32 * int(test_vector.size())); i++) {
+    CFG_write_bit_vec32(vector.data(), i,
+                        test_vector[i / 32] & (1u << (i % 32)));
+  }
+
+  EXPECT_EQ(vector, test_vector);
+}
+
+TEST(ReadWriteBitsVectorUint32Test, CFG_copy_bits_vec32) {
+  std::vector<uint32_t> test_vector{0x3A8FBCD2, 0x7E2D9F54, 0x9C0A6B71,
+                                    0x5F184E3D, 0xA39215E8, 0x1B6C8D9A,
+                                    0xE71FAB2F, 0x4D0E62F6, 0x82F573C9};
+  std::vector<uint32_t> expected_vector{0x3A8FBCFF, 0x7E2D9F54, 0x9C0A6B71,
+                                        0x5F184E3D, 0xA39215E8, 0x1B6C8D9A,
+                                        0xE71FAB2F, 0x4D0E62F6, 0xFFF573C9};
+  std::vector<uint32_t> vector(9, 0xffffffff);
+
+  for (int i = 7; i < (32 * int(test_vector.size())) - 8; i += 7) {
+    CFG_copy_bits_vec32(test_vector.data(), i, vector.data(), i, 7);
+  }
+
+  EXPECT_EQ(vector, expected_vector);
+}
+
+class ReverseByteOrderU32Test
+    : public ::testing::TestWithParam<std::tuple<uint32_t, uint32_t>> {
+ protected:
+  void SetUp() override {}
+  void TearDown() override {}
+};
+
+INSTANTIATE_TEST_SUITE_P(
+    Default, ReverseByteOrderU32Test,
+    ::testing::Values(std::make_tuple(0x01020304, 0x04030201),
+                      std::make_tuple(0x12345678, 0x78563412),
+                      std::make_tuple(0x1111FFFF, 0xFFFF1111)));
+
+TEST_P(ReverseByteOrderU32Test, CFG_reverse_byte_order_u32_test) {
+  uint32_t input = std::get<0>(GetParam());
+  uint32_t expected_output = std::get<1>(GetParam());
+  auto output = CFG_reverse_byte_order_u32(input);
+  EXPECT_EQ(output, expected_output);
+}
+
+class SetBitfieldU32Test
+    : public ::testing::TestWithParam<
+          std::tuple<uint32_t, uint8_t, uint8_t, uint32_t, uint32_t>> {
+ protected:
+  void SetUp() override {}
+  void TearDown() override {}
+};
+
+INSTANTIATE_TEST_SUITE_P(
+    Default, SetBitfieldU32Test,
+    ::testing::Values(
+        std::make_tuple(0x00000000, 7, 5, 31, 0x00000f80),
+        std::make_tuple(0xffffffff, 21, 7, 0, 0xf01fffff),
+        std::make_tuple(0x00000000, 0, 32, 0xdeadbeef, 0xdeadbeef),
+        std::make_tuple(0x00000001, 1, 31, 0xdeadbeef, 0xbd5b7ddf)));
+
+TEST_P(SetBitfieldU32Test, CFG_set_bitfield_u32_test) {
+  uint32_t value = std::get<0>(GetParam());
+  uint32_t pos = std::get<1>(GetParam());
+  uint32_t width = std::get<2>(GetParam());
+  uint32_t data = std::get<3>(GetParam());
+  uint32_t expected_value = std::get<4>(GetParam());
+  CFG_set_bitfield_u32(value, pos, width, data);
+  EXPECT_EQ(value, expected_value);
+}
+
+class ParseSignalTest
+    : public ::testing::TestWithParam<
+          std::tuple<std::string, std::string, uint32_t, uint32_t, uint32_t,
+                     uint32_t, uint32_t>> {
+ protected:
+  void SetUp() override {}
+  void TearDown() override {}
+};
+
+INSTANTIATE_TEST_SUITE_P(
+    Default, ParseSignalTest,
+    ::testing::Values(
+        std::make_tuple("counter[31:1]", "counter", 1, 31, 0, 0,
+                        OCLA_SIGNAL_PATTERN_1),
+        std::make_tuple("8'10011001", "8'10011001", 0, 0, 8, 153,
+                        OCLA_SIGNAL_PATTERN_2),
+        std::make_tuple("addr[5]", "addr", 5, 5, 0, 0, OCLA_SIGNAL_PATTERN_3),
+        std::make_tuple("3", "3", 0, 0, 0, 3, OCLA_SIGNAL_PATTERN_4),
+        std::make_tuple("abc", "abc", 0, 0, 0, 0, OCLA_SIGNAL_PATTERN_5),
+        std::make_tuple("#123ABC", "", 0, 0, 0, 0, 0)));
+
+TEST_P(ParseSignalTest, CFG_parse_signal_test) {
+  std::string signal_str = std::get<0>(GetParam());
+  std::string expected_name = std::get<1>(GetParam());
+  uint32_t expected_start = std::get<2>(GetParam());
+  uint32_t expected_end = std::get<3>(GetParam());
+  uint32_t expected_width = std::get<4>(GetParam());
+  uint32_t expected_value = std::get<5>(GetParam());
+  uint32_t expected_result = std::get<6>(GetParam());
+  uint32_t start = 0;
+  uint32_t end = 0;
+  uint32_t width = 0;
+  uint32_t value = 0;
+  std::string name = "";
+  auto result = CFG_parse_signal(signal_str, name, start, end, width, value);
+  EXPECT_EQ(result, expected_result);
+  EXPECT_EQ(name, expected_name);
+  EXPECT_EQ(start, expected_start);
+  EXPECT_EQ(end, expected_end);
+  EXPECT_EQ(width, expected_width);
+  EXPECT_EQ(value, expected_value);
 }

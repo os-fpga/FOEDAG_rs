@@ -3,9 +3,12 @@
 #include <map>
 
 #include "ConfigurationRS/CFGCommonRS/CFGCommonRS.h"
+#include "EioIP.h"
 #include "OclaHelpers.h"
 #include "OclaIP.h"
 #include "OclaJtagAdapter.h"
+
+#define EIO_IP_TYPE_STRING "EIO"
 
 std::vector<OclaDebugSession> Ocla::m_sessions{};
 
@@ -328,11 +331,7 @@ bool Ocla::get_hier_objects(uint32_t session_id, OclaDebugSession *&session,
                             uint32_t domain_id, OclaDomain **domain,
                             uint32_t probe_id, OclaProbe **probe,
                             std::string signal_name, OclaSignal **signal) {
-  if (session_id > 0 && m_sessions.size() >= session_id) {
-    session = &m_sessions[session_id - 1];
-  }
-
-  if (!session) {
+  if (!get_session(session_id, session)) {
     CFG_POST_ERR("Debug session is not loaded.");
     return false;
   }
@@ -399,7 +398,7 @@ bool Ocla::get_hier_objects(uint32_t session_id, OclaDebugSession *&session,
   return true;
 }
 
-void Ocla::show_signal_table(std::vector<OclaSignal> signals_list) {
+void Ocla::show_signal_table(std::vector<OclaSignal> &signal_list) {
   CFG_POST_MSG(
       "  "
       "+-------+-------------------------------------+--------------+------"
@@ -412,7 +411,7 @@ void Ocla::show_signal_table(std::vector<OclaSignal> signals_list) {
       "+-------+-------------------------------------+--------------+------"
       "--------+");
 
-  for (auto &sig : signals_list) {
+  for (auto &sig : signal_list) {
     CFG_POST_MSG("  | %5d | %-35s | %-12d | %-12d |", sig.get_index(),
                  sig.get_name().c_str(), sig.get_bitpos(), sig.get_bitwidth());
   }
@@ -515,6 +514,42 @@ void Ocla::show_info() {
 
     CFG_POST_MSG(" ");
   }
+
+  // show eio info
+  for (auto &eio : session->get_eio_instances()) {
+    CFG_POST_MSG("EIO:");
+    for (auto &probe : eio.get_probes()) {
+      if (probe.type == eio_probe_type_t::IO_INPUT) {
+        CFG_POST_MSG("  In-Probe %d", probe.idx);
+      } else {
+        CFG_POST_MSG("  Out-Probe %d", probe.idx);
+      }
+      show_eio_signal_table(probe.signal_list);
+    }
+    CFG_POST_MSG(" ");
+    // print usage informat requested by IP team
+    CFG_POST_MSG("  NOTES");
+    CFG_POST_MSG(
+        "    Use 'loop' & 'duration' options to repeatedly read the state of "
+        "the input signal");
+    CFG_POST_MSG("    for specific number of times.");
+    CFG_POST_MSG(" ");
+  }
+}
+
+void Ocla::show_eio_signal_table(std::vector<eio_signal_t> &signal_list) {
+  CFG_POST_MSG(
+      "  +-------+-------------------------------------+--------------+");
+  CFG_POST_MSG(
+      "  | Index | Signal Name                         | Bitwidth     |");
+  CFG_POST_MSG(
+      "  +-------+-------------------------------------+--------------+");
+  for (auto &s : signal_list) {
+    CFG_POST_MSG("  | %5d | %-35s | %-12d |", s.idx, s.name.c_str(),
+                 s.bitwidth);
+  }
+  CFG_POST_MSG(
+      "  +-------+-------------------------------------+--------------+");
 }
 
 void Ocla::show_instance_info() {
@@ -772,6 +807,16 @@ bool Ocla::verify(OclaDebugSession *session) {
     }
   }
 
+  for (auto &instance : session->get_eio_instances()) {
+    EioIP eio{m_adapter, instance.get_baseaddr()};
+    if (eio.get_type() != EIO_IP_TYPE_STRING) {
+      CFG_POST_ERR("Could not detect EIO instance %d at 0x%08x",
+                   instance.get_index(), instance.get_baseaddr());
+      ++error_count;
+      continue;
+    }
+  }
+
   if (error_count > 0) {
     CFG_POST_ERR("IP Verification failed");
     return false;
@@ -861,4 +906,175 @@ void Ocla::stop_session() {
     return;
   }
   m_sessions.clear();
+}
+
+bool Ocla::find_eio_signals(std::vector<eio_signal_t> &signal_list,
+                            std::vector<std::string> signal_names,
+                            std::vector<eio_signal_t> &output_list) {
+  for (auto &name : signal_names) {
+    // todo: search by index
+    bool status = false;
+    uint32_t signal_idx =
+        (uint32_t)CFG_convert_string_to_u64(name, false, &status);
+    auto it = std::find_if(
+        signal_list.begin(), signal_list.end(), [&](eio_signal_t s) {
+          return status ? s.idx == signal_idx : s.name == name;
+        });
+    if (it != signal_list.end()) {
+      output_list.push_back(*it);
+    } else {
+      CFG_POST_ERR("EIO signal '%s' not found", name.c_str());
+      return false;
+    }
+  }
+  return true;
+}
+
+bool Ocla::get_session(uint32_t session_id, OclaDebugSession *&session) {
+  if (session_id > 0 && m_sessions.size() >= session_id) {
+    session = &m_sessions[session_id - 1];
+    return true;
+  }
+  return false;
+}
+
+bool Ocla::get_eio_hier_objects(uint32_t session_id, OclaDebugSession *&session,
+                                uint32_t instance_index, EioInstance **instance,
+                                uint32_t probe_id, eio_probe_type_t probe_type,
+                                eio_probe_t **probe) {
+  if (!get_session(session_id, session)) {
+    CFG_POST_ERR("Debug session is not loaded.");
+    return false;
+  }
+
+  if (instance != nullptr) {
+    bool found = false;
+    for (auto &elem : session->get_eio_instances()) {
+      if (elem.get_index() == instance_index) {
+        *instance = &elem;
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      CFG_POST_ERR("EIO instance %d not found", instance_index);
+      return false;
+    }
+  }
+
+  if (probe != nullptr) {
+    bool found = false;
+    for (auto &elem : (*instance)->get_probes()) {
+      if (elem.idx == probe_id && elem.type == probe_type) {
+        *probe = &elem;
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      if (probe_type == eio_probe_type_t::IO_OUTPUT) {
+        CFG_POST_ERR("EIO output probe %d not found", probe_id);
+      } else {
+        CFG_POST_ERR("EIO input probe %d not found", probe_id);
+      }
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool Ocla::set_io(std::vector<std::string> signal_names,
+                  std::vector<uint64_t> values) {
+  CFG_ASSERT(m_adapter != nullptr);
+
+  if (signal_names.size() != values.size()) {
+    CFG_POST_ERR("Number of signal names and values not match");
+    return false;
+  }
+
+  OclaDebugSession *session = nullptr;
+  EioInstance *instance = nullptr;
+  eio_probe_t *probe = nullptr;
+
+  // NOTE: There is only 1 EIO instance and 1 output probe supported at current
+  // version. Multiple output probes will be supported in the future version.
+  if (!get_eio_hier_objects(1, session, 1, &instance, 1,
+                            eio_probe_type_t::IO_OUTPUT, &probe)) {
+    return false;
+  }
+
+  std::vector<eio_signal_t> output_list{};
+  if (!find_eio_signals(probe->signal_list, signal_names, output_list)) {
+    return false;
+  }
+
+  if (!verify(session)) {
+    return false;
+  }
+
+  uint32_t msb_pos = 0;
+  uint32_t i = 0;
+
+  // update io state
+  for (auto &s : output_list) {
+    auto value = CFG_convert_u64_to_vec_u32(values[i++]);
+    CFG_copy_bits_vec32(value.data(), 0, probe->state.data(), s.bitpos,
+                        s.bitwidth);
+    msb_pos = std::max(s.bitpos + s.bitwidth - 1, msb_pos);
+  }
+
+  // write io
+  EioIP eio{m_adapter, instance->get_baseaddr()};
+  eio.write(probe->state, ((msb_pos / 32) + 1));
+
+  return true;
+}
+
+bool Ocla::get_io(std::vector<std::string> signal_names,
+                  std::vector<eio_value_t> &output) {
+  CFG_ASSERT(m_adapter != nullptr);
+
+  OclaDebugSession *session = nullptr;
+  EioInstance *instance = nullptr;
+  eio_probe_t *probe = nullptr;
+
+  // NOTE: There is only 1 EIO instance and 1 input probe supported at current
+  // version. Multiple input probes will be supported in the future version.
+  if (!get_eio_hier_objects(1, session, 1, &instance, 1,
+                            eio_probe_type_t::IO_INPUT, &probe)) {
+    return false;
+  }
+
+  std::vector<eio_signal_t> output_list{};
+  if (!find_eio_signals(probe->signal_list, signal_names, output_list)) {
+    return false;
+  }
+
+  if (!verify(session)) {
+    return false;
+  }
+
+  uint32_t msb_pos = 0;
+
+  // find max msb pos from the requested signals
+  for (auto &s : output_list) {
+    msb_pos = std::max(s.bitpos + s.bitwidth - 1, msb_pos);
+  }
+
+  // read io
+  EioIP eio{m_adapter, instance->get_baseaddr()};
+  auto result = eio.read((msb_pos / 32) + 1);
+  for (auto &s : output_list) {
+    std::vector<uint32_t> buf(((s.bitwidth - 1) / 32) + 1, 0);
+    eio_value_t value{};
+    CFG_copy_bits_vec32(result.data(), s.bitpos, buf.data(), 0, s.bitwidth);
+    value.signal_name = s.name;
+    value.value = CFG_convert_vec_u32_to_u64(buf);
+    output.push_back(value);
+  }
+
+  return true;
 }

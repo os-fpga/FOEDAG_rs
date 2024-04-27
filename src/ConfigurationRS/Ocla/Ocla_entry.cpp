@@ -181,6 +181,40 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
                            parms->device)) {
       ocla.show_instance_info();
     }
+  } else if (subcmd == "set_io") {
+    auto parms = static_cast<const CFGArg_DEBUGGER_SET_IO*>(arg->get_sub_arg());
+    if (Ocla_select_device(adapter, hardware_manager, parms->cable,
+                           parms->device)) {
+      ocla.set_io(parms->signal, parms->value);
+    }
+  } else if (subcmd == "get_io") {
+    auto parms = static_cast<const CFGArg_DEBUGGER_GET_IO*>(arg->get_sub_arg());
+    if (Ocla_select_device(adapter, hardware_manager, parms->cable,
+                           parms->device)) {
+      for (uint64_t i = 0; i < parms->loop; i++) {
+        std::vector<eio_value_t> values{};
+        std::string output{};
+        bool first = true;
+        if (!ocla.get_io(parms->signal, values)) {
+          break;
+        }
+        if (values.size() != parms->signal.size()) {
+          CFG_POST_ERR("Result value length mismatched (expect=%d, actual=%d)",
+                       parms->signal.size(), values.size());
+          break;
+        }
+        for (auto& v : values) {
+          if (!first) {
+            output += ", " + v.signal_name + " = " + std::to_string(v.value);
+          } else {
+            output += v.signal_name + " = " + std::to_string(v.value);
+            first = false;
+          }
+        }
+        CFG_POST_MSG("#%d: %s", i, output.c_str());
+        CFG_sleep_ms((uint32_t)parms->duration);
+      }
+    }
   } else if (subcmd == "read") {
     auto parms = static_cast<const CFGArg_DEBUGGER_READ*>(arg->get_sub_arg());
     if (Ocla_select_device(adapter, hardware_manager, parms->cable,

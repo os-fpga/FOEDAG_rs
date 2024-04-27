@@ -30,6 +30,11 @@ struct oc_waveform_t {
   uint32_t domain_id;
 };
 
+struct eio_value_t {
+  std::string signal_name;
+  uint64_t value;
+};
+
 class Ocla {
  public:
   Ocla(OclaJtagAdapter *adapter);
@@ -48,6 +53,10 @@ class Ocla {
   bool get_status(uint32_t domain_id, uint32_t &status);
   bool start(uint32_t domain_id);
   void start_session(std::string filepath);
+  bool set_io(std::vector<std::string> signal_names,
+              std::vector<uint64_t> values);
+  bool get_io(std::vector<std::string> signal_names,
+              std::vector<eio_value_t> &output);
   void stop_session();
   void show_info();
   void show_instance_info();
@@ -56,14 +65,25 @@ class Ocla {
   static std::vector<OclaDebugSession> m_sessions;
   OclaJtagAdapter *m_adapter;
 
+  bool get_session(uint32_t session_id, OclaDebugSession *&session);
   bool get_hier_objects(uint32_t session_id, OclaDebugSession *&session,
                         uint32_t domain_id = 0, OclaDomain **domain = nullptr,
                         uint32_t probe_id = 0, OclaProbe **probe = nullptr,
                         std::string signal_name = "",
                         OclaSignal **signal = nullptr);
-  void show_signal_table(std::vector<OclaSignal> signals_list);
+  bool get_eio_hier_objects(uint32_t session_id, OclaDebugSession *&session,
+                            uint32_t instance_index = 0,
+                            EioInstance **instance = nullptr,
+                            uint32_t probe_id = 0,
+                            eio_probe_type_t probe_type = IO_INPUT,
+                            eio_probe_t **probe = nullptr);
+  void show_signal_table(std::vector<OclaSignal> &signal_list);
+  void show_eio_signal_table(std::vector<eio_signal_t> &signal_list);
   void program(OclaDomain *domain);
   bool verify(OclaDebugSession *session);
+  bool find_eio_signals(std::vector<eio_signal_t> &signal_list,
+                        std::vector<std::string> signal_names,
+                        std::vector<eio_signal_t> &output_list);
   std::string format_signal_name(oc_trigger_t &trig);
 };
 
