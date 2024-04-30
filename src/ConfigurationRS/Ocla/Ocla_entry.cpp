@@ -211,8 +211,8 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
             first = false;
           }
         }
-        CFG_POST_MSG("#%d: %s", i, output.c_str());
-        CFG_sleep_ms((uint32_t)parms->duration);
+        CFG_POST_MSG("Iteration %d: %s", i + 1, output.c_str());
+        CFG_sleep_ms((uint32_t)parms->interval);
       }
     }
   } else if (subcmd == "read") {

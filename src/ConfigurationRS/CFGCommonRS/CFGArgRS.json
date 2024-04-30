@@ -1003,7 +1003,7 @@
             "help": "Read for a specified number of times (default 1)"
           },
           {
-            "name": "duration",
+            "name": "interval",
             "short": "t",
             "type": "int",
             "optional": true,

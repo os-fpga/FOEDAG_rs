@@ -530,9 +530,10 @@ void Ocla::show_info() {
     // print usage informat requested by IP team
     CFG_POST_MSG("  NOTES");
     CFG_POST_MSG(
-        "    Use 'loop' & 'duration' options to repeatedly read the state of "
-        "the input signal");
-    CFG_POST_MSG("    for specific number of times.");
+        "    Use the 'loop' & 'interval' (in milisecond) options to repeatedly "
+        "read");
+    CFG_POST_MSG(
+        "    the state of the input signals for specific number of times.");
     CFG_POST_MSG(" ");
   }
 }
