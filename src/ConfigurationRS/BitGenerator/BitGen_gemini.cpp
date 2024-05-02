@@ -171,7 +171,7 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
     pcb["pl_col_stride"] = col_stride;
     // clang-format off
   #if PCB_CONFIG_INCLUDE_PARITY
-    pcb["reversed"] = 0;
+    pcb["reserved"] = 0;
   #else
     pcb["pl_extra_w32"] = 0;
     pcb["pl_extra_w33"] = 0;
@@ -266,7 +266,7 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
       pcb["pl_col_stride"] = col_stride;
       // clang-format off
   #if PCB_CONFIG_INCLUDE_PARITY
-      pcb["reversed"] = 0;
+      pcb["reserved"] = 0;
   #else
       pcb["pl_extra_w32"] = 0;
       pcb["pl_extra_w33"] = 0;
