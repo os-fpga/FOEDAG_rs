@@ -876,7 +876,8 @@
           "  -e {rising|falling|either|high|low|equal|lesser|greater}",
           "  -v {value}",
           "  -w {width}"
-        ]
+        ],
+        "arg": [0, 0]
       }
     },
     {
@@ -919,7 +920,8 @@
           "  debugger remove_trigger",
           "  -n <clock domain id>",
           "  -i <trigger index>"
-        ]
+        ],
+        "arg": [0, 0]
       }
     },
     {
@@ -940,31 +942,14 @@
             "optional": true,
             "default" : 1,
             "help": "Device index"
-          },
-          {
-            "name": "signal",
-            "short": "s",
-            "type": "str",
-            "multi": true,
-            "optional": false,
-            "help": "Signal name or index"
-          },
-          {
-            "name": "value",
-            "short": "v",
-            "type": "int",
-            "multi": true,
-            "optional": false,
-            "help": "IO value/state"
           }
         ],
         "desc": "To configure the state/value of an IO signal.",
         "help": [
           "To configure a IO value/state:",
-          "  debugger set_io",
-          "  -s <name/index>",
-          "  -v <value>"
-        ]
+          "  debugger set_io <signal1=value1> <signal2=value2> ..."
+        ],
+        "arg": [1, -1]
       }
     },
     {
@@ -987,14 +972,6 @@
             "help": "Device index"
           },
           {
-            "name": "signal",
-            "short": "s",
-            "type": "str",
-            "multi": true,
-            "optional": false,
-            "help": "Signal name or index"
-          },
-          {
             "name": "loop",
             "short": "l",
             "type": "int",
@@ -1015,10 +992,11 @@
         "help": [
           "To read a IO value/state:",
           "  debugger get_io",
-          "  -s <name/index>",
           "  -l {times}",
-          "  -t {milliseconds}"
-        ]
+          "  -t {milliseconds}",
+          "  <signal1> <signal2> ..."
+        ],
+        "arg": [1, -1]
       }
     },
     {

@@ -32,7 +32,8 @@ struct oc_waveform_t {
 
 struct eio_value_t {
   std::string signal_name;
-  uint64_t value;
+  uint32_t idx;
+  std::vector<uint32_t> value;
 };
 
 class Ocla {
@@ -53,9 +54,8 @@ class Ocla {
   bool get_status(uint32_t domain_id, uint32_t &status);
   bool start(uint32_t domain_id);
   void start_session(std::string filepath);
-  bool set_io(std::vector<std::string> signal_names,
-              std::vector<uint64_t> values);
-  bool get_io(std::vector<std::string> signal_names,
+  bool set_io(std::vector<std::string> signal_list);
+  bool get_io(std::vector<std::string> signal_list,
               std::vector<eio_value_t> &output);
   void stop_session();
   void show_info();
@@ -85,6 +85,9 @@ class Ocla {
                         std::vector<std::string> signal_names,
                         std::vector<eio_signal_t> &output_list);
   std::string format_signal_name(oc_trigger_t &trig);
+  bool parse_eio_signal_list(std::vector<std::string> signal_list,
+                             std::vector<std::string> &names,
+                             std::vector<std::vector<uint32_t>> &values);
 };
 
 void Ocla_entry(CFGCommon_ARG *cmdarg);

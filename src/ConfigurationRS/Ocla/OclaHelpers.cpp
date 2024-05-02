@@ -95,27 +95,17 @@ void CFG_copy_bits_vec32(uint32_t* data, uint32_t pos, uint32_t* output,
   }
 }
 
-std::vector<uint32_t> CFG_convert_u64_to_vec_u32(uint64_t value) {
-  return {uint32_t(value), uint32_t(value >> 32)};
-}
-
-uint64_t CFG_convert_vec_u32_to_u64(std::vector<uint32_t> values) {
-  CFG_ASSERT(values.size() >= 1);
-  if (values.size() > 1) {
-    return uint64_t(values[0]) | (uint64_t(values[1]) << 32);
-  }
-  return uint64_t(values[0]);
-}
-
 uint32_t CFG_parse_signal(std::string& signal_str, std::string& name,
                           uint32_t& bit_start, uint32_t& bit_end,
-                          uint32_t& bit_width, uint32_t& value) {
+                          uint32_t& bit_width, uint64_t* value) {
   static std::map<uint32_t, std::string> patterns = {
       {OCLA_SIGNAL_PATTERN_1, R"((\w+) *\[ *(\d+) *: *(\d+)\ *])"},
       {OCLA_SIGNAL_PATTERN_2, R"((\d+)'([01]+))"},
       {OCLA_SIGNAL_PATTERN_3, R"((\w+) *\[ *(\d+)\ *])"},
       {OCLA_SIGNAL_PATTERN_4, R"(^(\d+)$)"},
-      {OCLA_SIGNAL_PATTERN_5, R"(^(\w+)$)"}};
+      {OCLA_SIGNAL_PATTERN_5, R"(^(\w+)$)"},
+      {OCLA_SIGNAL_PATTERN_6, R"(^([a-z]\w+) *= *(0x[0-9a-f]+|\d+)$)"},
+      {OCLA_SIGNAL_PATTERN_7, R"(^#(\d+)=(0x([0-9a-f]+)|\d+)$)"}};
 
   uint32_t patid = 0;
   std::cmatch m;
@@ -135,7 +125,9 @@ uint32_t CFG_parse_signal(std::string& signal_str, std::string& name,
       bit_start = (uint32_t)std::stoul(m[3]);
       bit_end = (uint32_t)std::stoul(m[2]);
       bit_width = 0;
-      value = 0;
+      if (value) {
+        *value = 0;
+      }
       break;
     }
     case OCLA_SIGNAL_PATTERN_2:  // pattern 2: 4'0000
@@ -144,7 +136,9 @@ uint32_t CFG_parse_signal(std::string& signal_str, std::string& name,
       bit_start = 0;
       bit_end = 0;
       bit_width = (uint32_t)std::stoul(m[1]);
-      value = (uint32_t)CFG_convert_string_to_u64("b" + (std::string)m[2]);
+      if (value) {
+        *value = (uint32_t)CFG_convert_string_to_u64("b" + (std::string)m[2]);
+      }
       break;
     }
     case OCLA_SIGNAL_PATTERN_3:  // pattern 3: s_axil_awprot[0]
@@ -153,7 +147,9 @@ uint32_t CFG_parse_signal(std::string& signal_str, std::string& name,
       bit_start = (uint32_t)std::stoul(m[2]);
       bit_end = (uint32_t)std::stoul(m[2]);
       bit_width = 0;
-      value = 0;
+      if (value) {
+        *value = 0;
+      }
       break;
     }
     case OCLA_SIGNAL_PATTERN_4:  // pattern 5: 3
@@ -162,7 +158,9 @@ uint32_t CFG_parse_signal(std::string& signal_str, std::string& name,
       bit_start = 0;
       bit_end = 0;
       bit_width = 0;
-      value = (uint32_t)std::stoul(m[0]);
+      if (value) {
+        *value = (uint64_t)std::stoul(m[0]);
+      }
       break;
     }
     case OCLA_SIGNAL_PATTERN_5:  // pattern 5: s_axil_bready
@@ -171,7 +169,31 @@ uint32_t CFG_parse_signal(std::string& signal_str, std::string& name,
       bit_start = 0;
       bit_end = 0;
       bit_width = 0;
-      value = 0;
+      if (value) {
+        *value = 0;
+      }
+      break;
+    }
+    case OCLA_SIGNAL_PATTERN_6:  // pattern 6: start=0x1
+    {
+      name = m[1];
+      bit_start = 0;
+      bit_end = 0;
+      bit_width = 0;
+      if (value) {
+        *value = CFG_convert_string_to_u64(m[2], false);
+      }
+      break;
+    }
+    case OCLA_SIGNAL_PATTERN_7:  // pattern 7: #10=0x123
+    {
+      name = m[1];
+      bit_start = 0;
+      bit_end = 0;
+      bit_width = 0;
+      if (value) {
+        *value = CFG_convert_string_to_u64(m[2], false);
+      }
       break;
     }
     default:  // unknown pattern
@@ -180,7 +202,9 @@ uint32_t CFG_parse_signal(std::string& signal_str, std::string& name,
       bit_start = 0;
       bit_end = 0;
       bit_width = 0;
-      value = 0;
+      if (value) {
+        *value = 0;
+      }
       break;
     }
   }
