@@ -293,7 +293,7 @@ const std::map<const std::string, const BitGen_JSON_ACTION_FIELD>
           {"pl_row_stride", std::make_pair(80, 10)},
           {"pl_col_offset", std::make_pair(96, 10)},
           {"pl_col_stride", std::make_pair(112, 10)},
-          {"reversed", std::make_pair(128, 32)}}}};
+          {"reserved", std::make_pair(128, 32)}}}};
 
 static const BitGen_JSON_ACTION_FIELD* BitGen_JSON_get_action_database(
     const std::string& action) {
@@ -430,6 +430,8 @@ static void BitGen_JSON_parse_bitstream_bop_action(
     actions.push_back(BitGen_JSON::gen_icb_config_action(json));
   } else if (action == "pcb_config") {
     actions.push_back(BitGen_JSON::gen_pcb_config_action(json));
+  } else if (action == "pcb_config_with_parity") {
+    actions.push_back(BitGen_JSON::gen_pcb_config_with_parity_action(json));
   } else if (action == "authentication_key_otp_programming") {
     actions.push_back(BitGen_JSON::gen_auth_key_otp_programming_action(json));
   } else if (action == "aes_key_otp_programming") {

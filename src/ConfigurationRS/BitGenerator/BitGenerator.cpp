@@ -44,8 +44,9 @@ bool BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
             0 ||
         CFG_check_file_extensions(subarg->m_args[1], {".cfgbit"}) < 0) {
       CFG_POST_ERR(
-          "BITGEN: parse::, input should be in .bitasm or .cfgbit extension, "
-          "and output should be in .debug.txt extension");
+          "BITGEN: gen_bitstream:: input should be in .bitasm or .json "
+          "extension, "
+          "and output should be in .cfgbit extension");
       status = false;
     }
     status = status && read_aes_key(subarg->aes_key, aes_key);
@@ -100,7 +101,7 @@ bool BitGenerator_entry(const CFGCommon_ARG* cmdarg) {
             0 ||
         CFG_check_file_extensions(subarg->m_args[1], {".debug.txt"}) < 0) {
       CFG_POST_ERR(
-          "BITGEN: parse::, input should be in .bitasm or .cfgbit extension, "
+          "BITGEN: parse:: input should be in .bitasm or .cfgbit extension, "
           "and output should be in .debug.txt extension");
       status = false;
     }
