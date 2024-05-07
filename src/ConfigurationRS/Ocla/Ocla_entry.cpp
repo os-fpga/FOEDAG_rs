@@ -185,7 +185,7 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
     auto parms = static_cast<const CFGArg_DEBUGGER_SET_IO*>(arg->get_sub_arg());
     if (Ocla_select_device(adapter, hardware_manager, parms->cable,
                            parms->device)) {
-      ocla.set_io(parms->signal, parms->value);
+      ocla.set_io(parms->m_args);
     }
   } else if (subcmd == "get_io") {
     auto parms = static_cast<const CFGArg_DEBUGGER_GET_IO*>(arg->get_sub_arg());
@@ -195,24 +195,30 @@ void Ocla_entry(CFGCommon_ARG* cmdarg) {
         std::vector<eio_value_t> values{};
         std::string output{};
         bool first = true;
-        if (!ocla.get_io(parms->signal, values)) {
+        if (!ocla.get_io(parms->m_args, values)) {
           break;
         }
-        if (values.size() != parms->signal.size()) {
+        if (values.size() != parms->m_args.size()) {
           CFG_POST_ERR("Result value length mismatched (expect=%d, actual=%d)",
-                       parms->signal.size(), values.size());
+                       parms->m_args.size(), values.size());
           break;
         }
         for (auto& v : values) {
+          uint64_t value = v.value[0];
+          if (v.value.size() > 1) {
+            value |= uint64_t(v.value[1]) << 32;
+          }
           if (!first) {
-            output += ", " + v.signal_name + " = " + std::to_string(v.value);
+            output += ", " + v.signal_name + " (#" + std::to_string(v.idx) +
+                      ") = " + std::to_string(value);
           } else {
-            output += v.signal_name + " = " + std::to_string(v.value);
+            output += v.signal_name + " (#" + std::to_string(v.idx) +
+                      ") = " + std::to_string(value);
             first = false;
           }
         }
-        CFG_POST_MSG("#%d: %s", i, output.c_str());
-        CFG_sleep_ms((uint32_t)parms->duration);
+        CFG_POST_MSG("Iteration %d: %s", i + 1, output.c_str());
+        CFG_sleep_ms((uint32_t)parms->interval);
       }
     }
   } else if (subcmd == "read") {

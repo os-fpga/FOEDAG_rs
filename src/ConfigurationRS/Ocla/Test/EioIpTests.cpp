@@ -32,37 +32,62 @@ class EioIPTest : public ::testing::Test {
   NiceMock<MockOclaJtagAdapter> mockAdapter;
 };
 
-TEST_F(EioIPTest, read_lower_test) {
+TEST_F(EioIPTest, read_zero_test) {
+  EioIP eio(&mockAdapter, 0);
+  EXPECT_THROW(eio.read_input_bits(0), std::exception);
+}
+
+TEST_F(EioIPTest, read_three_test) {
+  EioIP eio(&mockAdapter, 0);
+  EXPECT_THROW(eio.read_input_bits(3), std::exception);
+}
+
+TEST_F(EioIPTest, read_one_test) {
   ON_CALL(mockAdapter, read(EIO_AXI_DAT_IN, 1, 4))
       .WillByDefault(Return(std::vector<jtag_read_result>{{0, 0x12345678, 0}}));
   EioIP eio(&mockAdapter, 0);
-  auto result = eio.read(1);
+  auto result = eio.read_input_bits(1);
   ASSERT_EQ(result.size(), 1);
   ASSERT_EQ(result[0], 0x12345678);
 }
 
-TEST_F(EioIPTest, read_both_test) {
+TEST_F(EioIPTest, read_two_test) {
   ON_CALL(mockAdapter, read(EIO_AXI_DAT_IN, 2, 4))
       .WillByDefault(Return(std::vector<jtag_read_result>{{0, 0x87654321, 0},
                                                           {0, 0x12345678, 0}}));
   EioIP eio(&mockAdapter, 0);
-  auto result = eio.read(2);
+  auto result = eio.read_input_bits(2);
   ASSERT_EQ(result.size(), 2);
   ASSERT_EQ(result[0], 0x87654321);
   ASSERT_EQ(result[1], 0x12345678);
 }
 
-TEST_F(EioIPTest, write_lower_test) {
-  EXPECT_CALL(mockAdapter, write(EIO_AXI_DAT_IN, 0xa55aa5a5));
+TEST_F(EioIPTest, write_zero_test) {
   EioIP eio(&mockAdapter, 0);
-  eio.write({0xa55aa5a5}, 1);
+  EXPECT_THROW(eio.write_output_bits({}, 0), std::exception);
 }
 
-TEST_F(EioIPTest, write_both_test) {
+TEST_F(EioIPTest, write_three_test) {
+  EioIP eio(&mockAdapter, 0);
+  EXPECT_THROW(eio.write_output_bits({1, 2, 3}, 3), std::exception);
+}
+
+TEST_F(EioIPTest, write_input_mismatch_test) {
+  EioIP eio(&mockAdapter, 0);
+  EXPECT_THROW(eio.write_output_bits({1}, 2), std::exception);
+}
+
+TEST_F(EioIPTest, write_one_test) {
+  EXPECT_CALL(mockAdapter, write(EIO_AXI_DAT_IN, 0xa55aa5a5));
+  EioIP eio(&mockAdapter, 0);
+  eio.write_output_bits({0xa55aa5a5}, 1);
+}
+
+TEST_F(EioIPTest, write_two_test) {
   EXPECT_CALL(mockAdapter, write(EIO_AXI_DAT_IN, 0xdeadbeef));
   EXPECT_CALL(mockAdapter, write(EIO_AXI_DAT_IN + 4, 0xa55aa5a5));
   EioIP eio(&mockAdapter, 0);
-  eio.write({0xdeadbeef, 0xa55aa5a5}, 2);
+  eio.write_output_bits({0xdeadbeef, 0xa55aa5a5}, 2);
 }
 
 TEST_F(EioIPTest, get_type_test) {

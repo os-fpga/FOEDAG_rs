@@ -165,13 +165,6 @@ bool OclaDebugSession::parse_eio(nlohmann::json json,
     probe.probe_width = probe_width;
     probe.idx = 1;
 
-    // NOTE: setup the io state to keep track the state of the output io since
-    // current version of IP doesn't provide the capability to readback the
-    // output io state. One caveat, since no way to read the initial state of
-    // the io when software starts, the sw always start with 0's for the output
-    // io state.
-    probe.state.assign((probe_width / 32) + 1, 0);
-
     // sanity check to see if parsed total signal width matches
     // Output_Probe_Width
     if (probe.probe_width != output_probe_width) {
@@ -359,10 +352,9 @@ bool OclaDebugSession::parse_eio_signal(
   uint32_t bit_start = 0;
   uint32_t bit_end = 0;
   uint32_t bit_width = 0;
-  uint32_t bit_value = 0;
 
-  auto patid = CFG_parse_signal(signal_str, signal_name, bit_start, bit_end,
-                                bit_width, bit_value);
+  auto patid =
+      CFG_parse_signal(signal_str, signal_name, bit_start, bit_end, bit_width);
   switch (patid) {
     case OCLA_SIGNAL_PATTERN_1:  // pattern 1: count[13:2]
     case OCLA_SIGNAL_PATTERN_3:  // pattern 3: s_axil_awprot[0]
@@ -393,10 +385,10 @@ bool OclaDebugSession::parse_ocla_signal(
   uint32_t bit_start = 0;
   uint32_t bit_end = 0;
   uint32_t bit_width = 0;
-  uint32_t bit_value = 0;
+  uint64_t bit_value = 0;
 
   auto patid = CFG_parse_signal(signal_str, signal_name, bit_start, bit_end,
-                                bit_width, bit_value);
+                                bit_width, &bit_value);
   switch (patid) {
     case OCLA_SIGNAL_PATTERN_1:  // pattern 1: count[13:2]
     {
@@ -421,7 +413,7 @@ bool OclaDebugSession::parse_ocla_signal(
       signal.set_orig_name(signal_str);
       signal.set_name(signal_name);
       signal.set_type(oc_signal_type_t::CONSTANT);
-      signal.set_value(bit_value);
+      signal.set_value((uint32_t)bit_value);
       signal.set_bitwidth(bit_width);
       break;
     }

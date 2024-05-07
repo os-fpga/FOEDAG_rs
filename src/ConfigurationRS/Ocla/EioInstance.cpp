@@ -15,3 +15,13 @@ uint32_t EioInstance::get_index() const { return m_index; };
 void EioInstance::add_probe(eio_probe_t& probe) { m_probes.push_back(probe); }
 
 std::vector<eio_probe_t>& EioInstance::get_probes() { return m_probes; }
+
+uint32_t EioInstance::get_total_probe_width(eio_probe_type_t type) const {
+  uint32_t width = 0;
+  for (auto& probe : m_probes) {
+    if (probe.type == type) {
+      width += probe.probe_width;
+    }
+  }
+  return width;
+}

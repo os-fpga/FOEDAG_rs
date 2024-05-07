@@ -336,7 +336,14 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple("addr[5]", "addr", 5, 5, 0, 0, OCLA_SIGNAL_PATTERN_3),
         std::make_tuple("3", "3", 0, 0, 0, 3, OCLA_SIGNAL_PATTERN_4),
         std::make_tuple("abc", "abc", 0, 0, 0, 0, OCLA_SIGNAL_PATTERN_5),
-        std::make_tuple("#123ABC", "", 0, 0, 0, 0, 0)));
+        std::make_tuple("#123ABC", "", 0, 0, 0, 0, 0),
+        std::make_tuple("start=1", "start", 0, 0, 0, 1, OCLA_SIGNAL_PATTERN_6),
+        std::make_tuple("stop=0", "stop", 0, 0, 0, 0, OCLA_SIGNAL_PATTERN_6),
+        std::make_tuple("bus=0x1234a", "bus", 0, 0, 0, 0x1234a,
+                        OCLA_SIGNAL_PATTERN_6),
+        std::make_tuple("#123=0xabcd", "123", 0, 0, 0, 0xabcd,
+                        OCLA_SIGNAL_PATTERN_7),
+        std::make_tuple("#2=12", "2", 0, 0, 0, 12, OCLA_SIGNAL_PATTERN_7)));
 
 TEST_P(ParseSignalTest, CFG_parse_signal_test) {
   std::string signal_str = std::get<0>(GetParam());
@@ -349,9 +356,9 @@ TEST_P(ParseSignalTest, CFG_parse_signal_test) {
   uint32_t start = 0;
   uint32_t end = 0;
   uint32_t width = 0;
-  uint32_t value = 0;
+  uint64_t value = 0;
   std::string name = "";
-  auto result = CFG_parse_signal(signal_str, name, start, end, width, value);
+  auto result = CFG_parse_signal(signal_str, name, start, end, width, &value);
   EXPECT_EQ(result, expected_result);
   EXPECT_EQ(name, expected_name);
   EXPECT_EQ(start, expected_start);

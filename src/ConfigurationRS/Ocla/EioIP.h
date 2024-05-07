@@ -23,8 +23,9 @@ class EioIP {
   std::string get_type() const;
   uint32_t get_version() const;
   uint32_t get_id() const;
-  void write(std::vector<uint32_t> values, uint32_t length);
-  std::vector<uint32_t> read(uint32_t length);
+  void write_output_bits(std::vector<uint32_t> values, uint32_t length);
+  std::vector<uint32_t> readback_output_bits(uint32_t length);
+  std::vector<uint32_t> read_input_bits(uint32_t length);
 
  private:
   void read_registers();

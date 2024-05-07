@@ -11,6 +11,8 @@
 #define OCLA_SIGNAL_PATTERN_3 (3)  // pattern 3: s_axil_awprot[0]
 #define OCLA_SIGNAL_PATTERN_4 (4)  // pattern 4: 3
 #define OCLA_SIGNAL_PATTERN_5 (5)  // pattern 5: s_axil_bready
+#define OCLA_SIGNAL_PATTERN_6 (6)  // pattern 6: start=0x1
+#define OCLA_SIGNAL_PATTERN_7 (7)  // pattern 7: #3=123
 
 std::string convert_ocla_trigger_mode_to_string(
     ocla_trigger_mode mode, std::string defval = "(unknown)");
@@ -52,12 +54,8 @@ void CFG_write_bit_vec32(uint32_t *data, uint32_t pos, uint32_t value);
 void CFG_copy_bits_vec32(uint32_t *src, uint32_t pos, uint32_t *dest,
                          uint32_t dest_pos, uint32_t nbits);
 
-std::vector<uint32_t> CFG_convert_u64_to_vec_u32(uint64_t value);
-
-uint64_t CFG_convert_vec_u32_to_u64(std::vector<uint32_t> values);
-
 uint32_t CFG_parse_signal(std::string &signal_str, std::string &name,
                           uint32_t &bit_start, uint32_t &bit_end,
-                          uint32_t &bit_width, uint32_t &value);
+                          uint32_t &bit_width, uint64_t *value = nullptr);
 
 #endif  //__OCLAHELPERS_H__

@@ -73,12 +73,12 @@ void Ocla::add_trigger(uint32_t domain_id, uint32_t probe_id,
   OclaSignal *signal = nullptr;
   OclaProbe *probe = nullptr;
   OclaInstance *instance = nullptr;
-  uint32_t bit_start = 0, bit_end = 0, bit_width = 0, bit_value = 0;
+  uint32_t bit_start = 0, bit_end = 0, bit_width = 0;
   std::string name = "";
 
   // parse signal selection string
-  auto patid = CFG_parse_signal(signal_name, name, bit_start, bit_end,
-                                bit_width, bit_value);
+  auto patid =
+      CFG_parse_signal(signal_name, name, bit_start, bit_end, bit_width);
   if (!patid || bit_start > bit_end) {
     CFG_POST_ERR("Invalid signal name format '%s'", signal_name.c_str());
     return;
@@ -196,12 +196,12 @@ void Ocla::edit_trigger(uint32_t domain_id, uint32_t trigger_index,
   OclaSignal *signal = nullptr;
   OclaProbe *probe = nullptr;
   OclaInstance *instance = nullptr;
-  uint32_t bit_start = 0, bit_end = 0, bit_width = 0, bit_value = 0;
+  uint32_t bit_start = 0, bit_end = 0, bit_width = 0;
   std::string name = "";
 
   // parse signal selection string
-  auto patid = CFG_parse_signal(signal_name, name, bit_start, bit_end,
-                                bit_width, bit_value);
+  auto patid =
+      CFG_parse_signal(signal_name, name, bit_start, bit_end, bit_width);
   if (!patid || bit_start > bit_end) {
     CFG_POST_ERR("Invalid signal name format '%s'", signal_name.c_str());
     return;
@@ -530,9 +530,10 @@ void Ocla::show_info() {
     // print usage informat requested by IP team
     CFG_POST_MSG("  NOTES");
     CFG_POST_MSG(
-        "    Use 'loop' & 'duration' options to repeatedly read the state of "
-        "the input signal");
-    CFG_POST_MSG("    for specific number of times.");
+        "    Use the 'loop' & 'interval' (in milisecond) options to repeatedly "
+        "read");
+    CFG_POST_MSG(
+        "    the state of the input signals for specific number of times.");
     CFG_POST_MSG(" ");
   }
 }
@@ -986,12 +987,32 @@ bool Ocla::get_eio_hier_objects(uint32_t session_id, OclaDebugSession *&session,
   return true;
 }
 
-bool Ocla::set_io(std::vector<std::string> signal_names,
-                  std::vector<uint64_t> values) {
+bool Ocla::parse_eio_signal_list(std::vector<std::string> signal_list,
+                                 std::vector<std::string> &names,
+                                 std::vector<std::vector<uint32_t>> &values) {
+  uint32_t bit_start = 0, bit_end = 0, bit_width = 0;
+  uint64_t bit_value = 0;
+  std::string name{};
+  for (auto &s : signal_list) {
+    auto patid =
+        CFG_parse_signal(s, name, bit_start, bit_end, bit_width, &bit_value);
+    if (patid != OCLA_SIGNAL_PATTERN_6 && patid != OCLA_SIGNAL_PATTERN_7) {
+      CFG_POST_ERR("Invalid signal format '%s'", s.c_str());
+      return false;
+    }
+    values.push_back({uint32_t(bit_value), uint32_t(bit_value >> 32)});
+    names.push_back(name);
+  }
+  return true;
+}
+
+bool Ocla::set_io(std::vector<std::string> signal_list) {
   CFG_ASSERT(m_adapter != nullptr);
 
-  if (signal_names.size() != values.size()) {
-    CFG_POST_ERR("Number of signal names and values not match");
+  std::vector<std::string> signal_names{};
+  std::vector<std::vector<uint32_t>> signal_values{};
+
+  if (!parse_eio_signal_list(signal_list, signal_names, signal_values)) {
     return false;
   }
 
@@ -1015,27 +1036,52 @@ bool Ocla::set_io(std::vector<std::string> signal_names,
     return false;
   }
 
+  // Caveat 1:
+  // Initialize the variable to keep track the state of the output io since
+  // current version of the IP doesn't provide the capability to readback the
+  // output io state. Since no way to read the initial state of the io when
+  // software starts, the sw always start with 0's for the output io state.
+  if (instance->output_state.empty()) {
+    uint32_t width = instance->get_total_probe_width(IO_OUTPUT);
+    instance->output_state.assign(((width - 1) / 32) + 1, 0);
+  }
+
   uint32_t msb_pos = 0;
   uint32_t i = 0;
 
   // update io state
   for (auto &s : output_list) {
-    auto value = CFG_convert_u64_to_vec_u32(values[i++]);
-    CFG_copy_bits_vec32(value.data(), 0, probe->state.data(), s.bitpos,
-                        s.bitwidth);
+    // extend the vector size according to the length of the signal to avoid
+    // array out of bound
+    size_t min_size = ((s.bitwidth - 1) / 32) + 1;
+    if (signal_values[i].size() < min_size) {
+      signal_values[i].resize(min_size);
+    }
+    CFG_copy_bits_vec32(signal_values[i++].data(), 0,
+                        instance->output_state.data(), s.bitpos, s.bitwidth);
     msb_pos = std::max(s.bitpos + s.bitwidth - 1, msb_pos);
   }
 
   // write io
   EioIP eio{m_adapter, instance->get_baseaddr()};
-  eio.write(probe->state, ((msb_pos / 32) + 1));
+  eio.write_output_bits(instance->output_state, (msb_pos / 32) + 1);
 
   return true;
 }
 
-bool Ocla::get_io(std::vector<std::string> signal_names,
+bool Ocla::get_io(std::vector<std::string> signal_list,
                   std::vector<eio_value_t> &output) {
   CFG_ASSERT(m_adapter != nullptr);
+
+  std::vector<std::string> signal_names{};
+
+  for (auto &s : signal_list) {
+    if (s[0] == '#') {
+      signal_names.push_back(s.substr(1, s.size() - 1));
+    } else {
+      signal_names.push_back(s);
+    }
+  }
 
   OclaDebugSession *session = nullptr;
   EioInstance *instance = nullptr;
@@ -1059,20 +1105,21 @@ bool Ocla::get_io(std::vector<std::string> signal_names,
 
   uint32_t msb_pos = 0;
 
-  // find max msb pos from the requested signals
+  // find left most signal (msb) pos of the signal list
   for (auto &s : output_list) {
     msb_pos = std::max(s.bitpos + s.bitwidth - 1, msb_pos);
   }
 
   // read io
   EioIP eio{m_adapter, instance->get_baseaddr()};
-  auto result = eio.read((msb_pos / 32) + 1);
+  auto result = eio.read_input_bits((msb_pos / 32) + 1);
+
+  // transform result
   for (auto &s : output_list) {
-    std::vector<uint32_t> buf(((s.bitwidth - 1) / 32) + 1, 0);
-    eio_value_t value{};
-    CFG_copy_bits_vec32(result.data(), s.bitpos, buf.data(), 0, s.bitwidth);
-    value.signal_name = s.name;
-    value.value = CFG_convert_vec_u32_to_u64(buf);
+    eio_value_t value{s.name, s.idx,
+                      std::vector<uint32_t>(((s.bitwidth - 1) / 32) + 1, 0)};
+    CFG_copy_bits_vec32(result.data(), s.bitpos, value.value.data(), 0,
+                        s.bitwidth);
     output.push_back(value);
   }
 
