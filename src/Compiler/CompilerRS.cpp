@@ -515,7 +515,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   result = ReplaceAll(result, "${LUT_SIZE}", std::to_string(m_lut_size));
   switch (GetNetlistType()) {
     case NetlistType::Verilog:
-      // Temporary, once pin_c works with Verilog, only output Verilog
+      // Temporary, once planner works with Verilog, only output Verilog
       result =
           ReplaceAll(result, "${OUTPUT_NETLIST}",
                      "write_verilog -noexpr -nodec -norename -v "
@@ -526,7 +526,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
           "${OUTPUT_FABRIC_VERILOG}\nwrite_blif -param ${OUTPUT_FABRIC_EBLIF}");
       break;
     case NetlistType::VHDL:
-      // Temporary, once pin_c and the Packer work with VHDL, replace by just
+      // Temporary, once planner and the Packer work with VHDL, replace by just
       // VHDL
       result =
           ReplaceAll(result, "${OUTPUT_NETLIST}",
@@ -538,7 +538,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
           "${OUTPUT_FABRIC_VERILOG}\nwrite_blif -param ${OUTPUT_FABRIC_EBLIF}");
       break;
     case NetlistType::Edif:
-      // Temporary, once pin_c works with Verilog, only output edif
+      // Temporary, once planner works with Verilog, only output edif
       result =
           ReplaceAll(result, "${OUTPUT_NETLIST}",
                      "write_edif ${OUTPUT_EDIF}\nwrite_blif ${OUTPUT_BLIF}");
