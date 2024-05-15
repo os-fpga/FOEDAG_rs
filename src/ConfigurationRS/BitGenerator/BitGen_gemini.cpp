@@ -2,6 +2,7 @@
 
 #include "BitGen_json.h"
 
+#define ICB_APPEND_AT_FRONT (1)
 #define PCB_UNIT_SIZE (1024)
 #define PCB_UNIT_USER_DATA_BIT (32)
 #define PCB_UNIT_PARITY_BIT (4)
@@ -111,12 +112,30 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
     CFG_ASSERT(m_bitobj->icb.data.size() ==
                (size_t)((m_bitobj->icb.bits + 7) / 8));
     nlohmann::json icb;
+#if ICB_APPEND_AT_FRONT
+    // This is to put the dummy bits at the front
+    std::vector<uint8_t> payload((size_t)(((m_bitobj->icb.bits + 31) / 32) * 4), 0);
+    CFG_ASSERT(payload.size() >= m_bitobj->icb.data.size());
+    CFG_ASSERT((payload.size() - m_bitobj->icb.data.size()) < 4);
+    uint32_t offset = m_bitobj->icb.bits % 32;
+    if (offset) {
+      offset = 32 - offset;
+    }
+    for (uint32_t i = 0; i < m_bitobj->icb.bits; i++, offset++) {
+      if (m_bitobj->icb.data[i >> 3] & (1 << (i & 7))) {
+        payload[offset >> 3] |= (1 << (offset & 7));
+      }
+    }
+    CFG_ASSERT((size_t)(offset) == (payload.size() * 8));
+#else
+    // This is to put the dummy bits at the back
     std::vector<uint8_t> payload;
     payload.insert(payload.end(), m_bitobj->icb.data.begin(),
                    m_bitobj->icb.data.end());
     while (payload.size() % 4) {
       payload.push_back(0);
     }
+#endif
     icb["action"] = "icb_config";
     icb["cfg_cmd"] = 0;
     icb["bit_twist"] = 0;
