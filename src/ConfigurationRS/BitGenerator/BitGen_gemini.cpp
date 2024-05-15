@@ -114,7 +114,8 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
     nlohmann::json icb;
 #if ICB_APPEND_AT_FRONT
     // This is to put the dummy bits at the front
-    std::vector<uint8_t> payload((size_t)(((m_bitobj->icb.bits + 31) / 32) * 4), 0);
+    std::vector<uint8_t> payload((size_t)(((m_bitobj->icb.bits + 31) / 32) * 4),
+                                 0);
     CFG_ASSERT(payload.size() >= m_bitobj->icb.data.size());
     CFG_ASSERT((payload.size() - m_bitobj->icb.data.size()) < 4);
     uint32_t offset = m_bitobj->icb.bits % 32;
