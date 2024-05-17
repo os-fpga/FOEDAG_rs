@@ -913,7 +913,6 @@ bool Ocla::find_eio_signals(std::vector<eio_signal_t> &signal_list,
                             std::vector<std::string> signal_names,
                             std::vector<eio_signal_t> &output_list) {
   for (auto &name : signal_names) {
-    // todo: search by index
     bool status = false;
     uint32_t signal_idx =
         (uint32_t)CFG_convert_string_to_u64(name, false, &status);
@@ -1036,18 +1035,10 @@ bool Ocla::set_io(std::vector<std::string> signal_list) {
     return false;
   }
 
-  // Caveat 1:
-  // Initialize the variable to keep track the state of the output io since
-  // current version of the IP doesn't provide the capability to readback the
-  // output io state. Since no way to read the initial state of the io when
-  // software starts, the sw always start with 0's for the output io state.
-  if (instance->output_state.empty()) {
-    uint32_t width = instance->get_total_probe_width(IO_OUTPUT);
-    instance->output_state.assign(((width - 1) / 32) + 1, 0);
-  }
-
-  uint32_t msb_pos = 0;
+  EioIP eio{m_adapter, instance->get_baseaddr()};
+  uint32_t num_words = instance->get_num_words(IO_OUTPUT);
   uint32_t i = 0;
+  auto output = eio.readback_output_bits(num_words);
 
   // update io state
   for (auto &s : output_list) {
@@ -1057,14 +1048,18 @@ bool Ocla::set_io(std::vector<std::string> signal_list) {
     if (signal_values[i].size() < min_size) {
       signal_values[i].resize(min_size);
     }
-    CFG_copy_bits_vec32(signal_values[i++].data(), 0,
-                        instance->output_state.data(), s.bitpos, s.bitwidth);
-    msb_pos = std::max(s.bitpos + s.bitwidth - 1, msb_pos);
+    CFG_copy_bits_vec32(signal_values[i++].data(), 0, output.data(), s.bitpos,
+                        s.bitwidth);
   }
 
-  // write io
-  EioIP eio{m_adapter, instance->get_baseaddr()};
-  eio.write_output_bits(instance->output_state, (msb_pos / 32) + 1);
+  // write output io
+  eio.write_output_bits(output, num_words);
+
+  // readback the output io register to confirm the write is successful
+  auto readback_output = eio.readback_output_bits(num_words);
+  if (readback_output != output) {
+    return false;
+  }
 
   return true;
 }
