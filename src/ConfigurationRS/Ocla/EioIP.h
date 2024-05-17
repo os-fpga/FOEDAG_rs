@@ -14,7 +14,14 @@
 #define EIO_AXI_DAT_OUT \
   (0x10)  // [WO] Data at the output probes of EIO (sent to the DUT)
 
+// CTRL (Control register) bitfield definitions
+#define EIO_CTRL_PRS_Pos (0)
+#define EIO_CTRL_PRS_Width (1)
+#define EIO_CTRL_PRS_Msk (((1u << EIO_CTRL_PRS_Width) - 1) << EIO_CTRL_PRS_Pos)
+
 class OclaJtagAdapter;
+
+enum eio_prs_mode { PROBE_IN = 0, PROBE_OUT = 1 };
 
 class EioIP {
  public:
@@ -23,11 +30,14 @@ class EioIP {
   std::string get_type() const;
   uint32_t get_version() const;
   uint32_t get_id() const;
+  eio_prs_mode get_prs_mode() const;
+  void set_prs_mode(eio_prs_mode mode);
   void write_output_bits(std::vector<uint32_t> values, uint32_t length);
   std::vector<uint32_t> readback_output_bits(uint32_t length);
   std::vector<uint32_t> read_input_bits(uint32_t length);
 
  private:
+  std::vector<uint32_t> read_bits(uint32_t addr, uint32_t length);
   void read_registers();
   OclaJtagAdapter *m_adapter;
   uint32_t m_baseaddr;
