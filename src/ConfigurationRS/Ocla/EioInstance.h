@@ -28,14 +28,9 @@ class EioInstance {
   ~EioInstance();
   std::vector<eio_probe_t>& get_probes();
   void add_probe(eio_probe_t& probe);
-  uint32_t get_total_probe_width(eio_probe_type_t type) const;
+  uint32_t get_num_words(eio_probe_type_t type) const;
   uint32_t get_baseaddr() const;
   uint32_t get_index() const;
-
-  // Caveat 1:
-  // Keep the output io signal state for RMW operation to the IP until EIO
-  // implemented the readback capability
-  std::vector<uint32_t> output_state;
 
  private:
   uint32_t m_baseaddr;
