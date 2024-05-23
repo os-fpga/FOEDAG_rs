@@ -104,7 +104,7 @@ class CompilerRS : public CompilerOpenFPGA {
   bool m_synthCec = false;
   bool m_synthNoSimplify = false;
   int m_maxThreads = -1;
-  bool m_keepTribuf = false;
+  bool m_keepTribuf = true;
   bool m_new_dsp19x2 = true;
   bool m_new_tdp36k = true;
   std::filesystem::path m_starsExecutablePath = "stars";

@@ -754,6 +754,10 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
         compiler->KeepTribuf(true);
         continue;
       }
+      if (option == "-no_tribuf") {
+        compiler->KeepTribuf(false);
+        continue;
+      }
       if (option == "-new_dsp19x2") {
         compiler->NewDsp19x2(true);
         continue;
