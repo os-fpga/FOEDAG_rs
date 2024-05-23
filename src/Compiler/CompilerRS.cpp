@@ -378,7 +378,13 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
       break;
   }
   std::string keep_tribuf{};
-  if (KeepTribuf()) keep_tribuf = "-keep_tribuf";
+  if (KeepTribuf()) {
+    // TODO: Synthesis does not write out IOs correctly yet in VHDL
+    // Once that is fixed, this if statement can be removed
+    if (GetNetlistType() != NetlistType::VHDL) {
+      keep_tribuf = "-keep_tribuf";
+    }
+  }
   std::string new_dsp19x2{};
   if (NewDsp19x2()) new_dsp19x2 = "-new_dsp19x2";
   std::string new_tdp36k{};
