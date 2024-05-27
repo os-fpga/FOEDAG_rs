@@ -324,10 +324,10 @@
             "help": "Device index"
           }
         ],
-        "desc": "Command to display all probe information in the user design parsed from the .bitasm file. And also, the current OCLA global and trigger configuration.",
+        "desc": "Command to display all probe information in the user design parsed from the .bitasm file. And the current OCLA global and trigger configuration.",
         "help": [
           "To show all information:",
-          "  debugger info -c {cable name/index} -b {device index}"
+          "  debugger info -b {cable name/index} -d {device index}"
         ],
         "arg": [0, 0]
       }
@@ -530,8 +530,8 @@
             "help": "Display additional information of list_device output"
           }
         ],
-        "desc": "To display list of connected devices to each conneceted/detected cable.",
-        "help": [ "To display list of connected devices to each conneceted/detected cable.",
+        "desc": "To display list of connected devices to each connected/detected cable.",
+        "help": [ "To display list of connected devices to each connected/detected cable.",
                   "To display list of all connected devices on specify cable.",
                   "The cable argument input can be the cable name or cable index that map to its name."
                 ],
