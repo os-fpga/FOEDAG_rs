@@ -44,7 +44,10 @@ class CompilerRS : public CompilerOpenFPGA {
   SynthesisCarryInference SynthCarry() { return m_synthCarry; }
   void SynthCarry(SynthesisCarryInference carry) { m_synthCarry = carry; }
   SynthesisIOInference SynthIO() { return m_synthIO; }
-  void SynthIO(SynthesisIOInference io) { m_synthIO = io; }
+  void SynthIO(SynthesisIOInference io) {
+    m_synthIO = io;
+    m_userSynthIOSetting = io;
+  }
   SynthesisFsmEncoding SynthFsm() { return m_synthFsm; }
   void SynthFsm(SynthesisFsmEncoding fsmEnc) { m_synthFsm = fsmEnc; }
   SynthesisClkeStrategy SynthClke() { return m_synthClke; }
@@ -98,6 +101,7 @@ class CompilerRS : public CompilerOpenFPGA {
   SynthesisFsmEncoding m_synthFsm = SynthesisFsmEncoding::Onehot;
   SynthesisClkeStrategy m_synthClke = SynthesisClkeStrategy::None;
   SynthesisIOInference m_synthIO = SynthesisIOInference::Auto;
+  SynthesisIOInference m_userSynthIOSetting = SynthesisIOInference::None;
   bool m_synthNoAdder = false;
   bool m_synthFast = false;
   bool m_synthNoFlatten = false;

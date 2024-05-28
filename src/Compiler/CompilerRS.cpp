@@ -371,6 +371,12 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
         // Once that is fixed, this if statement can be removed
         io_inference = "-no_iobuf";
         break;
+      } else if ((!BaseDeviceName().empty()) && (BaseDeviceName()[0] == 'e')) {
+        // eFPGA don't typically have IOs, unless the user explicitly requested
+        // it
+        if (m_userSynthIOSetting == SynthesisIOInference::None) {
+          io_inference = "-no_iobuf";
+        }
       }
       break;
     case SynthesisIOInference::None:
