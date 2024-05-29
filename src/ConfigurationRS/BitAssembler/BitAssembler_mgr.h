@@ -14,6 +14,7 @@ class BitAssembler_MGR {
   void get_scan_chain_fcb(const CFGObject_BITOBJ_SCAN_CHAIN_FCB* fcb);
   void get_ql_membank_fcb(const CFGObject_BITOBJ_QL_MEMBANK_FCB* fcb);
   void get_icb(const CFGObject_BITOBJ_ICB* icb);
+  void get_post_icb(const CFGObject_BITOBJ_POST_ICB* icb);
   void get_pcb(CFGObject_BITOBJ& bitobj);
   std::vector<std::string> m_warnings;
 
@@ -35,6 +36,7 @@ class BitAssembler_MGR {
   static std::string get_ocla_design(const std::string& filepath);
 
  private:
+  uint32_t get_icb(const std::string& filepath, std::vector<uint8_t>& data);
   template <typename T>
   uint32_t get_bitline_into_bytes(T& start, T& end, std::vector<uint8_t>& bytes,
                                   std::vector<uint8_t>* mask_bytes,

@@ -96,6 +96,21 @@
       "exist" : false
     },
     {
+      "name" : "post_icb",
+      "type" : [
+        {
+          "name" : "bits",
+          "type" : "u32"
+        },
+        {
+          "name" : "data",
+          "type" : "u8s",
+          "cmp"  : true
+        }
+      ],
+      "exist" : false
+    },
+    {
       "name" : "pcb",
       "type" : [
         {

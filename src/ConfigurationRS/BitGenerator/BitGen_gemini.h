@@ -10,6 +10,8 @@ class BitGen_GEMINI {
   void generate(std::vector<BitGen_BITSTREAM_BOP*>& data);
 
  protected:
+  void icb_generate(BitGen_BITSTREAM_BOP*& bop, const uint32_t bits,
+                    const std::vector<uint8_t>& data);
   uint64_t convert_to(uint64_t value, uint64_t unit);
   uint64_t convert_to8(uint64_t value);
   uint64_t convert_to16(uint64_t value);
