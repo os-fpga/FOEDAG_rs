@@ -212,87 +212,117 @@ void BitAssembler_MGR::get_icb(const CFGObject_BITOBJ_ICB* icb) {
   // ToDO: For now IO is not fully ready, just post warning if it does not.
   //       Once IO is ready, we will need to flag error
   if (std::filesystem::exists(filepath)) {
-    std::fstream file;
-    file.open(filepath.c_str(), std::ios::in);
-    CFG_ASSERT_MSG(file.is_open(), "Fail to open %s", filepath.c_str());
-    std::string line = "";
-    size_t line_tracking = 0;
-    size_t data_line = 0;
-    std::string format = "";
     std::vector<uint8_t> data;
-    while (getline(file, line)) {
-      // Only trim the trailing whitespace
-      CFG_get_rid_trailing_whitespace(line);
-      if (line.size() == 0) {
-        // allow blank line
-        continue;
+    uint32_t bits = get_icb(filepath, data);
+    CFG_ASSERT(bits);
+    CFG_ASSERT(((bits + 7) / 8) == (uint32_t)(data.size()));
+    icb->write_u32("bits", bits);
+    icb->write_u8s("data", data);
+  } else {
+    CFG_POST_WARNING("IO bitstream file %s does not exist. Skip for now",
+                     filepath.c_str());
+  }
+}
+
+void BitAssembler_MGR::get_post_icb(const CFGObject_BITOBJ_POST_ICB* icb) {
+  CFG_ASSERT(icb->get_object_count() == 0);
+
+  // Read io_bitstream.bit as text line by line, parse info out
+  std::string filepath =
+      CFG_print("%s/io_bitstream.post.bit", m_project_path.c_str());
+  // ToDO: For now IO is not fully ready, just post warning if it does not.
+  //       Once IO is ready, we will need to flag error
+  if (std::filesystem::exists(filepath)) {
+    std::vector<uint8_t> data;
+    uint32_t bits = get_icb(filepath, data);
+    CFG_ASSERT(bits);
+    CFG_ASSERT(((bits + 7) / 8) == (uint32_t)(data.size()));
+    icb->write_u32("bits", bits);
+    icb->write_u8s("data", data);
+  }
+}
+
+uint32_t BitAssembler_MGR::get_icb(const std::string& filepath,
+                                   std::vector<uint8_t>& data) {
+  CFG_ASSERT(data.size() == 0);
+  std::fstream file;
+  file.open(filepath.c_str(), std::ios::in);
+  CFG_ASSERT_MSG(file.is_open(), "Fail to open %s", filepath.c_str());
+  std::string line = "";
+  size_t bits = 0;
+  size_t line_tracking = 0;
+  size_t data_line = 0;
+  std::string format = "";
+  while (getline(file, line)) {
+    // Only trim the trailing whitespace
+    CFG_get_rid_trailing_whitespace(line);
+    if (line.size() == 0) {
+      // allow blank line
+      continue;
+    }
+    // Strict checking on the format
+    if (line_tracking == 0) {
+      // First line must start with this keyword
+      CFG_ASSERT(line == "// Feature Bitstream: IO");
+      line_tracking++;
+    } else if (line_tracking == 2) {
+      // This will be all data, no exception
+      CFG_ASSERT(bits);
+      CFG_ASSERT(data.size());
+      CFG_ASSERT(data_line < bits);
+      if (line == "1") {
+        data[data_line >> 3] |= (1 << (data_line & 7));
+      } else {
+        CFG_ASSERT(line == "0");
       }
-      // Strict checking on the format
-      if (line_tracking == 0) {
-        // First line must start with this keyword
-        CFG_ASSERT(line == "// Feature Bitstream: IO");
-        line_tracking++;
-      } else if (line_tracking == 2) {
-        // This will be all data, no exception
-        CFG_ASSERT(data_line < icb->bits);
+      data_line++;
+    } else {
+      if (line.find("//") == 0) {
+        if (line.find("// Model:") == 0 || line.find("// Timestamp:") == 0) {
+          // Ignore this
+          continue;
+        } else if (line.find("// Total Bits:") == 0) {
+          // Should only define once
+          CFG_ASSERT(bits == 0);
+          line.erase(0, 14);
+          CFG_get_rid_leading_whitespace(line);
+          bits = (size_t)(CFG_convert_string_to_u64(line, true));
+          CFG_ASSERT(bits);
+          CFG_ASSERT(bits <= (size_t)(0xFFFFFFFF));
+        } else if (line.find("// Format:") == 0) {
+          CFG_ASSERT(format.empty());
+          line.erase(0, 10);
+          CFG_get_rid_leading_whitespace(line);
+          format = line;
+          CFG_ASSERT(format == "BIT");
+        } else {
+          // Unknown -- put it into warning
+          m_warnings.push_back(
+              CFG_print("ICB Parser :: unknown :: %s", line.c_str()));
+        }
+      } else {
+        // Start of data
+        // Make sure length and width is known
+        CFG_ASSERT(bits);
+        CFG_ASSERT(format == "BIT");
+        CFG_ASSERT(data.size() == 0);
+        data.resize((bits + 7) / 8);
+        memset(&data[0], 0, data.size());
         if (line == "1") {
           data[data_line >> 3] |= (1 << (data_line & 7));
         } else {
           CFG_ASSERT(line == "0");
         }
+        line_tracking++;
         data_line++;
-      } else {
-        if (line.find("//") == 0) {
-          if (line.find("// Model:") == 0 || line.find("// Timestamp:") == 0) {
-            // Ignore this
-            continue;
-          } else if (line.find("// Total Bits:") == 0) {
-            // Should only define once
-            CFG_ASSERT(!icb->check_exist("bits"));
-            CFG_ASSERT(icb->bits == 0);
-            line.erase(0, 14);
-            CFG_get_rid_leading_whitespace(line);
-            icb->write_u32("bits",
-                           (uint32_t)(CFG_convert_string_to_u64(line, true)));
-            CFG_ASSERT(icb->check_exist("bits"));
-            CFG_ASSERT(icb->bits);
-          } else if (line.find("// Format:") == 0) {
-            CFG_ASSERT(format.empty());
-            line.erase(0, 10);
-            CFG_get_rid_leading_whitespace(line);
-            format = line;
-            CFG_ASSERT(format == "BIT");
-          } else {
-            // Unknown -- put it into warning
-            m_warnings.push_back(
-                CFG_print("ICB Parser :: unknown :: %s", line.c_str()));
-          }
-        } else {
-          // Start of data
-          // Make sure length and width is known
-          CFG_ASSERT(icb->check_exist("bits"));
-          CFG_ASSERT(format == "BIT");
-          CFG_ASSERT(data.size() == 0);
-          data.resize((icb->bits + 7) / 8);
-          memset(&data[0], 0, data.size());
-          if (line == "1") {
-            data[data_line >> 3] |= (1 << (data_line & 7));
-          } else {
-            CFG_ASSERT(line == "0");
-          }
-          line_tracking++;
-          data_line++;
-        }
       }
     }
-    CFG_ASSERT(icb->check_exist("bits"));
-    CFG_ASSERT(icb->bits == data_line);
-    icb->write_u8s("data", data);
-    file.close();
-  } else {
-    CFG_POST_WARNING("IO bitstream file %s does not exist. Skip for now",
-                     filepath.c_str());
   }
+  file.close();
+  CFG_ASSERT(bits);
+  CFG_ASSERT(data.size());
+  CFG_ASSERT(bits == data_line);
+  return (uint32_t)(bits);
 }
 
 void BitAssembler_MGR::get_pcb(CFGObject_BITOBJ& bitobj) {

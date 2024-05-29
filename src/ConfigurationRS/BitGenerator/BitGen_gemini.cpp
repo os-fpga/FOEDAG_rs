@@ -107,50 +107,25 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
     memset(&payload[0], 0, payload.size());
     payload.clear();
   }
+
   // ICB data
   if (m_bitobj->icb.bits) {
-    CFG_ASSERT(m_bitobj->icb.data.size() ==
-               (size_t)((m_bitobj->icb.bits + 7) / 8));
-    nlohmann::json icb;
-#if ICB_APPEND_AT_FRONT
-    // This is to put the dummy bits at the front
-    std::vector<uint8_t> payload((size_t)(((m_bitobj->icb.bits + 31) / 32) * 4),
-                                 0);
-    CFG_ASSERT(payload.size() >= m_bitobj->icb.data.size());
-    CFG_ASSERT((payload.size() - m_bitobj->icb.data.size()) < 4);
-    uint32_t offset = m_bitobj->icb.bits % 32;
-    if (offset) {
-      offset = 32 - offset;
-    }
-    for (uint32_t i = 0; i < m_bitobj->icb.bits; i++, offset++) {
-      if (m_bitobj->icb.data[i >> 3] & (1 << (i & 7))) {
-        payload[offset >> 3] |= (1 << (offset & 7));
-      }
-    }
-    CFG_ASSERT((size_t)(offset) == (payload.size() * 8));
-#else
-    // This is to put the dummy bits at the back
-    std::vector<uint8_t> payload;
-    payload.insert(payload.end(), m_bitobj->icb.data.begin(),
-                   m_bitobj->icb.data.end());
-    while (payload.size() % 4) {
-      payload.push_back(0);
-    }
-#endif
-    icb["action"] = "icb_config";
-    icb["cfg_cmd"] = 0;
-    icb["bit_twist"] = 0;
-    icb["byte_twist"] = 0;
-    icb["is_data_or_not_cmd"] = 0;
-    icb["update"] = 1;
-    icb["capture"] = 0;
-    icb["payload"] = nlohmann::json(payload);
-    bop->actions.push_back(BitGen_JSON::gen_icb_config_action(icb));
-    BitGen_JSON::zeroize_array_numbers(icb["payload"]);
-    memset(&payload[0], 0, payload.size());
-    payload.clear();
+    icb_generate(bop, m_bitobj->icb.bits, m_bitobj->icb.data);
   } else {
     CFG_ASSERT(m_bitobj->icb.data.size() == 0);
+  }
+
+  // POST ICB data
+  if (m_bitobj->post_icb.bits) {
+    CFG_ASSERT(m_bitobj->icb.bits == m_bitobj->post_icb.bits);
+    CFG_ASSERT(m_bitobj->icb.data.size() == m_bitobj->post_icb.data.size());
+    // We only do double ICB configuration if the ICB vs Post ICB is different
+    if (memcmp(&m_bitobj->icb.data[0], &m_bitobj->post_icb.data[0],
+               m_bitobj->icb.data.size()) != 0) {
+      icb_generate(bop, m_bitobj->post_icb.bits, m_bitobj->post_icb.data);
+    }
+  } else {
+    CFG_ASSERT(m_bitobj->post_icb.data.size() == 0);
   }
 
   // PCB data
@@ -316,6 +291,49 @@ void BitGen_GEMINI::generate(std::vector<BitGen_BITSTREAM_BOP*>& data) {
 
   // Finalize
   data.push_back(bop);
+}
+
+void BitGen_GEMINI::icb_generate(BitGen_BITSTREAM_BOP*& bop,
+                                 const uint32_t bits,
+                                 const std::vector<uint8_t>& data) {
+  CFG_ASSERT(bits);
+  CFG_ASSERT(data.size() == (size_t)((bits + 7) / 8));
+  nlohmann::json icb;
+#if ICB_APPEND_AT_FRONT
+  // This is to put the dummy bits at the front
+  std::vector<uint8_t> payload((size_t)(((bits + 31) / 32) * 4), 0);
+  CFG_ASSERT(payload.size() >= data.size());
+  CFG_ASSERT((payload.size() - data.size()) < 4);
+  uint32_t offset = bits % 32;
+  if (offset) {
+    offset = 32 - offset;
+  }
+  for (uint32_t i = 0; i < bits; i++, offset++) {
+    if (data[i >> 3] & (1 << (i & 7))) {
+      payload[offset >> 3] |= (1 << (offset & 7));
+    }
+  }
+  CFG_ASSERT((size_t)(offset) == (payload.size() * 8));
+#else
+  // This is to put the dummy bits at the back
+  std::vector<uint8_t> payload;
+  payload.insert(payload.end(), data.begin(), data.end());
+  while (payload.size() % 4) {
+    payload.push_back(0);
+  }
+#endif
+  icb["action"] = "icb_config";
+  icb["cfg_cmd"] = 0;
+  icb["bit_twist"] = 0;
+  icb["byte_twist"] = 0;
+  icb["is_data_or_not_cmd"] = 0;
+  icb["update"] = 1;
+  icb["capture"] = 0;
+  icb["payload"] = nlohmann::json(payload);
+  bop->actions.push_back(BitGen_JSON::gen_icb_config_action(icb));
+  BitGen_JSON::zeroize_array_numbers(icb["payload"]);
+  memset(&payload[0], 0, payload.size());
+  payload.clear();
 }
 
 std::vector<uint8_t> BitGen_GEMINI::genbits_line_by_line(

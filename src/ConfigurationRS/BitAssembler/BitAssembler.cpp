@@ -63,6 +63,14 @@ void BitAssembler_entry(CFGCommon_ARG* cmdarg) {
     // ICB
     mgr.get_icb(&bitobj.icb);
 
+    // Post ICB
+    mgr.get_post_icb(&bitobj.post_icb);
+
+    if (bitobj.post_icb.bits) {
+      // If there is post ICB, ICB must exist
+      CFG_ASSERT(bitobj.icb.bits == bitobj.post_icb.bits);
+    }
+
     // PCB
     mgr.get_pcb(bitobj);
 
