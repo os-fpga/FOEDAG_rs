@@ -44,6 +44,7 @@ class CompilerRS : public CompilerOpenFPGA {
   SynthesisCarryInference SynthCarry() { return m_synthCarry; }
   void SynthCarry(SynthesisCarryInference carry) { m_synthCarry = carry; }
   SynthesisIOInference SynthIO() { return m_synthIO; }
+  SynthesisIOInference SynthIOUser() const { return m_userSynthIOSetting; }
   void SynthIO(SynthesisIOInference io) {
     m_synthIO = io;
     m_userSynthIOSetting = io;
@@ -87,6 +88,8 @@ class CompilerRS : public CompilerOpenFPGA {
 
   bool NewTdp36k() const { return m_new_tdp36k; }
   void NewTdp36k(bool newNew_tdp36k) { m_new_tdp36k = newNew_tdp36k; }
+
+  virtual void adjustTargetDeviceDefaults();
 
  protected:
   void CustomSimulatorSetup(Simulator::SimulationType action);

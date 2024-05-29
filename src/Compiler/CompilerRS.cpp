@@ -25,6 +25,7 @@ All rights reserved
 #include "Configuration/CFGCompiler/CFGCompiler.h"
 #include "ConfigurationRS/BitAssembler/BitAssembler.h"
 #include "ConfigurationRS/Ocla/Ocla.h"
+#include "Main/Settings.h"
 #include "MainWindow/Session.h"
 #include "NewProject/ProjectManager/project_manager.h"
 #include "ProjNavigator/tcl_command_integration.h"
@@ -1063,6 +1064,23 @@ ArgumentsMap FOEDAG::TclArgs_getRsSynthesisOptions() {
     argumets.addArgument("bram_limit", bram);
     auto carry = StringUtils::to_string(compiler->MaxUserCarryLength());
     argumets.addArgument("carry_chain_limit", carry);
+
+    if (!compiler->BaseDeviceName().empty() &&
+        compiler->BaseDeviceName()[0] == 'e') {
+      if (compiler->SynthIOUser() == CompilerRS::SynthesisIOInference::None) {
+        argumets.addArgument("inferred_io", "none");
+      } else if (compiler->SynthIOUser() ==
+                 CompilerRS::SynthesisIOInference::Auto) {
+        argumets.addArgument("inferred_io", "auto");
+      }
+    } else {
+      if (compiler->SynthIO() == CompilerRS::SynthesisIOInference::None) {
+        argumets.addArgument("inferred_io", "none");
+      } else if (compiler->SynthIO() ==
+                 CompilerRS::SynthesisIOInference::Auto) {
+        argumets.addArgument("inferred_io", "auto");
+      }
+    }
   };
   return argumets;
 }
@@ -1154,6 +1172,13 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const ArgumentsMap &argsStr) {
   compiler->SynthFast(argsStr.hasKey("fast"));
   compiler->SynthNoFlatten(argsStr.hasKey("no_flatten"));
   compiler->KeepTribuf(argsStr.hasKey("keep_tribuf"));
+  auto io_buf = argsStr.value("inferred_io");
+  if (io_buf) {
+    if (io_buf == "none")
+      compiler->SynthIO(CompilerRS::SynthesisIOInference::None);
+    else if (io_buf == "auto")
+      compiler->SynthIO(CompilerRS::SynthesisIOInference::Auto);
+  }
 }
 
 std::string CompilerRS::BaseStaCommand() {
@@ -1437,4 +1462,18 @@ bool CompilerRS::PowerAnalysis() {
 
   Message("Design " + ProjManager()->projectName() + " is power analysed");
   return true;
+}
+
+void CompilerRS::adjustTargetDeviceDefaults() {
+  FOEDAG::Settings *settings = GlobalSession->GetSettings();
+  try {
+    auto &synth = settings->getJson()["Tasks"]["Synthesis"];
+    if (!BaseDeviceName().empty() && (BaseDeviceName()[0] == 'e')) {  // eFPGA
+      synth["inferred_io"]["default"] = "None";
+    } else {
+      synth["inferred_io"]["default"] = "Auto";
+    }
+  } catch (std::exception &e) {
+    ErrorMessage(e.what());
+  }
 }
