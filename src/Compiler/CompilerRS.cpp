@@ -1015,8 +1015,7 @@ ArgumentsMap FOEDAG::TclArgs_getRsSynthesisOptions() {
     // Use the script completer to generate an arg list w/ current values
     // Note we are only grabbing the values that matter for the settings ui
     std::string tclOptions = compiler->FinishSynthesisScript(
-        "${OPTIMIZATION} ${EFFORT} ${FSM_ENCODING} ${CARRY} ${FAST} "
-        "${NO_FLATTEN} ${KEEP_TRIBUF}");
+        "${OPTIMIZATION} ${EFFORT} ${FSM_ENCODING} ${CARRY}");
 
     // The settings UI provides a single argument value pair for each field.
     // Optimization uses -de -goal so we convert that to the settings specific
@@ -1033,6 +1032,11 @@ ArgumentsMap FOEDAG::TclArgs_getRsSynthesisOptions() {
         StringUtils::replaceAll(tclOptions, "-carry no ", "-carry none ");
 
     argumets = parseArguments(tclOptions);
+    argumets.addArgument("keep_tribuf",
+                         compiler->KeepTribuf() ? "true" : "false");
+    argumets.addArgument("no_flatten",
+                         compiler->SynthNoFlatten() ? "true" : "false");
+    argumets.addArgument("fast", compiler->SynthFast() ? "true" : "false");
 
     switch (compiler->GetNetlistType()) {
       case Compiler::NetlistType::Blif:
@@ -1169,9 +1173,21 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const ArgumentsMap &argsStr) {
     if (ok) compiler->MaxUserCarryLength(value);
   }
 
-  compiler->SynthFast(argsStr.hasKey("fast"));
-  compiler->SynthNoFlatten(argsStr.hasKey("no_flatten"));
-  compiler->KeepTribuf(argsStr.hasKey("keep_tribuf"));
+  auto fast = argsStr.value("fast");
+  if (fast) {
+    // enable when '-fast true', or '-fast'
+    compiler->SynthFast(fast == "true" || fast.value.empty());
+  }
+  auto no_flatten = argsStr.value("no_flatten");
+  if (no_flatten) {
+    // enable when '-no_flatten true', or '-no_flatten'
+    compiler->SynthNoFlatten(no_flatten == "true" || no_flatten.value.empty());
+  }
+  auto keep_tribuf = argsStr.value("keep_tribuf");
+  if (keep_tribuf) {
+    // enable when '-keep_tribuf true', or '-keep_tribuf'
+    compiler->KeepTribuf(keep_tribuf == "true" || keep_tribuf.value.empty());
+  }
   auto io_buf = argsStr.value("inferred_io");
   if (io_buf) {
     if (io_buf == "none")
