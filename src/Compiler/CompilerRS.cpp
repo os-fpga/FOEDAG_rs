@@ -972,6 +972,12 @@ std::string CompilerRS::BaseVprCommand(BaseVprDefaults defaults) {
   fs::path netlistFileName{netlistFile};
   netlistFileName = netlistFileName.filename();
   auto name = netlistFileName.stem().string();
+  if (m_flatRouting) {
+    command += " --flat_routing true";
+  }
+  if (!m_routingGraphFile.empty()) {
+    command += " --read_rr_graph " + m_routingGraphFile.string();
+  }
   command += " --net_file " + FilePath(Action::Pack, name + ".net").string();
   command +=
       " --place_file " + FilePath(Action::Placement, name + ".place").string();
