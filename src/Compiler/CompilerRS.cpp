@@ -367,12 +367,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   switch (m_synthIO) {
     case SynthesisIOInference::Auto:
       io_inference = "";
-      if (GetNetlistType() == NetlistType::VHDL) {
-        // TODO: Synthesis does not write out IOs correctly yet in VHDL
-        // Once that is fixed, this if statement can be removed
-        io_inference = "-no_iobuf";
-        break;
-      } else if ((!BaseDeviceName().empty()) && (BaseDeviceName()[0] == 'e')) {
+      if ((!BaseDeviceName().empty()) && (BaseDeviceName()[0] == 'e')) {
         // eFPGA don't typically have IOs, unless the user explicitly requested
         // it
         if (m_userSynthIOSetting == SynthesisIOInference::None) {
