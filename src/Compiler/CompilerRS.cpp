@@ -74,7 +74,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -post_cleanup 1 -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -post_cleanup 1 ${NEW_IO_BUF_MAP} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
@@ -97,7 +97,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -post_cleanup 1 -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -post_cleanup 1 ${NEW_IO_BUF_MAP} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
@@ -138,7 +138,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -post_cleanup 1 -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -post_cleanup 1 ${NEW_IO_BUF_MAP} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
@@ -162,7 +162,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -post_cleanup 1 -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -post_cleanup 1 ${NEW_IO_BUF_MAP} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
 
 ${OUTPUT_NETLIST}
 
@@ -391,6 +391,8 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   if (NewDsp19x2()) new_dsp19x2 = "-new_dsp19x2";
   std::string new_tdp36k{};
   if (NewTdp36k()) new_tdp36k = "-new_tdp36k";
+  std::string new_ioBufMap{};
+  if (NewIOBufMap()) new_ioBufMap = "-new_iobuf_map 1";
   std::string effort;
   switch (m_synthEffort) {
     case SynthesisEffort::None:
@@ -490,6 +492,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
     io_inference = "";
     keep_tribuf.clear();
     new_dsp19x2.clear();
+    new_ioBufMap.clear();
     new_tdp36k.clear();
     if (m_synthNoAdder) {
       optimization += " -no_adder";
@@ -509,6 +512,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   result = ReplaceAll(result, "${IO}", io_inference);
   result = ReplaceAll(result, "${KEEP_TRIBUF}", keep_tribuf);
   result = ReplaceAll(result, "${NEW_DSP19X2}", new_dsp19x2);
+  result = ReplaceAll(result, "${NEW_IO_BUF_MAP}", new_ioBufMap);
   result = ReplaceAll(result, "${NEW_TDP36K}", new_tdp36k);
   result = ReplaceAll(result, "${FAST}", fast_mode);
   result = ReplaceAll(result, "${NO_FLATTEN}", no_flatten_mode);
@@ -768,6 +772,10 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
       }
       if (option == "-new_dsp19x2") {
         compiler->NewDsp19x2(true);
+        continue;
+      }
+      if (option == "-new_iobuf_map") {
+        compiler->NewIOBufMap(true);
         continue;
       }
       if (option == "-no_dsp19x2") {

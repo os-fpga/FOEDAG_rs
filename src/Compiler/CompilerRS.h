@@ -84,10 +84,13 @@ class CompilerRS : public CompilerOpenFPGA {
   void KeepTribuf(bool newKeepTribuf) { m_keepTribuf = newKeepTribuf; }
 
   bool NewDsp19x2() const { return m_new_dsp19x2; }
-  void NewDsp19x2(bool newNew_dsp19x2) { m_new_dsp19x2 = newNew_dsp19x2; }
+  void NewDsp19x2(bool new_dsp19x2) { m_new_dsp19x2 = new_dsp19x2; }
 
   bool NewTdp36k() const { return m_new_tdp36k; }
-  void NewTdp36k(bool newNew_tdp36k) { m_new_tdp36k = newNew_tdp36k; }
+  void NewTdp36k(bool new_tdp36k) { m_new_tdp36k = new_tdp36k; }
+
+  bool NewIOBufMap() const { return m_new_ioBufMap; }
+  void NewIOBufMap(bool new_ioBufMap) { m_new_ioBufMap = new_ioBufMap; }
 
   virtual void adjustTargetDeviceDefaults();
 
@@ -114,6 +117,7 @@ class CompilerRS : public CompilerOpenFPGA {
   bool m_keepTribuf = true;
   bool m_new_dsp19x2 = true;
   bool m_new_tdp36k = true;
+  bool m_new_ioBufMap = false;
   std::filesystem::path m_starsExecutablePath = "planning";
   std::filesystem::path m_tclExecutablePath = "tclsh";
   std::filesystem::path m_raptorExecutablePath = "raptor";
