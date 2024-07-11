@@ -778,6 +778,10 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
         compiler->NewIOBufMap(true);
         continue;
       }
+      if (option == "-no_iobuf_map") {
+        compiler->NewIOBufMap(false);
+        continue;
+      }
       if (option == "-no_dsp19x2") {
         compiler->NewDsp19x2(false);
         continue;
