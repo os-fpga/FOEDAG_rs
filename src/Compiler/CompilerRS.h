@@ -117,7 +117,7 @@ class CompilerRS : public CompilerOpenFPGA {
   bool m_keepTribuf = true;
   bool m_new_dsp19x2 = true;
   bool m_new_tdp36k = true;
-  bool m_new_ioBufMap = false;
+  bool m_new_ioBufMap = true;
   std::filesystem::path m_starsExecutablePath = "planning";
   std::filesystem::path m_tclExecutablePath = "tclsh";
   std::filesystem::path m_raptorExecutablePath = "raptor";
