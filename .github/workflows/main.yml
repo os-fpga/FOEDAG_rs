@@ -140,11 +140,34 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}  
 
-    - name: pull the CentOS image
+    - name: Pull the CentOS image
       run: docker pull ghcr.io/os-fpga/foedag:centos7latest 
+
+    - name: Install minimum dependencies
+      run: |
+          sudo apt update && sudo apt upgrade -y
+          sudo apt install -y qt6-base-dev qt6-webengine-dev qt6-webengine* libqt6webenginecore6* && sudo apt clean all 
+          sudo apt install -y libegl1-mesa-dev libx11-xcb-dev libxkbcommon-dev libhwloc-dev libusb-1.0-0-dev && sudo apt clean all
+          wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-jammy.list http://packages.lunarg.com/vulkan/lunarg-vulkan-jammy.list
+          sudo apt update
+          sudo apt install -y vulkan-sdk
+          sudo apt-get autoremove -y >/dev/null 2>&1
+          sudo apt-get autoclean -y >/dev/null 2>&1
+          df -h
 
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Checkout submodules
+      uses: addnab/docker-run-action@v3
+      with:
+        shell: bash
+        image: ghcr.io/os-fpga/foedag:centos7latest
+        options: -v ${{ github.workspace }}:/home/runner
+        run: |
+              cd $HOME 
+              make run-cmake-release 
       
     - name: Show shell configuration
       uses: addnab/docker-run-action@v3
@@ -168,7 +191,7 @@ jobs:
         run: |
               cd $HOME 
               #       make debug test/unittest-d
-              make release test/batch
+              make clean && make release test/batch
               #        make test/gui
 
     - name: Regression
