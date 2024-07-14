@@ -392,7 +392,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   std::string new_tdp36k{};
   if (NewTdp36k()) new_tdp36k = "-new_tdp36k";
   std::string new_ioBufMap{};
-  if (NewIOBufMap()) new_ioBufMap = "-new_iobuf_map 1 -ofab_map 1";
+  if (NewIOBufMap()) new_ioBufMap = "-new_iobuf_map 1 -iofab_map 1";
   std::string effort;
   switch (m_synthEffort) {
     case SynthesisEffort::None:
