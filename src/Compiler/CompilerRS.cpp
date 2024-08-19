@@ -980,7 +980,7 @@ std::string CompilerRS::BaseVprCommand(BaseVprDefaults defaults) {
   netlistFileName = netlistFileName.filename();
   auto name = netlistFileName.stem().string();
   if (m_flatRouting) {
-    command += " --flat_routing true";
+    command += " --flat_routing on";
   }
   if (!m_routingGraphFile.empty()) {
     command += " --read_rr_graph " + m_routingGraphFile.string();
