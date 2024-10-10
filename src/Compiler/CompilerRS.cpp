@@ -131,6 +131,7 @@ const std::string RapidSiliconYosysSurelogScript = R"(
 # Read source files
 ${READ_DESIGN_FILES}${PRIMITIVES_BLACKBOX}
 
+read_verilog -sv ${PRIMITIVES_BLACKBOX}
 # Technology mapping
 hierarchy ${TOP_MODULE_DIRECTIVE}
 
