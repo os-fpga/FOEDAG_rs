@@ -109,7 +109,7 @@ jobs:
 
     - name: Archive regression artifacts
       if: matrix.mode == 'regression' && always()
-      uses: actions/upload-artifact@v3.1.0
+      uses: actions/upload-artifact@v4.4.3
       with:
         name: raptor_gui-linux-gcc-regression
         path: |
@@ -396,14 +396,14 @@ jobs:
          make test/batch
 
     - name: Archive build artifacts
-      uses: actions/upload-artifact@v3.1.0
+      uses: actions/upload-artifact@v4.4.3
       with:
         name: raptor_gui-windows-msvc
         path: ${{ github.workspace }}/install
 
     - name: Archive regression artifacts
       if: always()
-      uses: actions/upload-artifact@v3.1.0
+      uses: actions/upload-artifact@v4.4.3
       with:
         name: raptor_gui-windows-msvc-regression
         path: |
