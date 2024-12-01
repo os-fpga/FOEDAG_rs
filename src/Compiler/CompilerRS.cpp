@@ -1075,7 +1075,8 @@ ArgumentsMap FOEDAG::TclArgs_getRsSynthesisOptions() {
     argumets.addArgument("no_flatten",
                          compiler->SynthNoFlatten() ? "true" : "false");
     argumets.addArgument("fast", compiler->SynthFast() ? "true" : "false");
-
+    argumets.addArgument("no_sat",
+                         compiler->SynthNoSat() ? "true" : "false");
     switch (compiler->GetNetlistType()) {
       case Compiler::NetlistType::Blif:
         argumets.addArgument("netlist_lang", "blif");
