@@ -466,7 +466,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
     no_sat = "-no_sat";
   }
 
-  std::string init_registers = std::string("-init_registers ") + std::to_string(SynthInitRegisters) + std::string(" ");
+  std::string init_registers = std::string("-init_registers ") + std::to_string(SynthInitRegisters()) + std::string(" ");
 
   std::string limits;
   limits += std::string("-max_lut ") + std::to_string(MaxDeviceLUTCount()) +
