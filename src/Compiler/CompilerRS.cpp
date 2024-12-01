@@ -467,7 +467,7 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   }
 
   std::string init_registers = std::string("-init_registers ") + std::to_string(SynthInitRegisters()) + std::string(" ");
-
+  std::cout << "Ravi1 " << init_registers << std::endl; //TODO
   std::string limits;
   limits += std::string("-max_lut ") + std::to_string(MaxDeviceLUTCount()) +
             std::string(" ");
@@ -758,13 +758,17 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
 
       if (option == "-init_registers" && i + 1 < argc) {
         std::string arg = argv[++i];
-        if (arg != "2" && arg != "1" && arg != "0") {
-        const auto &[value, ok] = StringUtils::to_number<uint32_t>(arg);
+        compiler->ErrorMessage("Ravi2: " + arg); //TODO
+        if (arg == "2" || arg == "1" || arg == "0") {
+        const auto &[value, ok] = StringUtils::to_number<int>(arg);
+        compiler->ErrorMessage("Ravi3: " + value); //TODO
         if (ok) compiler->SynthInitRegisters(value);
         continue;
         }
+        else {
           compiler->ErrorMessage("Unknown init registers option <0|1|2>: " + arg);
           return TCL_ERROR;
+        }
       }
 
       if (option == "-no_adder") {
