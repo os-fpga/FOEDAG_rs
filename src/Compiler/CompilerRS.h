@@ -67,6 +67,10 @@ class CompilerRS : public CompilerOpenFPGA {
   void SynthNoSimplify(bool noSimplify) { m_synthNoSimplify = noSimplify; }
   int MaxThreads() { return m_maxThreads; }
   void MaxThreads(int maxThreads) { m_maxThreads = maxThreads; }
+  bool SynthNoSat() { return m_synthNoFlatten; }
+  void SynthNoSat(bool no_sat) { m_synthNoSat = no_sat; }
+  int SynthInitRegisters() { return m_synthInitRegisters; }
+  void SynthInitRegisters(int initRegisters) { m_synthInitRegisters = initRegisters; }
 
   void StarsExecPath(const std::filesystem::path& path) {
     m_starsExecutablePath = path;
@@ -114,10 +118,12 @@ class CompilerRS : public CompilerOpenFPGA {
   bool m_synthCec = false;
   bool m_synthNoSimplify = false;
   int m_maxThreads = -1;
+  int m_synthInitRegisters = 0;
   bool m_keepTribuf = true;
   bool m_new_dsp19x2 = true;
   bool m_new_tdp36k = true;
   bool m_new_ioBufMap = true;
+  bool m_synthNoSat = false;
   std::filesystem::path m_starsExecutablePath = "planning";
   std::filesystem::path m_tclExecutablePath = "tclsh";
   std::filesystem::path m_raptorExecutablePath = "raptor";

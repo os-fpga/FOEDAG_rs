@@ -71,6 +71,11 @@
                 "widgetType": "checkbox",
                 "arg": "no_bram"
             },
+            "no_sat_checkbox": {
+                "label": "No Sat",
+                "widgetType": "checkbox",
+                "arg": "no_sat"
+            },
             "fast_checkbox": {
                 "label": "Fast Synthesis",
                 "widgetType": "checkbox",
