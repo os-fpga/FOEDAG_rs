@@ -67,7 +67,7 @@ class CompilerRS : public CompilerOpenFPGA {
   void SynthNoSimplify(bool noSimplify) { m_synthNoSimplify = noSimplify; }
   int MaxThreads() { return m_maxThreads; }
   void MaxThreads(int maxThreads) { m_maxThreads = maxThreads; }
-  bool SynthNoSat() { return m_synthNoFlatten; }
+  bool SynthNoSat() { return m_synthNoSat; }
   void SynthNoSat(bool no_sat) { m_synthNoSat = no_sat; }
   int SynthInitRegisters() { return m_synthInitRegisters; }
   void SynthInitRegisters(int initRegisters) { m_synthInitRegisters = initRegisters; }
