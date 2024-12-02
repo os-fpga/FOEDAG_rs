@@ -59,22 +59,86 @@
                     "auto",
                     "none"
                 ],
-                "arg": "carry"
+                "arg": "carry",
+                "default":"Auto"
             },
-            "no_dsp_checkbox": {
-                "label": "No DSP Blocks",
-                "widgetType": "checkbox",
-                "arg": "no_dsp"
+            "netlist_lang_dropdown": {
+                "label": "Pnr netlist language",
+                "widgetType": "dropdown",
+                "options": [
+                    "Blif",
+                    "EBlif",
+                    "Edif",
+                    "Verilog",
+                    "VHDL"
+                ],
+                "optionsLookup": [
+                    "blif",
+                    "eblif",
+                    "edif",
+                    "verilog",
+                    "vhdl"
+                ],
+                "default": "Verilog",
+                "arg": "netlist_lang"
             },
-            "no_bram_checkbox": {
-                "label": "No Block Ram",
+            "inferred_io": {
+                "label": "Inferred IO",
+                "widgetType": "dropdown",
+                "options": [
+                    "Auto",
+                    "None"
+                ],
+                "optionsLookup": [
+                    "auto",
+                    "none"
+                ],
+                "arg": "inferred_io"
+            },
+            "bram_spinbox_ex": {
+                "label": "Block RAM limit",
+                "widgetType": "spinbox",
+                "minVal": 0,
+                "maxVal": 0,
+                "stepVal": 1,
+                "arg": "bram_limit"
+            },
+            "carry_chain_spinbox_ex": {
+                "label": "Carry length limit",
+                "widgetType": "spinbox",
+                "minVal": 0,
+                "maxVal": 0,
+                "stepVal": 1,
+                "arg": "carry_chain_limit"
+            },
+            "init_registers_spinbox_ex": {
+                "label": "Init Registers",
+                "widgetType": "spinbox",
+                "minVal": 0,
+                "maxVal": 2,
+                "stepVal": 1,
+                "arg": "init_registers"
+            },
+            "no_sat_checkbox": {
+                "label": "No Sat",
                 "widgetType": "checkbox",
-                "arg": "no_bram"
+                "arg": "no_sat"
             },
             "fast_checkbox": {
                 "label": "Fast Synthesis",
                 "widgetType": "checkbox",
                 "arg": "fast"
+            },
+            "no_flatten": {
+                "label": "No flatten",
+                "widgetType": "checkbox",
+                "arg": "no_flatten"
+            },
+            "keep_tribuf": {
+                "label": "Keep Tribuf",
+                "widgetType": "checkbox",
+                "arg": "keep_tribuf",
+                "default": "checked"
             },
             "_META_": {
                 "hidden": false,

@@ -74,7 +74,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -post_cleanup 1 -legalize_ram_clk_ports ${NEW_IO_BUF_MAP} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -post_cleanup 1 -legalize_ram_clk_ports ${NEW_IO_BUF_MAP} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC} ${NO_SAT} ${INIT_REGISTERS}
 
 ${OUTPUT_NETLIST}
 
@@ -97,7 +97,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -post_cleanup 1 -legalize_ram_clk_ports ${NEW_IO_BUF_MAP} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -post_cleanup 1 -legalize_ram_clk_ports ${NEW_IO_BUF_MAP} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC} ${NO_SAT} ${INIT_REGISTERS}
 
 ${OUTPUT_NETLIST}
 
@@ -139,7 +139,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -post_cleanup 1 -legalize_ram_clk_ports ${NEW_IO_BUF_MAP} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -post_cleanup 1 -legalize_ram_clk_ports ${NEW_IO_BUF_MAP} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC} ${NO_SAT} ${INIT_REGISTERS}
 
 ${OUTPUT_NETLIST}
 
@@ -163,7 +163,7 @@ ${KEEP_NAMES}
 
 plugin -i ${PLUGIN_LIB}
 
-${PLUGIN_NAME} -post_cleanup 1 -legalize_ram_clk_ports ${NEW_IO_BUF_MAP} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC}
+${PLUGIN_NAME} -post_cleanup 1 -legalize_ram_clk_ports ${NEW_IO_BUF_MAP} -tech ${MAP_TO_TECHNOLOGY} ${OPTIMIZATION} ${EFFORT} ${CARRY} ${IO} ${KEEP_TRIBUF} ${NEW_DSP19X2} ${NEW_TDP36K} ${LIMITS} ${FSM_ENCODING} ${FAST} ${NO_FLATTEN} ${MAX_THREADS} ${NO_SIMPLIFY} ${CLKE_STRATEGY} ${CEC} ${NO_SAT} ${INIT_REGISTERS}
 
 ${OUTPUT_NETLIST}
 
@@ -461,7 +461,14 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   if (m_synthCec) {
     cec = "-cec";
   }
+  std::string no_sat;
+  if (m_synthNoSat) {
+    no_sat = "-no_sat";
+  }
 
+  std::string init_registers = std::string("-init_registers ") +
+                               std::to_string(SynthInitRegisters()) +
+                               std::string(" ");
   std::string limits;
   limits += std::string("-max_lut ") + std::to_string(MaxDeviceLUTCount()) +
             std::string(" ");
@@ -521,6 +528,8 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   result = ReplaceAll(result, "${NO_SIMPLIFY}", no_simplify);
   result = ReplaceAll(result, "${CLKE_STRATEGY}", clke_strategy);
   result = ReplaceAll(result, "${CEC}", cec);
+  result = ReplaceAll(result, "${NO_SAT}", no_sat);
+  result = ReplaceAll(result, "${INIT_REGISTERS}", init_registers);
   result = ReplaceAll(result, "${PLUGIN_LIB}", YosysPluginLibName());
   result = ReplaceAll(result, "${PLUGIN_NAME}", YosysPluginName());
   result = ReplaceAll(result, "${MAP_TO_TECHNOLOGY}", YosysMapTechnology());
@@ -747,6 +756,20 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
         if (ok) compiler->MaxUserCarryLength(value);
         continue;
       }
+
+      if (option == "-init_registers" && i + 1 < argc) {
+        std::string arg = argv[++i];
+        if (arg == "2" || arg == "1" || arg == "0") {
+          const auto &[value, ok] = StringUtils::to_number<int>(arg);
+          if (ok) compiler->SynthInitRegisters(value);
+          continue;
+        } else {
+          compiler->ErrorMessage("Unknown init registers option <0|1|2>: " +
+                                 arg);
+          return TCL_ERROR;
+        }
+      }
+
       if (option == "-no_adder") {
         compiler->SynthNoAdder(true);
         continue;
@@ -769,6 +792,10 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
       }
       if (option == "-no_tribuf") {
         compiler->KeepTribuf(false);
+        continue;
+      }
+      if (option == "-no_sat") {
+        compiler->SynthNoSat(true);
         continue;
       }
       if (option == "-new_dsp19x2") {
@@ -1051,7 +1078,7 @@ ArgumentsMap FOEDAG::TclArgs_getRsSynthesisOptions() {
     argumets.addArgument("no_flatten",
                          compiler->SynthNoFlatten() ? "true" : "false");
     argumets.addArgument("fast", compiler->SynthFast() ? "true" : "false");
-
+    argumets.addArgument("no_sat", compiler->SynthNoSat() ? "true" : "false");
     switch (compiler->GetNetlistType()) {
       case Compiler::NetlistType::Blif:
         argumets.addArgument("netlist_lang", "blif");
@@ -1082,7 +1109,9 @@ ArgumentsMap FOEDAG::TclArgs_getRsSynthesisOptions() {
     argumets.addArgument("bram_limit", bram);
     auto carry = StringUtils::to_string(compiler->MaxUserCarryLength());
     argumets.addArgument("carry_chain_limit", carry);
-
+    auto init_registers =
+        StringUtils::to_string(compiler->SynthInitRegisters());
+    argumets.addArgument("init_registers", init_registers);
     if (!compiler->BaseDeviceName().empty() &&
         compiler->BaseDeviceName()[0] == 'e') {
       if (compiler->SynthIOUser() == CompilerRS::SynthesisIOInference::None) {
@@ -1186,7 +1215,11 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const ArgumentsMap &argsStr) {
         StringUtils::to_number<uint32_t>(carry_chain_limit);
     if (ok) compiler->MaxUserCarryLength(value);
   }
-
+  auto init_registers = argsStr.value("init_registers");
+  if (init_registers) {
+    const auto &[value, ok] = StringUtils::to_number<int>(init_registers);
+    if (ok) compiler->SynthInitRegisters(value);
+  }
   auto fast = argsStr.value("fast");
   if (fast) {
     // enable when '-fast true', or '-fast'
@@ -1196,6 +1229,11 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const ArgumentsMap &argsStr) {
   if (no_flatten) {
     // enable when '-no_flatten true', or '-no_flatten'
     compiler->SynthNoFlatten(no_flatten == "true" || no_flatten.value.empty());
+  }
+  auto no_sat = argsStr.value("no_sat");
+  if (no_sat) {
+    // enable when '-no_sat true', or '-no_sat'
+    compiler->SynthNoSat(no_sat == "true" || no_sat.value.empty());
   }
   auto keep_tribuf = argsStr.value("keep_tribuf");
   if (keep_tribuf) {

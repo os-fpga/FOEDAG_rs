@@ -25,8 +25,8 @@ Tcl commands (Available in GUI or Batch console or Batch script):
    run_project <file>         : Opens and immediately runs the project
    target_device <name>       : Targets a device with <name> (default is 1GE75)
    device_file <file>         : Set file <file> with supported devices which replaces default file (device.xml)
-   add_design_file <file list> ?type?   ?-work <libName>?   ?-L <libName>? 
-       <type>                 : -VHDL_1987, -VHDL_1993, -VHDL_2000, -VHDL_2008, -VHDL_2019, -V_1995, -V_2001, -SV_2005, -SV_2009, -SV_2012, -SV_2017, default auto-detect 
+   add_design_file <file list> ?type?   ?-work <libName>?   ?-L <libName>?
+       <type>                 : -VHDL_1987, -VHDL_1993, -VHDL_2000, -VHDL_2008, -VHDL_2019, -V_1995, -V_2001, -SV_2005, -SV_2009, -SV_2012, -SV_2017, default auto-detect
        -work <libName>        : Compiles the compilation unit into library <libName>, default is "work"
        -L <libName>           : Import the library <libName> needed to compile the compilation unit, default is "work"
    set_top_module <top> ?-work <libName>? : Sets the top-level design module/entity for synthesis
@@ -36,8 +36,8 @@ Tcl commands (Available in GUI or Batch console or Batch script):
    set_macro <name>=<value>   : As in -D<macro>=<value>
    read_netlist <file>        : Read a netlist (.blif/.eblif) instead of an RTL design (Skip Synthesis)
    add_constraint_file <file> : Sets constraints file (SDC) filename and location
-   add_simulation_file <file list> ?type?   ?-work <libName>?   ?-L <libName>? 
-       <type>                 : -VHDL_1987, -VHDL_1993, -VHDL_2000, -VHDL_2008, -VHDL_2019, -V_1995, -V_2001, -SV_2005, -SV_2009, -SV_2012, -SV_2017, -C, -CPP 
+   add_simulation_file <file list> ?type?   ?-work <libName>?   ?-L <libName>?
+       <type>                 : -VHDL_1987, -VHDL_1993, -VHDL_2000, -VHDL_2008, -VHDL_2019, -V_1995, -V_2001, -SV_2005, -SV_2009, -SV_2012, -SV_2017, -C, -CPP
        -work <libName>        : Compiles the compilation unit into library <libName>, default is "work"
        -L <libName>           : Import the library <libName> needed to compile the compilation unit, default is "work"
    set_top_testbench <module> : Sets the top-level testbench module/entity for simulation
@@ -78,7 +78,7 @@ Tcl commands (Available in GUI or Batch console or Batch script):
 --- IP ---
 ----------
    add_litex_ip_catalog <directory> : Browses directory for LiteX IP generators, adds the IP(s) to the IP Catalog
-   ip_catalog ?<ip_name>?     : Lists all available IPs, and their parameters if <ip_name> is given 
+   ip_catalog ?<ip_name>?     : Lists all available IPs, and their parameters if <ip_name> is given
    configure_ip <IP_NAME> -mod_name <name> -out_file <filename> -version <ver_name> -P<param>="<value>"...
                               : Configures an IP <IP_NAME> and generates the corresponding file with module name
    ipgenerate ?clean?         : Generates all IP instances set by ip_configure
@@ -124,12 +124,17 @@ Tcl commands (Available in GUI or Batch console or Batch script):
      -no_tribuf               : Do not keep IO tristates
      -no_adder                : Do not infer adders
      -inferred_io             : Automatic I/O inference (Default false for eFPGA)
-     -no_inferred_io          : No automatic I/O inference (Default true for FPGA)     
+     -no_inferred_io          : No automatic I/O inference (Default true for FPGA)
+     -no_sat                  : Disable SAT solver
+     -init_registers <int>    : Force initialization of uninitialized registers
+       0                      : '0' value means initialize with '0' (Default '0' is used)
+       1                      : '1' value means initialize with '1'
+       2                      : '2' value means leave it uninitialized
 <engineering>
      -clke_strategy <strategy>: Clock enable extraction strategy for FFs:
        early                  : Perform early extraction
        late                   : Perform late extraction
-     -cec                     : Dump verilog after key phases and use internal equivalence checking (ABC based) 
+     -cec                     : Dump verilog after key phases and use internal equivalence checking (ABC based)
 </engineering>
    set_limits <type> <int>    : Sets a user limit on object of type (dsp, bram), specify 0 to disable block inferrence
        dsp                    : Maximum number of usable DSPs
@@ -139,7 +144,7 @@ Tcl commands (Available in GUI or Batch console or Batch script):
      clean                    : Deletes files generated from this task
    synthesize <optimization>  ?clean? : RTL Synthesis, optional opt. (area, delay, mixed)
      <optimization>           : area, delay, mixed
-       area                   : Optimize for reduce resource area 
+       area                   : Optimize for reduce resource area
        delay                  : Optimize for performance
        mixed                  : Optimize for area and performance (default)
      clean                    : Deletes files generated from this task
@@ -192,7 +197,7 @@ Tcl commands (Available in GUI or Batch console or Batch script):
 ------------------------------
    power ?clean?              : Statistical Power Analysis
      clean                    : Deletes files generated from this task
-     
+
 ------------------------------
 --- Power Analysis -----------
 ------------------------------
@@ -219,7 +224,7 @@ timing_flow <"default" | "analytic"> : Timing driven compilation flow. This proc
   "analytic"                   : Use timing-driven analytic placement as initial placement. The result is then passed through the simulated annealing (SA) placer.
   "default"                    : Uses VPR's default initial placer (default)
 
-routability_flow <number_of_molecules_in_partition "200"> <congestion "medium | high"> <vpr_constraints_file ""> : Routability driven compilation flow. This proc accepts three optional arguments: 
+routability_flow <number_of_molecules_in_partition "200"> <congestion "medium | high"> <vpr_constraints_file ""> : Routability driven compilation flow. This proc accepts three optional arguments:
   - number_of_molecules_in_partition: Average number of molecules in each cluster (default is 200).
   - congestion: medium, high
   - initial VPR placement constraints file
@@ -237,7 +242,7 @@ congestion_flow <congestion_type> : Congestion driven compilation flow
 ------------------
 --- Programmer ---
 ------------------
-   programmer <command>           : A programmer tool allows you to program and configure FPGA devices via JTAG 
+   programmer <command>           : A programmer tool allows you to program and configure FPGA devices via JTAG
      command                      : fpga_config, flash, fpga_status, list_device, list_cable, otp
      fpga_config -c <cable name/index> ?-d <device_index>? <bitstream_file> : Program the FPGA device via JTAG
        -c <cable_name/index>    : Specify the cable name or index
@@ -329,7 +334,7 @@ congestion_flow <congestion_type> : Congestion driven compilation flow
        -b <cable name/index>    : Cable name or index
        -d <device index>        : Device index
        sig1=val1...sigN=valN    : List of signal names or indexes and values to set
-     get_io ?-b <cable name/index>? ?-d <device index>? ?-l <times>? ?-t <milliseconds>? <signal1> <signal2> : To read the state/value of an IO signal. 
+     get_io ?-b <cable name/index>? ?-d <device index>? ?-l <times>? ?-t <milliseconds>? <signal1> <signal2> : To read the state/value of an IO signal.
        -b <cable name/index>    : Cable name or index
        -d <device index>        : Device index
        sig1...sigN              : List of signal names or indexes to read
