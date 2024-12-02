@@ -467,7 +467,6 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
   }
 
   std::string init_registers = std::string("-init_registers ") + std::to_string(SynthInitRegisters()) + std::string(" ");
-  std::cout << "Ravi1 " << init_registers << std::endl; //TODO
   std::string limits;
   limits += std::string("-max_lut ") + std::to_string(MaxDeviceLUTCount()) +
             std::string(" ");
@@ -758,10 +757,8 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
 
       if (option == "-init_registers" && i + 1 < argc) {
         std::string arg = argv[++i];
-        compiler->ErrorMessage("Ravi2: " + arg); //TODO
         if (arg == "2" || arg == "1" || arg == "0") {
         const auto &[value, ok] = StringUtils::to_number<int>(arg);
-        compiler->ErrorMessage("Ravi3: " + value); //TODO
         if (ok) compiler->SynthInitRegisters(value);
         continue;
         }
@@ -1111,7 +1108,8 @@ ArgumentsMap FOEDAG::TclArgs_getRsSynthesisOptions() {
     argumets.addArgument("bram_limit", bram);
     auto carry = StringUtils::to_string(compiler->MaxUserCarryLength());
     argumets.addArgument("carry_chain_limit", carry);
-
+    auto init_registers = StringUtils::to_string(compiler->SynthInitRegisters());
+    argumets.addArgument("init_registers", init_registers);
     if (!compiler->BaseDeviceName().empty() &&
         compiler->BaseDeviceName()[0] == 'e') {
       if (compiler->SynthIOUser() == CompilerRS::SynthesisIOInference::None) {
@@ -1215,7 +1213,12 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const ArgumentsMap &argsStr) {
         StringUtils::to_number<uint32_t>(carry_chain_limit);
     if (ok) compiler->MaxUserCarryLength(value);
   }
-
+  auto init_registers = argsStr.value("init_registers");
+  if (init_registers) {
+    const auto &[value, ok] =
+        StringUtils::to_number<int>(init_registers);
+    if (ok) compiler->SynthInitRegisters(value);
+  }
   auto fast = argsStr.value("fast");
   if (fast) {
     // enable when '-fast true', or '-fast'
