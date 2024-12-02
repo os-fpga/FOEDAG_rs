@@ -70,9 +70,7 @@ class CompilerRS : public CompilerOpenFPGA {
   bool SynthNoSat() { return m_synthNoSat; }
   void SynthNoSat(bool no_sat) { m_synthNoSat = no_sat; }
   int SynthInitRegisters() { return m_synthInitRegisters; }
-  void SynthInitRegisters(int initRegisters) {
-    m_synthInitRegisters = initRegisters;
-  }
+  void SynthInitRegisters(int initRegisters) { m_synthInitRegisters = initRegisters; }
 
   void StarsExecPath(const std::filesystem::path& path) {
     m_starsExecutablePath = path;
