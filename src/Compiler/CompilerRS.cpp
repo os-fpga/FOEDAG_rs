@@ -466,7 +466,9 @@ std::string CompilerRS::FinishSynthesisScript(const std::string &script) {
     no_sat = "-no_sat";
   }
 
-  std::string init_registers = std::string("-init_registers ") + std::to_string(SynthInitRegisters()) + std::string(" ");
+  std::string init_registers = std::string("-init_registers ") +
+                               std::to_string(SynthInitRegisters()) +
+                               std::string(" ");
   std::string limits;
   limits += std::string("-max_lut ") + std::to_string(MaxDeviceLUTCount()) +
             std::string(" ");
@@ -758,12 +760,12 @@ bool CompilerRS::RegisterCommands(TclInterpreter *interp, bool batchMode) {
       if (option == "-init_registers" && i + 1 < argc) {
         std::string arg = argv[++i];
         if (arg == "2" || arg == "1" || arg == "0") {
-        const auto &[value, ok] = StringUtils::to_number<int>(arg);
-        if (ok) compiler->SynthInitRegisters(value);
-        continue;
-        }
-        else {
-          compiler->ErrorMessage("Unknown init registers option <0|1|2>: " + arg);
+          const auto &[value, ok] = StringUtils::to_number<int>(arg);
+          if (ok) compiler->SynthInitRegisters(value);
+          continue;
+        } else {
+          compiler->ErrorMessage("Unknown init registers option <0|1|2>: " +
+                                 arg);
           return TCL_ERROR;
         }
       }
@@ -1076,8 +1078,7 @@ ArgumentsMap FOEDAG::TclArgs_getRsSynthesisOptions() {
     argumets.addArgument("no_flatten",
                          compiler->SynthNoFlatten() ? "true" : "false");
     argumets.addArgument("fast", compiler->SynthFast() ? "true" : "false");
-    argumets.addArgument("no_sat",
-                         compiler->SynthNoSat() ? "true" : "false");
+    argumets.addArgument("no_sat", compiler->SynthNoSat() ? "true" : "false");
     switch (compiler->GetNetlistType()) {
       case Compiler::NetlistType::Blif:
         argumets.addArgument("netlist_lang", "blif");
@@ -1108,7 +1109,8 @@ ArgumentsMap FOEDAG::TclArgs_getRsSynthesisOptions() {
     argumets.addArgument("bram_limit", bram);
     auto carry = StringUtils::to_string(compiler->MaxUserCarryLength());
     argumets.addArgument("carry_chain_limit", carry);
-    auto init_registers = StringUtils::to_string(compiler->SynthInitRegisters());
+    auto init_registers =
+        StringUtils::to_string(compiler->SynthInitRegisters());
     argumets.addArgument("init_registers", init_registers);
     if (!compiler->BaseDeviceName().empty() &&
         compiler->BaseDeviceName()[0] == 'e') {
@@ -1215,8 +1217,7 @@ void FOEDAG::TclArgs_setRsSynthesisOptions(const ArgumentsMap &argsStr) {
   }
   auto init_registers = argsStr.value("init_registers");
   if (init_registers) {
-    const auto &[value, ok] =
-        StringUtils::to_number<int>(init_registers);
+    const auto &[value, ok] = StringUtils::to_number<int>(init_registers);
     if (ok) compiler->SynthInitRegisters(value);
   }
   auto fast = argsStr.value("fast");
